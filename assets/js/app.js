@@ -27,6 +27,14 @@ const DEFAULT_DATA = {
     merge_requests_month: 120,
     issues_month: 260
   },
+  events: [
+    { name: 'First login', date: '2025-08-28' },
+    { name: 'First project created', date: '2025-09-05' },
+    { name: 'First merge request', date: '2025-09-18' },
+    { name: 'First pipeline run', date: '2025-10-02' },
+    { name: 'First security scan', date: '2025-10-05' },
+    { name: 'First deployment', date: '2025-10-06' }
+  ],
   onboarding: {
     tasks: [
       { name: 'Kickoff and stakeholder alignment', done: true, date: '2025-08-29' },
@@ -48,6 +56,17 @@ const DEFAULT_DATA = {
     first_value: { date: '', expected_date: '2025-10-15' },
     outcome: { date: '', expected_date: '2025-12-15' }
   },
+  cicd: {
+    pipelines_week: 38,
+    pipeline_success_rate: 0.72,
+    pipeline_duration_minutes: 18,
+    deployments_week: 4,
+    milestones: [
+      { name: 'First pipeline created', date: '2025-10-02', status: 'complete' },
+      { name: 'Shared runners enabled', date: '2025-09-28', status: 'complete' },
+      { name: 'First production deployment', date: '', status: 'pending' }
+    ]
+  },
   targets: {
     engage_days: 14,
     onboard_days: 45,
@@ -58,6 +77,57 @@ const DEFAULT_DATA = {
     security_adoption: { watch: 0.1, good: 0.2 },
     deployment_adoption: { watch: 0.1, good: 0.3 }
   },
+  devops_adoption: {
+    devops_score: 0.35,
+    use_cases_green_target: 3,
+    use_cases: [
+      { name: 'Plan: Issues and boards', status: 'watch', note: '12 teams active' },
+      { name: 'Create: SCM and merge requests', status: 'watch', note: '12 of 30 teams' },
+      { name: 'Verify: CI pipelines', status: 'watch', note: '25% of projects' },
+      { name: 'Secure: SAST and DAST', status: 'risk', note: '6 projects scanning' },
+      { name: 'Release: Deployments', status: 'risk', note: '4 projects deploying' },
+      { name: 'Measure: Value Stream Analytics', status: 'risk', note: 'Not enabled' }
+    ]
+  },
+  success_plan: {
+    objectives: [
+      {
+        title: 'Automate Tier-1 release workflows',
+        metric: 'Tier-1 deployments via GitLab',
+        owner: 'DevOps Lead',
+        due: '2025-12-15',
+        progress: 0.3,
+        status: 'in_progress'
+      },
+      {
+        title: 'Expand CI adoption to 60% of projects',
+        metric: 'CI pipelines enabled',
+        owner: 'Platform Engineering',
+        due: '2025-11-30',
+        progress: 0.5,
+        status: 'in_progress'
+      },
+      {
+        title: 'Enable security scanning for regulated apps',
+        metric: 'SAST + Dependency Scanning',
+        owner: 'Security',
+        due: '2025-11-15',
+        progress: 0.15,
+        status: 'at_risk'
+      }
+    ]
+  },
+  health: {
+    overall_status: 'watch',
+    last_exec_review: '2025-09-30',
+    factors: [
+      { label: 'License utilization', status: 'risk', detail: '8% active vs 80% target' },
+      { label: 'Stage adoption', status: 'watch', detail: '1 of 6 use cases green' },
+      { label: 'Executive engagement', status: 'watch', detail: 'Last EBR on 2025-09-30' },
+      { label: 'Support activity', status: 'watch', detail: '5 open high-priority tickets' },
+      { label: 'Success plan progress', status: 'watch', detail: '0 objectives completed' }
+    ]
+  },
   dora: {
     deploy_freq_per_day: 0.2,
     lead_time_days: 7,
@@ -65,8 +135,60 @@ const DEFAULT_DATA = {
     mttr_hours: 12
   },
   outcomes: {
+    primary_goal: 'Automate release workflow for Tier-1 apps',
+    primary_status: 'In progress',
+    primary_progress: 0.35,
+    primary_note: '4 of 12 Tier-1 apps deploy via GitLab',
     narrative:
       'CI coverage reached 25% of projects. Next focus is enabling security scans and expanding deployment automation to improve lead time and MTTR.'
+  },
+  learning: {
+    recommended: [
+      {
+        title: 'GitLab CI/CD fundamentals',
+        type: 'Course',
+        detail: 'Pipeline basics, runners, and best practices',
+        link: 'https://learn.gitlab.com/'
+      },
+      {
+        title: 'GitLab administration essentials',
+        type: 'Course',
+        detail: 'Instance management and security baselines',
+        link: 'https://learn.gitlab.com/'
+      },
+      {
+        title: 'Secure DevOps workshops',
+        type: 'Workshop',
+        detail: 'Enable SAST, DAST, and dependency scanning',
+        link: 'https://docs.gitlab.com/ee/user/application_security/'
+      }
+    ],
+    webinars: [
+      {
+        title: 'Accelerating time to value with GitLab',
+        type: 'Webinar',
+        detail: 'Customer success and onboarding best practices',
+        link: 'https://about.gitlab.com/resources/'
+      },
+      {
+        title: 'DevOps metrics and DORA deep dive',
+        type: 'Webinar',
+        detail: 'How to interpret DORA metrics in GitLab',
+        link: 'https://about.gitlab.com/resources/'
+      }
+    ],
+    templates: [
+      {
+        title: 'Onboarding issue board template',
+        detail: 'Track setup tasks with a ready-made issue board',
+        link: 'https://docs.gitlab.com/ee/user/project/issues/'
+      },
+      {
+        title: 'Success plan template',
+        detail: 'Capture outcomes, owners, and KPIs',
+        link: 'https://about.gitlab.com/handbook/customer-success/'
+      }
+    ]
   }
 };
 
@@ -108,6 +230,15 @@ const formatDecimal = (value, digits = 1) => {
 const daysBetween = (start, end) => {
   if (!start || !end) return null;
   return Math.round((end - start) / MS_PER_DAY);
+};
+
+const normalizeStatus = (status) => {
+  if (!status) return 'watch';
+  const normalized = status.toString().toLowerCase();
+  if (['good', 'green', 'complete', 'completed', 'on_track', 'on-track', 'success'].includes(normalized)) return 'good';
+  if (['risk', 'red', 'at_risk', 'at-risk', 'overdue', 'blocked'].includes(normalized)) return 'risk';
+  if (['watch', 'yellow', 'in_progress', 'in-progress', 'pending'].includes(normalized)) return 'watch';
+  return 'watch';
 };
 
 const getValue = (obj, path) =>
@@ -163,6 +294,12 @@ const labelForStatus = (status) => {
     default:
       return 'Watch';
   }
+};
+
+const deriveOverallStatus = (factors) => {
+  if (factors.some((factor) => factor.status === 'risk')) return 'risk';
+  if (factors.some((factor) => factor.status === 'watch')) return 'watch';
+  return 'good';
 };
 
 const loadData = async () => {
@@ -262,6 +399,39 @@ const buildView = (data) => {
 
   const nextMilestone = milestoneOrder.find((item) => !parseDate(data.milestones[item.key].date)) || milestoneOrder[4];
 
+  const devopsUseCases = (data.devops_adoption?.use_cases || []).map((useCase) => ({
+    ...useCase,
+    status: normalizeStatus(useCase.status)
+  }));
+  const useCasesGreen = devopsUseCases.filter((useCase) => useCase.status === 'good').length;
+  const useCasesTotal = devopsUseCases.length;
+  const devopsScore = data.devops_adoption?.devops_score ?? adoptionIndex;
+
+  const successObjectives = data.success_plan?.objectives || [];
+  const normalizedObjectives = successObjectives.map((objective) => ({
+    ...objective,
+    status: normalizeStatus(objective.status)
+  }));
+  const objectivesComplete = normalizedObjectives.filter((objective) => objective.status === 'good').length;
+  const objectivesOnTrack = normalizedObjectives.filter((objective) => objective.status !== 'risk').length;
+  const objectivesProgress =
+    normalizedObjectives.length > 0
+      ? normalizedObjectives.reduce((sum, objective) => sum + (objective.progress || 0), 0) / normalizedObjectives.length
+      : 0;
+
+  const healthFactors = (data.health?.factors || []).map((factor) => ({
+    ...factor,
+    status: normalizeStatus(factor.status)
+  }));
+  const healthStatus = data.health?.overall_status ? normalizeStatus(data.health.overall_status) : deriveOverallStatus(healthFactors);
+
+  const outcomes = {
+    ...data.outcomes,
+    primary_progress: data.outcomes?.primary_progress ?? objectivesProgress
+  };
+
+  const cicd = data.cicd || {};
+
   return {
     customer: {
       name: data.customer.name,
@@ -296,14 +466,24 @@ const buildView = (data) => {
     },
     signals: {
       time_to_engage: engagementDays !== null ? `${engagementDays} days` : 'Pending',
-      time_to_onboard: onboardDays !== null ? `${onboardDays} days` : daysSinceStart !== null ? `In progress (Day ${daysSinceStart})` : 'In progress',
+      time_to_onboard:
+        onboardDays !== null ? `${onboardDays} days` : daysSinceStart !== null ? `In progress (Day ${daysSinceStart})` : 'In progress',
       infra_ready: infraDays !== null ? `Day ${infraDays}` : 'Pending',
       first_value: `${formatPercent(licenseUtil)} licenses active`
     },
     metrics: {
       license_utilization_pct: formatPercent(licenseUtil),
       adoption_index_pct: formatPercent(adoptionIndex),
-      first_value_status: `${formatPercent(licenseUtil)} license activation (target 10%)`
+      first_value_status: `${formatPercent(licenseUtil)} license activation (target 10%)`,
+      ci_adoption_pct: formatPercent(ciAdoption),
+      security_adoption_pct: formatPercent(securityAdoption),
+      deployment_adoption_pct: formatPercent(deploymentAdoption),
+      pipeline_success_rate_pct: formatPercent(cicd.pipeline_success_rate || 0),
+      pipelines_week: numberFormat.format(cicd.pipelines_week || 0),
+      deployments_week: numberFormat.format(cicd.deployments_week || 0),
+      pipeline_duration: `${formatDecimal(cicd.pipeline_duration_minutes || 0, 0)} min`,
+      devops_score_pct: formatPercent(devopsScore),
+      use_cases_green: `${useCasesGreen} of ${useCasesTotal} use cases green`
     },
     milestones: {
       ...milestones,
@@ -318,7 +498,32 @@ const buildView = (data) => {
       change_failure: `${formatDecimal(data.dora.change_failure_pct, 0)}%`,
       mttr: `${formatDecimal(data.dora.mttr_hours, 0)} hours`
     },
-    outcomes: data.outcomes,
+    outcomes,
+    success_plan: {
+      summary: `${objectivesComplete} of ${normalizedObjectives.length} objectives achieved`,
+      on_track: `${objectivesOnTrack} of ${normalizedObjectives.length} objectives on track`
+    },
+    health: {
+      overall_status: healthStatus,
+      overall_label: labelForStatus(healthStatus),
+      last_exec_review: formatDate(data.health?.last_exec_review)
+    },
+    persona: {
+      executive: {
+        adoption_score: formatPercent(devopsScore),
+        health_label: labelForStatus(healthStatus)
+      },
+      leader: {
+        ci_coverage: formatPercent(ciAdoption),
+        pipeline_success: formatPercent(cicd.pipeline_success_rate || 0),
+        security_coverage: formatPercent(securityAdoption)
+      },
+      csm: {
+        health_label: labelForStatus(healthStatus),
+        license_utilization: formatPercent(licenseUtil),
+        success_plan: `${objectivesComplete} of ${normalizedObjectives.length} objectives achieved`
+      }
+    },
     progressValues: {
       license_utilization: licenseUtil,
       scm_adoption: scmAdoption,
@@ -328,7 +533,8 @@ const buildView = (data) => {
       engagement,
       onboarding_completion: onboardingCompletion,
       adoption_index: adoptionIndex,
-      first_value_progress: firstValueProgress
+      first_value_progress: firstValueProgress,
+      outcome_progress: outcomes.primary_progress || 0
     },
     statusMap: {
       license_utilization: statusForMetric(licenseUtil, data.targets.license_utilization),
@@ -343,6 +549,14 @@ const buildView = (data) => {
       adoptionIndex,
       firstValueProgress,
       licenseUtil
+    },
+    lists: {
+      devopsUseCases,
+      successObjectives: normalizedObjectives,
+      healthFactors,
+      events: data.events || [],
+      cicdMilestones: cicd.milestones || [],
+      learning: data.learning || {}
     }
   };
 };
@@ -361,6 +575,124 @@ const renderTasks = (tasks) => {
         <div class="task-title">${task.name}</div>
         <div class="task-meta">${metaText}</div>
       </div>
+    `;
+    list.appendChild(item);
+  });
+};
+
+const renderEventList = (selector, events, startDate) => {
+  const list = document.querySelector(selector);
+  if (!list) return;
+  list.innerHTML = '';
+  events.forEach((event) => {
+    const item = document.createElement('li');
+    item.className = 'event-item';
+    const eventDate = parseDate(event.date);
+    const day = eventDate && startDate ? daysBetween(startDate, eventDate) : null;
+    const meta = eventDate ? `Day ${day} | ${formatDate(eventDate)}` : 'Pending';
+    item.innerHTML = `
+      <div>
+        <div class="event-title">${event.name}</div>
+        <div class="event-meta">${meta}</div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+};
+
+const renderMilestoneList = (selector, milestones) => {
+  const list = document.querySelector(selector);
+  if (!list) return;
+  list.innerHTML = '';
+  milestones.forEach((milestone) => {
+    const item = document.createElement('li');
+    const status = normalizeStatus(milestone.status);
+    const meta = milestone.date ? formatDate(milestone.date) : 'Pending';
+    item.className = 'event-item';
+    item.innerHTML = `
+      <div class="event-row">
+        <span class="status-dot" data-status="${status}"></span>
+        <div>
+          <div class="event-title">${milestone.name}</div>
+          <div class="event-meta">${meta}</div>
+        </div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+};
+
+const renderUseCases = (selector, useCases) => {
+  const list = document.querySelector(selector);
+  if (!list) return;
+  list.innerHTML = '';
+  useCases.forEach((useCase) => {
+    const item = document.createElement('li');
+    item.className = 'usecase-item';
+    item.innerHTML = `
+      <span class="status-dot" data-status="${useCase.status}"></span>
+      <div>
+        <div class="usecase-title">${useCase.name}</div>
+        <div class="usecase-note">${useCase.note || ''}</div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+};
+
+const renderObjectives = (selector, objectives) => {
+  const list = document.querySelector(selector);
+  if (!list) return;
+  list.innerHTML = '';
+  objectives.forEach((objective) => {
+    const item = document.createElement('li');
+    item.className = 'objective-item';
+    item.innerHTML = `
+      <div class="objective-head">
+        <span class="objective-title">${objective.title}</span>
+        <span class="status-pill" data-status="${objective.status}">${labelForStatus(objective.status)}</span>
+      </div>
+      <div class="objective-meta">Owner: ${objective.owner} - Due: ${formatDate(objective.due)}</div>
+      <div class="progress" data-inline-progress style="--value: ${objective.progress || 0}">
+        <span class="progress-bar"></span>
+      </div>
+      <div class="objective-note">${objective.metric}</div>
+    `;
+    list.appendChild(item);
+  });
+};
+
+const renderHealthFactors = (selector, factors) => {
+  const list = document.querySelector(selector);
+  if (!list) return;
+  list.innerHTML = '';
+  factors.forEach((factor) => {
+    const item = document.createElement('li');
+    item.className = 'health-item';
+    item.innerHTML = `
+      <div class="health-row">
+        <span class="status-dot" data-status="${factor.status}"></span>
+        <div>
+          <div class="health-title">${factor.label}</div>
+          <div class="health-note">${factor.detail}</div>
+        </div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+};
+
+const renderResourceList = (selector, resources) => {
+  const list = document.querySelector(selector);
+  if (!list) return;
+  list.innerHTML = '';
+  resources.forEach((resource) => {
+    const item = document.createElement('li');
+    item.className = 'resource-item';
+    item.innerHTML = `
+      <div class="resource-title">${resource.title}</div>
+      <div class="resource-meta">${resource.type ? `${resource.type} - ` : ''}${resource.detail || ''}</div>
+      <a href="${resource.link}">Open resource</a>
     `;
     list.appendChild(item);
   });
@@ -457,16 +789,63 @@ const renderTimeline = (view) => {
   });
 };
 
+const updateHealthBadge = (view) => {
+  document.querySelectorAll('[data-health-badge]').forEach((badge) => {
+    badge.dataset.status = view.health.overall_status;
+    badge.textContent = `Health: ${view.health.overall_label}`;
+  });
+};
+
+const initPersonaTabs = () => {
+  const tabs = Array.from(document.querySelectorAll('[data-persona]'));
+  const panels = Array.from(document.querySelectorAll('[data-persona-panel]'));
+  if (!tabs.length || !panels.length) return;
+
+  const setActive = (persona) => {
+    tabs.forEach((tab) => {
+      const isActive = tab.dataset.persona === persona;
+      tab.classList.toggle('is-active', isActive);
+      tab.setAttribute('aria-selected', isActive.toString());
+    });
+    panels.forEach((panel) => {
+      const isActive = panel.dataset.personaPanel === persona;
+      panel.classList.toggle('is-active', isActive);
+      panel.setAttribute('aria-hidden', (!isActive).toString());
+    });
+  };
+
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      setActive(tab.dataset.persona);
+    });
+  });
+
+  setActive(tabs[0].dataset.persona);
+};
+
 const init = async () => {
   const data = await loadData();
   const view = buildView(data);
 
   renderTasks(data.onboarding.tasks);
+  renderEventList('[data-list="ttv-events"]', view.lists.events, parseDate(data.customer.start_date));
+  renderMilestoneList('[data-list="cicd-milestones"]', view.lists.cicdMilestones);
+  renderUseCases('[data-list="devops-usecases"]', view.lists.devopsUseCases);
+  renderUseCases('[data-list="maturity-map"]', view.lists.devopsUseCases);
+  renderObjectives('[data-list="success-plan"]', view.lists.successObjectives);
+  renderHealthFactors('[data-list="health-factors"]', view.lists.healthFactors);
+  renderResourceList('[data-list="learning-recommended"]', view.lists.learning.recommended || []);
+  renderResourceList('[data-list="learning-webinars"]', view.lists.learning.webinars || []);
+  renderResourceList('[data-list="learning-templates"]', view.lists.learning.templates || []);
+  renderResourceList('[data-list="onboarding-templates"]', view.lists.learning.templates || []);
+
   updateBindings(view);
   updateProgressBars(view.progressValues);
   updateRing(view.additional.licenseUtil);
   updateChips(view);
   renderTimeline(view);
+  updateHealthBadge(view);
+  initPersonaTabs();
 
   document.body.classList.add('loaded');
 };

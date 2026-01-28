@@ -25,9 +25,11 @@
             </div>
           </div>
           <div class="nav-links" aria-label="Primary">
+            <a href="#personas">Personas</a>
             <a href="#overview">Overview</a>
             <a href="#onboarding">Onboarding</a>
             <a href="#adoption">Adoption</a>
+            <a href="#health">Health</a>
             <a href="#outcomes">Outcomes</a>
             <a href="#resources">Guides</a>
           </div>
@@ -95,6 +97,93 @@
       </header>
 
       <main>
+        <section class="section" id="personas">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Persona views</p>
+              <h2>Focus the story by stakeholder</h2>
+            </div>
+            <p class="section-lede">
+              Tailor the dashboard to executives, DevOps leaders, and CSMs. Each view highlights the KPIs and
+              outcomes that matter most to that audience.
+            </p>
+          </div>
+
+          <div class="persona-tabs" role="tablist" aria-label="Persona tabs">
+            <button class="persona-tab is-active" type="button" data-persona="executive" role="tab" aria-controls="persona-executive" aria-selected="true">
+              Executive
+            </button>
+            <button class="persona-tab" type="button" data-persona="leader" role="tab" aria-controls="persona-leader" aria-selected="false">
+              DevOps leader
+            </button>
+            <button class="persona-tab" type="button" data-persona="csm" role="tab" aria-controls="persona-csm" aria-selected="false">
+              CSM view
+            </button>
+          </div>
+
+          <div class="persona-panels">
+            <div class="persona-panel is-active" id="persona-executive" data-persona-panel="executive" role="tabpanel">
+              <div class="summary-grid">
+                <article class="card" style="--order: 1">
+                  <h3>DevOps score</h3>
+                  <p class="stat" data-field="persona.executive.adoption_score">0%</p>
+                  <p class="muted">Benchmark against best-in-class delivery performance.</p>
+                </article>
+                <article class="card" style="--order: 2">
+                  <h3>Account health</h3>
+                  <div class="health-badge" data-health-badge>Health: Watch</div>
+                  <p class="muted">Based on adoption, engagement, and outcomes.</p>
+                </article>
+                <article class="card" style="--order: 3">
+                  <h3>Primary outcome</h3>
+                  <p class="stat" data-field="outcomes.primary_goal">Automate release workflow for Tier-1 apps</p>
+                  <p class="muted" data-field="outcomes.primary_note">4 of 12 Tier-1 apps deploy via GitLab</p>
+                </article>
+              </div>
+            </div>
+
+            <div class="persona-panel" id="persona-leader" data-persona-panel="leader" role="tabpanel" aria-hidden="true">
+              <div class="summary-grid">
+                <article class="card" style="--order: 1">
+                  <h3>CI coverage</h3>
+                  <p class="stat" data-field="persona.leader.ci_coverage">0%</p>
+                  <p class="muted">Percent of projects running pipelines.</p>
+                </article>
+                <article class="card" style="--order: 2">
+                  <h3>Pipeline success rate</h3>
+                  <p class="stat" data-field="persona.leader.pipeline_success">0%</p>
+                  <p class="muted">Track stability before expanding rollout.</p>
+                </article>
+                <article class="card" style="--order: 3">
+                  <h3>Security coverage</h3>
+                  <p class="stat" data-field="persona.leader.security_coverage">0%</p>
+                  <p class="muted">Projects running at least one scan.</p>
+                </article>
+              </div>
+            </div>
+
+            <div class="persona-panel" id="persona-csm" data-persona-panel="csm" role="tabpanel" aria-hidden="true">
+              <div class="summary-grid">
+                <article class="card" style="--order: 1">
+                  <h3>Health summary</h3>
+                  <div class="health-badge" data-health-badge>Health: Watch</div>
+                  <p class="muted">Drive next-step playbooks based on health factors.</p>
+                </article>
+                <article class="card" style="--order: 2">
+                  <h3>License utilization</h3>
+                  <p class="stat" data-field="persona.csm.license_utilization">0%</p>
+                  <p class="muted">Target 80%+ adoption for expansion readiness.</p>
+                </article>
+                <article class="card" style="--order: 3">
+                  <h3>Success plan progress</h3>
+                  <p class="stat" data-field="persona.csm.success_plan">0 of 0 objectives achieved</p>
+                  <p class="muted">Review outcomes and update playbooks weekly.</p>
+                </article>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section class="section" id="overview">
           <div class="section-head">
             <div>
@@ -221,6 +310,19 @@
               </div>
             </article>
           </div>
+
+          <div class="metric-grid">
+            <article class="card" style="--order: 3">
+              <h3>Time-to-value indicators</h3>
+              <p class="muted">Measure days from contract start to early usage events.</p>
+              <ul class="event-list" data-list="ttv-events"></ul>
+            </article>
+            <article class="card" style="--order: 4">
+              <h3>Onboarding templates</h3>
+              <p class="muted">Reusable assets to align tasks and success plans.</p>
+              <ul class="resource-list" data-list="onboarding-templates"></ul>
+            </article>
+          </div>
         </section>
 
         <section class="section" id="adoption">
@@ -315,6 +417,65 @@
               <p class="muted">Use MAU and MR activity to validate ongoing engagement.</p>
             </article>
           </div>
+
+          <div class="two-column">
+            <article class="card" style="--order: 7">
+              <h3>DevOps adoption map</h3>
+              <p class="stat" data-field="metrics.use_cases_green">0 of 6 use cases green</p>
+              <p class="muted">Target: 3+ use cases green for healthy adoption.</p>
+              <ul class="usecase-list" data-list="devops-usecases"></ul>
+            </article>
+            <article class="card" style="--order: 8">
+              <h3>CI/CD usage milestones</h3>
+              <div class="kpi-grid">
+                <div class="kpi">
+                  <span class="kpi-label">Pipelines per week</span>
+                  <span class="kpi-value" data-field="metrics.pipelines_week">0</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Success rate</span>
+                  <span class="kpi-value" data-field="metrics.pipeline_success_rate_pct">0%</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Avg duration</span>
+                  <span class="kpi-value" data-field="metrics.pipeline_duration">0 min</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Deployments per week</span>
+                  <span class="kpi-value" data-field="metrics.deployments_week">0</span>
+                </div>
+              </div>
+              <ul class="event-list" data-list="cicd-milestones"></ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="health">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Health and maturity</p>
+              <h2>Account health score</h2>
+            </div>
+            <p class="section-lede">
+              Combine adoption, engagement, and outcome signals into a clear health snapshot. Use this view
+              to guide playbooks and executive updates.
+            </p>
+          </div>
+
+          <div class="two-column">
+            <article class="card" style="--order: 1">
+              <h3>Health indicators</h3>
+              <div class="health-badge" data-health-badge>Health: Watch</div>
+              <p class="muted">Review drivers behind the health status.</p>
+              <ul class="health-list" data-list="health-factors"></ul>
+            </article>
+            <article class="card" style="--order: 2">
+              <h3>DevSecOps maturity</h3>
+              <p class="stat" data-field="metrics.use_cases_green">0 of 6 use cases green</p>
+              <p class="muted">Use cases represent Plan, Create, Verify, Secure, Release, and Measure.</p>
+              <ul class="usecase-list" data-list="maturity-map"></ul>
+            </article>
+          </div>
         </section>
 
         <section class="section" id="outcomes">
@@ -351,7 +512,23 @@
             </article>
           </div>
 
-          <div class="card narrative" style="--order: 5">
+          <div class="two-column">
+            <article class="card" style="--order: 5">
+              <h3>Success plan objectives</h3>
+              <p class="muted" data-field="success_plan.summary">0 of 0 objectives achieved</p>
+              <ul class="objective-list" data-list="success-plan"></ul>
+            </article>
+            <article class="card" style="--order: 6">
+              <h3>Outcome tracking</h3>
+              <p class="stat" data-field="outcomes.primary_status">In progress</p>
+              <div class="progress" data-progress="outcome_progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <span class="progress-bar"></span>
+              </div>
+              <p class="muted" data-field="outcomes.primary_note">4 of 12 Tier-1 apps deploy via GitLab</p>
+            </article>
+          </div>
+
+          <div class="card narrative" style="--order: 7">
             <h3>Value narrative</h3>
             <p data-field="outcomes.narrative">
               Lead time reduced from two weeks to one day as CI coverage expanded to 30% of projects. Next
@@ -395,7 +572,22 @@
             </details>
           </div>
 
-          <div class="card faq" style="--order: 6">
+          <div class="summary-grid">
+            <article class="card" style="--order: 5">
+              <h3>Recommended learning</h3>
+              <ul class="resource-list" data-list="learning-recommended"></ul>
+            </article>
+            <article class="card" style="--order: 6">
+              <h3>Webinars and guides</h3>
+              <ul class="resource-list" data-list="learning-webinars"></ul>
+            </article>
+            <article class="card" style="--order: 7">
+              <h3>Templates and playbooks</h3>
+              <ul class="resource-list" data-list="learning-templates"></ul>
+            </article>
+          </div>
+
+          <div class="card faq" style="--order: 8">
             <h3>Support path</h3>
             <p>
               If milestones are off track, escalate to your CSM and Technical Account Manager. Capture blockers
