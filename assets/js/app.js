@@ -1,3 +1,4 @@
+
 const DEFAULT_DATA = {
   meta: {
     last_updated: '2025-10-08'
@@ -10,7 +11,8 @@ const DEFAULT_DATA = {
   },
   licenses: {
     purchased: 500,
-    active: 40
+    active: 40,
+    production: 480
   },
   projects: {
     total: 120,
@@ -25,7 +27,8 @@ const DEFAULT_DATA = {
   usage: {
     monthly_active_users: 34,
     merge_requests_month: 120,
-    issues_month: 260
+    issues_month: 260,
+    billable_users: 320
   },
   events: [
     { name: 'First login', date: '2025-08-28' },
@@ -70,50 +73,155 @@ const DEFAULT_DATA = {
   targets: {
     engage_days: 14,
     onboard_days: 45,
-    first_value_days: 30,
-    license_utilization: { watch: 0.5, good: 0.8 },
-    scm_adoption: { watch: 0.25, good: 0.4 },
-    ci_adoption: { watch: 0.25, good: 0.75 },
-    security_adoption: { watch: 0.1, good: 0.2 },
-    deployment_adoption: { watch: 0.1, good: 0.3 }
+    first_value_days: 30
   },
-  devops_adoption: {
+  use_case_scoring: {
+    platform_adoption_target_green: 3,
     devops_score: 0.35,
-    use_cases_green_target: 3,
+    gainsight_ranges: {
+      red: '0-50',
+      yellow: '51-75',
+      green: '76-100'
+    },
     use_cases: [
-      { name: 'Plan: Issues and boards', status: 'watch', note: '12 teams active' },
-      { name: 'Create: SCM and merge requests', status: 'watch', note: '12 of 30 teams' },
-      { name: 'Verify: CI pipelines', status: 'watch', note: '25% of projects' },
-      { name: 'Secure: SAST and DAST', status: 'risk', note: '6 projects scanning' },
-      { name: 'Release: Deployments', status: 'risk', note: '4 projects deploying' },
-      { name: 'Measure: Value Stream Analytics', status: 'risk', note: 'Not enabled' }
+      {
+        id: 'scm',
+        name: 'Use Case Adoption: Create (SCM)',
+        stage: 'Create',
+        adoption_timeline: '1 month after license purchase',
+        rollup_rule: 'single_metric',
+        summary_metric_index: 0,
+        green_criteria: 'Green when more than 33% of billable users triggered Git operations in the last 28 days.',
+        metrics: [
+          {
+            name: 'Git operation utilization % (L28D)',
+            value: 0.28,
+            format: 'percent',
+            calc: 'Git Operations - Users L28D / Billable Users',
+            threshold_text: 'Red <=10%, Yellow >10% and <=33%, Green >33%',
+            thresholds: { red_max: 0.10, yellow_max: 0.33, green_inclusive: false }
+          }
+        ]
+      },
+      {
+        id: 'ci',
+        name: 'Use Case Adoption: Verify (CI)',
+        stage: 'Verify',
+        adoption_timeline: '1 month after license purchase',
+        rollup_rule: 'single_metric',
+        summary_metric_index: 0,
+        green_criteria: 'Green when CI builds per billable user in the last 28 days is greater than 40.',
+        metrics: [
+          {
+            name: 'CI builds per billable user (L28D)',
+            value: 18,
+            format: 'number',
+            calc: 'CI Builds L28D / Billable Users',
+            threshold_text: 'Red <=2, Yellow >2 and <=40, Green >40',
+            thresholds: { red_max: 2, yellow_max: 40, green_inclusive: false }
+          }
+        ]
+      },
+      {
+        id: 'security',
+        name: 'Use Case Adoption: Secure (DevSecOps)',
+        stage: 'Secure',
+        adoption_timeline: '1 month after license purchase',
+        rollup_rule: 'two_green_one_yellow',
+        summary_metric_index: 0,
+        green_criteria: 'Green when two of three measures are green and the remaining measure is yellow or green.',
+        metrics: [
+          {
+            name: 'Secure scanner utilization %',
+            value: 0.08,
+            format: 'percent',
+            calc: 'Secure Scanners - Users L28D / Billable Users',
+            threshold_text: 'Red <=5%, Yellow >5% and <20%, Green >=20%',
+            thresholds: { red_max: 0.05, yellow_max: 0.20, green_min: 0.20, green_inclusive: true }
+          },
+          {
+            name: 'Average scans per CI pipeline',
+            value: 0.22,
+            format: 'number',
+            calc: 'Total scans / CI internal pipelines L28D',
+            threshold_text: 'Red <0.1, Yellow >=0.1 and <=0.5, Green >0.5',
+            thresholds: { red_max: 0.1, yellow_max: 0.5, green_inclusive: false }
+          },
+          {
+            name: 'Number of scanners in use',
+            value: 2,
+            format: 'number',
+            calc: 'Sum of scanners used (SAST, DAST, dependency, etc)',
+            threshold_text: 'Red <=1, Yellow 2, Green >=3',
+            thresholds: { red_max: 1, yellow_max: 2, green_min: 3, green_inclusive: true }
+          }
+        ]
+      },
+      {
+        id: 'cd',
+        name: 'Use Case Adoption: Release (CD)',
+        stage: 'Release',
+        adoption_timeline: '1 month after license purchase',
+        rollup_rule: 'two_green_one_yellow',
+        summary_metric_index: 1,
+        green_criteria: 'Green when two of three measures are green and the remaining measure is yellow or green.',
+        metrics: [
+          {
+            name: 'User deployments utilization %',
+            value: 0.06,
+            format: 'percent',
+            calc: 'Deployments - Users L28D / Billable Users',
+            threshold_text: 'Red <5%, Yellow 5-12%, Green >12%',
+            thresholds: { red_max: 0.05, yellow_max: 0.12, green_inclusive: false }
+          },
+          {
+            name: 'Deployments per user (L28D)',
+            value: 1.8,
+            format: 'number',
+            calc: 'Deployments L28D / Billable Users',
+            threshold_text: 'Red <2, Yellow 2-7, Green >7',
+            thresholds: { red_max: 2, yellow_max: 7, green_inclusive: false }
+          },
+          {
+            name: 'Successful deployments %',
+            value: 0.82,
+            format: 'percent',
+            calc: 'Successful deploys L28D / (Successful + Failed deploys L28D)',
+            threshold_text: 'Red <25%, Yellow 25-80%, Green >80%',
+            thresholds: { red_max: 0.25, yellow_max: 0.8, green_inclusive: false }
+          }
+        ]
+      }
     ]
   },
   success_plan: {
     objectives: [
       {
         title: 'Automate Tier-1 release workflows',
-        metric: 'Tier-1 deployments via GitLab',
+        success_criteria: '10 of 12 Tier-1 apps deploy via GitLab pipelines with >80% success rate',
         owner: 'DevOps Lead',
         due: '2025-12-15',
+        status: 'in_progress',
         progress: 0.3,
-        status: 'in_progress'
+        evidence: ''
       },
       {
         title: 'Expand CI adoption to 60% of projects',
-        metric: 'CI pipelines enabled',
+        success_criteria: '72 of 120 projects running pipelines',
         owner: 'Platform Engineering',
         due: '2025-11-30',
+        status: 'in_progress',
         progress: 0.5,
-        status: 'in_progress'
+        evidence: ''
       },
       {
         title: 'Enable security scanning for regulated apps',
-        metric: 'SAST + Dependency Scanning',
+        success_criteria: 'SAST + dependency scanning on all regulated projects',
         owner: 'Security',
         due: '2025-11-15',
+        status: 'at_risk',
         progress: 0.15,
-        status: 'at_risk'
+        evidence: ''
       }
     ]
   },
@@ -122,8 +230,8 @@ const DEFAULT_DATA = {
     last_exec_review: '2025-09-30',
     factors: [
       { label: 'License utilization', status: 'risk', detail: '8% active vs 80% target' },
-      { label: 'Stage adoption', status: 'watch', detail: '1 of 6 use cases green' },
-      { label: 'Executive engagement', status: 'watch', detail: 'Last EBR on 2025-09-30' },
+      { label: 'Use case adoption', status: 'watch', detail: '0 of 4 use cases green' },
+      { label: 'Leadership engagement', status: 'watch', detail: 'Last executive review 2025-09-30' },
       { label: 'Support activity', status: 'watch', detail: '5 open high-priority tickets' },
       { label: 'Success plan progress', status: 'watch', detail: '0 objectives completed' }
     ]
@@ -155,12 +263,6 @@ const DEFAULT_DATA = {
         type: 'Course',
         detail: 'Instance management and security baselines',
         link: 'https://learn.gitlab.com/'
-      },
-      {
-        title: 'Secure DevOps workshops',
-        type: 'Workshop',
-        detail: 'Enable SAST, DAST, and dependency scanning',
-        link: 'https://docs.gitlab.com/ee/user/application_security/'
       }
     ],
     webinars: [
@@ -186,7 +288,45 @@ const DEFAULT_DATA = {
       {
         title: 'Success plan template',
         detail: 'Capture outcomes, owners, and KPIs',
-        link: 'https://about.gitlab.com/handbook/customer-success/'
+        link: 'https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/'
+      }
+    ],
+    cadence: [
+      {
+        title: 'Leadership recurring check-ins',
+        detail: 'Quarterly leadership check-ins with goals, adoption metrics, and next steps',
+        link: 'https://handbook.gitlab.com/handbook/customer-success/csm/leadership-recurring-checkin/'
+      },
+      {
+        title: 'Executive Business Review (EBR)',
+        detail: 'Strategic review focused on outcomes, ROI, and roadmap alignment',
+        link: 'https://handbook.gitlab.com/handbook/customer-success/csm/ebr/'
+      }
+    ],
+    playbooks: [
+      {
+        title: 'CI / Verify workshop',
+        detail: 'Half-day enablement with project conversion and pipeline onboarding',
+        link: 'https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/'
+      },
+      {
+        title: 'Customer Success Playbooks catalog',
+        detail: 'Index of playbooks for onboarding, adoption, and expansion',
+        link: 'https://handbook.gitlab.com/handbook/customer-success/playbooks/'
+      }
+    ],
+    collaboration: [
+      {
+        title: 'Customer Collaboration Project',
+        detail: 'Shared project for agenda issues, enablement planning, and transparency',
+        link: 'https://handbook.gitlab.com/handbook/customer-success/csm/customer-collaboration-project/'
+      }
+    ],
+    reporting: [
+      {
+        title: 'Reporting and dashboarding framework',
+        detail: 'Operationalize vs insights and recommendations',
+        link: 'https://handbook.gitlab.com/handbook/customer-success/reporting-and-dashboarding-framework/'
       }
     ]
   }
@@ -244,6 +384,88 @@ const normalizeStatus = (status) => {
 const getValue = (obj, path) =>
   path.split('.').reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj);
 
+const labelForStatus = (status) => {
+  switch (status) {
+    case 'good':
+      return 'On track';
+    case 'risk':
+      return 'At risk';
+    default:
+      return 'Watch';
+  }
+};
+
+const labelForSignal = (status) => {
+  switch (status) {
+    case 'good':
+      return 'Green';
+    case 'risk':
+      return 'Red';
+    default:
+      return 'Yellow';
+  }
+};
+
+const formatMetricValue = (value, format) => {
+  if (value === undefined || value === null || Number.isNaN(value)) return 'n/a';
+  if (format === 'percent') return formatPercent(value);
+  if (format === 'number') return formatDecimal(value, 1);
+  return value.toString();
+};
+
+const buildThresholdText = (metric) => {
+  if (metric.threshold_text) return metric.threshold_text;
+  const thresholds = metric.thresholds || {};
+  const formatValue = (val) => (metric.format === 'percent' ? formatPercent(val) : formatDecimal(val, 1));
+  if (thresholds.red_max !== undefined && thresholds.yellow_max !== undefined) {
+    const red = `Red <=${formatValue(thresholds.red_max)}`;
+    const yellow = `Yellow >${formatValue(thresholds.red_max)} and <=${formatValue(thresholds.yellow_max)}`;
+    const green = `Green >${formatValue(thresholds.yellow_max)}`;
+    return `${red}, ${yellow}, ${green}`;
+  }
+  return '';
+};
+
+const scoreMetric = (metric) => {
+  const value = metric.value;
+  if (value === undefined || value === null || Number.isNaN(value)) return 'watch';
+  const thresholds = metric.thresholds || {};
+  if (thresholds.green_min !== undefined) {
+    if (value >= thresholds.green_min) return 'good';
+  } else if (thresholds.yellow_max !== undefined) {
+    if (value > thresholds.yellow_max) return 'good';
+  }
+  if (thresholds.red_max !== undefined && value <= thresholds.red_max) return 'risk';
+  return 'watch';
+};
+
+const rollupUseCaseStatus = (metricStatuses, rule) => {
+  const greenCount = metricStatuses.filter((status) => status === 'good').length;
+  const riskCount = metricStatuses.filter((status) => status === 'risk').length;
+  if (rule === 'two_green_one_yellow') {
+    if (greenCount >= 2 && riskCount === 0) return 'good';
+    if (riskCount >= 2) return 'risk';
+    return 'watch';
+  }
+  return metricStatuses[0] || 'watch';
+};
+
+const deriveOverallStatus = (factors) => {
+  if (factors.some((factor) => factor.status === 'risk')) return 'risk';
+  if (factors.some((factor) => factor.status === 'watch')) return 'watch';
+  return 'good';
+};
+
+const loadData = async () => {
+  try {
+    const response = await fetch('data/metrics.json', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Failed to load data');
+    return await response.json();
+  } catch (error) {
+    return DEFAULT_DATA;
+  }
+};
+
 const milestoneText = (date, expectedDate, targetDays, startDate, referenceDate) => {
   const parsedDate = parseDate(date);
   const parsedExpected = parseDate(expectedDate);
@@ -276,40 +498,6 @@ const milestoneStatus = (date, targetDays, startDate, referenceDate) => {
     }
   }
   return { status: 'In progress', statusKey: 'in_progress' };
-};
-
-const statusForMetric = (value, thresholds) => {
-  if (!thresholds) return 'watch';
-  if (value >= thresholds.good) return 'good';
-  if (value >= thresholds.watch) return 'watch';
-  return 'risk';
-};
-
-const labelForStatus = (status) => {
-  switch (status) {
-    case 'good':
-      return 'On track';
-    case 'risk':
-      return 'At risk';
-    default:
-      return 'Watch';
-  }
-};
-
-const deriveOverallStatus = (factors) => {
-  if (factors.some((factor) => factor.status === 'risk')) return 'risk';
-  if (factors.some((factor) => factor.status === 'watch')) return 'watch';
-  return 'good';
-};
-
-const loadData = async () => {
-  try {
-    const response = await fetch('data/metrics.json', { cache: 'no-store' });
-    if (!response.ok) throw new Error('Failed to load data');
-    return await response.json();
-  } catch (error) {
-    return DEFAULT_DATA;
-  }
 };
 
 const buildView = (data) => {
@@ -399,13 +587,33 @@ const buildView = (data) => {
 
   const nextMilestone = milestoneOrder.find((item) => !parseDate(data.milestones[item.key].date)) || milestoneOrder[4];
 
-  const devopsUseCases = (data.devops_adoption?.use_cases || []).map((useCase) => ({
-    ...useCase,
-    status: normalizeStatus(useCase.status)
-  }));
-  const useCasesGreen = devopsUseCases.filter((useCase) => useCase.status === 'good').length;
-  const useCasesTotal = devopsUseCases.length;
-  const devopsScore = data.devops_adoption?.devops_score ?? adoptionIndex;
+  const rawUseCases = data.use_case_scoring?.use_cases || [];
+  const useCaseCards = rawUseCases.map((useCase) => {
+    const metrics = (useCase.metrics || []).map((metric) => {
+      const status = scoreMetric(metric);
+      return {
+        ...metric,
+        status,
+        value_display: formatMetricValue(metric.value, metric.format),
+        threshold_display: buildThresholdText(metric)
+      };
+    });
+    const overallStatus = rollupUseCaseStatus(metrics.map((metric) => metric.status), useCase.rollup_rule);
+    const summaryMetricIndex = useCase.summary_metric_index ?? 0;
+    const summaryMetric = metrics[summaryMetricIndex];
+    const summaryNote = summaryMetric ? `${summaryMetric.name}: ${summaryMetric.value_display}` : useCase.summary_note || '';
+    return {
+      ...useCase,
+      metrics,
+      overall_status: overallStatus,
+      summary_note: summaryNote
+    };
+  });
+
+  const greenUseCases = useCaseCards.filter((useCase) => useCase.overall_status === 'good').length;
+  const platformTarget = data.use_case_scoring?.platform_adoption_target_green ?? 3;
+  const devopsScore = data.use_case_scoring?.devops_score ?? adoptionIndex;
+  const gainsightRanges = data.use_case_scoring?.gainsight_ranges || { red: '0-50', yellow: '51-75', green: '76-100' };
 
   const successObjectives = data.success_plan?.objectives || [];
   const normalizedObjectives = successObjectives.map((objective) => ({
@@ -413,7 +621,6 @@ const buildView = (data) => {
     status: normalizeStatus(objective.status)
   }));
   const objectivesComplete = normalizedObjectives.filter((objective) => objective.status === 'good').length;
-  const objectivesOnTrack = normalizedObjectives.filter((objective) => objective.status !== 'risk').length;
   const objectivesProgress =
     normalizedObjectives.length > 0
       ? normalizedObjectives.reduce((sum, objective) => sum + (objective.progress || 0), 0) / normalizedObjectives.length
@@ -475,15 +682,17 @@ const buildView = (data) => {
       license_utilization_pct: formatPercent(licenseUtil),
       adoption_index_pct: formatPercent(adoptionIndex),
       first_value_status: `${formatPercent(licenseUtil)} license activation (target 10%)`,
-      ci_adoption_pct: formatPercent(ciAdoption),
-      security_adoption_pct: formatPercent(securityAdoption),
-      deployment_adoption_pct: formatPercent(deploymentAdoption),
       pipeline_success_rate_pct: formatPercent(cicd.pipeline_success_rate || 0),
       pipelines_week: numberFormat.format(cicd.pipelines_week || 0),
       deployments_week: numberFormat.format(cicd.deployments_week || 0),
       pipeline_duration: `${formatDecimal(cicd.pipeline_duration_minutes || 0, 0)} min`,
       devops_score_pct: formatPercent(devopsScore),
-      use_cases_green: `${useCasesGreen} of ${useCasesTotal} use cases green`
+      use_cases_green: `${greenUseCases} of ${useCaseCards.length} use cases green`,
+      platform_adoption_score: `${greenUseCases} of ${useCaseCards.length} use cases green`,
+      platform_adoption_target: `${platformTarget}+ green use cases`,
+      gainsight_red_range: gainsightRanges.red,
+      gainsight_yellow_range: gainsightRanges.yellow,
+      gainsight_green_range: gainsightRanges.green
     },
     milestones: {
       ...milestones,
@@ -500,8 +709,7 @@ const buildView = (data) => {
     },
     outcomes,
     success_plan: {
-      summary: `${objectivesComplete} of ${normalizedObjectives.length} objectives achieved`,
-      on_track: `${objectivesOnTrack} of ${normalizedObjectives.length} objectives on track`
+      summary: `${objectivesComplete} of ${normalizedObjectives.length} objectives achieved`
     },
     health: {
       overall_status: healthStatus,
@@ -536,14 +744,6 @@ const buildView = (data) => {
       first_value_progress: firstValueProgress,
       outcome_progress: outcomes.primary_progress || 0
     },
-    statusMap: {
-      license_utilization: statusForMetric(licenseUtil, data.targets.license_utilization),
-      scm_adoption: statusForMetric(scmAdoption, data.targets.scm_adoption),
-      ci_adoption: statusForMetric(ciAdoption, data.targets.ci_adoption),
-      security_adoption: statusForMetric(securityAdoption, data.targets.security_adoption),
-      deployment_adoption: statusForMetric(deploymentAdoption, data.targets.deployment_adoption),
-      engagement: statusForMetric(engagement, data.targets.license_utilization)
-    },
     additional: {
       onboardingCompletion,
       adoptionIndex,
@@ -551,12 +751,17 @@ const buildView = (data) => {
       licenseUtil
     },
     lists: {
-      devopsUseCases,
-      successObjectives: normalizedObjectives,
+      useCaseCards,
+      useCaseSummaries: useCaseCards.map((useCase) => ({
+        name: useCase.name,
+        status: useCase.overall_status,
+        note: useCase.summary_note
+      })),
       healthFactors,
       events: data.events || [],
       cicdMilestones: cicd.milestones || [],
-      learning: data.learning || {}
+      learning: data.learning || {},
+      successObjectives: normalizedObjectives
     }
   };
 };
@@ -640,25 +845,67 @@ const renderUseCases = (selector, useCases) => {
   });
 };
 
-const renderObjectives = (selector, objectives) => {
-  const list = document.querySelector(selector);
-  if (!list) return;
-  list.innerHTML = '';
-  objectives.forEach((objective) => {
-    const item = document.createElement('li');
-    item.className = 'objective-item';
-    item.innerHTML = `
-      <div class="objective-head">
-        <span class="objective-title">${objective.title}</span>
-        <span class="status-pill" data-status="${objective.status}">${labelForStatus(objective.status)}</span>
+const renderUseCaseCards = (selector, useCases) => {
+  const container = document.querySelector(selector);
+  if (!container) return;
+  container.innerHTML = '';
+  useCases.forEach((useCase, index) => {
+    const card = document.createElement('article');
+    card.className = 'card usecase-card';
+    card.style.setProperty('--order', (index + 2).toString());
+    const statusLabel = labelForSignal(useCase.overall_status);
+    const metricsHtml = useCase.metrics
+      .map(
+        (metric) => `
+        <div class="metric-row">
+          <span class="status-dot" data-status="${metric.status}"></span>
+          <div>
+            <div class="metric-name">${metric.name}</div>
+            <div class="metric-meta">Value: ${metric.value_display}</div>
+            <div class="metric-threshold">${metric.threshold_display}</div>
+            ${metric.calc ? `<div class="metric-calc">${metric.calc}</div>` : ''}
+          </div>
+        </div>
+      `
+      )
+      .join('');
+
+    card.innerHTML = `
+      <div class="metric-head">
+        <div>
+          <h3>${useCase.name}</h3>
+          <p class="muted">${useCase.adoption_timeline || ''}</p>
+        </div>
+        <span class="status-pill" data-status="${useCase.overall_status}">${statusLabel}</span>
       </div>
-      <div class="objective-meta">Owner: ${objective.owner} - Due: ${formatDate(objective.due)}</div>
-      <div class="progress" data-inline-progress style="--value: ${objective.progress || 0}">
-        <span class="progress-bar"></span>
+      <div class="usecase-metrics">
+        ${metricsHtml}
       </div>
-      <div class="objective-note">${objective.metric}</div>
+      <p class="usecase-criteria">${useCase.green_criteria || ''}</p>
     `;
-    list.appendChild(item);
+
+    container.appendChild(card);
+  });
+};
+
+const renderSuccessPlanTable = (selector, objectives) => {
+  const tableBody = document.querySelector(selector);
+  if (!tableBody) return;
+  tableBody.innerHTML = '';
+  objectives.forEach((objective) => {
+    const row = document.createElement('tr');
+    const status = normalizeStatus(objective.status);
+    const statusLabel = labelForStatus(status);
+    const evidence = objective.evidence ? `<a href="${objective.evidence}">Evidence</a>` : 'Add link';
+    row.innerHTML = `
+      <td>${objective.title}</td>
+      <td>${objective.success_criteria}</td>
+      <td>${objective.owner}</td>
+      <td>${formatDate(objective.due)}</td>
+      <td><span class="status-pill" data-status="${status}">${statusLabel}</span></td>
+      <td>${evidence}</td>
+    `;
+    tableBody.appendChild(row);
   });
 };
 
@@ -740,30 +987,6 @@ const updateChips = (view) => {
     adoption: {
       status: adoptionStatus,
       label: `Adoption health ${labelForStatus(adoptionStatus).toLowerCase()}`
-    },
-    license_utilization: {
-      status: view.statusMap.license_utilization,
-      label: labelForStatus(view.statusMap.license_utilization)
-    },
-    scm_adoption: {
-      status: view.statusMap.scm_adoption,
-      label: labelForStatus(view.statusMap.scm_adoption)
-    },
-    ci_adoption: {
-      status: view.statusMap.ci_adoption,
-      label: labelForStatus(view.statusMap.ci_adoption)
-    },
-    security_adoption: {
-      status: view.statusMap.security_adoption,
-      label: labelForStatus(view.statusMap.security_adoption)
-    },
-    deployment_adoption: {
-      status: view.statusMap.deployment_adoption,
-      label: labelForStatus(view.statusMap.deployment_adoption)
-    },
-    engagement: {
-      status: view.statusMap.engagement,
-      label: labelForStatus(view.statusMap.engagement)
     }
   };
 
@@ -830,13 +1053,19 @@ const init = async () => {
   renderTasks(data.onboarding.tasks);
   renderEventList('[data-list="ttv-events"]', view.lists.events, parseDate(data.customer.start_date));
   renderMilestoneList('[data-list="cicd-milestones"]', view.lists.cicdMilestones);
-  renderUseCases('[data-list="devops-usecases"]', view.lists.devopsUseCases);
-  renderUseCases('[data-list="maturity-map"]', view.lists.devopsUseCases);
-  renderObjectives('[data-list="success-plan"]', view.lists.successObjectives);
+  renderUseCases('[data-list="devops-usecases"]', view.lists.useCaseSummaries);
+  renderUseCases('[data-list="maturity-map"]', view.lists.useCaseSummaries);
+  renderUseCaseCards('[data-usecase-cards]', view.lists.useCaseCards);
+  renderSuccessPlanTable('[data-list="success-plan-table"]', view.lists.successObjectives);
   renderHealthFactors('[data-list="health-factors"]', view.lists.healthFactors);
+
   renderResourceList('[data-list="learning-recommended"]', view.lists.learning.recommended || []);
   renderResourceList('[data-list="learning-webinars"]', view.lists.learning.webinars || []);
   renderResourceList('[data-list="learning-templates"]', view.lists.learning.templates || []);
+  renderResourceList('[data-list="learning-cadence"]', view.lists.learning.cadence || []);
+  renderResourceList('[data-list="learning-playbooks"]', view.lists.learning.playbooks || []);
+  renderResourceList('[data-list="learning-collaboration"]', view.lists.learning.collaboration || []);
+  renderResourceList('[data-list="learning-reporting"]', view.lists.learning.reporting || []);
   renderResourceList('[data-list="onboarding-templates"]', view.lists.learning.templates || []);
 
   updateBindings(view);
