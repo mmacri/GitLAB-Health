@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Static customer success dashboard for GitLab enterprise onboarding and adoption." />
+    <title>GitLab Enterprise Customer Success Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero" id="top">
+        <nav class="nav">
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true"></div>
+            <div class="brand-text">
+              <span class="brand-title">GitLab Enterprise Success</span>
+              <span class="brand-sub">Customer Success Dashboard</span>
+            </div>
+          </div>
+          <div class="nav-links" aria-label="Primary">
+            <a href="#overview">Overview</a>
+            <a href="#onboarding">Onboarding</a>
+            <a href="#adoption">Adoption</a>
+            <a href="#outcomes">Outcomes</a>
+            <a href="#resources">Guides</a>
+          </div>
+        </nav>
+
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">Enterprise onboarding and value realization</p>
+            <h1>Track milestones, adoption, and outcomes in one place.</h1>
+            <p class="hero-lede">
+              A static, GitHub Pages-ready dashboard built for enterprise customer success teams. Use it to
+              align stakeholders, highlight progress, and accelerate time-to-value with GitLab.
+            </p>
+            <div class="hero-meta">
+              <div class="meta-card">
+                <span class="meta-label">Customer</span>
+                <span class="meta-value" data-field="customer.name">Northwind Industries</span>
+              </div>
+              <div class="meta-card">
+                <span class="meta-label">Subscription start</span>
+                <span class="meta-value" data-field="dates.start">Aug 27, 2025</span>
+              </div>
+              <div class="meta-card">
+                <span class="meta-label">Last updated</span>
+                <span class="meta-value" data-field="dates.updated">Jan 20, 2026</span>
+              </div>
+            </div>
+            <div class="hero-tags">
+              <span class="chip" data-chip="onboarding">Onboarding 80%</span>
+              <span class="chip" data-chip="first_value">First value pending</span>
+              <span class="chip" data-chip="adoption">Adoption health watch</span>
+            </div>
+          </div>
+
+          <div class="hero-panel">
+            <div class="card ring-card" style="--order: 1">
+              <div class="ring" data-ring="license_utilization" role="img" aria-label="License utilization">
+                <div class="ring-inner">
+                  <span class="ring-value" data-field="metrics.license_utilization_pct">0%</span>
+                  <span class="ring-label">License utilization</span>
+                </div>
+              </div>
+              <div class="ring-meta">
+                <div>
+                  <div class="ring-stat" data-field="licenses.active">0</div>
+                  <div class="ring-caption">Active seats</div>
+                </div>
+                <div>
+                  <div class="ring-stat" data-field="licenses.purchased">0</div>
+                  <div class="ring-caption">Purchased seats</div>
+                </div>
+              </div>
+            </div>
+            <div class="card highlight-card" style="--order: 2">
+              <h2>Next milestone</h2>
+              <p class="highlight-title" data-field="milestones.next.title">First value activation</p>
+              <p class="highlight-detail" data-field="milestones.next.detail">Target Day 30. Currently Day 28.</p>
+              <div class="progress" data-progress="first_value_progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <span class="progress-bar"></span>
+              </div>
+              <p class="highlight-foot">Align enablement and platform tasks to unblock the next milestone.</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="section" id="overview">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Journey overview</p>
+              <h2>Milestone timeline</h2>
+            </div>
+            <p class="section-lede">
+              Track progress from first engagement through outcome delivery. Each milestone shows actual
+              completion dates and whether timelines are on target.
+            </p>
+          </div>
+
+          <div class="timeline" id="milestone-timeline">
+            <article class="timeline-step" data-milestone="engagement">
+              <span class="step-index">01</span>
+              <div class="step-content">
+                <h3>Engagement</h3>
+                <p class="step-status" data-field="milestones.engagement.status">Complete</p>
+                <p class="step-detail" data-field="milestones.engagement.detail">Day 5 | Sep 1, 2025</p>
+              </div>
+            </article>
+            <article class="timeline-step" data-milestone="infra_ready">
+              <span class="step-index">02</span>
+              <div class="step-content">
+                <h3>Infrastructure ready</h3>
+                <p class="step-status" data-field="milestones.infra_ready.status">Complete</p>
+                <p class="step-detail" data-field="milestones.infra_ready.detail">Day 19 | Sep 15, 2025</p>
+              </div>
+            </article>
+            <article class="timeline-step" data-milestone="onboarding_complete">
+              <span class="step-index">03</span>
+              <div class="step-content">
+                <h3>Onboarding complete</h3>
+                <p class="step-status" data-field="milestones.onboarding_complete.status">Complete</p>
+                <p class="step-detail" data-field="milestones.onboarding_complete.detail">Day 44 | Oct 10, 2025</p>
+              </div>
+            </article>
+            <article class="timeline-step" data-milestone="first_value">
+              <span class="step-index">04</span>
+              <div class="step-content">
+                <h3>First value</h3>
+                <p class="step-status" data-field="milestones.first_value.status">In progress</p>
+                <p class="step-detail" data-field="milestones.first_value.detail">Target Day 30 | Expected Oct 15, 2025</p>
+              </div>
+            </article>
+            <article class="timeline-step" data-milestone="outcome">
+              <span class="step-index">05</span>
+              <div class="step-content">
+                <h3>Outcome achieved</h3>
+                <p class="step-status" data-field="milestones.outcome.status">In progress</p>
+                <p class="step-detail" data-field="milestones.outcome.detail">Primary use case delivery in progress</p>
+              </div>
+            </article>
+          </div>
+
+          <div class="summary-grid">
+            <article class="card" style="--order: 1">
+              <h3>Onboarding completion</h3>
+              <div class="progress" data-progress="onboarding_completion" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <span class="progress-bar"></span>
+              </div>
+              <p class="stat" data-field="onboarding.summary">8 of 10 tasks complete</p>
+              <p class="muted">Target: 45 days to complete onboarding tasks.</p>
+            </article>
+            <article class="card" style="--order: 2">
+              <h3>Adoption index</h3>
+              <div class="progress" data-progress="adoption_index" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <span class="progress-bar"></span>
+              </div>
+              <p class="stat" data-field="metrics.adoption_index_pct">0%</p>
+              <p class="muted">Blended view across SCM, CI/CD, Security, and Deployment adoption.</p>
+            </article>
+            <article class="card" style="--order: 3">
+              <h3>Time to first value</h3>
+              <div class="progress" data-progress="first_value_progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <span class="progress-bar"></span>
+              </div>
+              <p class="stat" data-field="metrics.first_value_status">10% license activation target</p>
+              <p class="muted">Focus on activating users and running initial production pipelines.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="onboarding">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Onboarding detail</p>
+              <h2>Execution checklist</h2>
+            </div>
+            <p class="section-lede">
+              Use this checklist to align platform readiness, enablement, and early adoption. Update task
+              statuses as each milestone component is completed.
+            </p>
+          </div>
+
+          <div class="two-column">
+            <article class="card" style="--order: 1">
+              <h3>Onboarding tasks</h3>
+              <ul class="task-list" data-list="onboarding-tasks"></ul>
+            </article>
+            <article class="card" style="--order: 2">
+              <h3>Onboarding signals</h3>
+              <div class="signal-grid">
+                <div class="signal">
+                  <span class="signal-label">Time to engage</span>
+                  <span class="signal-value" data-field="signals.time_to_engage">5 days</span>
+                  <span class="signal-note">Goal: 14 days</span>
+                </div>
+                <div class="signal">
+                  <span class="signal-label">Time to onboard</span>
+                  <span class="signal-value" data-field="signals.time_to_onboard">44 days</span>
+                  <span class="signal-note">Goal: 45 days</span>
+                </div>
+                <div class="signal">
+                  <span class="signal-label">Infrastructure ready</span>
+                  <span class="signal-value" data-field="signals.infra_ready">Day 19</span>
+                  <span class="signal-note">Self-managed + SSO enabled</span>
+                </div>
+                <div class="signal">
+                  <span class="signal-label">First value</span>
+                  <span class="signal-value" data-field="signals.first_value">8% licenses active</span>
+                  <span class="signal-note">Target: 10% activation</span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="adoption">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Adoption metrics</p>
+              <h2>Feature adoption scorecard</h2>
+            </div>
+            <p class="section-lede">
+              Monitor usage across core GitLab stages. Each card includes progress against adoption
+              thresholds and guidance for scaling.
+            </p>
+          </div>
+
+          <div class="metric-grid">
+            <article class="card metric-card" data-metric="license_utilization" style="--order: 1">
+              <div class="metric-head">
+                <h3>License utilization</h3>
+                <span class="chip" data-chip="license_utilization">Watch</span>
+              </div>
+              <div class="progress" data-progress="license_utilization" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <span class="progress-bar"></span>
+                <span class="progress-marker" style="--marker: 0.1"></span>
+                <span class="progress-marker" style="--marker: 0.5"></span>
+                <span class="progress-marker" style="--marker: 0.8"></span>
+              </div>
+              <p class="stat"><span data-field="licenses.active">0</span> of <span data-field="licenses.purchased">0</span> seats active</p>
+              <p class="muted">10% activation signals first value. Aim for 80%+ for enterprise scale.</p>
+            </article>
+
+            <article class="card metric-card" data-metric="scm_adoption" style="--order: 2">
+              <div class="metric-head">
+                <h3>SCM adoption</h3>
+                <span class="chip" data-chip="scm_adoption">Watch</span>
+              </div>
+              <div class="progress" data-progress="scm_adoption" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <span class="progress-bar"></span>
+                <span class="progress-marker" style="--marker: 0.4"></span>
+              </div>
+              <p class="stat"><span data-field="teams.scm_adopted">0</span> of <span data-field="teams.total">0</span> teams using GitLab SCM</p>
+              <p class="muted">Adopted when more than 40% of teams use GitLab for code review.</p>
+            </article>
+
+            <article class="card metric-card" data-metric="ci_adoption" style="--order: 3">
+              <div class="metric-head">
+                <h3>CI/CD adoption</h3>
+                <span class="chip" data-chip="ci_adoption">Watch</span>
+              </div>
+              <div class="progress" data-progress="ci_adoption" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <span class="progress-bar"></span>
+                <span class="progress-marker" style="--marker: 0.25"></span>
+                <span class="progress-marker" style="--marker: 0.75"></span>
+              </div>
+              <p class="stat"><span data-field="projects.ci_enabled">0</span> of <span data-field="projects.total">0</span> projects running pipelines</p>
+              <p class="muted">Target 25% for adoption, 75% for broad enterprise coverage.</p>
+            </article>
+
+            <article class="card metric-card" data-metric="security_adoption" style="--order: 4">
+              <div class="metric-head">
+                <h3>Security adoption</h3>
+                <span class="chip" data-chip="security_adoption">Watch</span>
+              </div>
+              <div class="progress" data-progress="security_adoption" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <span class="progress-bar"></span>
+                <span class="progress-marker" style="--marker: 0.2"></span>
+              </div>
+              <p class="stat"><span data-field="projects.security_scans">0</span> projects running scans</p>
+              <p class="muted">Enable SAST, DAST, and dependency scanning in pipelines for Secure adoption.</p>
+            </article>
+
+            <article class="card metric-card" data-metric="deployment_adoption" style="--order: 5">
+              <div class="metric-head">
+                <h3>Deployment adoption</h3>
+                <span class="chip" data-chip="deployment_adoption">Watch</span>
+              </div>
+              <div class="progress" data-progress="deployment_adoption" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <span class="progress-bar"></span>
+              </div>
+              <p class="stat"><span data-field="projects.deploying">0</span> projects deploying via GitLab</p>
+              <p class="muted">Track first production deployment and expand to multiple teams.</p>
+            </article>
+
+            <article class="card metric-card" data-metric="engagement" style="--order: 6">
+              <div class="metric-head">
+                <h3>User engagement</h3>
+                <span class="chip" data-chip="engagement">Watch</span>
+              </div>
+              <div class="progress" data-progress="engagement" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <span class="progress-bar"></span>
+              </div>
+              <p class="stat"><span data-field="usage.monthly_active_users">0</span> monthly active users</p>
+              <p class="muted">Use MAU and MR activity to validate ongoing engagement.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="outcomes">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Outcomes and value</p>
+              <h2>DORA performance snapshot</h2>
+            </div>
+            <p class="section-lede">
+              Connect adoption to value by tracking delivery speed and reliability metrics.
+            </p>
+          </div>
+
+          <div class="dora-grid">
+            <article class="card dora-card" style="--order: 1">
+              <h3>Deployment frequency</h3>
+              <p class="dora-value" data-field="dora.deploy_freq">0 / day</p>
+              <p class="muted">Delivery cadence across production services.</p>
+            </article>
+            <article class="card dora-card" style="--order: 2">
+              <h3>Lead time</h3>
+              <p class="dora-value" data-field="dora.lead_time">0 days</p>
+              <p class="muted">Commit to production lead time.</p>
+            </article>
+            <article class="card dora-card" style="--order: 3">
+              <h3>Change failure rate</h3>
+              <p class="dora-value" data-field="dora.change_failure">0%</p>
+              <p class="muted">Percent of changes causing incidents.</p>
+            </article>
+            <article class="card dora-card" style="--order: 4">
+              <h3>MTTR</h3>
+              <p class="dora-value" data-field="dora.mttr">0 hours</p>
+              <p class="muted">Time to restore service after failure.</p>
+            </article>
+          </div>
+
+          <div class="card narrative" style="--order: 5">
+            <h3>Value narrative</h3>
+            <p data-field="outcomes.narrative">
+              Lead time reduced from two weeks to one day as CI coverage expanded to 30% of projects. Next
+              focus: secure scanning and deployment automation to improve MTTR.
+            </p>
+          </div>
+        </section>
+
+        <section class="section" id="resources">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Guided enablement</p>
+              <h2>Onboarding tutorials and playbooks</h2>
+            </div>
+            <p class="section-lede">
+              These resources accelerate time-to-value. Link them to your internal enablement programs or
+              GitLab documentation.
+            </p>
+          </div>
+
+          <div class="resource-grid">
+            <details class="card resource" open>
+              <summary>Onboarding quick start</summary>
+              <p>Use the GitLab onboarding checklist to align stakeholders, validate access, and set the success plan.</p>
+              <a href="https://docs.gitlab.com/ee/">GitLab docs overview</a>
+            </details>
+            <details class="card resource">
+              <summary>CI/CD onboarding guide</summary>
+              <p>Enable pipelines, shared runners, and merge request pipelines for consistent automation.</p>
+              <a href="https://docs.gitlab.com/ee/ci/">GitLab CI/CD documentation</a>
+            </details>
+            <details class="card resource">
+              <summary>DevSecOps enablement</summary>
+              <p>Configure SAST, DAST, and dependency scans to reach Secure stage adoption.</p>
+              <a href="https://docs.gitlab.com/ee/user/application_security/">GitLab security scanners</a>
+            </details>
+            <details class="card resource">
+              <summary>Value Stream Analytics</summary>
+              <p>Use VSA and DevOps Adoption dashboards to track DORA metrics and feature adoption.</p>
+              <a href="https://docs.gitlab.com/ee/user/analytics/">Analytics and VSA docs</a>
+            </details>
+          </div>
+
+          <div class="card faq" style="--order: 6">
+            <h3>Support path</h3>
+            <p>
+              If milestones are off track, escalate to your CSM and Technical Account Manager. Capture blockers
+              in the success plan and prioritize enablement workshops.
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <div>
+          <p class="muted">Static dashboard for GitLab enterprise customer success. Update data in <code>data/metrics.json</code>.</p>
+        </div>
+      </footer>
+    </div>
+
+    <script src="assets/js/app.js"></script>
+  </body>
+</html>

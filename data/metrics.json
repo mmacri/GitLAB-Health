@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "last_updated": "2025-10-08"
+  },
+  "customer": {
+    "name": "Northwind Industries",
+    "plan": "Ultimate",
+    "csm": "Jordan Lee",
+    "start_date": "2025-08-27"
+  },
+  "licenses": {
+    "purchased": 500,
+    "active": 40
+  },
+  "projects": {
+    "total": 120,
+    "ci_enabled": 30,
+    "deploying": 4,
+    "security_scans": 6
+  },
+  "teams": {
+    "total": 30,
+    "scm_adopted": 12
+  },
+  "usage": {
+    "monthly_active_users": 34,
+    "merge_requests_month": 120,
+    "issues_month": 260
+  },
+  "onboarding": {
+    "tasks": [
+      { "name": "Kickoff and stakeholder alignment", "done": true, "date": "2025-08-29" },
+      { "name": "GitLab instance deployed", "done": true, "date": "2025-09-10" },
+      { "name": "SSO configured", "done": true, "date": "2025-09-12" },
+      { "name": "Pilot teams onboarded", "done": true, "date": "2025-09-20" },
+      { "name": "Repository migration", "done": true, "date": "2025-09-25" },
+      { "name": "CI runners configured", "done": true, "date": "2025-09-28" },
+      { "name": "First pipelines running", "done": true, "date": "2025-10-02" },
+      { "name": "Security baseline defined", "done": true, "date": "2025-10-05" },
+      { "name": "Training sessions complete", "done": false, "date": "" },
+      { "name": "Success plan validated", "done": false, "date": "" }
+    ]
+  },
+  "milestones": {
+    "engagement": { "date": "2025-09-01" },
+    "infra_ready": { "date": "2025-09-15" },
+    "onboarding_complete": { "date": "" },
+    "first_value": { "date": "", "expected_date": "2025-10-15" },
+    "outcome": { "date": "", "expected_date": "2025-12-15" }
+  },
+  "targets": {
+    "engage_days": 14,
+    "onboard_days": 45,
+    "first_value_days": 30,
+    "license_utilization": { "watch": 0.5, "good": 0.8 },
+    "scm_adoption": { "watch": 0.25, "good": 0.4 },
+    "ci_adoption": { "watch": 0.25, "good": 0.75 },
+    "security_adoption": { "watch": 0.1, "good": 0.2 },
+    "deployment_adoption": { "watch": 0.1, "good": 0.3 }
+  },
+  "dora": {
+    "deploy_freq_per_day": 0.2,
+    "lead_time_days": 7,
+    "change_failure_pct": 12,
+    "mttr_hours": 12
+  },
+  "outcomes": {
+    "narrative": "CI coverage reached 25% of projects. Next focus is enabling security scans and expanding deployment automation to improve lead time and MTTR."
+  }
+}
