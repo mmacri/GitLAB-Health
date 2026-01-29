@@ -193,6 +193,7 @@ const DEFAULT_DATA = {
         "adoption_timeline": "1 month after license purchase",
         "rollup_rule": "single_metric",
         "summary_metric_index": 0,
+        "score": 62,
         "green_criteria": "Green when more than 33% of billable users triggered Git operations in the last 28 days.",
         "metrics": [
           {
@@ -216,6 +217,7 @@ const DEFAULT_DATA = {
         "adoption_timeline": "1 month after license purchase",
         "rollup_rule": "single_metric",
         "summary_metric_index": 0,
+        "score": 60,
         "green_criteria": "Green when CI builds per billable user in the last 28 days is greater than 40.",
         "metrics": [
           {
@@ -239,6 +241,7 @@ const DEFAULT_DATA = {
         "adoption_timeline": "1 month after license purchase",
         "rollup_rule": "two_green_one_yellow",
         "summary_metric_index": 0,
+        "score": 58,
         "green_criteria": "Green when two of three measures are green and the remaining measure is yellow or green.",
         "metrics": [
           {
@@ -288,6 +291,7 @@ const DEFAULT_DATA = {
         "adoption_timeline": "1 month after license purchase",
         "rollup_rule": "two_green_one_yellow",
         "summary_metric_index": 1,
+        "score": 55,
         "green_criteria": "Green when two of three measures are green and the remaining measure is yellow or green.",
         "metrics": [
           {
@@ -380,6 +384,7 @@ const DEFAULT_DATA = {
   },
   "health": {
     "overall_status": "watch",
+    "score": 68,
     "last_exec_review": "2025-09-30",
     "factors": [
       {
@@ -408,6 +413,13 @@ const DEFAULT_DATA = {
         "detail": "0 objectives completed"
       }
     ]
+  },
+  "engagement": {
+    "last_exec_meeting": "2025-09-30",
+    "cadence_attendance_pct": 0.68,
+    "workshop_participation_pct": 0.52,
+    "collaboration_activity": "Active - 12 open issues",
+    "last_usage_review": "2025-10-03"
   },
   "dora": {
     "deploy_freq_per_day": 0.2,
@@ -630,7 +642,206 @@ const DEFAULT_DATA = {
         "link": "#resources"
       }
     ]
+  },
+  "action_center": {
+    "critical": [
+      {
+        "title": "Enable first production pipeline",
+        "detail": "Due in 7 days - unblock first value milestone",
+        "link": "#onboarding"
+      }
+    ],
+    "important": [
+      {
+        "title": "Schedule CI/Verify workshop",
+        "detail": "Due in 30 days - accelerate CI adoption",
+        "link": "#playbooks"
+      },
+      {
+        "title": "Configure security scanning baseline",
+        "detail": "Due in 30 days - begin Secure adoption",
+        "link": "#adoption"
+      }
+    ],
+    "recommended": [
+      {
+        "title": "Review DevOps maturity map",
+        "detail": "Align on next use case to bring to green",
+        "link": "#adoption"
+      }
+    ]
+  },
+  "success_plan_development": [
+    {
+      "title": "Discovery question library",
+      "detail": "Open-ended and metrics-based prompts for success plan discovery",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/questions-techniques/"
+    },
+    {
+      "title": "Continuous planning workflow",
+      "detail": "Use collaboration project data to keep success plans current",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/continuous-planning/"
+    },
+    {
+      "title": "Success criteria examples",
+      "detail": "Baseline metrics and success criteria examples",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/"
+    }
+  ],
+  "health_methodology": [
+    {
+      "title": "Customer health scoring overview",
+      "detail": "Purpose, lifecycle usage, and scoring framework",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"
+    },
+    {
+      "title": "Health assessment & triage",
+      "detail": "Yellow/Red indicators and management guidance",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"
+    },
+    {
+      "title": "Use case adoption scoring methodology",
+      "detail": "How lighthouse metrics and thresholds are defined",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"
+    },
+    {
+      "title": "Platform adoption scoring",
+      "detail": "Platform adoption score definition and usage",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/"
+    }
+  ],
+  "risk_mitigation": [
+    {
+      "title": "Risk mitigation strategies",
+      "detail": "Playbooks for reducing risk and driving adoption",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/risk-mitigation/"
+    },
+    {
+      "title": "Non-engaged customer strategies",
+      "detail": "Playbook steps for re-engagement",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/engagement/non-engaged-customer-strategies/"
+    },
+    {
+      "title": "Customer success escalations",
+      "detail": "Account escalation process and severity definitions",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/escalations/"
+    }
+  ],
+  "onboarding_best_practices": [
+    {
+      "title": "Customer onboarding guide",
+      "detail": "Onboarding steps and time-to-value KPIs",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/"
+    },
+    {
+      "title": "Onboarding best practices deck",
+      "detail": "Foundational technical onboarding focus areas",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/customer-onboarding-best-practices/"
+    },
+    {
+      "title": "Deployment types",
+      "detail": "Self-managed vs SaaS deployment definitions",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/gainsight/deployment-types/"
+    }
+  ],
+  "adoption_landing_zones": [
+    {
+      "title": "Adoption landing zones index",
+      "detail": "Collection of adoption enablement resources",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/adoption-landing-zones/"
+    },
+    {
+      "title": "CI adoption landing zone",
+      "detail": "CI enablement resources and migration guidance",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/adoption-landing-zones/ci/"
+    },
+    {
+      "title": "DevSecOps adoption landing zone",
+      "detail": "Security adoption resources",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/adoption-landing-zones/devsecops/"
+    },
+    {
+      "title": "AI/ML adoption landing zone",
+      "detail": "AI/ML enablement resources",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/adoption-landing-zones/ai-ml/"
+    }
+  ],
+  "playbooks_library": [
+    {
+      "title": "CI / Verify workshop",
+      "detail": "Enablement workshop for CI adoption",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"
+    },
+    {
+      "title": "CD / Release playbook",
+      "detail": "Adoption guidance for Release stage",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/"
+    },
+    {
+      "title": "Secure workshop",
+      "detail": "Enablement workshop for Secure stage",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/workshops/secure/"
+    },
+    {
+      "title": "Playbooks catalog",
+      "detail": "Customer Success playbooks index",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/"
+    }
+  ],
+  "workshops_library": [
+    {
+      "title": "Customer workshops index",
+      "detail": "Overview of CS workshops",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/workshops/"
+    }
+  ],
+  "executive_resources": [
+    {
+      "title": "Executive business reviews (EBR)",
+      "detail": "Strategic review framework and preparation steps",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/ebr/"
+    },
+    {
+      "title": "CSM QBRs",
+      "detail": "Quarterly review cadence and process",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/qbr/"
+    },
+    {
+      "title": "Executive relationships",
+      "detail": "Guidance on building executive partnerships",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/executive-relationships/"
+    }
+  ],
+  "renewal_resources": [
+    {
+      "title": "Customer renewal tracking",
+      "detail": "Renewal timeline and CTA guidance",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/renewals/"
+    }
+  ],
+  "dora_resources": [
+    {
+      "title": "DORA metrics in GitLab",
+      "detail": "How DORA metrics are measured and displayed",
+      "link": "https://docs.gitlab.com/user/analytics/dora_metrics/"
+    },
+    {
+      "title": "DORA metrics API",
+      "detail": "Retrieve DORA metrics via REST API",
+      "link": "https://docs.gitlab.com/api/dora/metrics/"
+    },
+    {
+      "title": "Jira to GitLab DORA integration",
+      "detail": "Incident replication for DORA metrics",
+      "link": "https://docs.gitlab.com/solutions/components/jira_dora/"
+    }
+  ],
+  "health_scoring": {
+    "red": "0-49",
+    "yellow": "50-74",
+    "green": "75-100"
   }
+}
 };
 
 const numberFormat = new Intl.NumberFormat('en-US');
@@ -757,6 +968,70 @@ const scoreMetric = (metric) => {
   }
   if (thresholds.red_max !== undefined && value <= thresholds.red_max) return 'risk';
   return 'watch';
+};
+
+const scoreBand = (score) => {
+  if (score === undefined || score === null || Number.isNaN(score)) {
+    return { label: 'Not scored', status: 'watch' };
+  }
+  if (score <= 50) return { label: 'Red', status: 'risk' };
+  if (score <= 75) return { label: 'Yellow', status: 'watch' };
+  return { label: 'Green', status: 'good' };
+};
+
+const parseRangeMax = (range) => {
+  if (!range || typeof range !== 'string') return null;
+  const match = range.match(/(\d+)\s*-\s*(\d+)/);
+  return match ? Number(match[2]) : null;
+};
+
+const scoreBandForHealth = (score, ranges = {}) => {
+  if (score === undefined || score === null || Number.isNaN(score)) {
+    return { label: 'Not scored', status: 'watch' };
+  }
+  const redMax = parseRangeMax(ranges.red) ?? 49;
+  const yellowMax = parseRangeMax(ranges.yellow) ?? 74;
+  if (score <= redMax) return { label: 'Red', status: 'risk' };
+  if (score <= yellowMax) return { label: 'Yellow', status: 'watch' };
+  return { label: 'Green', status: 'good' };
+};
+
+const scoreMetricValue = (metric) => {
+  const value = metric.value;
+  if (value === undefined || value === null || Number.isNaN(value)) return null;
+  const thresholds = metric.thresholds || {};
+  const status = scoreMetric(metric);
+  const redMax = typeof thresholds.red_max === 'number' ? thresholds.red_max : null;
+  const yellowMax = typeof thresholds.yellow_max === 'number' ? thresholds.yellow_max : null;
+  const greenMin = typeof thresholds.green_min === 'number' ? thresholds.green_min : null;
+  const clampScore = (score, min, max) => Math.max(min, Math.min(max, score));
+
+  if (status === 'risk') {
+    if (redMax && redMax > 0) {
+      return Math.round(clampScore((value / redMax) * 50, 0, 50));
+    }
+    return 25;
+  }
+
+  if (status === 'watch') {
+    const lower = redMax ?? 0;
+    const upper = yellowMax ?? greenMin ?? lower + 1;
+    if (upper <= lower) return 63;
+    const ratio = (value - lower) / (upper - lower);
+    return Math.round(clampScore(51 + ratio * (75 - 51), 51, 75));
+  }
+
+  if (greenMin && greenMin > 0) {
+    const upper = greenMin * 2;
+    const ratio = (value - greenMin) / (upper - greenMin);
+    return Math.round(clampScore(76 + ratio * (100 - 76), 76, 100));
+  }
+  if (yellowMax && yellowMax > 0) {
+    const upper = yellowMax * 2;
+    const ratio = (value - yellowMax) / (upper - yellowMax);
+    return Math.round(clampScore(76 + ratio * (100 - 76), 76, 100));
+  }
+  return 88;
 };
 
 const rollupUseCaseStatus = (metricStatuses, rule) => {
@@ -919,20 +1194,30 @@ const buildView = (data) => {
   const useCaseCards = rawUseCases.map((useCase) => {
     const metrics = (useCase.metrics || []).map((metric) => {
       const status = scoreMetric(metric);
+      const score = scoreMetricValue(metric);
       return {
         ...metric,
         status,
+        score,
         value_display: formatMetricValue(metric.value, metric.format),
         threshold_display: buildThresholdText(metric)
       };
     });
     const overallStatus = rollupUseCaseStatus(metrics.map((metric) => metric.status), useCase.rollup_rule);
+    const metricScores = metrics.map((metric) => metric.score).filter((score) => typeof score === 'number');
+    const computedScore = metricScores.length
+      ? Math.round(metricScores.reduce((sum, score) => sum + score, 0) / metricScores.length)
+      : null;
+    const useCaseScore = typeof useCase.score === 'number' ? useCase.score : computedScore;
+    const scoreMeta = scoreBand(useCaseScore);
     const summaryMetricIndex = useCase.summary_metric_index ?? 0;
     const summaryMetric = metrics[summaryMetricIndex];
     const summaryNote = summaryMetric ? `${summaryMetric.name}: ${summaryMetric.value_display}` : useCase.summary_note || '';
     return {
       ...useCase,
       metrics,
+      score: useCaseScore,
+      score_band: scoreMeta,
       overall_status: overallStatus,
       summary_note: summaryNote
     };
@@ -961,6 +1246,8 @@ const buildView = (data) => {
     status: normalizeStatus(factor.status)
   }));
   const healthStatus = data.health?.overall_status ? normalizeStatus(data.health.overall_status) : deriveOverallStatus(healthFactors);
+  const healthScoreValue = typeof data.health?.score === 'number' ? data.health.score : null;
+  const healthScoreMeta = scoreBandForHealth(healthScoreValue, data.health_scoring || {});
 
   const execRisks = healthFactors.filter((factor) => factor.status !== 'good').slice(0, 3);
   const execSuccessPlan = normalizedObjectives.slice(0, 3).map((objective) => ({
@@ -1054,7 +1341,17 @@ const buildView = (data) => {
     health: {
       overall_status: healthStatus,
       overall_label: labelForStatus(healthStatus),
-      last_exec_review: formatDate(data.health?.last_exec_review)
+      last_exec_review: formatDate(data.health?.last_exec_review),
+      score: healthScoreValue !== null ? healthScoreValue.toString() : '—',
+      score_label: healthScoreMeta.label,
+      score_status: healthScoreMeta.status
+    },
+    engagement: {
+      last_exec_meeting: formatDate(data.engagement?.last_exec_meeting || data.health?.last_exec_review) || 'Pending',
+      cadence_attendance: data.engagement?.cadence_attendance_pct !== undefined ? formatPercent(data.engagement.cadence_attendance_pct) : 'Not tracked',
+      workshop_participation: data.engagement?.workshop_participation_pct !== undefined ? formatPercent(data.engagement.workshop_participation_pct) : 'Not tracked',
+      collaboration_activity: data.engagement?.collaboration_activity || 'Not tracked',
+      last_usage_review: formatDate(data.engagement?.last_usage_review) || 'Pending'
     },
     journey: {
       current_key: journeyCurrent.key,
@@ -1107,7 +1404,7 @@ const buildView = (data) => {
       useCaseSummaries: useCaseCards.map((useCase) => ({
         name: useCase.name,
         status: useCase.overall_status,
-        note: useCase.summary_note
+        note: useCase.score !== null && useCase.score !== undefined ? `Score ${useCase.score} (${useCase.score_band.label})` : useCase.summary_note
       })),
       healthFactors,
       execRisks,
@@ -1209,6 +1506,8 @@ const renderUseCaseCards = (selector, useCases) => {
     card.className = 'card usecase-card';
     card.style.setProperty('--order', (index + 2).toString());
     const statusLabel = labelForSignal(useCase.overall_status);
+    const scoreLabel = useCase.score !== null && useCase.score !== undefined ? useCase.score : '—';
+    const scoreMeta = useCase.score_band || scoreBand(useCase.score);
     const placeholderNote = useCase.placeholder ? '<p class="metric-placeholder">Tracking not enabled for this use case.</p>' : '';
     const metricsHtml = useCase.metrics
       .map(
@@ -1232,7 +1531,13 @@ const renderUseCaseCards = (selector, useCases) => {
           <h3>${useCase.name}</h3>
           <p class="muted">${useCase.adoption_timeline || ''}</p>
         </div>
-        <span class="status-pill" data-status="${useCase.overall_status}">${statusLabel}</span>
+        <div class="usecase-badges">
+          <span class="usecase-score" data-status="${scoreMeta.status}">
+            <span class="score-num">${scoreLabel}</span>
+            <span class="score-label">${scoreMeta.label}</span>
+          </span>
+          <span class="status-pill" data-status="${useCase.overall_status}">${statusLabel}</span>
+        </div>
       </div>
       <div class="usecase-metrics">
         ${metricsHtml}
@@ -1366,6 +1671,35 @@ const renderNextActions = (selector, actions = []) => {
   });
 };
 
+const renderActionCenter = (actionCenter = {}) => {
+  const renderList = (key) => {
+    const list = document.querySelector(`[data-action-list="${key}"]`);
+    if (!list) return;
+    const items = actionCenter[key] || [];
+    list.innerHTML = '';
+    if (!items.length) {
+      const item = document.createElement('li');
+      item.className = 'action-center-item muted';
+      item.textContent = 'No items defined.';
+      list.appendChild(item);
+      return;
+    }
+    items.forEach((action) => {
+      const item = document.createElement('li');
+      item.className = 'action-center-item';
+      const link = action.link ? `<a href="${action.link}">Open</a>` : '';
+      item.innerHTML = `
+        <div class="action-title">${action.title || 'Action'}</div>
+        <div class="action-detail">${action.detail || ''}</div>
+        ${link}
+      `;
+      list.appendChild(item);
+    });
+  };
+
+  ['critical', 'important', 'recommended'].forEach(renderList);
+};
+
 const updateBindings = (view) => {
   document.querySelectorAll('[data-field]').forEach((element) => {
     const value = getValue(view, element.dataset.field);
@@ -1440,6 +1774,12 @@ const updateHealthBadge = (view) => {
   });
 };
 
+const updateHealthScore = (view) => {
+  document.querySelectorAll('[data-health-score]').forEach((score) => {
+    score.dataset.status = view.health.score_status;
+  });
+};
+
 const updateModeLinks = (mode) => {
   document.querySelectorAll('[data-mode-link]').forEach((link) => {
     const modes = link.dataset.modeLink;
@@ -1453,7 +1793,7 @@ const updateModeLinks = (mode) => {
 };
 
 const initModeTabs = (view) => {
-  const tabs = Array.from(document.querySelectorAll('.mode-tab'));
+  const tabs = Array.from(document.querySelectorAll('.mode-tab, .mode-btn'));
   const panels = Array.from(document.querySelectorAll('[data-mode-panel]'));
   if (!tabs.length || !panels.length) return;
 
@@ -1539,6 +1879,7 @@ const init = async () => {
   renderHealthFactors('[data-list="health-factors"]', view.lists.healthFactors);
   renderMiniList('[data-list="exec-risks"]', view.lists.execRisks, 'No risks flagged');
   renderMiniList('[data-list="exec-success-plan"]', view.lists.execSuccessPlan, 'No objectives yet');
+  renderActionCenter(data.action_center || {});
 
   renderResourceList('[data-list="learning-recommended"]', view.lists.learning.recommended || []);
   renderResourceList('[data-list="learning-webinars"]', view.lists.learning.webinars || []);
@@ -1550,6 +1891,15 @@ const init = async () => {
   renderResourceList('[data-list="collaboration-templates"]', view.lists.learning.collaboration_templates || []);
   renderResourceList('[data-list="operating-cadence"]', view.lists.learning.operating_cadence || []);
   renderResourceList('[data-list="onboarding-templates"]', view.lists.learning.templates || []);
+  renderResourceList('[data-list="onboarding-best-practices"]', data.onboarding_best_practices || []);
+  renderResourceList('[data-list="health-methodology"]', data.health_methodology || []);
+  renderResourceList('[data-list="risk-mitigation"]', data.risk_mitigation || []);
+  renderResourceList('[data-list="playbooks-library"]', data.playbooks_library || []);
+  renderResourceList('[data-list="adoption-landing-zones"]', data.adoption_landing_zones || []);
+  renderResourceList('[data-list="success-plan-development"]', data.success_plan_development || []);
+  renderResourceList('[data-list="executive-resources"]', data.executive_resources || []);
+  renderResourceList('[data-list="dora-resources"]', data.dora_resources || []);
+  renderResourceList('[data-list="renewal-resources"]', data.renewal_resources || []);
 
   updateBindings(view);
   updateProgressBars(view.progressValues);
@@ -1557,6 +1907,7 @@ const init = async () => {
   updateChips(view);
   renderTimeline(view);
   updateHealthBadge(view);
+  updateHealthScore(view);
   initPhaseTabs(view);
   initModeTabs(view);
 

@@ -192,6 +192,7 @@
         "adoption_timeline": "1 month after license purchase",
         "rollup_rule": "single_metric",
         "summary_metric_index": 0,
+        "score": 62,
         "green_criteria": "Green when more than 33% of billable users triggered Git operations in the last 28 days.",
         "metrics": [
           {
@@ -215,6 +216,7 @@
         "adoption_timeline": "1 month after license purchase",
         "rollup_rule": "single_metric",
         "summary_metric_index": 0,
+        "score": 60,
         "green_criteria": "Green when CI builds per billable user in the last 28 days is greater than 40.",
         "metrics": [
           {
@@ -238,6 +240,7 @@
         "adoption_timeline": "1 month after license purchase",
         "rollup_rule": "two_green_one_yellow",
         "summary_metric_index": 0,
+        "score": 58,
         "green_criteria": "Green when two of three measures are green and the remaining measure is yellow or green.",
         "metrics": [
           {
@@ -287,6 +290,7 @@
         "adoption_timeline": "1 month after license purchase",
         "rollup_rule": "two_green_one_yellow",
         "summary_metric_index": 1,
+        "score": 55,
         "green_criteria": "Green when two of three measures are green and the remaining measure is yellow or green.",
         "metrics": [
           {
@@ -379,6 +383,7 @@
   },
   "health": {
     "overall_status": "watch",
+    "score": 68,
     "last_exec_review": "2025-09-30",
     "factors": [
       {
@@ -407,6 +412,13 @@
         "detail": "0 objectives completed"
       }
     ]
+  },
+  "engagement": {
+    "last_exec_meeting": "2025-09-30",
+    "cadence_attendance_pct": 0.68,
+    "workshop_participation_pct": 0.52,
+    "collaboration_activity": "Active - 12 open issues",
+    "last_usage_review": "2025-10-03"
   },
   "dora": {
     "deploy_freq_per_day": 0.2,
