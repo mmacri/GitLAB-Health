@@ -118,7 +118,8 @@
       "License activation below 50% after first value",
       "Limited DevSecOps scanning coverage",
       "Workshop participation below target"
-    ]
+    ],
+    "definitions_source": "https://handbook.gitlab.com/handbook/customer-success/customer-success-vision/"
   },
   "adoption": {
     "platform_adoption_target": 3,
@@ -126,66 +127,70 @@
       {
         "key": "create",
         "name": "Create (SCM)",
-        "score": 68,
-        "trend_30d_pct": 6,
+        "score": 82,
+        "trend_30d_pct": 7,
         "drivers": [
           "Merge request usage growing",
-          "Code review coverage at 55%"
+          "Code review coverage at 78%"
         ],
         "thresholds": [
           "Green >= 76",
           "Yellow 51-75",
           "Red <= 50"
         ],
-        "playbook": "https://handbook.gitlab.com/handbook/customer-success/playbooks/"
+        "playbook": "https://handbook.gitlab.com/handbook/customer-success/playbooks/",
+        "threshold_source": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"
       },
       {
         "key": "verify",
         "name": "Verify (CI)",
-        "score": 60,
-        "trend_30d_pct": 8,
+        "score": 79,
+        "trend_30d_pct": 9,
         "drivers": [
-          "CI builds per billable user at 18",
-          "Pipeline success rate 72%"
+          "CI builds per billable user at 46",
+          "Pipeline success rate 86%"
         ],
         "thresholds": [
           "Green > 40 builds per user",
           "Yellow 3-40",
           "Red <= 2"
         ],
-        "playbook": "https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"
+        "playbook": "https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/",
+        "threshold_source": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"
       },
       {
         "key": "secure",
         "name": "Secure (DevSecOps)",
-        "score": 58,
-        "trend_30d_pct": 4,
+        "score": 76,
+        "trend_30d_pct": 6,
         "drivers": [
-          "Scanner utilization 8%",
-          "DAST not enabled"
+          "Scanner utilization 24%",
+          "SAST + dependency scanning active"
         ],
         "thresholds": [
           "Green >= 20% utilization",
           "Yellow 5-19%",
           "Red < 5%"
         ],
-        "playbook": "https://handbook.gitlab.com/handbook/customer-success/playbooks/"
+        "playbook": "https://handbook.gitlab.com/handbook/customer-success/playbooks/",
+        "threshold_source": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"
       },
       {
         "key": "release",
         "name": "Release (CD)",
-        "score": 55,
-        "trend_30d_pct": 2,
+        "score": 62,
+        "trend_30d_pct": 3,
         "drivers": [
-          "Deployments per user 1.8",
-          "Only 4 teams deploying"
+          "Deployments per user 2.6",
+          "6 teams deploying via GitLab"
         ],
         "thresholds": [
           "Green > 7 deployments per user",
           "Yellow 2-7",
           "Red < 2"
         ],
-        "playbook": "https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/"
+        "playbook": "https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/",
+        "threshold_source": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"
       }
     ],
     "landing_zone": {
@@ -329,13 +334,13 @@
           ]
         }
       ]
-    }
+    },
+    "platform_source": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/"
   },
   "health": {
-    "adoption_score": 64,
-    "engagement_score": 72,
-    "outcomes_score": 58,
-    "overall_score": 65,
+    "engagement_score": 74,
+    "outcomes_score": 65,
+    "overall_score": 72,
     "early_warning_flags": [
       {
         "severity": "yellow",
@@ -355,7 +360,17 @@
         "detail": "Success plan objective #2 behind schedule",
         "playbook": "https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"
       }
-    ]
+    ],
+    "product_score": 78,
+    "risk_score": 62,
+    "voice_score": 70,
+    "weights": {
+      "product": 0.5,
+      "risk": 0.25,
+      "outcomes": 0.1,
+      "voice": 0.05,
+      "engagement": 0.1
+    }
   },
   "engagement": {
     "cadence_attendance_rate": 0.76,

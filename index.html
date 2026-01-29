@@ -269,37 +269,76 @@
                 <span class="score-num" data-field="health.overall_score">68</span>
                 <span class="score-label" data-field="health.band_label">Yellow</span>
               </div>
-              <p class="muted">Weighted rubric: Adoption 40%, Engagement 30%, Outcomes 30%.</p>
-              <details class="drawer">
-                <summary>Health rubric breakdown</summary>
-                <div class="metric-row">
-                  <span class="status-dot" data-status="watch"></span>
-                  <div>
-                    <div class="metric-name">Adoption</div>
-                    <div class="metric-meta" data-field="health.adoption_score">64</div>
+                <p class="muted" data-field="health.weights_summary">
+                  PROVE weights: Product 50%, Risk 25%, Outcomes 10%, Voice 5%, Engagement 10%.
+                </p>
+                <details class="drawer">
+                  <summary>Health rubric breakdown</summary>
+                  <div class="metric-row">
+                    <span class="status-dot" data-health-dot="product"></span>
+                    <div>
+                      <div class="metric-name">Product usage</div>
+                      <div class="metric-meta">
+                        <span data-field="health.product_score">78</span> •
+                        <span data-field="health.weights.product">50%</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div class="metric-row">
-                  <span class="status-dot" data-status="good"></span>
-                  <div>
-                    <div class="metric-name">Engagement</div>
-                    <div class="metric-meta" data-field="health.engagement_score">72</div>
+                  <div class="metric-row">
+                    <span class="status-dot" data-health-dot="risk"></span>
+                    <div>
+                      <div class="metric-name">Risk</div>
+                      <div class="metric-meta">
+                        <span data-field="health.risk_score">62</span> • <span data-field="health.weights.risk">25%</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div class="metric-row">
-                  <span class="status-dot" data-status="risk"></span>
-                  <div>
-                    <div class="metric-name">Outcomes</div>
-                    <div class="metric-meta" data-field="health.outcomes_score">58</div>
+                  <div class="metric-row">
+                    <span class="status-dot" data-health-dot="outcomes"></span>
+                    <div>
+                      <div class="metric-name">Outcomes</div>
+                      <div class="metric-meta">
+                        <span data-field="health.outcomes_score">65</span> •
+                        <span data-field="health.weights.outcomes">10%</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </details>
+                  <div class="metric-row">
+                    <span class="status-dot" data-health-dot="voice"></span>
+                    <div>
+                      <div class="metric-name">Voice of customer</div>
+                      <div class="metric-meta">
+                        <span data-field="health.voice_score">70</span> • <span data-field="health.weights.voice">5%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="metric-row">
+                    <span class="status-dot" data-health-dot="engagement"></span>
+                    <div>
+                      <div class="metric-name">Engagement</div>
+                      <div class="metric-meta">
+                        <span data-field="health.engagement_score">74</span> •
+                        <span data-field="health.weights.engagement">10%</span>
+                      </div>
+                    </div>
+                  </div>
+                </details>
             </article>
 
             <article class="card" style="--order: 2" data-audience="all devops csm">
               <h3>Platform adoption</h3>
               <p class="stat" data-field="adoption.platform_adoption_summary">2 of 4 use cases green</p>
-              <p class="muted">GitLab recommends 3+ green use cases.</p>
+                <p class="muted">
+                  GitLab recommends 3+ green use cases.
+                  <a
+                    class="tooltip inline-link"
+                    href="https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/"
+                    target="_blank"
+                    rel="noopener"
+                    data-tooltip="Platform adoption scoring criteria."
+                    >Handbook</a
+                  >
+                </p>
               <details class="drawer">
                 <summary>Use case scores</summary>
                 <ul class="usecase-list" data-list="usecase-summary"></ul>
@@ -405,9 +444,20 @@
             </article>
           </div>
 
-          <details class="drawer">
-            <summary>Milestone definitions</summary>
-            <ul class="definition-list">
+            <details class="drawer">
+              <summary>Milestone definitions</summary>
+              <p class="muted">
+                Definitions aligned to GitLab time-to-value milestones.
+                <a
+                  class="tooltip inline-link"
+                  href="https://handbook.gitlab.com/handbook/customer-success/customer-success-vision/"
+                  target="_blank"
+                  rel="noopener"
+                  data-tooltip="GitLab onboarding milestone definitions and first value criteria."
+                  >Handbook</a
+                >
+              </p>
+              <ul class="definition-list">
               <li><span class="definition-term">Engagement</span> First CSM meeting held with the customer.</li>
               <li>
                 <span class="definition-term">Infrastructure ready</span> Environment is operational and integrated into the
@@ -459,7 +509,17 @@
             <article class="card" style="--order: 1">
               <h3>Platform adoption score</h3>
               <p class="stat" data-field="adoption.platform_adoption_summary">2 of 4 use cases green</p>
-              <p class="muted">Full platform adoption is achieved with 3+ green use cases.</p>
+                <p class="muted">
+                  Full platform adoption is achieved with 3+ green use cases.
+                  <a
+                    class="tooltip inline-link"
+                    href="https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/"
+                    target="_blank"
+                    rel="noopener"
+                    data-tooltip="Platform adoption scoring criteria."
+                    >Handbook</a
+                  >
+                </p>
             </article>
             <article class="card" style="--order: 2">
               <h3>Recommended workshop</h3>
@@ -469,10 +529,21 @@
             </article>
           </div>
 
-          <details class="drawer">
-            <summary>Use case scorecards</summary>
-            <div class="usecase-grid" data-usecase-cards></div>
-          </details>
+            <details class="drawer">
+              <summary>Use case scorecards</summary>
+              <p class="muted">
+                Thresholds based on GitLab use case adoption scoring.
+                <a
+                  class="tooltip inline-link"
+                  href="https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"
+                  target="_blank"
+                  rel="noopener"
+                  data-tooltip="Use case adoption scoring thresholds."
+                  >Handbook</a
+                >
+              </p>
+              <div class="usecase-grid" data-usecase-cards></div>
+            </details>
 
           <details class="drawer" id="landing-zone">
             <summary>Adoption landing zone</summary>
@@ -530,29 +601,48 @@
 
           <div class="section-body" data-section-body>
           <div class="summary-grid">
-            <article class="card" style="--order: 1">
-              <h3>Weighted health rubric</h3>
-              <div class="health-score" data-health-score>
-                <span class="score-num" data-field="health.overall_score">68</span>
-                <span class="score-label" data-field="health.band_label">Yellow</span>
-              </div>
-              <div class="progress" data-progress="health_adoption" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-                <span class="progress-bar"></span>
-              </div>
-              <p class="muted">Adoption weight 40%</p>
-              <div class="progress" data-progress="health_engagement" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-                <span class="progress-bar"></span>
-              </div>
-              <p class="muted">Engagement weight 30%</p>
-              <div class="progress" data-progress="health_outcomes" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-                <span class="progress-bar"></span>
-              </div>
-              <p class="muted">Outcomes weight 30%</p>
-              <details class="drawer">
-                <summary>Health scoring framework (PROVE-aligned)</summary>
-                <ul class="definition-list">
-                  <li><span class="definition-term">Product usage</span> Adoption and platform use-case scores.</li>
-                  <li><span class="definition-term">Risk</span> Early warning flags, renewal signals, and blockers.</li>
+              <article class="card" style="--order: 1">
+                <h3>Weighted health rubric</h3>
+                <div class="health-score" data-health-score>
+                  <span class="score-num" data-field="health.overall_score">68</span>
+                  <span class="score-label" data-field="health.band_label">Yellow</span>
+                </div>
+                <div class="progress" data-progress="health_product" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                  <span class="progress-bar"></span>
+                </div>
+                <p class="muted">Product weight <span data-field="health.weights.product">50%</span></p>
+                <div class="progress" data-progress="health_risk" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                  <span class="progress-bar"></span>
+                </div>
+                <p class="muted">Risk weight <span data-field="health.weights.risk">25%</span></p>
+                <div class="progress" data-progress="health_outcomes" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                  <span class="progress-bar"></span>
+                </div>
+                <p class="muted">Outcomes weight <span data-field="health.weights.outcomes">10%</span></p>
+                <div class="progress" data-progress="health_voice" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                  <span class="progress-bar"></span>
+                </div>
+                <p class="muted">Voice weight <span data-field="health.weights.voice">5%</span></p>
+                <div class="progress" data-progress="health_engagement" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                  <span class="progress-bar"></span>
+                </div>
+                <p class="muted">Engagement weight <span data-field="health.weights.engagement">10%</span></p>
+                <details class="drawer">
+                  <summary>Health scoring framework (PROVE-aligned)</summary>
+                  <p class="muted">
+                    Framework and weights aligned to GitLab Customer Health Scoring.
+                    <a
+                      class="tooltip inline-link"
+                      href="https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"
+                      target="_blank"
+                      rel="noopener"
+                      data-tooltip="PROVE weights and health scoring framework."
+                      >Handbook</a
+                    >
+                  </p>
+                  <ul class="definition-list">
+                    <li><span class="definition-term">Product usage</span> Adoption and platform use-case scores.</li>
+                    <li><span class="definition-term">Risk</span> Early warning flags, renewal signals, and blockers.</li>
                   <li><span class="definition-term">Outcomes</span> Success plan progress and value realization.</li>
                   <li><span class="definition-term">Voice</span> Sentiment and executive feedback.</li>
                   <li><span class="definition-term">Engagement</span> Cadence attendance and enablement participation.</li>
@@ -907,27 +997,46 @@
       </form>
     </dialog>
 
-    <dialog class="modal" id="health-modal" aria-labelledby="health-modal-title">
-      <form method="dialog" class="modal-content">
-        <h3 id="health-modal-title">Update health scores</h3>
-        <label class="field">
-          Adoption score
-          <input type="number" min="0" max="100" step="1" name="adoption_score" />
-        </label>
-        <label class="field">
-          Engagement score
-          <input type="number" min="0" max="100" step="1" name="engagement_score" />
-        </label>
-        <label class="field">
-          Outcomes score
-          <input type="number" min="0" max="100" step="1" name="outcomes_score" />
-        </label>
-        <div class="modal-actions">
-          <button type="submit">Save</button>
-          <button type="button" data-close-modal>Cancel</button>
-        </div>
-      </form>
-    </dialog>
+      <dialog class="modal" id="health-modal" aria-labelledby="health-modal-title">
+        <form method="dialog" class="modal-content">
+          <h3 id="health-modal-title">Update health scores</h3>
+          <p class="muted">
+            PROVE weights follow the GitLab Customer Health Scoring model.
+            <a
+              class="tooltip inline-link"
+              href="https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"
+              target="_blank"
+              rel="noopener"
+              data-tooltip="PROVE weights and health scoring framework."
+              >Handbook</a
+            >
+          </p>
+          <label class="field">
+            Product usage score
+            <input type="number" min="0" max="100" step="1" name="product_score" />
+          </label>
+          <label class="field">
+            Risk score
+            <input type="number" min="0" max="100" step="1" name="risk_score" />
+          </label>
+          <label class="field">
+            Outcomes score
+            <input type="number" min="0" max="100" step="1" name="outcomes_score" />
+          </label>
+          <label class="field">
+            Voice score
+            <input type="number" min="0" max="100" step="1" name="voice_score" />
+          </label>
+          <label class="field">
+            Engagement score
+            <input type="number" min="0" max="100" step="1" name="engagement_score" />
+          </label>
+          <div class="modal-actions">
+            <button type="submit">Save</button>
+            <button type="button" data-close-modal>Cancel</button>
+          </div>
+        </form>
+      </dialog>
 
     <dialog class="modal" id="touchpoint-modal" aria-labelledby="touchpoint-modal-title">
       <form method="dialog" class="modal-content">
