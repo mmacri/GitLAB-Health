@@ -30,33 +30,103 @@
     "billable_users": 320
   },
   "events": [
-    { "name": "First login", "date": "2025-08-28" },
-    { "name": "First project created", "date": "2025-09-05" },
-    { "name": "First merge request", "date": "2025-09-18" },
-    { "name": "First pipeline run", "date": "2025-10-02" },
-    { "name": "First security scan", "date": "2025-10-05" },
-    { "name": "First deployment", "date": "2025-10-06" }
+    {
+      "name": "First login",
+      "date": "2025-08-28"
+    },
+    {
+      "name": "First project created",
+      "date": "2025-09-05"
+    },
+    {
+      "name": "First merge request",
+      "date": "2025-09-18"
+    },
+    {
+      "name": "First pipeline run",
+      "date": "2025-10-02"
+    },
+    {
+      "name": "First security scan",
+      "date": "2025-10-05"
+    },
+    {
+      "name": "First deployment",
+      "date": "2025-10-06"
+    }
   ],
   "onboarding": {
     "tasks": [
-      { "name": "Kickoff and stakeholder alignment", "done": true, "date": "2025-08-29" },
-      { "name": "GitLab instance deployed", "done": true, "date": "2025-09-10" },
-      { "name": "SSO configured", "done": true, "date": "2025-09-12" },
-      { "name": "Pilot teams onboarded", "done": true, "date": "2025-09-20" },
-      { "name": "Repository migration", "done": true, "date": "2025-09-25" },
-      { "name": "CI runners configured", "done": true, "date": "2025-09-28" },
-      { "name": "First pipelines running", "done": true, "date": "2025-10-02" },
-      { "name": "Security baseline defined", "done": true, "date": "2025-10-05" },
-      { "name": "Training sessions complete", "done": false, "date": "" },
-      { "name": "Success plan validated", "done": false, "date": "" }
+      {
+        "name": "Kickoff and stakeholder alignment",
+        "done": true,
+        "date": "2025-08-29"
+      },
+      {
+        "name": "GitLab instance deployed",
+        "done": true,
+        "date": "2025-09-10"
+      },
+      {
+        "name": "SSO configured",
+        "done": true,
+        "date": "2025-09-12"
+      },
+      {
+        "name": "Pilot teams onboarded",
+        "done": true,
+        "date": "2025-09-20"
+      },
+      {
+        "name": "Repository migration",
+        "done": true,
+        "date": "2025-09-25"
+      },
+      {
+        "name": "CI runners configured",
+        "done": true,
+        "date": "2025-09-28"
+      },
+      {
+        "name": "First pipelines running",
+        "done": true,
+        "date": "2025-10-02"
+      },
+      {
+        "name": "Security baseline defined",
+        "done": true,
+        "date": "2025-10-05"
+      },
+      {
+        "name": "Training sessions complete",
+        "done": false,
+        "date": ""
+      },
+      {
+        "name": "Success plan validated",
+        "done": false,
+        "date": ""
+      }
     ]
   },
   "milestones": {
-    "engagement": { "date": "2025-09-01" },
-    "infra_ready": { "date": "2025-09-15" },
-    "onboarding_complete": { "date": "" },
-    "first_value": { "date": "", "expected_date": "2025-10-15" },
-    "outcome": { "date": "", "expected_date": "2025-12-15" }
+    "engagement": {
+      "date": "2025-09-01"
+    },
+    "infra_ready": {
+      "date": "2025-09-15"
+    },
+    "onboarding_complete": {
+      "date": ""
+    },
+    "first_value": {
+      "date": "",
+      "expected_date": "2025-10-15"
+    },
+    "outcome": {
+      "date": "",
+      "expected_date": "2025-12-15"
+    }
   },
   "cicd": {
     "pipelines_week": 38,
@@ -64,9 +134,21 @@
     "pipeline_duration_minutes": 18,
     "deployments_week": 4,
     "milestones": [
-      { "name": "First pipeline created", "date": "2025-10-02", "status": "complete" },
-      { "name": "Shared runners enabled", "date": "2025-09-28", "status": "complete" },
-      { "name": "First production deployment", "date": "", "status": "pending" }
+      {
+        "name": "First pipeline created",
+        "date": "2025-10-02",
+        "status": "complete"
+      },
+      {
+        "name": "Shared runners enabled",
+        "date": "2025-09-28",
+        "status": "complete"
+      },
+      {
+        "name": "First production deployment",
+        "date": "",
+        "status": "pending"
+      }
     ]
   },
   "targets": {
@@ -84,6 +166,26 @@
     },
     "use_cases": [
       {
+        "id": "plan",
+        "name": "Use Case Adoption: Plan",
+        "stage": "Plan",
+        "adoption_timeline": "1 month after license purchase",
+        "rollup_rule": "single_metric",
+        "summary_metric_index": 0,
+        "green_criteria": "Track planning usage once service ping data is available.",
+        "placeholder": true,
+        "metrics": [
+          {
+            "name": "Planning feature utilization (issues/epics)",
+            "value": null,
+            "format": "number",
+            "calc": "Issues + epics created L28D / Billable users",
+            "threshold_text": "Not yet tracked in this snapshot",
+            "thresholds": {}
+          }
+        ]
+      },
+      {
         "id": "scm",
         "name": "Use Case Adoption: Create (SCM)",
         "stage": "Create",
@@ -98,7 +200,11 @@
             "format": "percent",
             "calc": "Git Operations - Users L28D / Billable Users",
             "threshold_text": "Red <=10%, Yellow >10% and <=33%, Green >33%",
-            "thresholds": { "red_max": 0.10, "yellow_max": 0.33, "green_inclusive": false }
+            "thresholds": {
+              "red_max": 0.1,
+              "yellow_max": 0.33,
+              "green_inclusive": false
+            }
           }
         ]
       },
@@ -117,7 +223,11 @@
             "format": "number",
             "calc": "CI Builds L28D / Billable Users",
             "threshold_text": "Red <=2, Yellow >2 and <=40, Green >40",
-            "thresholds": { "red_max": 2, "yellow_max": 40, "green_inclusive": false }
+            "thresholds": {
+              "red_max": 2,
+              "yellow_max": 40,
+              "green_inclusive": false
+            }
           }
         ]
       },
@@ -136,7 +246,12 @@
             "format": "percent",
             "calc": "Secure Scanners - Users L28D / Billable Users",
             "threshold_text": "Red <=5%, Yellow >5% and <20%, Green >=20%",
-            "thresholds": { "red_max": 0.05, "yellow_max": 0.20, "green_min": 0.20, "green_inclusive": true }
+            "thresholds": {
+              "red_max": 0.05,
+              "yellow_max": 0.2,
+              "green_min": 0.2,
+              "green_inclusive": true
+            }
           },
           {
             "name": "Average scans per CI pipeline",
@@ -144,7 +259,11 @@
             "format": "number",
             "calc": "Total scans / CI internal pipelines L28D",
             "threshold_text": "Red <0.1, Yellow >=0.1 and <=0.5, Green >0.5",
-            "thresholds": { "red_max": 0.1, "yellow_max": 0.5, "green_inclusive": false }
+            "thresholds": {
+              "red_max": 0.1,
+              "yellow_max": 0.5,
+              "green_inclusive": false
+            }
           },
           {
             "name": "Number of scanners in use",
@@ -152,7 +271,12 @@
             "format": "number",
             "calc": "Sum of scanners used (SAST, DAST, dependency, etc)",
             "threshold_text": "Red <=1, Yellow 2, Green >=3",
-            "thresholds": { "red_max": 1, "yellow_max": 2, "green_min": 3, "green_inclusive": true }
+            "thresholds": {
+              "red_max": 1,
+              "yellow_max": 2,
+              "green_min": 3,
+              "green_inclusive": true
+            }
           }
         ]
       },
@@ -171,7 +295,11 @@
             "format": "percent",
             "calc": "Deployments - Users L28D / Billable Users",
             "threshold_text": "Red <5%, Yellow 5-12%, Green >12%",
-            "thresholds": { "red_max": 0.05, "yellow_max": 0.12, "green_inclusive": false }
+            "thresholds": {
+              "red_max": 0.05,
+              "yellow_max": 0.12,
+              "green_inclusive": false
+            }
           },
           {
             "name": "Deployments per user (L28D)",
@@ -179,7 +307,11 @@
             "format": "number",
             "calc": "Deployments L28D / Billable Users",
             "threshold_text": "Red <2, Yellow 2-7, Green >7",
-            "thresholds": { "red_max": 2, "yellow_max": 7, "green_inclusive": false }
+            "thresholds": {
+              "red_max": 2,
+              "yellow_max": 7,
+              "green_inclusive": false
+            }
           },
           {
             "name": "Successful deployments %",
@@ -187,7 +319,31 @@
             "format": "percent",
             "calc": "Successful deploys L28D / (Successful + Failed deploys L28D)",
             "threshold_text": "Red <25%, Yellow 25-80%, Green >80%",
-            "thresholds": { "red_max": 0.25, "yellow_max": 0.8, "green_inclusive": false }
+            "thresholds": {
+              "red_max": 0.25,
+              "yellow_max": 0.8,
+              "green_inclusive": false
+            }
+          }
+        ]
+      },
+      {
+        "id": "measure",
+        "name": "Use Case Adoption: Measure",
+        "stage": "Measure",
+        "adoption_timeline": "1 month after license purchase",
+        "rollup_rule": "single_metric",
+        "summary_metric_index": 0,
+        "green_criteria": "Track value stream analytics usage once enabled.",
+        "placeholder": true,
+        "metrics": [
+          {
+            "name": "Value stream analytics utilization",
+            "value": null,
+            "format": "number",
+            "calc": "VSA views L28D / Billable users",
+            "threshold_text": "Not yet tracked in this snapshot",
+            "thresholds": {}
           }
         ]
       }
@@ -196,31 +352,28 @@
   "success_plan": {
     "objectives": [
       {
-        "title": "Automate Tier-1 release workflows",
-        "success_criteria": "10 of 12 Tier-1 apps deploy via GitLab pipelines with >80% success rate",
-        "owner": "DevOps Lead",
-        "due": "2025-12-15",
+        "objective": "Automate Tier-1 release workflows",
+        "success_metric": "Tier-1 apps deploying via GitLab",
+        "target": "10 of 12 apps by 2025-12-15",
         "status": "in_progress",
-        "progress": 0.3,
-        "evidence": ""
+        "evidence": "",
+        "owner": "DevOps Lead"
       },
       {
-        "title": "Expand CI adoption to 60% of projects",
-        "success_criteria": "72 of 120 projects running pipelines",
-        "owner": "Platform Engineering",
-        "due": "2025-11-30",
+        "objective": "Expand CI adoption to 60% of projects",
+        "success_metric": "Projects running pipelines",
+        "target": "72 of 120 projects by 2025-11-30",
         "status": "in_progress",
-        "progress": 0.5,
-        "evidence": ""
+        "evidence": "",
+        "owner": "Platform Engineering"
       },
       {
-        "title": "Enable security scanning for regulated apps",
-        "success_criteria": "SAST + dependency scanning on all regulated projects",
-        "owner": "Security",
-        "due": "2025-11-15",
+        "objective": "Enable security scanning for regulated apps",
+        "success_metric": "Regulated apps with SAST + dependency scanning",
+        "target": "100% by 2025-11-15",
         "status": "at_risk",
-        "progress": 0.15,
-        "evidence": ""
+        "evidence": "",
+        "owner": "Security"
       }
     ]
   },
@@ -228,11 +381,31 @@
     "overall_status": "watch",
     "last_exec_review": "2025-09-30",
     "factors": [
-      { "label": "License utilization", "status": "risk", "detail": "8% active vs 80% target" },
-      { "label": "Use case adoption", "status": "watch", "detail": "0 of 4 use cases green" },
-      { "label": "Leadership engagement", "status": "watch", "detail": "Last executive review 2025-09-30" },
-      { "label": "Support activity", "status": "watch", "detail": "5 open high-priority tickets" },
-      { "label": "Success plan progress", "status": "watch", "detail": "0 objectives completed" }
+      {
+        "label": "License utilization",
+        "status": "risk",
+        "detail": "8% active vs 80% target"
+      },
+      {
+        "label": "Use case adoption",
+        "status": "watch",
+        "detail": "0 of 4 use cases green"
+      },
+      {
+        "label": "Leadership engagement",
+        "status": "watch",
+        "detail": "Last executive review 2025-09-30"
+      },
+      {
+        "label": "Support activity",
+        "status": "watch",
+        "detail": "5 open high-priority tickets"
+      },
+      {
+        "label": "Success plan progress",
+        "status": "watch",
+        "detail": "0 objectives completed"
+      }
     ]
   },
   "dora": {
@@ -318,6 +491,11 @@
         "title": "Customer Collaboration Project",
         "detail": "Shared project for agenda issues, enablement planning, and transparency",
         "link": "https://handbook.gitlab.com/handbook/customer-success/csm/customer-collaboration-project/"
+      },
+      {
+        "title": "Use this dashboard with the Collaboration Project",
+        "detail": "Link dashboard insights to shared issues, agendas, and action items",
+        "link": "https://handbook.gitlab.com/handbook/customer-success/csm/customer-collaboration-project/"
       }
     ],
     "reporting": [
@@ -325,6 +503,130 @@
         "title": "Reporting and dashboarding framework",
         "detail": "Operationalize vs insights and recommendations",
         "link": "https://handbook.gitlab.com/handbook/customer-success/reporting-and-dashboarding-framework/"
+      }
+    ],
+    "collaboration_templates": [
+      {
+        "title": "Onboarding checklist issue",
+        "detail": "Track onboarding tasks and owners",
+        "link": "https://handbook.gitlab.com/handbook/customer-success/csm/customer-collaboration-project/"
+      },
+      {
+        "title": "Workshop follow-up issue",
+        "detail": "Capture actions from enablement sessions",
+        "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/"
+      },
+      {
+        "title": "Risk tracking issue",
+        "detail": "Document blockers and mitigation owners",
+        "link": "https://handbook.gitlab.com/handbook/customer-success/csm/"
+      },
+      {
+        "title": "Feature request intake",
+        "detail": "Log and prioritize product feedback",
+        "link": "https://handbook.gitlab.com/handbook/customer-success/csm/customer-collaboration-project/"
+      }
+    ],
+    "operating_cadence": [
+      {
+        "title": "Monthly adoption review",
+        "detail": "Review milestone status, adoption gaps, and enablement actions",
+        "link": "#adoption"
+      },
+      {
+        "title": "Quarterly executive review",
+        "detail": "Share outcomes, ROI narrative, and roadmap alignment",
+        "link": "#outcomes"
+      },
+      {
+        "title": "Continuous workshop tracking",
+        "detail": "Run playbooks and update collaboration issues",
+        "link": "#resources"
+      }
+    ]
+  },
+  "journey_phase": {
+    "current": "onboarding",
+    "phases": [
+      {
+        "key": "onboarding",
+        "label": "Onboarding",
+        "focus": "Milestones and first value",
+        "description": "Confirm engagement, platform readiness, and initial activation."
+      },
+      {
+        "key": "early_adoption",
+        "label": "Early adoption",
+        "focus": "Verify and Secure enablement",
+        "description": "Expand CI coverage, stabilize pipelines, and start scanning."
+      },
+      {
+        "key": "broad_adoption",
+        "label": "Broad adoption",
+        "focus": "Use case coverage and health stabilization",
+        "description": "Scale use cases across teams and improve health drivers."
+      },
+      {
+        "key": "value_realization",
+        "label": "Value realization",
+        "focus": "Outcomes, ROI, and executive alignment",
+        "description": "Validate success plan outcomes and executive cadence."
+      }
+    ]
+  },
+  "next_actions": {
+    "executive": [
+      {
+        "text": "Review success plan objective progress",
+        "link": "#outcomes"
+      },
+      {
+        "text": "Confirm platform adoption score trajectory",
+        "link": "#adoption"
+      },
+      {
+        "text": "Discuss top health risks and mitigations",
+        "link": "#health"
+      },
+      {
+        "text": "Prepare QBR/EBR agenda",
+        "link": "#resources"
+      }
+    ],
+    "adoption": [
+      {
+        "text": "Enable CI for remaining teams",
+        "link": "#adoption"
+      },
+      {
+        "text": "Schedule Verify workshop",
+        "link": "#resources"
+      },
+      {
+        "text": "Expand security scanning coverage",
+        "link": "#adoption"
+      },
+      {
+        "text": "Update onboarding checklist items",
+        "link": "#onboarding"
+      }
+    ],
+    "csm": [
+      {
+        "text": "Update health drivers and risks",
+        "link": "#health"
+      },
+      {
+        "text": "Align collaboration project issues",
+        "link": "#resources"
+      },
+      {
+        "text": "Refresh success plan evidence links",
+        "link": "#outcomes"
+      },
+      {
+        "text": "Review reporting cadence outputs",
+        "link": "#resources"
       }
     ]
   }
