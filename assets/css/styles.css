@@ -392,7 +392,7 @@ body.loaded .card {
   transition: opacity 0.3s ease, filter 0.3s ease;
 }
 
-body.mode-ready[data-mode] .section[data-mode-in] {
+body.mode-ready[data-mode]:not([data-mode="all"]) .section[data-mode-in] {
   display: none;
 }
 

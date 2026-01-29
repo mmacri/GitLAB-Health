@@ -13,7 +13,7 @@
     />
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
-  <body data-mode="executive" data-phase="onboarding">
+  <body data-mode="all" data-phase="onboarding">
     <div class="page">
       <header class="hero" id="top">
         <nav class="nav">
@@ -133,7 +133,10 @@
                 <article class="card mode-card" style="--order: 2">
                   <h3>View mode</h3>
                   <div class="mode-tabs" role="tablist" aria-label="View modes">
-                    <button class="mode-tab is-active" type="button" role="tab" data-mode="executive" aria-controls="mode-executive" aria-selected="true">
+                    <button class="mode-tab is-active" type="button" role="tab" data-mode="all" aria-controls="mode-executive" aria-selected="true">
+                      Full dashboard
+                    </button>
+                    <button class="mode-tab" type="button" role="tab" data-mode="executive" aria-controls="mode-executive" aria-selected="false">
                       Executive Summary
                     </button>
                     <button class="mode-tab" type="button" role="tab" data-mode="adoption" aria-controls="mode-adoption" aria-selected="false">

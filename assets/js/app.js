@@ -643,6 +643,10 @@ const dateFormat = new Intl.DateTimeFormat('en-US', {
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 const MODE_CONFIG = {
+  all: {
+    label: 'Full dashboard',
+    description: 'All sections visible. Use persona modes to focus on specific decisions.'
+  },
   executive: {
     label: 'Executive Summary',
     description: 'Executive summary focused on outcomes, risk, and platform adoption.'
@@ -972,6 +976,8 @@ const buildView = (data) => {
   const cicd = data.cicd || {};
   const nextActions = data.next_actions || {};
 
+  const defaultMode = data.mode?.current || 'all';
+
   return {
     customer: {
       name: data.customer.name,
@@ -1058,9 +1064,9 @@ const buildView = (data) => {
       phases: journeyPhases
     },
     mode: {
-      current: 'executive',
-      label: MODE_CONFIG.executive.label,
-      description: MODE_CONFIG.executive.description
+      current: defaultMode,
+      label: MODE_CONFIG[defaultMode]?.label || MODE_CONFIG.executive.label,
+      description: MODE_CONFIG[defaultMode]?.description || MODE_CONFIG.executive.description
     },
     persona: {
       executive: {
@@ -1437,7 +1443,7 @@ const updateHealthBadge = (view) => {
 const updateModeLinks = (mode) => {
   document.querySelectorAll('[data-mode-link]').forEach((link) => {
     const modes = link.dataset.modeLink;
-    if (!modes || modes === 'all') {
+    if (mode === 'all' || !modes || modes === 'all') {
       link.classList.remove('is-hidden');
       return;
     }
@@ -1447,19 +1453,20 @@ const updateModeLinks = (mode) => {
 };
 
 const initModeTabs = (view) => {
-  const tabs = Array.from(document.querySelectorAll('[data-mode]'));
+  const tabs = Array.from(document.querySelectorAll('.mode-tab'));
   const panels = Array.from(document.querySelectorAll('[data-mode-panel]'));
   if (!tabs.length || !panels.length) return;
 
   const setActive = (mode) => {
     document.body.dataset.mode = mode;
+    const panelKey = mode === 'all' ? 'executive' : mode;
     tabs.forEach((tab) => {
       const isActive = tab.dataset.mode === mode;
       tab.classList.toggle('is-active', isActive);
       tab.setAttribute('aria-selected', isActive.toString());
     });
     panels.forEach((panel) => {
-      const isActive = panel.dataset.modePanel === mode;
+      const isActive = panel.dataset.modePanel === panelKey;
       panel.classList.toggle('is-active', isActive);
       panel.setAttribute('aria-hidden', (!isActive).toString());
     });
@@ -1470,7 +1477,8 @@ const initModeTabs = (view) => {
     document.querySelectorAll('[data-field="mode.description"]').forEach((node) => {
       node.textContent = modeCopy.description;
     });
-    renderNextActions('[data-list="next-actions"]', view.lists.nextActions[mode] || []);
+    const nextActions = view.lists.nextActions[mode] || view.lists.nextActions.executive || [];
+    renderNextActions('[data-list="next-actions"]', nextActions);
     updateModeLinks(mode);
   };
 
@@ -1484,7 +1492,7 @@ const initModeTabs = (view) => {
 };
 
 const initPhaseTabs = (view) => {
-  const tabs = Array.from(document.querySelectorAll('[data-phase]'));
+  const tabs = Array.from(document.querySelectorAll('.phase-tab'));
   if (!tabs.length) return;
   const phaseMap = new Map((view.journey.phases || []).map((phase) => [phase.key, phase]));
 
