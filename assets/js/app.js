@@ -4,7 +4,11 @@ const DATA_URL = 'data/dashboard.json';
 const STORAGE_KEYS = {
   mode: 'gl-health-mode',
   actions: 'gl-health-action-state',
-  overrides: 'gl-health-overrides'
+  overrides: 'gl-health-overrides',
+  sections: 'gl-health-sections',
+  sidebar: 'gl-health-sidebar',
+  fab: 'gl-health-fab',
+  lastSection: 'gl-health-last-section'
 };
 
 const DEFAULT_DATA = {"meta":{"last_updated":"2026-01-20","updated_by":"Jordan Lee","notes":"Monthly health review and renewal readiness update"},"customer":{"name":"Northwind Industries","segment":"Enterprise","plan":"Ultimate","renewal_date":"2026-06-30","deployment_type":"Self-managed","instance_type":"Dedicated instance","start_date":"2025-08-27","csm":"Jordan Lee","tam":"Avery Chen"},"seats":{"purchased":500,"active":210,"utilization_30d_series":[{"date":"2025-11-15","value":0.34},{"date":"2025-12-01","value":0.36},{"date":"2025-12-15","value":0.38},{"date":"2025-12-30","value":0.4},{"date":"2026-01-15","value":0.42}]},"onboarding":{"phase":"First value","completion_pct":0.92,"milestones":{"engagement":{"date":"2025-09-01"},"infra_ready":{"date":"2025-09-15"},"onboarding_complete":{"date":"2025-10-20"},"first_value":{"date":"2025-10-25"},"outcome":{"date":""}},"checklist":[{"task":"Executive kickoff and success criteria aligned","done":true,"date":"2025-08-29"},{"task":"GitLab instance deployed and validated","done":true,"date":"2025-09-10"},{"task":"SSO configured and tested","done":true,"date":"2025-09-12"},{"task":"Pilot teams onboarded","done":true,"date":"2025-09-20"},{"task":"Repository migration complete","done":true,"date":"2025-09-25"},{"task":"CI runners configured","done":true,"date":"2025-09-28"},{"task":"First pipelines running","done":true,"date":"2025-10-02"},{"task":"Security baseline defined","done":true,"date":"2025-10-05"},{"task":"Enablement training delivered","done":true,"date":"2025-10-18"},{"task":"Success plan validated","done":true,"date":"2025-10-20"}],"risks":["License activation below 50% after first value","Limited DevSecOps scanning coverage","Workshop participation below target"]},"adoption":{"platform_adoption_target":3,"use_case_scores":[{"key":"create","name":"Create (SCM)","score":68,"trend_30d_pct":6,"drivers":["Merge request usage growing","Code review coverage at 55%"],"thresholds":["Green >= 76","Yellow 51-75","Red <= 50"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/"},{"key":"verify","name":"Verify (CI)","score":60,"trend_30d_pct":8,"drivers":["CI builds per billable user at 18","Pipeline success rate 72%"],"thresholds":["Green > 40 builds per user","Yellow 3-40","Red <= 2"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"},{"key":"secure","name":"Secure (DevSecOps)","score":58,"trend_30d_pct":4,"drivers":["Scanner utilization 8%","DAST not enabled"],"thresholds":["Green >= 20% utilization","Yellow 5-19%","Red < 5%"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/"},{"key":"release","name":"Release (CD)","score":55,"trend_30d_pct":2,"drivers":["Deployments per user 1.8","Only 4 teams deploying"],"thresholds":["Green > 7 deployments per user","Yellow 2-7","Red < 2"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/"}],"landing_zone":{"phases":[{"key":"pre_engagement","label":"Pre-engagement","goals":["Align executive sponsor","Confirm success criteria"],"tasks":["Document business outcomes","Identify technical champions"],"risks":["Unclear ownership","Undefined success metrics"],"workshops":["Discovery and planning session"],"success_criteria":["Success plan draft approved","Executive sponsor confirmed"]},{"key":"engagement","label":"Engagement","goals":["Kickoff and stakeholder alignment","Success plan baseline"],"tasks":["Hold kickoff","Create collaboration project"],"risks":["Missed stakeholder attendance"],"workshops":["Onboarding kickoff"],"success_criteria":["Kickoff completed","Success plan objectives logged"]},{"key":"infra_ready","label":"Infra ready","goals":["Platform available","SSO and access configured"],"tasks":["Deploy GitLab","Configure SSO","Validate runners"],"risks":["Infrastructure delays","Access issues"],"workshops":["Admin enablement"],"success_criteria":["GitLab production ready","Runners online"]},{"key":"onboarding_complete","label":"Onboarding complete","goals":["Teams onboarded","Training complete"],"tasks":["Migrate repositories","Deliver training sessions"],"risks":["Low training attendance"],"workshops":["CI/Verify workshop"],"success_criteria":["Training completed","Pilot teams live"]},{"key":"first_value","label":"First value","goals":["Reach 10% license activation","First production pipeline"],"tasks":["Enable CI in priority projects","Drive adoption campaigns"],"risks":["Low license utilization","Pipeline instability"],"workshops":["CI/Verify workshop"],"success_criteria":["10% licenses active","First deployment via GitLab"]},{"key":"outcome","label":"Outcome achieved","goals":["Primary use case delivered","Business outcomes verified"],"tasks":["Scale CI/CD coverage","Enable security scans"],"risks":["Outcome lag","Security gaps"],"workshops":["Secure workshop","CD/Release playbook"],"success_criteria":["Use case green","ROI validated"]}]}},"health":{"adoption_score":64,"engagement_score":72,"outcomes_score":58,"overall_score":65,"early_warning_flags":[{"severity":"yellow","title":"Usage drop 22% month over month","detail":"Pipeline activity dipped after holiday freeze","playbook":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"},{"severity":"yellow","title":"Engagement decline","detail":"Cadence attendance fell below 70%","playbook":"https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"},{"severity":"red","title":"Renewal risk at 162 days","detail":"Success plan objective #2 behind schedule","playbook":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"}]},"engagement":{"cadence_attendance_rate":0.76,"last_exec_meeting":"2025-12-18","next_exec_meeting":"2026-03-18","last_ebr_date":"2025-12-18","next_ebr_date":"2026-03-20","last_qbr_date":"2025-10-15","next_qbr_date":"2026-04-15","workshop_participation":0.62,"response_time_days":2.4,"nps":34,"sentiment":"Mixed","cadence_calendar":[{"cadence":"Monthly","focus":"Adoption review","owner":"CSM","next_date":"2026-02-10"},{"cadence":"Quarterly","focus":"Executive business review","owner":"CSM + Exec sponsor","next_date":"2026-03-20"},{"cadence":"Biweekly","focus":"Delivery workshop checkpoint","owner":"DevOps lead","next_date":"2026-02-03"}],"ebr_templates":{"agenda":"EBR Agenda\n1. Executive summary and outcomes\n2. Adoption and health score\n3. Success plan progress\n4. Risks and mitigations\n5. Roadmap alignment\n6. Next quarter priorities","slides":"EBR Slide Outline\n1. Executive summary\n2. Health score and adoption\n3. Success plan objectives\n4. DORA and value streams\n5. Risks and mitigation plan\n6. Roadmap alignment\n7. Next quarter priorities","checklist":"EBR Checklist\n- Confirm KPIs and success plan status\n- Update renewal risk and mitigation\n- Validate DORA and VSA metrics\n- Capture executive feedback"}},"touchpoints":{"email_metrics":{"open_rate":0.42,"ctr":0.08,"response_rate":0.18},"self_service_metrics":{"doc_views":860,"training_completion":0.62,"ticket_deflection":0.24},"in_app_metrics":{"views":320,"clicks":70,"survey_completion":0.56},"digital_health_score":71,"breakdown":{"email":68,"self_service":74,"in_app":70}},"risks":[{"id":"risk-license","severity":"red","driver":"License utilization below 50%","detail":"Only 210 of 500 seats active","owner":"CSM","due_date":"2026-02-15","playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/","mitigation":[{"task":"Launch adoption campaign with team leads","owner":"CSM","due_date":"2026-02-05"},{"task":"Schedule onboarding refresher session","owner":"TAM","due_date":"2026-02-12"}]},{"id":"risk-security","severity":"yellow","driver":"Security scans enabled in only 12% of projects","detail":"SAST not running on regulated apps","owner":"Security lead","due_date":"2026-03-01","playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/","mitigation":[{"task":"Enable SAST and dependency scanning","owner":"Security","due_date":"2026-02-20"},{"task":"Run Secure workshop","owner":"CSM","due_date":"2026-02-28"}]}],"risk_playbooks":{"red":[{"title":"Health score triage","link":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"},{"title":"Customer health scoring","link":"https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"}],"yellow":[{"title":"Playbooks index","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/"},{"title":"Success plans","link":"https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/"}]},"success_plan":{"next_review":"2026-02-05","objectives":[{"title":"Automate Tier-1 release workflows","status":"in_progress","progress_pct":0.45,"owner":"DevOps lead","target_date":"2026-03-30","evidence":"https://gitlab.com/northwind/collaboration/-/issues/34","dependencies":["Runner scaling","Release pipeline approval"],"next_milestone":"First Tier-1 app release"},{"title":"Expand CI adoption to 60% of projects","status":"in_progress","progress_pct":0.55,"owner":"Platform engineering","target_date":"2026-03-15","evidence":"https://gitlab.com/northwind/collaboration/-/issues/28","dependencies":["CI templates rollout"],"next_milestone":"50% projects with CI"},{"title":"Enable security scanning for regulated apps","status":"at_risk","progress_pct":0.3,"owner":"Security","target_date":"2026-02-28","evidence":"https://gitlab.com/northwind/collaboration/-/issues/41","dependencies":["SAST pipeline updates"],"next_milestone":"SAST baseline enabled"}]},"outcomes":{"value_summary":"Release frequency up 2.5x","value_detail":"Lead time down from 14 to 7 days","narrative":"Delivery velocity improved across Tier-1 services with GitLab CI/CD adoption. The next focus is scaling Secure tooling to regulated apps."},"dora":{"metrics":{"deployment_frequency":{"label":"Deployment frequency","unit":"deploys/day","baseline":0.2,"current":0.6,"target":1.0,"series":[{"date":"2025-11-01","value":0.2},{"date":"2025-12-01","value":0.3},{"date":"2026-01-01","value":0.5},{"date":"2026-01-20","value":0.6}]},"lead_time":{"label":"Lead time for changes","unit":"days","baseline":14,"current":7,"target":3,"series":[{"date":"2025-11-01","value":14},{"date":"2025-12-01","value":10},{"date":"2026-01-01","value":8},{"date":"2026-01-20","value":7}]},"change_failure":{"label":"Change failure rate","unit":"%","baseline":18,"current":11,"target":5,"series":[{"date":"2025-11-01","value":18},{"date":"2025-12-01","value":14},{"date":"2026-01-01","value":12},{"date":"2026-01-20","value":11}]},"mttr":{"label":"Time to restore service","unit":"hours","baseline":10,"current":6,"target":2,"series":[{"date":"2025-11-01","value":10},{"date":"2025-12-01","value":8},{"date":"2026-01-01","value":7},{"date":"2026-01-20","value":6}]}},"levels":{"deployment_frequency":{"elite":1.0,"high":0.2,"medium":0.03},"lead_time":{"elite":1.0,"high":7.0,"medium":30.0},"change_failure":{"elite":5.0,"high":10.0,"medium":20.0},"mttr":{"elite":1.0,"high":24.0,"medium":72.0}}},"vsa":{"lead_time_days":7.2,"cycle_time_days":5.1,"throughput_per_week":18,"bottleneck_stage":"Code review","recommendations":["Introduce merge request templates for faster reviews","Add reviewers to critical paths","Automate approval rules for low-risk changes"]},"collaboration_project":{"url":"https://gitlab.com/northwind/collaboration","open_issues":24,"overdue":5,"comment_velocity":"34 comments/week","templates":{"agenda":"Agenda\n- Progress review\n- Risks and blockers\n- Upcoming workshops\n- Action items","action_items":"Action Items\n- Task\n- Owner\n- Due date\n- Status","escalation":"Escalation\n- Issue description\n- Severity\n- Impact\n- Requested support","success_report":"Success Report\n- Objective\n- Outcome\n- Evidence\n- Next steps"}},"activity":[{"date":"2026-01-18","title":"CI usage review","detail":"Pipeline success rate improved to 72%"},{"date":"2026-01-10","title":"Security workshop scheduled","detail":"Secure enablement set for Feb 20"},{"date":"2026-01-05","title":"Executive summary shared","detail":"Renewal readiness checkpoint sent to sponsor"}],"renewal_readiness":["Success plan objectives mapped to renewal goals","Health score above 60","Executive sponsor aligned on Q2 priorities","Expansion opportunity identified"],"workshops":[{"title":"CI / Verify Workshop","detail":"Half-day enablement for pipeline onboarding","duration":"4 hours","prerequisites":"Runner access and sample project","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"},{"title":"CD / Release Playbook","detail":"Deployment automation planning","duration":"3 hours","prerequisites":"CI pipeline baseline","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/"},{"title":"Secure Workshop","detail":"SAST and dependency scanning rollout","duration":"3 hours","prerequisites":"Security team alignment","link":"https://handbook.gitlab.com/handbook/customer-success/workshops/secure/"}],"resources":{"health":[{"title":"Customer health scoring","detail":"Health score framework and definitions","link":"https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"},{"title":"Health score triage","detail":"Guidance for red and yellow accounts","link":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"}],"success":[{"title":"Success plans","detail":"Success plan framework and objectives","link":"https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/"}],"onboarding":[{"title":"Customer onboarding","detail":"Onboarding process and milestones","link":"https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/"},{"title":"Cadence calls","detail":"Cadence call structure and expectations","link":"https://handbook.gitlab.com/handbook/customer-success/csm/cadence-calls/"}],"playbooks":[{"title":"CS playbooks index","detail":"Customer Success playbooks catalog","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/"},{"title":"CI / Verify playbook","detail":"CI adoption enablement","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"},{"title":"CD / Release playbook","detail":"Release adoption enablement","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/"}],"ebr":[{"title":"Executive business reviews","detail":"EBR guidance and preparation","link":"https://handbook.gitlab.com/handbook/customer-success/csm/ebr/"}],"collaboration":[{"title":"Customer collaboration project","detail":"Shared project guide","link":"https://handbook.gitlab.com/handbook/customer-success/csm/customer-collaboration-project/"}],"analytics":[{"title":"Value Streams dashboard","detail":"Value Streams dashboard docs","link":"https://docs.gitlab.com/user/analytics/value_streams_dashboard/"},{"title":"DORA metrics","detail":"DORA metrics documentation","link":"https://docs.gitlab.com/user/analytics/dora_metrics/"},{"title":"DORA charts","detail":"DORA charts documentation","link":"https://docs.gitlab.com/user/analytics/dora_metrics_charts/"}]}};
@@ -35,6 +39,21 @@ const formatPercent = (value) => {
 const formatNumber = (value) => {
   if (value === undefined || value === null || Number.isNaN(value)) return '0';
   return numberFormat.format(value);
+};
+
+const escapeHtml = (value) =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+const highlightMatch = (label, query) => {
+  if (!query) return escapeHtml(label);
+  const escaped = escapeHtml(label);
+  const pattern = new RegExp(`(${query.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')})`, 'ig');
+  return escaped.replace(pattern, '<mark>$1</mark>');
 };
 
 const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
@@ -98,6 +117,14 @@ const mergeOverrides = (data, overrides) => {
   return merged;
 };
 
+const syncPersonaAttributes = () => {
+  document.querySelectorAll('[data-audience]').forEach((el) => {
+    if (!el.dataset.personaRelevance) {
+      el.dataset.personaRelevance = el.dataset.audience;
+    }
+  });
+};
+
 const computeHealthScores = (health) => {
   const adoption = health.adoption_score ?? 0;
   const engagement = health.engagement_score ?? 0;
@@ -125,6 +152,76 @@ const computeTrend = (series) => {
   const prev = series[series.length - 2].value;
   if (prev === 0) return 0;
   return Math.round(((last - prev) / prev) * 100);
+};
+
+const statusLabel = (status) => {
+  if (status === 'good') return 'On track';
+  if (status === 'risk') return 'At risk';
+  return 'Watch';
+};
+
+const computeSectionMetrics = (view) => {
+  const useCases = view.lists.useCaseCards || [];
+  const greenCount = useCases.filter((useCase) => useCase.score >= 76).length;
+  const adoptionProgress = useCases.length ? greenCount / useCases.length : 0;
+  const targetMatch = String(view.adoption.platform_adoption_target || '').match(/\d+/);
+  const adoptionTarget = targetMatch ? Number.parseInt(targetMatch[0], 10) : 3;
+
+  const onboardingTasks = view.lists.onboardingTasks || [];
+  const completedTasks = onboardingTasks.filter((task) => task.done).length;
+  const journeyProgress = onboardingTasks.length ? completedTasks / onboardingTasks.length : 0;
+  const milestoneValues = Object.values(view.milestones || {});
+  const milestonesComplete = milestoneValues.every((milestone) => milestone.statusKey === 'complete');
+
+  const objectives = view.lists.successPlan || [];
+  const onTrackCount = objectives.filter((objective) => objective.status !== 'at_risk').length;
+  const outcomesProgress = objectives.length ? onTrackCount / objectives.length : 0;
+
+  const healthBand = bandFromScore(view.health.overall_score || 0);
+  const digitalBand = bandFromScore(view.touchpoints.digital_health_score || 0);
+
+  return {
+    overview: {
+      progress: clamp((view.health.overall_score || 0) / 100),
+      status: healthBand.status,
+      value: `${view.health.overall_score || 0}%`
+    },
+    'overview-summary': {
+      progress: clamp((view.health.overall_score || 0) / 100),
+      status: healthBand.status,
+      value: `${view.health.overall_score || 0}%`
+    },
+    journey: {
+      progress: clamp(journeyProgress),
+      status: milestonesComplete ? 'good' : journeyProgress >= 0.6 ? 'watch' : 'risk',
+      value: `${Math.round(journeyProgress * 100)}%`
+    },
+    adoption: {
+      progress: clamp(adoptionProgress),
+      status: greenCount >= adoptionTarget ? 'good' : greenCount > 0 ? 'watch' : 'risk',
+      value: `${greenCount}/${useCases.length}`
+    },
+    'health-risk': {
+      progress: clamp((view.health.overall_score || 0) / 100),
+      status: healthBand.status,
+      value: `${view.health.overall_score || 0}%`
+    },
+    outcomes: {
+      progress: clamp(outcomesProgress),
+      status: outcomesProgress >= 0.7 ? 'good' : outcomesProgress >= 0.4 ? 'watch' : 'risk',
+      value: `${onTrackCount}/${objectives.length}`
+    },
+    engagement: {
+      progress: clamp((view.touchpoints.digital_health_score || 0) / 100),
+      status: digitalBand.status,
+      value: `${view.touchpoints.digital_health_score || 0}%`
+    },
+    resources: {
+      progress: 1,
+      status: 'good',
+      value: 'Ready'
+    }
+  };
 };
 
 const computeChange = (current, baseline) => {
@@ -936,11 +1033,280 @@ const initDetailsControls = () => {
   });
 };
 
+const updateSectionBadges = (metrics) => {
+  document.querySelectorAll('[data-section]').forEach((section) => {
+    const metric = metrics[section.id];
+    const badge = section.querySelector('[data-section-status]');
+    if (!metric || !badge) return;
+    badge.textContent = statusLabel(metric.status);
+    badge.dataset.status = metric.status;
+  });
+};
+
+const updateProgressSidebar = (metrics) => {
+  const overall = [];
+  document.querySelectorAll('[data-progress-item]').forEach((item) => {
+    const metric = metrics[item.dataset.sectionId];
+    if (!metric) return;
+    const valueEl = item.querySelector('[data-progress-value]');
+    const statusEl = item.querySelector('[data-progress-status]');
+    if (valueEl) valueEl.textContent = metric.value;
+    if (statusEl) statusEl.dataset.status = metric.status;
+    overall.push(metric.progress);
+  });
+  const avg = overall.length ? overall.reduce((sum, value) => sum + value, 0) / overall.length : 0;
+  const fill = document.querySelector('[data-overall-progress]');
+  const label = document.querySelector('[data-overall-progress-label]');
+  const track = document.querySelector('.progress-track');
+  if (fill) {
+    fill.style.setProperty('--value', avg);
+  }
+  if (label) {
+    label.textContent = `${Math.round(avg * 100)}%`;
+  }
+  if (track) {
+    track.setAttribute('aria-valuenow', Math.round(avg * 100).toString());
+  }
+};
+
+const applySectionState = (section, collapsed) => {
+  section.classList.toggle('is-collapsed', collapsed);
+  const btn = section.querySelector('[data-section-toggle]');
+  const body = section.querySelector('[data-section-body]');
+  if (body) {
+    body.setAttribute('aria-hidden', collapsed.toString());
+  }
+  if (btn) {
+    btn.textContent = collapsed ? 'Expand section' : 'Collapse section';
+    btn.setAttribute('aria-expanded', (!collapsed).toString());
+  }
+};
+
+const initSectionControls = (metrics) => {
+  const storedState = loadStorage(STORAGE_KEYS.sections, {});
+  const sections = [...document.querySelectorAll('.section[data-section]')];
+  const defaults = {};
+  sections.forEach((section) => {
+    const metric = metrics[section.id];
+    if (storedState[section.id] !== undefined) return;
+    if (section.id === 'overview-summary') {
+      defaults[section.id] = false;
+      return;
+    }
+    if (metric && metric.progress >= 0.95 && metric.status === 'good') {
+      defaults[section.id] = true;
+      return;
+    }
+    defaults[section.id] = metric ? metric.status === 'good' && metric.progress >= 0.8 : false;
+  });
+  const mergedState = { ...defaults, ...storedState };
+
+  sections.forEach((section) => {
+    applySectionState(section, mergedState[section.id]);
+  });
+
+  const persist = () => saveStorage(STORAGE_KEYS.sections, mergedState);
+
+  sections.forEach((section) => {
+    const btn = section.querySelector('[data-section-toggle]');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      mergedState[section.id] = !mergedState[section.id];
+      applySectionState(section, mergedState[section.id]);
+      persist();
+    });
+  });
+
+  document.querySelectorAll('[data-sections-expand]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      sections.forEach((section) => {
+        mergedState[section.id] = false;
+        applySectionState(section, false);
+      });
+      persist();
+    });
+  });
+
+  document.querySelectorAll('[data-sections-collapse]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      sections.forEach((section) => {
+        mergedState[section.id] = true;
+        applySectionState(section, true);
+      });
+      persist();
+    });
+  });
+};
+
+const initSidebar = () => {
+  const html = document.documentElement;
+  const stored = loadStorage(STORAGE_KEYS.sidebar, 'show');
+  const applyState = (value) => {
+    html.dataset.sidebarHidden = value === 'hide';
+  };
+  applyState(stored);
+  document.querySelectorAll('[data-sidebar-toggle]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const next = html.dataset.sidebarHidden === 'true' ? 'show' : 'hide';
+      applyState(next);
+      saveStorage(STORAGE_KEYS.sidebar, next);
+      const select = document.querySelector('[data-setting-sidebar]');
+      if (select) select.value = next;
+    });
+  });
+  const select = document.querySelector('[data-setting-sidebar]');
+  if (select) {
+    select.value = stored;
+    select.addEventListener('change', (event) => {
+      applyState(event.target.value);
+      saveStorage(STORAGE_KEYS.sidebar, event.target.value);
+    });
+  }
+};
+
+const initFab = () => {
+  const fab = document.querySelector('[data-fab]');
+  const toggle = document.querySelector('[data-fab-toggle]');
+  if (!fab || !toggle) return;
+  const stored = loadStorage(STORAGE_KEYS.fab, false);
+  const setOpen = (open) => {
+    fab.classList.toggle('is-open', open);
+    toggle.setAttribute('aria-expanded', open.toString());
+    const menu = document.querySelector('[data-fab-menu]');
+    if (menu) menu.setAttribute('aria-hidden', (!open).toString());
+    saveStorage(STORAGE_KEYS.fab, open);
+  };
+  setOpen(Boolean(stored));
+  toggle.addEventListener('click', () => setOpen(!fab.classList.contains('is-open')));
+  document.addEventListener('click', (event) => {
+    if (!fab.classList.contains('is-open')) return;
+    if (fab.contains(event.target)) return;
+    setOpen(false);
+  });
+};
+
+const initBackToTop = () => {
+  const btn = document.querySelector('[data-back-to-top]');
+  if (!btn) return;
+  const toggle = () => {
+    btn.classList.toggle('is-visible', window.scrollY > 400);
+  };
+  toggle();
+  window.addEventListener('scroll', toggle);
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+};
+
+const initMobileNav = () => {
+  const nav = document.querySelector('[data-mobile-nav]');
+  const openBtn = document.querySelector('[data-open-nav]');
+  if (!nav || !openBtn) return;
+  const closeButtons = nav.querySelectorAll('[data-close-nav]');
+  const links = nav.querySelectorAll('[data-mobile-link]');
+
+  const setOpen = (open) => {
+    nav.classList.toggle('is-open', open);
+    nav.setAttribute('aria-hidden', (!open).toString());
+    document.body.classList.toggle('nav-open', open);
+  };
+
+  openBtn.addEventListener('click', () => setOpen(true));
+  closeButtons.forEach((btn) => btn.addEventListener('click', () => setOpen(false)));
+  links.forEach((link) => link.addEventListener('click', () => setOpen(false)));
+  nav.querySelector('.mobile-nav-backdrop')?.addEventListener('click', () => setOpen(false));
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && nav.classList.contains('is-open')) {
+      setOpen(false);
+    }
+  });
+};
+
+const initSettings = () => {
+  const settingsModal = document.getElementById('settings-modal');
+  if (!settingsModal) return;
+  document.querySelectorAll('[data-open-settings]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (typeof settingsModal.showModal === 'function') {
+        settingsModal.showModal();
+      } else {
+        settingsModal.setAttribute('open', '');
+      }
+    });
+  });
+  settingsModal.querySelector('[data-reset-preferences]')?.addEventListener('click', () => {
+    Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
+    window.location.reload();
+  });
+  settingsModal.querySelectorAll('[data-close-modal]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (typeof settingsModal.close === 'function') {
+        settingsModal.close();
+      } else {
+        settingsModal.removeAttribute('open');
+      }
+    });
+  });
+};
+
+const initBreadcrumbs = () => {
+  const sectionEl = document.querySelector('[data-breadcrumb-section]');
+  const subEl = document.querySelector('[data-breadcrumb-subsection]');
+  const subSep = document.querySelector('.crumb-sub-sep');
+  const state = { sectionId: null };
+
+  const setSection = (label, id) => {
+    if (sectionEl) sectionEl.textContent = label || 'Overview';
+    state.sectionId = id;
+    setSubsection('');
+  };
+
+  const setSubsection = (label) => {
+    if (!subEl || !subSep) return;
+    if (!label) {
+      subEl.textContent = '';
+      subEl.style.display = 'none';
+      subSep.style.display = 'none';
+      return;
+    }
+    subEl.textContent = label;
+    subEl.style.display = 'inline';
+    subSep.style.display = 'inline';
+  };
+
+  return { setSection, setSubsection, getSectionId: () => state.sectionId };
+};
+
+const initDetailBreadcrumbs = (breadcrumbs) => {
+  document.querySelectorAll('details').forEach((detail) => {
+    detail.addEventListener('toggle', () => {
+      const section = detail.closest('[data-section]');
+      if (!section || section.id !== breadcrumbs.getSectionId()) return;
+      if (detail.open) {
+        breadcrumbs.setSubsection(detail.querySelector('summary')?.textContent?.trim() || '');
+        return;
+      }
+      const openDetail = section.querySelector('details[open]');
+      breadcrumbs.setSubsection(openDetail?.querySelector('summary')?.textContent?.trim() || '');
+    });
+  });
+};
+
 const initModeSwitch = () => {
   const buttons = [...document.querySelectorAll('[data-mode]')];
+  const hint = document.querySelector('[data-mode-hint]');
+  const modeCopy = {
+    all: 'Showing all sections.',
+    exec: 'Executive focus: outcomes and risks.',
+    devops: 'DevOps focus: adoption and enablement.',
+    csm: 'CSM focus: health drivers and cadence.'
+  };
   const setMode = (mode, persist = true) => {
     document.documentElement.dataset.mode = mode;
     buttons.forEach((btn) => btn.classList.toggle('is-active', btn.dataset.mode === mode));
+    if (hint) {
+      hint.textContent = modeCopy[mode] || modeCopy.all;
+    }
     if (persist) {
       saveStorage(STORAGE_KEYS.mode, mode);
     }
@@ -958,22 +1324,44 @@ const initModeSwitch = () => {
   return () => document.documentElement.dataset.mode || 'all';
 };
 
-const initNavSpy = () => {
+const initNavSpy = (breadcrumbs) => {
   const links = [...document.querySelectorAll('[data-nav-link]')];
+  const progressItems = [...document.querySelectorAll('[data-progress-item]')];
   const sections = [...document.querySelectorAll('[data-section]')];
+  const linkMap = new Map(links.map((link) => [link.getAttribute('href')?.replace('#', ''), link]));
 
   let activeId = null;
-  const setActive = (id) => {
-    if (!id || activeId === id) return;
-    activeId = id;
-    links.forEach((link) => link.classList.toggle('is-active', link.getAttribute('href') === `#${id}`));
+  const setActive = (section) => {
+    if (!section) return;
+    const alias = section.dataset.sectionAlias;
+    const targetId = linkMap.has(section.id) ? section.id : alias || section.id;
+    if (activeId === targetId) return;
+    activeId = targetId;
+    links.forEach((link) => {
+      const isActive = link.getAttribute('href') === `#${targetId}`;
+      link.classList.toggle('is-active', isActive);
+      if (isActive) {
+        link.setAttribute('aria-current', 'page');
+      } else {
+        link.removeAttribute('aria-current');
+      }
+    });
+    progressItems.forEach((item) => item.classList.toggle('is-active', item.dataset.sectionId === targetId));
+
+    const label = section.dataset.sectionLabel || section.querySelector('h2')?.textContent || 'Overview';
+    if (breadcrumbs) {
+      breadcrumbs.setSection(label, targetId);
+      const openDetail = section.querySelector('details[open]');
+      breadcrumbs.setSubsection(openDetail?.querySelector('summary')?.textContent?.trim() || '');
+    }
+    saveStorage(STORAGE_KEYS.lastSection, targetId);
   };
 
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          setActive(entry.target.id);
+          setActive(entry.target);
         }
       });
     },
@@ -1001,11 +1389,14 @@ const initPalette = (view) => {
     document.querySelectorAll('[data-section]').forEach((section) => {
       const heading = section.querySelector('h2');
       if (!heading) return;
+      const label = section.dataset.sectionLabel || heading.textContent.trim();
+      const targetId = section.dataset.sectionAlias || section.id;
       items.push({
-        label: heading.textContent.trim(),
+        label,
         meta: 'Section',
+        breadcrumb: `Dashboard / ${label}`,
         type: 'section',
-        target: `#${section.id}`
+        target: `#${targetId}`
       });
     });
 
@@ -1013,6 +1404,7 @@ const initPalette = (view) => {
       items.push({
         label: workshop.title,
         meta: 'Workshop',
+        breadcrumb: 'Dashboard / Engagement & Enablement',
         type: 'link',
         target: workshop.link
       });
@@ -1022,6 +1414,7 @@ const initPalette = (view) => {
       items.push({
         label: useCase.name,
         meta: 'Use case score',
+        breadcrumb: 'Dashboard / Adoption',
         type: 'section',
         target: '#adoption'
       });
@@ -1032,8 +1425,54 @@ const initPalette = (view) => {
       items.push({
         label: doraMetrics[key].label,
         meta: 'DORA metric',
+        breadcrumb: 'Dashboard / Outcomes',
         type: 'section',
         target: '#outcomes'
+      });
+    });
+
+    [
+      { label: 'Health score', target: '#overview-summary', breadcrumb: 'Dashboard / Overview' },
+      { label: 'Platform adoption', target: '#adoption', breadcrumb: 'Dashboard / Adoption' },
+      { label: 'License utilization', target: '#overview-summary', breadcrumb: 'Dashboard / Overview' },
+      { label: 'Digital health score', target: '#engagement', breadcrumb: 'Dashboard / Engagement' }
+    ].forEach((metric) => {
+      items.push({
+        label: metric.label,
+        meta: 'Metric',
+        breadcrumb: metric.breadcrumb,
+        type: 'section',
+        target: metric.target
+      });
+    });
+
+    (currentView.lists.nextActions || []).forEach((action) => {
+      items.push({
+        label: action.title,
+        meta: 'Next action',
+        breadcrumb: 'Dashboard / Overview',
+        type: 'section',
+        target: '#next-actions'
+      });
+    });
+
+    (currentView.lists.onboardingTasks || []).forEach((task) => {
+      items.push({
+        label: task.task,
+        meta: 'Onboarding task',
+        breadcrumb: 'Dashboard / Journey',
+        type: 'section',
+        target: '#journey'
+      });
+    });
+
+    (currentView.lists.risks || []).forEach((risk) => {
+      items.push({
+        label: risk.driver,
+        meta: 'Risk',
+        breadcrumb: 'Dashboard / Health & Risk',
+        type: 'section',
+        target: '#health-risk'
       });
     });
 
@@ -1043,6 +1482,7 @@ const initPalette = (view) => {
         items.push({
           label: resource.title,
           meta: 'Resource',
+          breadcrumb: 'Dashboard / Resources',
           type: 'link',
           target: resource.link
         });
@@ -1054,6 +1494,7 @@ const initPalette = (view) => {
       items.push({
         label: key.replace(/_/g, ' '),
         meta: 'Template',
+        breadcrumb: 'Dashboard / Engagement & Enablement',
         type: 'template',
         target: templates[key]
       });
@@ -1066,8 +1507,9 @@ const initPalette = (view) => {
       const li = document.createElement('li');
       li.className = `palette-item${index === activeIndex ? ' is-active' : ''}`;
       li.innerHTML = `
-        <span class="palette-label">${item.label}</span>
+        <span class="palette-label">${highlightMatch(item.label, input.value.trim())}</span>
         <span class="palette-meta">${item.meta}</span>
+        ${item.breadcrumb ? `<span class="palette-crumb">${item.breadcrumb}</span>` : ''}
       `;
       li.addEventListener('click', () => selectItem(item));
       results.appendChild(li);
@@ -1084,7 +1526,14 @@ const initPalette = (view) => {
   const selectItem = async (item) => {
     if (!item) return;
     if (item.type === 'section') {
-      window.location.hash = item.target;
+      const target = document.querySelector(item.target);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        target.classList.add('section-flash');
+        setTimeout(() => target.classList.remove('section-flash'), 1400);
+      } else {
+        window.location.hash = item.target;
+      }
     } else if (item.type === 'link') {
       window.open(item.target, '_blank', 'noopener');
     } else if (item.type === 'template') {
@@ -1156,7 +1605,7 @@ const initPalette = (view) => {
   return { open: openPalette, update };
 };
 
-const initQuickActions = (getMode, getSection) => {
+const initQuickActions = (getMode, getSection, getView) => {
   document.querySelectorAll('[data-share-link]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const url = new URL(window.location.href);
@@ -1169,6 +1618,42 @@ const initQuickActions = (getMode, getSection) => {
       flashButton(btn, 'Copied');
     });
   });
+
+  document.querySelectorAll('[data-schedule-meeting]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const collabModal = document.getElementById('collab-modal');
+      if (collabModal) {
+        const select = collabModal.querySelector('[data-collab-template]');
+        if (select) {
+          select.value = 'collab_agenda';
+          select.dispatchEvent(new Event('change'));
+        }
+        if (typeof collabModal.showModal === 'function') {
+          collabModal.showModal();
+        } else {
+          collabModal.setAttribute('open', '');
+        }
+        return;
+      }
+      const view = getView();
+      if (view?.collaboration_project?.url) {
+        window.open(view.collaboration_project.url, '_blank', 'noopener');
+      }
+    });
+  });
+};
+
+const restoreScrollPosition = () => {
+  if (window.location.hash) return;
+  const lastSection = loadStorage(STORAGE_KEYS.lastSection, null);
+  if (!lastSection) return;
+  const target =
+    document.getElementById(lastSection) || document.querySelector(`[data-section-alias="${lastSection}"]`);
+  if (target) {
+    setTimeout(() => {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+  }
 };
 
 const initModals = (state, refresh) => {
@@ -1266,11 +1751,43 @@ const initModals = (state, refresh) => {
   });
 };
 
-const initExport = () => {
+const buildCsv = (view) => {
+  const rows = [
+    ['Metric', 'Value'],
+    ['Health score', view.health.overall_score],
+    ['Health band', view.health.band_label],
+    ['Platform adoption', view.adoption.platform_adoption_summary],
+    ['License utilization', view.seats.utilization_pct],
+    ['Renewal countdown', view.customer.renewal_countdown],
+    ['Digital health score', view.touchpoints.digital_health_score],
+    ['Next EBR', view.engagement.next_ebr_date]
+  ];
+  const escape = (value) => `"${String(value).replace(/"/g, '""')}"`;
+  return rows.map((row) => row.map(escape).join(',')).join('\n');
+};
+
+const initExport = (getView) => {
   document.querySelectorAll('[data-export-ebr]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const url = new URL('print/ebr.html', window.location.href);
       window.open(url.toString(), '_blank', 'noopener');
+    });
+  });
+
+  document.querySelectorAll('[data-export-csv]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const view = getView();
+      if (!view) return;
+      const csv = buildCsv(view);
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'gitlab-health-dashboard.csv';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
     });
   });
 };
@@ -1281,6 +1798,13 @@ const render = (view, state) => {
   updateProgressBars(view);
   updateRing(view);
   updateTimeline(view);
+  const sectionMetrics = computeSectionMetrics(view);
+  updateSectionBadges(sectionMetrics);
+  updateProgressSidebar(sectionMetrics);
+  if (!state.sectionControlsReady) {
+    initSectionControls(sectionMetrics);
+    state.sectionControlsReady = true;
+  }
 
   renderSeatTrend(document.querySelector('[data-list="seat-trend"]'), view.lists.seatTrend);
   renderRenewalChecklist(document.querySelector('[data-list="renewal-checklist"]'), view.lists.renewalChecklist);
@@ -1340,14 +1864,24 @@ const init = async () => {
     overrides,
     actionState,
     view: null,
-    palette: null
+    palette: null,
+    sectionControlsReady: false
   };
 
+  syncPersonaAttributes();
+  initSidebar();
+  initMobileNav();
+  initFab();
+  initBackToTop();
+  initSettings();
+
+  const breadcrumbs = initBreadcrumbs();
   const getMode = initModeSwitch();
-  const getSection = initNavSpy();
+  const getSection = initNavSpy(breadcrumbs);
+  initDetailBreadcrumbs(breadcrumbs);
   initDetailsControls();
-  initQuickActions(getMode, getSection);
-  initExport();
+  initQuickActions(getMode, getSection, () => state.view);
+  initExport(() => state.view);
 
   const refresh = () => {
     state.view = buildView(state.data, state.overrides, state.actionState);
@@ -1361,6 +1895,7 @@ const init = async () => {
   initLandingZone(state.view);
   initCollabModal(state.view.templates);
   initModals(state, refresh);
+  restoreScrollPosition();
 };
 
 document.addEventListener('DOMContentLoaded', init);

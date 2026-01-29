@@ -16,7 +16,13 @@
   </head>
   <body>
     <div class="page">
-      <header class="hero site-header" id="overview" data-section data-audience="all exec devops csm">
+      <header
+        class="hero site-header"
+        id="overview"
+        data-section
+        data-section-label="Overview"
+        data-audience="all exec devops csm"
+      >
         <div class="nav-shell">
           <nav class="nav primary-nav" aria-label="Primary navigation">
             <div class="brand">
@@ -26,6 +32,9 @@
                 <span class="brand-sub">Customer Success Dashboard</span>
               </div>
             </div>
+            <button class="nav-toggle" type="button" data-open-nav aria-label="Open navigation">
+              Menu
+            </button>
             <div class="nav-links" aria-label="Primary">
               <a href="#overview" data-nav-link>Overview</a>
               <a href="#journey" data-nav-link>Journey</a>
@@ -35,9 +44,13 @@
               <a href="#engagement" data-nav-link>Engagement &amp; Enablement</a>
               <a href="#resources" data-nav-link>Resources</a>
             </div>
-            <button class="nav-search" type="button" data-open-palette aria-label="Search dashboard">
-              Search (Ctrl+K)
-            </button>
+            <div class="nav-actions">
+              <button class="nav-search" type="button" data-open-palette aria-label="Search dashboard">
+                Search (Ctrl+K)
+              </button>
+              <button class="ghost-btn" type="button" data-export-ebr>Export</button>
+              <button class="ghost-btn" type="button" data-open-settings>Settings</button>
+            </div>
           </nav>
 
           <section class="modebar" aria-label="Mode and quick links">
@@ -47,6 +60,7 @@
               <button class="mode-btn" type="button" data-mode="exec">Executive</button>
               <button class="mode-btn" type="button" data-mode="devops">DevOps leader</button>
               <button class="mode-btn" type="button" data-mode="csm">CSM</button>
+              <span class="mode-hint" data-mode-hint>Showing all sections.</span>
             </div>
             <div class="modebar-right">
               <a class="qa" href="#next-actions">Next actions</a>
@@ -55,6 +69,20 @@
               <button class="qa" type="button" data-open-palette>Search</button>
             </div>
           </section>
+
+          <div class="breadcrumb-bar">
+            <nav class="breadcrumbs" aria-label="Breadcrumb">
+              <span class="crumb" data-breadcrumb-root>Dashboard</span>
+              <span class="crumb-sep" aria-hidden="true">/</span>
+              <span class="crumb" data-breadcrumb-section>Overview</span>
+              <span class="crumb-sep crumb-sub-sep" aria-hidden="true">/</span>
+              <span class="crumb crumb-sub" data-breadcrumb-subsection>Summary</span>
+            </nav>
+            <div class="section-global-controls">
+              <button class="ghost-btn" type="button" data-sections-expand>Expand all sections</button>
+              <button class="ghost-btn" type="button" data-sections-collapse>Collapse all sections</button>
+            </div>
+          </div>
         </div>
 
         <div class="hero-grid">
@@ -155,8 +183,70 @@
         </div>
       </header>
 
-      <main>
-        <section class="section" id="overview-summary" data-section data-audience="all exec devops csm" data-details-scope>
+      <div class="layout">
+        <aside class="progress-sidebar" data-progress-sidebar aria-label="Section progress">
+          <div class="progress-card">
+            <div class="progress-head">
+              <div>
+                <p class="eyebrow">Progress</p>
+                <p class="progress-label">Section status</p>
+              </div>
+              <button class="ghost-btn" type="button" data-sidebar-toggle>Hide</button>
+            </div>
+            <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+              <span class="progress-fill" data-overall-progress></span>
+            </div>
+            <span class="progress-value" data-overall-progress-label>0%</span>
+            <ul class="progress-list" data-progress-list>
+              <li data-progress-item data-section-id="overview">
+                <a href="#overview">Overview</a>
+                <span class="progress-meta" data-progress-value>--</span>
+                <span class="progress-status" data-progress-status aria-hidden="true"></span>
+              </li>
+              <li data-progress-item data-section-id="journey">
+                <a href="#journey">Journey</a>
+                <span class="progress-meta" data-progress-value>--</span>
+                <span class="progress-status" data-progress-status aria-hidden="true"></span>
+              </li>
+              <li data-progress-item data-section-id="adoption">
+                <a href="#adoption">Adoption</a>
+                <span class="progress-meta" data-progress-value>--</span>
+                <span class="progress-status" data-progress-status aria-hidden="true"></span>
+              </li>
+              <li data-progress-item data-section-id="health-risk">
+                <a href="#health-risk">Health &amp; Risk</a>
+                <span class="progress-meta" data-progress-value>--</span>
+                <span class="progress-status" data-progress-status aria-hidden="true"></span>
+              </li>
+              <li data-progress-item data-section-id="outcomes">
+                <a href="#outcomes">Outcomes</a>
+                <span class="progress-meta" data-progress-value>--</span>
+                <span class="progress-status" data-progress-status aria-hidden="true"></span>
+              </li>
+              <li data-progress-item data-section-id="engagement">
+                <a href="#engagement">Engagement</a>
+                <span class="progress-meta" data-progress-value>--</span>
+                <span class="progress-status" data-progress-status aria-hidden="true"></span>
+              </li>
+              <li data-progress-item data-section-id="resources">
+                <a href="#resources">Resources</a>
+                <span class="progress-meta" data-progress-value>--</span>
+                <span class="progress-status" data-progress-status aria-hidden="true"></span>
+              </li>
+            </ul>
+          </div>
+        </aside>
+
+        <main class="main-content">
+          <section
+            class="section"
+            id="overview-summary"
+            data-section
+            data-section-label="Executive snapshot"
+            data-section-alias="overview"
+            data-audience="all exec devops csm"
+            data-details-scope
+          >
           <div class="section-head">
             <div>
               <p class="eyebrow">Overview</p>
@@ -164,11 +254,14 @@
               <p class="section-question">Question: What changed and what matters next?</p>
             </div>
             <div class="section-controls">
+              <span class="section-status" data-section-status></span>
+              <button class="ghost-btn" type="button" data-section-toggle>Collapse section</button>
               <button class="ghost-btn" type="button" data-details-action="expand">Expand all</button>
               <button class="ghost-btn" type="button" data-details-action="collapse">Collapse all</button>
             </div>
           </div>
 
+          <div class="section-body" data-section-body>
           <div class="summary-grid">
             <article class="card" style="--order: 1" data-audience="all exec csm">
               <h3>Health score</h3>
@@ -243,9 +336,17 @@
               <ul class="event-list" data-list="activity-feed"></ul>
             </article>
           </div>
+          </div>
         </section>
 
-        <section class="section" id="journey" data-section data-audience="all exec devops csm" data-details-scope>
+        <section
+          class="section"
+          id="journey"
+          data-section
+          data-section-label="Journey"
+          data-audience="all exec devops csm"
+          data-details-scope
+        >
           <div class="section-head">
             <div>
               <p class="eyebrow">Journey</p>
@@ -253,11 +354,14 @@
               <p class="section-question">Question: Are we on track to first value?</p>
             </div>
             <div class="section-controls">
+              <span class="section-status" data-section-status></span>
+              <button class="ghost-btn" type="button" data-section-toggle>Collapse section</button>
               <button class="ghost-btn" type="button" data-details-action="expand">Expand all</button>
               <button class="ghost-btn" type="button" data-details-action="collapse">Collapse all</button>
             </div>
           </div>
 
+          <div class="section-body" data-section-body>
           <div class="timeline" id="milestone-timeline">
             <article class="timeline-step" data-milestone="engagement">
               <span class="step-index">01</span>
@@ -321,8 +425,16 @@
             <summary>Onboarding risks and triggers</summary>
             <ul class="event-list" data-list="onboarding-risks"></ul>
           </details>
+          </div>
         </section>
-        <section class="section" id="adoption" data-section data-audience="all devops csm" data-details-scope>
+        <section
+          class="section"
+          id="adoption"
+          data-section
+          data-section-label="Adoption"
+          data-audience="all devops csm"
+          data-details-scope
+        >
           <div class="section-head">
             <div>
               <p class="eyebrow">Adoption</p>
@@ -330,11 +442,14 @@
               <p class="section-question">Question: What are we not using yet?</p>
             </div>
             <div class="section-controls">
+              <span class="section-status" data-section-status></span>
+              <button class="ghost-btn" type="button" data-section-toggle>Collapse section</button>
               <button class="ghost-btn" type="button" data-details-action="expand">Expand all</button>
               <button class="ghost-btn" type="button" data-details-action="collapse">Collapse all</button>
             </div>
           </div>
 
+          <div class="section-body" data-section-body>
           <div class="summary-grid">
             <article class="card" style="--order: 1">
               <h3>Platform adoption score</h3>
@@ -383,9 +498,17 @@
               </div>
             </div>
           </details>
+          </div>
         </section>
 
-        <section class="section" id="health-risk" data-section data-audience="all exec csm" data-details-scope>
+        <section
+          class="section"
+          id="health-risk"
+          data-section
+          data-section-label="Health & Risk"
+          data-audience="all exec csm"
+          data-details-scope
+        >
           <div class="section-head">
             <div>
               <p class="eyebrow">Health &amp; risk</p>
@@ -393,11 +516,14 @@
               <p class="section-question">Question: Should we worry?</p>
             </div>
             <div class="section-controls">
+              <span class="section-status" data-section-status></span>
+              <button class="ghost-btn" type="button" data-section-toggle>Collapse section</button>
               <button class="ghost-btn" type="button" data-details-action="expand">Expand all</button>
               <button class="ghost-btn" type="button" data-details-action="collapse">Collapse all</button>
             </div>
           </div>
 
+          <div class="section-body" data-section-body>
           <div class="summary-grid">
             <article class="card" style="--order: 1">
               <h3>Weighted health rubric</h3>
@@ -445,7 +571,14 @@
             </div>
           </details>
         </section>
-        <section class="section" id="outcomes" data-section data-audience="all exec csm devops" data-details-scope>
+        <section
+          class="section"
+          id="outcomes"
+          data-section
+          data-section-label="Outcomes"
+          data-audience="all exec csm devops"
+          data-details-scope
+        >
           <div class="section-head">
             <div>
               <p class="eyebrow">Outcomes</p>
@@ -453,11 +586,14 @@
               <p class="section-question">Question: Are we delivering business value?</p>
             </div>
             <div class="section-controls">
+              <span class="section-status" data-section-status></span>
+              <button class="ghost-btn" type="button" data-section-toggle>Collapse section</button>
               <button class="ghost-btn" type="button" data-details-action="expand">Expand all</button>
               <button class="ghost-btn" type="button" data-details-action="collapse">Collapse all</button>
             </div>
           </div>
 
+          <div class="section-body" data-section-body>
           <div class="summary-grid">
             <article class="card" style="--order: 1">
               <h3>Success plan progress</h3>
@@ -499,9 +635,17 @@
               </article>
             </div>
           </details>
+          </div>
         </section>
 
-        <section class="section" id="engagement" data-section data-audience="all exec devops csm" data-details-scope>
+        <section
+          class="section"
+          id="engagement"
+          data-section
+          data-section-label="Engagement & Enablement"
+          data-audience="all exec devops csm"
+          data-details-scope
+        >
           <div class="section-head">
             <div>
               <p class="eyebrow">Engagement &amp; enablement</p>
@@ -509,11 +653,14 @@
               <p class="section-question">Question: Are stakeholders engaged and enabled?</p>
             </div>
             <div class="section-controls">
+              <span class="section-status" data-section-status></span>
+              <button class="ghost-btn" type="button" data-section-toggle>Collapse section</button>
               <button class="ghost-btn" type="button" data-details-action="expand">Expand all</button>
               <button class="ghost-btn" type="button" data-details-action="collapse">Collapse all</button>
             </div>
           </div>
 
+          <div class="section-body" data-section-body>
           <div class="summary-grid">
             <article class="card" style="--order: 1">
               <h3>Digital health score</h3>
@@ -586,9 +733,17 @@
               </article>
             </div>
           </details>
+          </div>
         </section>
 
-        <section class="section" id="resources" data-section data-audience="all exec devops csm" data-details-scope>
+        <section
+          class="section"
+          id="resources"
+          data-section
+          data-section-label="Resources"
+          data-audience="all exec devops csm"
+          data-details-scope
+        >
           <div class="section-head">
             <div>
               <p class="eyebrow">Resources</p>
@@ -596,11 +751,14 @@
               <p class="section-question">Question: Where can I go deeper?</p>
             </div>
             <div class="section-controls">
+              <span class="section-status" data-section-status></span>
+              <button class="ghost-btn" type="button" data-section-toggle>Collapse section</button>
               <button class="ghost-btn" type="button" data-details-action="expand">Expand all</button>
               <button class="ghost-btn" type="button" data-details-action="collapse">Collapse all</button>
             </div>
           </div>
 
+          <div class="section-body" data-section-body>
           <div class="summary-grid">
             <article class="card">
               <h3>Health scoring</h3>
@@ -637,8 +795,10 @@
               </article>
             </div>
           </details>
+          </div>
         </section>
       </main>
+    </div>
 
       <footer class="footer">
         <div>
@@ -647,13 +807,22 @@
       </footer>
     </div>
 
-    <div class="quick-actions" aria-label="Quick actions">
-      <button class="quick-btn" type="button" data-open-health>Update Health</button>
-      <button class="quick-btn" type="button" data-open-touchpoint>Log Touchpoint</button>
-      <button class="quick-btn" type="button" data-open-collab>Collaboration Issue</button>
-      <button class="quick-btn" type="button" data-export-ebr>Export PDF</button>
-      <button class="quick-btn" type="button" data-share-link>Share link</button>
+    <div class="fab" data-fab aria-label="Quick actions">
+      <button class="fab-trigger" type="button" data-fab-toggle aria-expanded="false">
+        Quick actions
+      </button>
+      <div class="fab-menu" data-fab-menu aria-hidden="true">
+        <button class="fab-item" type="button" data-export-ebr>Export PDF</button>
+        <button class="fab-item" type="button" data-export-csv>Export CSV</button>
+        <button class="fab-item" type="button" data-share-link>Share link</button>
+        <button class="fab-item" type="button" data-open-health>Update health</button>
+        <button class="fab-item" type="button" data-open-touchpoint>Log activity</button>
+        <button class="fab-item" type="button" data-open-collab>Create collaboration issue</button>
+        <button class="fab-item" type="button" data-schedule-meeting>Schedule meeting</button>
+      </div>
     </div>
+
+    <button class="back-to-top" type="button" data-back-to-top aria-label="Back to top">Top</button>
 
     <div class="palette" id="palette" aria-hidden="true">
       <div class="palette-backdrop" data-close-palette></div>
@@ -662,6 +831,44 @@
         <ul id="palette-results" class="palette-results"></ul>
       </div>
     </div>
+
+    <div class="mobile-nav" data-mobile-nav aria-hidden="true">
+      <div class="mobile-nav-backdrop" data-close-nav></div>
+      <nav class="mobile-nav-panel" role="dialog" aria-modal="true" aria-label="Navigation">
+        <div class="mobile-nav-head">
+          <span>Navigate</span>
+          <button class="ghost-btn" type="button" data-close-nav>Close</button>
+        </div>
+        <a href="#overview" data-mobile-link>Overview</a>
+        <a href="#journey" data-mobile-link>Journey</a>
+        <a href="#adoption" data-mobile-link>Adoption</a>
+        <a href="#health-risk" data-mobile-link>Health &amp; Risk</a>
+        <a href="#outcomes" data-mobile-link>Outcomes &amp; Success Plan</a>
+        <a href="#engagement" data-mobile-link>Engagement &amp; Enablement</a>
+        <a href="#resources" data-mobile-link>Resources</a>
+      </nav>
+    </div>
+
+    <dialog class="modal" id="settings-modal" aria-labelledby="settings-modal-title">
+      <form method="dialog" class="modal-content">
+        <h3 id="settings-modal-title">Dashboard settings</h3>
+        <label class="field">
+          Progress sidebar
+          <select name="sidebar" data-setting-sidebar>
+            <option value="show">Show</option>
+            <option value="hide">Hide</option>
+          </select>
+        </label>
+        <div class="field">
+          Reset stored preferences
+          <button class="inline-button" type="button" data-reset-preferences>Clear saved state</button>
+        </div>
+        <div class="modal-actions">
+          <button type="submit">Done</button>
+          <button type="button" data-close-modal>Close</button>
+        </div>
+      </form>
+    </dialog>
 
     <dialog class="modal" id="health-modal" aria-labelledby="health-modal-title">
       <form method="dialog" class="modal-content">
