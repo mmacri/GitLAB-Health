@@ -296,8 +296,8 @@ a:hover {
   padding: var(--space-md);
   position: relative;
   overflow: hidden;
-  opacity: 0;
-  transform: translateY(12px);
+  opacity: 1;
+  transform: translateY(0);
   transition: opacity 0.5s ease, transform 0.5s ease;
   transition-delay: calc(var(--order, 0) * 90ms);
 }
@@ -392,31 +392,31 @@ body.loaded .card {
   transition: opacity 0.3s ease, filter 0.3s ease;
 }
 
-body[data-mode] .section[data-mode-in] {
+body.mode-ready[data-mode] .section[data-mode-in] {
   display: none;
 }
 
-body[data-mode="executive"] .section[data-mode-in~="executive"] {
+body.mode-ready[data-mode="executive"] .section[data-mode-in~="executive"] {
   display: block;
 }
 
-body[data-mode="adoption"] .section[data-mode-in~="adoption"] {
+body.mode-ready[data-mode="adoption"] .section[data-mode-in~="adoption"] {
   display: block;
 }
 
-body[data-mode="csm"] .section[data-mode-in~="csm"] {
+body.mode-ready[data-mode="csm"] .section[data-mode-in~="csm"] {
   display: block;
 }
 
-body[data-phase] .section[data-phase-in] {
+body.mode-ready[data-phase] .section[data-phase-in] {
   opacity: 0.35;
   filter: grayscale(0.1);
 }
 
-body[data-phase="onboarding"] .section[data-phase-in~="onboarding"],
-body[data-phase="early_adoption"] .section[data-phase-in~="early_adoption"],
-body[data-phase="broad_adoption"] .section[data-phase-in~="broad_adoption"],
-body[data-phase="value_realization"] .section[data-phase-in~="value_realization"] {
+body.mode-ready[data-phase="onboarding"] .section[data-phase-in~="onboarding"],
+body.mode-ready[data-phase="early_adoption"] .section[data-phase-in~="early_adoption"],
+body.mode-ready[data-phase="broad_adoption"] .section[data-phase-in~="broad_adoption"],
+body.mode-ready[data-phase="value_realization"] .section[data-phase-in~="value_realization"] {
   opacity: 1;
   filter: none;
 }

@@ -1552,7 +1552,7 @@ const init = async () => {
   initPhaseTabs(view);
   initModeTabs(view);
 
-  document.body.classList.add('loaded');
+  document.body.classList.add('mode-ready', 'loaded');
 };
 
 init();
