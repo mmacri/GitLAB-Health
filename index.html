@@ -1,10 +1,11 @@
+
 <!doctype html>
-<html lang="en">
+<html lang="en" data-mode="all">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Static customer success dashboard for GitLab enterprise onboarding and adoption." />
-    <title>GitLab Enterprise Customer Success Dashboard</title>
+    <title>GitLab Health Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -13,54 +14,56 @@
     />
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
-  <body data-mode="all" data-phase="onboarding">
+  <body>
     <div class="page">
-      <header class="hero" id="top">
-        <nav class="nav">
-          <div class="brand">
-            <div class="brand-mark" aria-hidden="true"></div>
-            <div class="brand-text">
-              <span class="brand-title">GitLab Enterprise Success</span>
-              <span class="brand-sub">Customer Success Dashboard</span>
+      <header class="hero site-header" id="overview" data-section data-audience="all exec devops csm">
+        <div class="nav-shell">
+          <nav class="nav primary-nav" aria-label="Primary navigation">
+            <div class="brand">
+              <div class="brand-mark" aria-hidden="true"></div>
+              <div class="brand-text">
+                <span class="brand-title">GitLab Health</span>
+                <span class="brand-sub">Customer Success Dashboard</span>
+              </div>
             </div>
-          </div>
-          <div class="nav-links" aria-label="Primary">
-            <a href="#journey" data-mode-link="all">Journey</a>
-            <a href="#action-center" data-mode-link="all">Actions</a>
-            <a href="#milestones" data-mode-link="adoption csm">Milestones</a>
-            <a href="#onboarding" data-mode-link="adoption csm">Onboarding</a>
-            <a href="#adoption" data-mode-link="adoption csm">Adoption</a>
-            <a href="#health" data-mode-link="csm executive">Health</a>
-            <a href="#engagement" data-mode-link="csm executive">Engagement</a>
-            <a href="#outcomes" data-mode-link="csm executive">Outcomes</a>
-            <a href="#enablement" data-mode-link="adoption csm">Enablement</a>
-            <a href="#resources" data-mode-link="adoption csm">Guides</a>
-          </div>
-        </nav>
+            <div class="nav-links" aria-label="Primary">
+              <a href="#overview" data-nav-link>Overview</a>
+              <a href="#journey" data-nav-link>Journey</a>
+              <a href="#adoption" data-nav-link>Adoption</a>
+              <a href="#health-risk" data-nav-link>Health &amp; Risk</a>
+              <a href="#outcomes" data-nav-link>Outcomes &amp; Success Plan</a>
+              <a href="#engagement" data-nav-link>Engagement &amp; Enablement</a>
+              <a href="#resources" data-nav-link>Resources</a>
+            </div>
+            <button class="nav-search" type="button" data-open-palette aria-label="Search dashboard">
+              Search (Ctrl+K)
+            </button>
+          </nav>
 
-        <section class="modebar" id="modebar" aria-label="Mode and quick actions">
-          <div class="modebar-left">
-            <span class="modebar-label">View mode</span>
-            <button class="mode-btn is-active" type="button" data-mode="all">Full dashboard</button>
-            <button class="mode-btn" type="button" data-mode="executive">Executive</button>
-            <button class="mode-btn" type="button" data-mode="adoption">DevOps leader</button>
-            <button class="mode-btn" type="button" data-mode="csm">CSM</button>
-          </div>
-          <div class="modebar-right">
-            <a class="qa" href="#next-actions">Next actions</a>
-            <a class="qa" href="#success-plan">Update success plan</a>
-            <a class="qa" href="#risks">Report a risk</a>
-            <a class="qa" href="#enablement">Request enablement</a>
-          </div>
-        </section>
+          <section class="modebar" aria-label="Mode and quick links">
+            <div class="modebar-left">
+              <span class="modebar-label">View mode</span>
+              <button class="mode-btn is-active" type="button" data-mode="all">View all</button>
+              <button class="mode-btn" type="button" data-mode="exec">Executive</button>
+              <button class="mode-btn" type="button" data-mode="devops">DevOps leader</button>
+              <button class="mode-btn" type="button" data-mode="csm">CSM</button>
+            </div>
+            <div class="modebar-right">
+              <a class="qa" href="#next-actions">Next actions</a>
+              <a class="qa" href="#success-plan">Success plan</a>
+              <a class="qa" href="#collaboration">Collaboration</a>
+              <button class="qa" type="button" data-open-palette>Search</button>
+            </div>
+          </section>
+        </div>
 
         <div class="hero-grid">
           <div class="hero-copy">
             <p class="eyebrow">Enterprise onboarding and value realization</p>
-            <h1>Track milestones, adoption, and outcomes in one place.</h1>
+            <h1>Track adoption, health, and outcomes in one place.</h1>
             <p class="hero-lede">
-              A static, GitHub Pages-ready dashboard built for enterprise customer success teams. Use it to
-              align stakeholders, highlight progress, and accelerate time-to-value with GitLab.
+              GitLab Health Dashboard aligns Customer Success, DevOps leaders, and executives on time-to-value,
+              adoption, and renewal readiness with a single source of truth.
             </p>
             <div class="hero-meta">
               <div class="meta-card">
@@ -68,244 +71,191 @@
                 <span class="meta-value" data-field="customer.name">Northwind Industries</span>
               </div>
               <div class="meta-card">
-                <span class="meta-label">Subscription start</span>
-                <span class="meta-value" data-field="dates.start">Aug 27, 2025</span>
+                <span class="meta-label">Segment</span>
+                <span class="meta-value" data-field="customer.segment">Enterprise</span>
+              </div>
+              <div class="meta-card">
+                <span class="meta-label">Renewal date</span>
+                <span class="meta-value" data-field="customer.renewal_date">Jun 30, 2026</span>
               </div>
               <div class="meta-card">
                 <span class="meta-label">Last updated</span>
-                <span class="meta-value" data-field="dates.updated">Oct 8, 2025</span>
+                <span class="meta-value" data-field="meta.last_updated">Jan 20, 2026</span>
               </div>
             </div>
             <div class="hero-tags">
-              <span class="chip" data-chip="onboarding">Onboarding 80%</span>
-              <span class="chip" data-chip="first_value">First value pending</span>
-              <span class="chip" data-chip="adoption">Adoption health watch</span>
+              <span class="chip" data-field="customer.deployment_type">Self-managed</span>
+              <span class="chip" data-field="customer.instance_type">Dedicated instance</span>
+              <span class="chip" data-field="customer.plan">Ultimate</span>
             </div>
           </div>
 
           <div class="hero-panel">
-            <div class="card ring-card" style="--order: 1">
-              <div class="ring" data-ring="license_utilization" role="img" aria-label="License utilization">
+            <div class="card" style="--order: 1">
+              <h2>Customer snapshot</h2>
+              <div class="kpi-grid">
+                <div class="kpi">
+                  <span class="kpi-label">Health score</span>
+                  <span class="kpi-value" data-field="health.overall_score">68</span>
+                  <span class="kpi-meta" data-field="health.band_label">Yellow</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Platform adoption</span>
+                  <span class="kpi-value" data-field="adoption.platform_adoption_summary">2 of 4 green</span>
+                  <span class="kpi-meta" data-field="adoption.platform_adoption_target">Target 3+</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">License utilization</span>
+                  <span class="kpi-value" data-field="seats.utilization_pct">42%</span>
+                  <span class="kpi-meta" data-field="seats.utilization_trend">+6% MoM</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Renewal countdown</span>
+                  <span class="kpi-value" data-field="customer.renewal_countdown">151 days</span>
+                  <span class="kpi-meta">Renewal window open</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card ring-card" style="--order: 2">
+              <div class="ring" data-ring="seat_utilization" role="img" aria-label="Seat utilization">
                 <div class="ring-inner">
-                  <span class="ring-value" data-field="metrics.license_utilization_pct">8%</span>
-                  <span class="ring-label">License utilization</span>
+                  <span class="ring-value" data-field="seats.utilization_pct">42%</span>
+                  <span class="ring-label">Seat utilization</span>
                 </div>
               </div>
               <div class="ring-meta">
                 <div>
-                  <div class="ring-stat" data-field="licenses.active">40</div>
+                  <div class="ring-stat" data-field="seats.active">210</div>
                   <div class="ring-caption">Active seats</div>
                 </div>
                 <div>
-                  <div class="ring-stat" data-field="licenses.purchased">500</div>
+                  <div class="ring-stat" data-field="seats.purchased">500</div>
                   <div class="ring-caption">Purchased seats</div>
                 </div>
               </div>
             </div>
-            <div class="card highlight-card" style="--order: 2">
-              <h2>Next milestone</h2>
-              <p class="highlight-title" data-field="milestones.next.title">Onboarding complete</p>
-              <p class="highlight-detail" data-field="milestones.next.detail">Target Day 45</p>
-              <div class="progress" data-progress="first_value_progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-                <span class="progress-bar"></span>
+
+            <div class="card" style="--order: 3">
+              <h2>Executive cadence</h2>
+              <p class="stat" data-field="engagement.next_ebr_date">Next EBR: Mar 20, 2026</p>
+              <p class="muted">Latest executive review and renewal prep.</p>
+              <div class="kpi-grid">
+                <div class="kpi">
+                  <span class="kpi-label">Last EBR</span>
+                  <span class="kpi-value" data-field="engagement.last_ebr_date">Dec 18, 2025</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Next QBR</span>
+                  <span class="kpi-value" data-field="engagement.next_qbr_date">Apr 15, 2026</span>
+                </div>
               </div>
-              <p class="highlight-foot">Align enablement and platform tasks to unblock the next milestone.</p>
             </div>
           </div>
         </div>
       </header>
 
       <main>
-        <div class="content-layout">
-          <div class="content">
-            <section class="section journey" id="journey">
-              <div class="section-head">
-                <div>
-                  <p class="eyebrow">Customer journey</p>
-                  <h2>Phase and operating mode</h2>
-                  <p class="section-question">Question: Where are we in the lifecycle and what matters now?</p>
-                </div>
-                <p class="section-lede">
-                  Align the dashboard to GitLab lifecycle phases and use modes to focus each stakeholder on the
-                  right decisions.
-                </p>
-              </div>
-
-              <div class="journey-grid">
-                <article class="card journey-card" style="--order: 1">
-                  <h3>Current customer phase</h3>
-                  <div class="phase-tabs" role="tablist" aria-label="Journey phases">
-                    <button class="phase-tab is-active" type="button" role="tab" data-phase="onboarding" aria-selected="true">Onboarding</button>
-                    <button class="phase-tab" type="button" role="tab" data-phase="early_adoption" aria-selected="false">Early adoption</button>
-                    <button class="phase-tab" type="button" role="tab" data-phase="broad_adoption" aria-selected="false">Broad adoption</button>
-                    <button class="phase-tab" type="button" role="tab" data-phase="value_realization" aria-selected="false">Value realization</button>
-                  </div>
-                  <p class="phase-focus">
-                    <span data-field="journey.current_label">Onboarding</span> focus:
-                    <span data-field="journey.current_focus">Milestones and first value</span>
-                  </p>
-                  <p class="muted" data-field="journey.current_description">
-                    Confirm engagement, platform readiness, and initial activation.
-                  </p>
-                  <p class="phase-note muted">Metrics outside the current phase are de-emphasized.</p>
-                </article>
-                <article class="card mode-card" style="--order: 2">
-                  <h3>View mode</h3>
-                  <div class="mode-tabs" role="tablist" aria-label="View modes">
-                    <button class="mode-tab is-active" type="button" role="tab" data-mode="all" aria-controls="mode-executive" aria-selected="true">
-                      Full dashboard
-                    </button>
-                    <button class="mode-tab" type="button" role="tab" data-mode="executive" aria-controls="mode-executive" aria-selected="false">
-                      Executive Summary
-                    </button>
-                    <button class="mode-tab" type="button" role="tab" data-mode="adoption" aria-controls="mode-adoption" aria-selected="false">
-                      Adoption &amp; Enablement
-                    </button>
-                    <button class="mode-tab" type="button" role="tab" data-mode="csm" aria-controls="mode-csm" aria-selected="false">
-                      CSM / Operator
-                    </button>
-                  </div>
-                  <p class="muted" data-field="mode.description">Executive summary focused on outcomes and risk.</p>
-                </article>
-              </div>
-
-              <div class="mode-panels">
-                <div class="mode-panel is-active" id="mode-executive" data-mode-panel="executive" role="tabpanel">
-                  <div class="summary-grid">
-                    <article class="card" style="--order: 1">
-                      <h3>Platform adoption</h3>
-                      <p class="stat" data-field="metrics.platform_adoption_score">Platform adoption: 0 / 6 (Needs improvement)</p>
-                      <p class="muted">
-                        Platform Adoption Score equals the count of green use cases.
-                        <span class="tooltip" data-tooltip="GitLab defines successful platform adoption as 3+ green use cases.">Why this matters</span>
-                      </p>
-                    </article>
-                    <article class="card" style="--order: 2">
-                      <h3>Success plan objectives</h3>
-                      <p class="stat" data-field="success_plan.summary">0 of 3 objectives achieved</p>
-                      <ul class="mini-list" data-list="exec-success-plan"></ul>
-                    </article>
-                    <article class="card" style="--order: 3">
-                      <h3>Key risks</h3>
-                      <div class="health-badge" data-health-badge>Health: Watch</div>
-                      <ul class="mini-list" data-list="exec-risks"></ul>
-                    </article>
-                    <article class="card" style="--order: 4">
-                      <h3>DORA headline metrics</h3>
-                      <div class="kpi-grid kpi-compact">
-                        <div class="kpi">
-                          <span class="kpi-label">Deploy freq</span>
-                          <span class="kpi-value" data-field="dora.deploy_freq">0 / day</span>
-                        </div>
-                        <div class="kpi">
-                          <span class="kpi-label">Lead time</span>
-                          <span class="kpi-value" data-field="dora.lead_time">0 days</span>
-                        </div>
-                        <div class="kpi">
-                          <span class="kpi-label">Change fail</span>
-                          <span class="kpi-value" data-field="dora.change_failure">0%</span>
-                        </div>
-                        <div class="kpi">
-                          <span class="kpi-label">MTTR</span>
-                          <span class="kpi-value" data-field="dora.mttr">0 hours</span>
-                        </div>
-                      </div>
-                    </article>
-                  </div>
-                </div>
-
-                <div class="mode-panel" id="mode-adoption" data-mode-panel="adoption" role="tabpanel" aria-hidden="true">
-                  <div class="summary-grid">
-                    <article class="card" style="--order: 1">
-                      <h3>Use case adoption score</h3>
-                      <p class="stat" data-field="metrics.platform_adoption_score">Platform adoption: 0 / 6 (Needs improvement)</p>
-                      <p class="muted">Focus on Verify and Secure enablement this phase.</p>
-                    </article>
-                    <article class="card" style="--order: 2">
-                      <h3>CI coverage</h3>
-                      <p class="stat" data-field="persona.leader.ci_coverage">25%</p>
-                      <p class="muted">Percent of projects running pipelines.</p>
-                    </article>
-                    <article class="card" style="--order: 3">
-                      <h3>Security coverage</h3>
-                      <p class="stat" data-field="persona.leader.security_coverage">5%</p>
-                      <p class="muted">Projects running at least one scan.</p>
-                    </article>
-                    <article class="card" style="--order: 4">
-                      <h3>Enablement focus</h3>
-                      <p class="stat">Verify workshop</p>
-                      <p class="muted">Schedule CI / Verify playbook sessions for remaining teams.</p>
-                    </article>
-                  </div>
-                </div>
-
-                <div class="mode-panel" id="mode-csm" data-mode-panel="csm" role="tabpanel" aria-hidden="true">
-                  <div class="summary-grid">
-                    <article class="card" style="--order: 1">
-                      <h3>Health summary</h3>
-                      <div class="health-badge" data-health-badge>Health: Watch</div>
-                      <p class="muted">Drive playbooks based on health drivers.</p>
-                    </article>
-                    <article class="card" style="--order: 2">
-                      <h3>License utilization</h3>
-                      <p class="stat" data-field="persona.csm.license_utilization">8%</p>
-                      <p class="muted">Target 80%+ adoption for expansion readiness.</p>
-                    </article>
-                    <article class="card" style="--order: 3">
-                      <h3>Success plan progress</h3>
-                      <p class="stat" data-field="persona.csm.success_plan">0 of 3 objectives achieved</p>
-                      <p class="muted">Review outcomes and update playbooks weekly.</p>
-                    </article>
-                    <article class="card" style="--order: 4">
-                      <h3>Collaboration hub</h3>
-                      <p class="stat">Shared project</p>
-                      <p class="muted">Keep agendas, enablement tasks, and risks in sync.</p>
-                    </article>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-        <section class="section" id="action-center" data-mode-in="executive adoption csm" data-phase-in="onboarding early_adoption broad_adoption value_realization">
+        <section class="section" id="overview-summary" data-section data-audience="all exec devops csm" data-details-scope>
           <div class="section-head">
             <div>
-              <p class="eyebrow">Action center</p>
-              <h2>Priority actions</h2>
-              <p class="section-question">Question: What needs attention now?</p>
+              <p class="eyebrow">Overview</p>
+              <h2>Executive snapshot</h2>
+              <p class="section-question">Question: What changed and what matters next?</p>
             </div>
-            <p class="section-lede">
-              Focus the team on the actions that unblock milestones and drive adoption. Owners should update
-              progress in the collaboration project.
-            </p>
+            <div class="section-controls">
+              <button class="ghost-btn" type="button" data-details-action="expand">Expand all</button>
+              <button class="ghost-btn" type="button" data-details-action="collapse">Collapse all</button>
+            </div>
           </div>
 
-          <div class="action-grid">
-            <article class="card action-card" style="--order: 1">
-              <h3>Critical</h3>
-              <ul class="action-center-list" data-action-list="critical"></ul>
+          <div class="summary-grid">
+            <article class="card" style="--order: 1" data-audience="all exec csm">
+              <h3>Health score</h3>
+              <div class="health-score" data-health-score>
+                <span class="score-num" data-field="health.overall_score">68</span>
+                <span class="score-label" data-field="health.band_label">Yellow</span>
+              </div>
+              <p class="muted">Weighted rubric: Adoption 40%, Engagement 30%, Outcomes 30%.</p>
+              <details class="drawer">
+                <summary>Health rubric breakdown</summary>
+                <div class="metric-row">
+                  <span class="status-dot" data-status="watch"></span>
+                  <div>
+                    <div class="metric-name">Adoption</div>
+                    <div class="metric-meta" data-field="health.adoption_score">64</div>
+                  </div>
+                </div>
+                <div class="metric-row">
+                  <span class="status-dot" data-status="good"></span>
+                  <div>
+                    <div class="metric-name">Engagement</div>
+                    <div class="metric-meta" data-field="health.engagement_score">72</div>
+                  </div>
+                </div>
+                <div class="metric-row">
+                  <span class="status-dot" data-status="risk"></span>
+                  <div>
+                    <div class="metric-name">Outcomes</div>
+                    <div class="metric-meta" data-field="health.outcomes_score">58</div>
+                  </div>
+                </div>
+              </details>
             </article>
-            <article class="card action-card" style="--order: 2">
-              <h3>Important</h3>
-              <ul class="action-center-list" data-action-list="important"></ul>
+
+            <article class="card" style="--order: 2" data-audience="all devops csm">
+              <h3>Platform adoption</h3>
+              <p class="stat" data-field="adoption.platform_adoption_summary">2 of 4 use cases green</p>
+              <p class="muted">GitLab recommends 3+ green use cases.</p>
+              <details class="drawer">
+                <summary>Use case scores</summary>
+                <ul class="usecase-list" data-list="usecase-summary"></ul>
+              </details>
             </article>
-            <article class="card action-card" style="--order: 3">
-              <h3>Recommended</h3>
-              <ul class="action-center-list" data-action-list="recommended"></ul>
+
+            <article class="card" style="--order: 3" data-audience="all">
+              <h3>License utilization trend</h3>
+              <p class="stat" data-field="seats.utilization_pct">42%</p>
+              <p class="muted">Last 90 days utilization movement.</p>
+              <ul class="event-list" data-list="seat-trend"></ul>
+            </article>
+
+            <article class="card" style="--order: 4" data-audience="exec csm">
+              <h3>Renewal outlook</h3>
+              <p class="stat" data-field="customer.renewal_countdown">151 days</p>
+              <p class="muted">Renewal date: <span data-field="customer.renewal_date">Jun 30, 2026</span></p>
+              <details class="drawer">
+                <summary>Renewal readiness checklist</summary>
+                <ul class="event-list" data-list="renewal-checklist"></ul>
+              </details>
+            </article>
+          </div>
+
+          <div class="two-column">
+            <article class="card" style="--order: 5" id="next-actions">
+              <h3>Next best actions</h3>
+              <p class="muted">Rules-based actions generated from current metrics.</p>
+              <ul class="action-list" data-list="next-best-actions"></ul>
+            </article>
+            <article class="card" style="--order: 6">
+              <h3>What changed since last update</h3>
+              <p class="muted">Highlights from touchpoints and usage reviews.</p>
+              <ul class="event-list" data-list="activity-feed"></ul>
             </article>
           </div>
         </section>
 
-        <section class="section" id="milestones" data-mode-in="adoption csm" data-phase-in="onboarding early_adoption">
+        <section class="section" id="journey" data-section data-audience="all exec devops csm" data-details-scope>
           <div class="section-head">
             <div>
-              <p class="eyebrow">Onboarding milestones</p>
-              <h2>Milestones timeline</h2>
+              <p class="eyebrow">Journey</p>
+              <h2>Onboarding and first value</h2>
               <p class="section-question">Question: Are we on track to first value?</p>
             </div>
-            <p class="section-lede">
-              Track progress from first engagement through outcome delivery. Each milestone shows actual
-              completion dates and whether timelines are on target.
-            </p>
+            <div class="section-controls">
+              <button class="ghost-btn" type="button" data-details-action="expand">Expand all</button>
+              <button class="ghost-btn" type="button" data-details-action="collapse">Collapse all</button>
+            </div>
           </div>
 
           <div class="timeline" id="milestone-timeline">
@@ -338,7 +288,7 @@
               <div class="step-content">
                 <h3>First value</h3>
                 <p class="step-status" data-field="milestones.first_value.status">In progress</p>
-                <p class="step-detail" data-field="milestones.first_value.detail">Target Day 30 | Expected Oct 15, 2025</p>
+                <p class="step-detail" data-field="milestones.first_value.detail">Target Day 30</p>
               </div>
             </article>
             <article class="timeline-step" data-milestone="outcome">
@@ -346,520 +296,439 @@
               <div class="step-content">
                 <h3>Outcome achieved</h3>
                 <p class="step-status" data-field="milestones.outcome.status">In progress</p>
-                <p class="step-detail" data-field="milestones.outcome.detail">Primary use case delivery in progress</p>
+                <p class="step-detail" data-field="milestones.outcome.detail">Primary use case delivery</p>
               </div>
             </article>
           </div>
 
-          <div class="definition-grid">
-            <article class="card" style="--order: 1">
-              <h3>Milestone definitions (GitLab handbook)</h3>
-              <ul class="definition-list">
-                <li><span class="definition-term">Engagement</span> First CSM meeting with the customer.</li>
-                <li><span class="definition-term">Onboarding complete</span> All onboarding tasks finished.</li>
-                <li><span class="definition-term">Infrastructure ready</span> GitLab deployed or integrated and ready for users.</li>
-                <li><span class="definition-term">First value</span> At least 10% of production licenses activated.</li>
-                <li><span class="definition-term">Outcome achieved</span> Primary purchase intent delivered.</li>
-              </ul>
-            </article>
-            <article class="card" style="--order: 2">
-              <h3>Time-to-value targets</h3>
-              <ul class="definition-list">
-                <li><span class="definition-term">Time to engage</span> 14 days from contract start.</li>
-                <li><span class="definition-term">Time to onboard</span> 45 days to complete onboarding tasks.</li>
-                <li><span class="definition-term">Time to first value</span> 30 days to reach 10% activation.</li>
-              </ul>
-            </article>
+          <details class="drawer">
+            <summary>Milestone definitions</summary>
+            <ul class="definition-list">
+              <li><span class="definition-term">Engagement</span> First CSM meeting with the customer.</li>
+              <li><span class="definition-term">Infrastructure ready</span> GitLab deployed or integrated and ready for users.</li>
+              <li><span class="definition-term">Onboarding complete</span> All onboarding tasks finished.</li>
+              <li><span class="definition-term">First value</span> 10% of production licenses activated.</li>
+              <li><span class="definition-term">Outcome achieved</span> Primary purchase intent delivered.</li>
+            </ul>
+          </details>
+
+          <details class="drawer">
+            <summary>Onboarding checklist</summary>
+            <ul class="task-list" data-list="onboarding-tasks"></ul>
+          </details>
+
+          <details class="drawer">
+            <summary>Onboarding risks and triggers</summary>
+            <ul class="event-list" data-list="onboarding-risks"></ul>
+          </details>
+        </section>
+        <section class="section" id="adoption" data-section data-audience="all devops csm" data-details-scope>
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Adoption</p>
+              <h2>Use case adoption scores</h2>
+              <p class="section-question">Question: What are we not using yet?</p>
+            </div>
+            <div class="section-controls">
+              <button class="ghost-btn" type="button" data-details-action="expand">Expand all</button>
+              <button class="ghost-btn" type="button" data-details-action="collapse">Collapse all</button>
+            </div>
           </div>
 
           <div class="summary-grid">
-            <article class="card" style="--order: 3">
-              <h3>Onboarding completion</h3>
-              <div class="progress" data-progress="onboarding_completion" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-                <span class="progress-bar"></span>
-              </div>
-              <p class="stat" data-field="onboarding.summary">8 of 10 tasks complete</p>
-              <p class="muted">Target: 45 days to complete onboarding tasks.</p>
-            </article>
-            <article class="card" style="--order: 4">
-              <h3>Platform adoption score</h3>
-              <p class="stat" data-field="metrics.platform_adoption_score">Platform adoption: 0 / 6 (Needs improvement)</p>
-              <p class="muted">
-                Platform Adoption Score equals the count of green use cases.
-                <span class="tooltip" data-tooltip="GitLab defines successful platform adoption as 3+ green use cases.">Definition</span>
-              </p>
-            </article>
-            <article class="card" style="--order: 5">
-              <h3>Time to first value</h3>
-              <div class="progress" data-progress="first_value_progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-                <span class="progress-bar"></span>
-              </div>
-              <p class="stat" data-field="metrics.first_value_status">8% license activation (target 10%)</p>
-              <p class="muted">Focus on activating users and running initial production pipelines.</p>
-            </article>
-          </div>
-        </section>
-        <section class="section" id="onboarding" data-mode-in="adoption csm" data-phase-in="onboarding early_adoption">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Onboarding execution</p>
-              <h2>Milestone checklist</h2>
-              <p class="section-question">Question: What is blocking onboarding completion?</p>
-            </div>
-            <p class="section-lede">
-              Use this checklist to align platform readiness, enablement, and early adoption. Update task
-              statuses as each milestone component is completed.
-            </p>
-          </div>
-
-          <div class="two-column">
             <article class="card" style="--order: 1">
-              <h3>Milestone tasks</h3>
-              <ul class="task-list" data-list="onboarding-tasks"></ul>
+              <h3>Platform adoption score</h3>
+              <p class="stat" data-field="adoption.platform_adoption_summary">2 of 4 use cases green</p>
+              <p class="muted">Target: 3+ green use cases for successful adoption.</p>
             </article>
             <article class="card" style="--order: 2">
-              <h3>Milestone signals</h3>
-              <div class="signal-grid">
-                <div class="signal">
-                  <span class="signal-label">Time to engage</span>
-                  <span class="signal-value" data-field="signals.time_to_engage">5 days</span>
-                  <span class="signal-note">Goal: 14 days</span>
-                </div>
-                <div class="signal">
-                  <span class="signal-label">Time to onboard</span>
-                  <span class="signal-value" data-field="signals.time_to_onboard">In progress (Day 42)</span>
-                  <span class="signal-note">Goal: 45 days</span>
-                </div>
-                <div class="signal">
-                  <span class="signal-label">Infrastructure ready</span>
-                  <span class="signal-value" data-field="signals.infra_ready">Day 19</span>
-                  <span class="signal-note">Self-managed + SSO enabled</span>
-                </div>
-                <div class="signal">
-                  <span class="signal-label">First value</span>
-                  <span class="signal-value" data-field="signals.first_value">8% licenses active</span>
-                  <span class="signal-note">Target: 10% activation</span>
-                </div>
-              </div>
+              <h3>Recommended workshop</h3>
+              <p class="stat" data-field="adoption.recommended_workshop">CI / Verify Workshop</p>
+              <p class="muted" data-field="adoption.recommended_reason">CI builds per billable user below green threshold.</p>
+              <a class="inline-link" data-field="adoption.recommended_link" href="https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/">Open playbook</a>
             </article>
           </div>
 
-          <div class="two-column">
-            <article class="card" style="--order: 3">
-              <h3>What counts as first value</h3>
-              <p class="muted">First value is reached when at least 10% of production licenses are activated.</p>
-              <ul class="definition-list">
-                <li><span class="definition-term">SaaS</span> Auto-derived when known license utilization reaches 10% and is recorded in the system.</li>
-                <li><span class="definition-term">Self-managed</span> CSM updates the first value date using the best estimate from usage evidence.</li>
-                <li><span class="definition-term">Evidence</span> GitLab installed, user management enabled, and active usage in production projects.</li>
-              </ul>
-            </article>
-            <article class="card" style="--order: 4">
-              <h3>Time-to-value indicators</h3>
-              <p class="muted">Measure days from contract start to early usage events.</p>
-              <ul class="event-list" data-list="ttv-events"></ul>
-            </article>
-          </div>
+          <details class="drawer">
+            <summary>Use case scorecards</summary>
+            <div class="usecase-grid" data-usecase-cards></div>
+          </details>
 
-          <div class="metric-grid">
-            <article class="card" style="--order: 5">
-              <h3>Onboarding templates</h3>
-              <p class="muted">Reusable assets to align tasks and success plans.</p>
-              <ul class="resource-list" data-list="onboarding-templates"></ul>
-            </article>
-            <article class="card" style="--order: 6">
-              <h3>Onboarding best practices</h3>
-              <p class="muted">Guidance for time-to-value and deployment considerations.</p>
-              <ul class="resource-list" data-list="onboarding-best-practices"></ul>
-            </article>
-          </div>
-        </section>
-
-        <section class="section" id="adoption" data-mode-in="adoption csm" data-phase-in="early_adoption broad_adoption">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Use case adoption</p>
-              <h2>Adoption scoring</h2>
-              <p class="section-question">Question: What are we not using yet?</p>
-            </div>
-            <p class="section-lede">
-              Use GitLab handbook thresholds to score adoption for Verify, Secure, Release, and Create. Each
-              use case rolls up to Red, Yellow, or Green health.
-            </p>
-          </div>
-
-          <article class="card note-card" style="--order: 1">
-            <h3>Scoring ranges</h3>
-            <p class="muted">Use case scores align to the Gainsight range bands.</p>
-            <div class="definition-list">
-              <div><span class="definition-term">Red</span> <span data-field="metrics.gainsight_red_range">0-50</span></div>
-              <div><span class="definition-term">Yellow</span> <span data-field="metrics.gainsight_yellow_range">51-75</span></div>
-              <div><span class="definition-term">Green</span> <span data-field="metrics.gainsight_green_range">76-100</span></div>
-            </div>
-          </article>
-
-          <div class="usecase-grid" data-usecase-cards></div>
-
-          <div class="two-column">
-            <article class="card" style="--order: 6">
-              <h3>Platform adoption score</h3>
-              <p class="stat" data-field="metrics.platform_adoption_score">Platform adoption: 0 / 6 (Needs improvement)</p>
-              <p class="muted">
-                Platform Adoption Score equals the count of green use cases.
-                <span class="tooltip" data-tooltip="GitLab defines successful platform adoption as 3+ green use cases.">Definition</span>
-              </p>
-              <ul class="usecase-list" data-list="devops-usecases"></ul>
-            </article>
-            <article class="card" style="--order: 7">
-              <h3>CI/CD usage milestones</h3>
-              <div class="kpi-grid">
-                <div class="kpi">
-                  <span class="kpi-label">Pipelines per week</span>
-                  <span class="kpi-value" data-field="metrics.pipelines_week">0</span>
+          <details class="drawer" id="landing-zone">
+            <summary>Adoption landing zone</summary>
+            <div class="landing-zone">
+              <label class="field-label" for="landing-zone-phase">Onboarding phase</label>
+              <select id="landing-zone-phase" class="field-select" data-landing-zone-select></select>
+              <div class="landing-grid">
+                <div>
+                  <h4>Top goals</h4>
+                  <ul class="event-list" data-landing-zone="goals"></ul>
                 </div>
-                <div class="kpi">
-                  <span class="kpi-label">Success rate</span>
-                  <span class="kpi-value" data-field="metrics.pipeline_success_rate_pct">0%</span>
+                <div>
+                  <h4>Required tasks</h4>
+                  <ul class="event-list" data-landing-zone="tasks"></ul>
                 </div>
-                <div class="kpi">
-                  <span class="kpi-label">Avg duration</span>
-                  <span class="kpi-value" data-field="metrics.pipeline_duration">0 min</span>
+                <div>
+                  <h4>Risks to watch</h4>
+                  <ul class="event-list" data-landing-zone="risks"></ul>
                 </div>
-                <div class="kpi">
-                  <span class="kpi-label">Deployments per week</span>
-                  <span class="kpi-value" data-field="metrics.deployments_week">0</span>
+                <div>
+                  <h4>Recommended workshops</h4>
+                  <ul class="event-list" data-landing-zone="workshops"></ul>
                 </div>
-              </div>
-              <ul class="event-list" data-list="cicd-milestones"></ul>
-            </article>
-          </div>
-        </section>
-        <section class="section" id="health" data-mode-in="csm" data-phase-in="broad_adoption value_realization">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Customer health score</p>
-              <h2>Health drivers</h2>
-              <p class="section-question">Question: Should we worry?</p>
-            </div>
-            <p class="section-lede">
-              Combine adoption, engagement, and outcome signals into a clear health snapshot. Use this view
-              to guide playbooks and executive updates.
-            </p>
-          </div>
-
-          <details class="card health-drivers" open>
-            <summary>Health drivers rubric</summary>
-            <div class="driver-grid">
-              <div class="driver-card">
-                <span class="definition-term">Adoption</span>
-                <p class="muted">Use case adoption scores, platform adoption count, and license utilization.</p>
-              </div>
-              <div class="driver-card">
-                <span class="definition-term">Engagement</span>
-                <p class="muted">Leadership cadence, enablement attendance, and collaboration activity.</p>
-              </div>
-              <div class="driver-card">
-                <span class="definition-term">Outcomes</span>
-                <p class="muted">Success plan progress, verifiable outcomes, and ROI narrative.</p>
+                <div>
+                  <h4>Success criteria</h4>
+                  <ul class="event-list" data-landing-zone="criteria"></ul>
+                </div>
               </div>
             </div>
           </details>
+        </section>
 
-          <div class="two-column">
-            <article class="card" style="--order: 2">
-              <h3 id="risks">Health indicators</h3>
-              <div class="health-badge" data-health-badge>Health: Watch</div>
-              <div class="health-score" data-health-score>
-                <span class="score-num" data-field="health.score">—</span>
-                <span class="score-label" data-field="health.score_label">Not scored</span>
-              </div>
-              <p class="muted">Review drivers behind the health status.</p>
-              <ul class="health-list" data-list="health-factors"></ul>
-            </article>
-            <article class="card" style="--order: 3">
-              <h3>Use case maturity map</h3>
-              <p class="stat" data-field="metrics.platform_adoption_score">Platform adoption: 0 / 6 (Needs improvement)</p>
-              <p class="muted">Use cases represent Plan, Create, Verify, Secure, Release, and Measure adoption.</p>
-              <ul class="usecase-list" data-list="maturity-map"></ul>
-            </article>
+        <section class="section" id="health-risk" data-section data-audience="all exec csm" data-details-scope>
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Health &amp; risk</p>
+              <h2>Health score and risk mitigation</h2>
+              <p class="section-question">Question: Should we worry?</p>
+            </div>
+            <div class="section-controls">
+              <button class="ghost-btn" type="button" data-details-action="expand">Expand all</button>
+              <button class="ghost-btn" type="button" data-details-action="collapse">Collapse all</button>
+            </div>
           </div>
 
           <div class="summary-grid">
-            <article class="card" style="--order: 4">
-              <h3>Health methodology</h3>
-              <p class="muted">Reference the handbook definitions that underpin health scoring.</p>
-              <ul class="resource-list" data-list="health-methodology"></ul>
-            </article>
-            <article class="card" style="--order: 5">
-              <h3>Risk mitigation playbooks</h3>
-              <p class="muted">Escalation paths and re-engagement strategies.</p>
-              <ul class="resource-list" data-list="risk-mitigation"></ul>
-            </article>
-          </div>
-        </section>
-
-        <section class="section" id="engagement" data-mode-in="executive csm" data-phase-in="onboarding early_adoption broad_adoption value_realization">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Engagement signals</p>
-              <h2>Engagement and cadence</h2>
-              <p class="section-question">Question: Are stakeholders engaged and aligned?</p>
-            </div>
-            <p class="section-lede">
-              Track executive touchpoints, workshop attendance, and collaboration activity to validate
-              engagement alongside adoption and outcomes.
-            </p>
-          </div>
-
-          <div class="signal-grid">
-            <div class="signal">
-              <span class="signal-label">Last exec meeting</span>
-              <span class="signal-value" data-field="engagement.last_exec_meeting">Sep 30, 2025</span>
-              <span class="signal-note">Target: quarterly check-in</span>
-            </div>
-            <div class="signal">
-              <span class="signal-label">Cadence attendance</span>
-              <span class="signal-value" data-field="engagement.cadence_attendance">0%</span>
-              <span class="signal-note">Share attendance across monthly reviews</span>
-            </div>
-            <div class="signal">
-              <span class="signal-label">Workshop participation</span>
-              <span class="signal-value" data-field="engagement.workshop_participation">0%</span>
-              <span class="signal-note">Goal: at least one workshop per quarter</span>
-            </div>
-            <div class="signal">
-              <span class="signal-label">Collaboration activity</span>
-              <span class="signal-value" data-field="engagement.collaboration_activity">Not tracked</span>
-              <span class="signal-note">Shared issues and agenda items</span>
-            </div>
-            <div class="signal">
-              <span class="signal-label">Last usage review</span>
-              <span class="signal-value" data-field="engagement.last_usage_review">Pending</span>
-              <span class="signal-note">Review usage ping or analytics</span>
-            </div>
-          </div>
-        </section>
-
-        <section class="section" id="outcomes" data-mode-in="csm" data-phase-in="broad_adoption value_realization">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Success plan outcomes</p>
-              <h2>Value realization</h2>
-              <p class="section-question">Question: Are we delivering business value?</p>
-            </div>
-            <p class="section-lede">
-              Connect adoption to value by tracking delivery speed and reliability metrics.
-            </p>
-          </div>
-
-          <div class="dora-grid">
-            <article class="card dora-card" style="--order: 1">
-              <h3>Deployment frequency</h3>
-              <p class="dora-value" data-field="dora.deploy_freq">0 / day</p>
-              <p class="muted">Delivery cadence across production services.</p>
-            </article>
-            <article class="card dora-card" style="--order: 2">
-              <h3>Lead time</h3>
-              <p class="dora-value" data-field="dora.lead_time">0 days</p>
-              <p class="muted">Commit to production lead time.</p>
-            </article>
-            <article class="card dora-card" style="--order: 3">
-              <h3>Change failure rate</h3>
-              <p class="dora-value" data-field="dora.change_failure">0%</p>
-              <p class="muted">Percent of changes causing incidents.</p>
-            </article>
-            <article class="card dora-card" style="--order: 4">
-              <h3>MTTR</h3>
-              <p class="dora-value" data-field="dora.mttr">0 hours</p>
-              <p class="muted">Time to restore service after failure.</p>
-            </article>
-          </div>
-
-          <div class="two-column">
-            <article class="card" style="--order: 5">
-              <h3>Success plan structure</h3>
-              <ul class="definition-list">
-                <li><span class="definition-term">Objective</span> Clear goal aligned to business outcomes.</li>
-                <li><span class="definition-term">Success metrics</span> Measurable, verifiable outcomes.</li>
-                <li><span class="definition-term">KPIs</span> Quantified targets tied to adoption or DORA.</li>
-                <li><span class="definition-term">Initiatives</span> Actions and workshops required.</li>
-                <li><span class="definition-term">Owners</span> Named stakeholders responsible for delivery.</li>
-                <li><span class="definition-term">Timeline</span> Target dates for each objective.</li>
-              </ul>
-            </article>
-            <article class="card" style="--order: 6">
-              <h3>Outcome tracking</h3>
-              <p class="stat" data-field="outcomes.primary_status">In progress</p>
-              <div class="progress" data-progress="outcome_progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <article class="card" style="--order: 1">
+              <h3>Weighted health rubric</h3>
+              <div class="health-score" data-health-score>
+                <span class="score-num" data-field="health.overall_score">68</span>
+                <span class="score-label" data-field="health.band_label">Yellow</span>
+              </div>
+              <div class="progress" data-progress="health_adoption" role="progressbar" aria-valuemin="0" aria-valuemax="100">
                 <span class="progress-bar"></span>
               </div>
-              <p class="muted" data-field="outcomes.primary_note">4 of 12 Tier-1 apps deploy via GitLab</p>
+              <p class="muted">Adoption weight 40%</p>
+              <div class="progress" data-progress="health_engagement" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <span class="progress-bar"></span>
+              </div>
+              <p class="muted">Engagement weight 30%</p>
+              <div class="progress" data-progress="health_outcomes" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <span class="progress-bar"></span>
+              </div>
+              <p class="muted">Outcomes weight 30%</p>
+            </article>
+
+            <article class="card" style="--order: 2">
+              <h3>Early warning flags</h3>
+              <p class="muted">Predictive signals for renewal and adoption risks.</p>
+              <ul class="health-list" data-list="early-warnings"></ul>
             </article>
           </div>
 
-          <article class="card" style="--order: 7" id="success-plan">
-            <h3>Success plan objectives and verifiable outcomes</h3>
-            <p class="muted" data-field="success_plan.summary">0 of 3 objectives achieved</p>
-            <div class="table-wrap">
-              <table class="success-table">
-                <thead>
-                  <tr>
-                    <th>Objective</th>
-                    <th>Success metric</th>
-                    <th>Target</th>
-                    <th>Status</th>
-                    <th>Evidence</th>
-                  </tr>
-                </thead>
-                <tbody data-list="success-plan-table"></tbody>
-              </table>
-            </div>
-          </article>
+          <details class="drawer">
+            <summary>Risk register and mitigation checklists</summary>
+            <div class="risk-grid" data-list="risk-register"></div>
+          </details>
 
-          <div class="card narrative" style="--order: 8">
-            <h3>Value narrative</h3>
-            <p data-field="outcomes.narrative">
-              CI coverage reached 25% of projects. Next focus is enabling security scans and expanding deployment automation to improve lead time and MTTR.
-            </p>
+          <details class="drawer">
+            <summary>Red and Yellow response playbooks</summary>
+            <div class="resource-grid">
+              <article class="card">
+                <h3>Red response</h3>
+                <ul class="resource-list" data-list="risk-playbooks-red"></ul>
+              </article>
+              <article class="card">
+                <h3>Yellow response</h3>
+                <ul class="resource-list" data-list="risk-playbooks-yellow"></ul>
+              </article>
+            </div>
+          </details>
+        </section>
+        <section class="section" id="outcomes" data-section data-audience="all exec csm devops" data-details-scope>
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Outcomes</p>
+              <h2>Success plan and value realization</h2>
+              <p class="section-question">Question: Are we delivering business value?</p>
+            </div>
+            <div class="section-controls">
+              <button class="ghost-btn" type="button" data-details-action="expand">Expand all</button>
+              <button class="ghost-btn" type="button" data-details-action="collapse">Collapse all</button>
+            </div>
           </div>
 
           <div class="summary-grid">
-            <article class="card" style="--order: 9">
-              <h3>DORA resources</h3>
-              <p class="muted">Reference how GitLab calculates and exposes DORA metrics.</p>
-              <ul class="resource-list" data-list="dora-resources"></ul>
+            <article class="card" style="--order: 1">
+              <h3>Success plan progress</h3>
+              <p class="stat" data-field="success_plan.progress_summary">2 of 5 objectives on track</p>
+              <p class="muted">Next review: <span data-field="success_plan.next_review">Feb 5, 2026</span></p>
+              <details class="drawer" id="success-plan">
+                <summary>Objectives and dependencies</summary>
+                <div class="success-list" data-list="success-plan"></div>
+              </details>
             </article>
-            <article class="card" style="--order: 10">
-              <h3>Renewal readiness</h3>
-              <p class="muted">Renewal tracking guidance and health alignment.</p>
-              <ul class="resource-list" data-list="renewal-resources"></ul>
+            <article class="card" style="--order: 2">
+              <h3>Value realization</h3>
+              <p class="stat" data-field="outcomes.value_summary">Release frequency up 2.5x</p>
+              <p class="muted" data-field="outcomes.value_detail">Lead time down from 14 to 7 days.</p>
+              <details class="drawer">
+                <summary>Value narrative</summary>
+                <p data-field="outcomes.narrative">Delivery velocity improved across Tier-1 services with GitLab CI/CD adoption.</p>
+              </details>
             </article>
-          </div>
-        </section>
-        <section class="section" id="enablement" data-mode-in="adoption csm" data-phase-in="onboarding early_adoption broad_adoption value_realization">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Enablement and playbooks</p>
-              <h2>Workshops, playbooks, and landing zones</h2>
-              <p class="section-question">Question: What enablement unlocks the next milestone?</p>
-            </div>
-            <p class="section-lede">
-              Use GitLab Customer Success playbooks and adoption landing zones to drive adoption across teams.
-            </p>
           </div>
 
-          <div class="guide-grid">
-            <article class="card guide-card" style="--order: 1">
-              <h3>Workshops and playbooks</h3>
-              <p class="muted">Enablement sessions aligned to Verify, Secure, and Release adoption.</p>
-              <ul class="resource-list" data-list="playbooks-library"></ul>
-            </article>
-            <article class="card guide-card" style="--order: 2">
-              <h3>Adoption landing zones</h3>
-              <p class="muted">Stage-specific enablement resources and migration guidance.</p>
-              <ul class="resource-list" data-list="adoption-landing-zones"></ul>
-            </article>
-            <article class="card guide-card" style="--order: 3">
-              <h3>Success plan development</h3>
-              <p class="muted">Discovery questions, success criteria templates, and continuous planning.</p>
-              <ul class="resource-list" data-list="success-plan-development"></ul>
-            </article>
-            <article class="card guide-card" style="--order: 4">
-              <h3>Executive alignment resources</h3>
-              <p class="muted">EBR/QBR planning and executive relationship guidance.</p>
-              <ul class="resource-list" data-list="executive-resources"></ul>
-            </article>
-          </div>
+          <details class="drawer">
+            <summary>DORA performance snapshot</summary>
+            <div class="dora-grid" data-list="dora-cards"></div>
+          </details>
+
+          <details class="drawer">
+            <summary>Value stream analytics</summary>
+            <div class="summary-grid">
+              <article class="card">
+                <h3>Key VSA metrics</h3>
+                <ul class="event-list" data-list="vsa-metrics"></ul>
+                <a class="inline-link" href="https://docs.gitlab.com/user/analytics/value_streams_dashboard/">Value Streams dashboard docs</a>
+              </article>
+              <article class="card">
+                <h3>Bottleneck analysis</h3>
+                <p class="stat" data-field="vsa.bottleneck_stage">Code review</p>
+                <ul class="event-list" data-list="vsa-recommendations"></ul>
+              </article>
+            </div>
+          </details>
         </section>
 
-        <section class="section" id="resources" data-mode-in="adoption csm" data-phase-in="onboarding early_adoption broad_adoption value_realization">
+        <section class="section" id="engagement" data-section data-audience="all exec devops csm" data-details-scope>
           <div class="section-head">
             <div>
-              <p class="eyebrow">Operating cadence &amp; guides</p>
-              <h2>Enablement and operating rhythm</h2>
-              <p class="section-question">Question: What should we do next?</p>
+              <p class="eyebrow">Engagement &amp; enablement</p>
+              <h2>Touchpoints, cadence, and enablement</h2>
+              <p class="section-question">Question: Are stakeholders engaged and enabled?</p>
             </div>
-            <p class="section-lede">
-              Link this dashboard to leadership cadence, workshops, collaboration projects, and reporting
-              frameworks to turn insights into action.
-            </p>
-          </div>
-
-          <div class="guide-grid">
-            <article class="card guide-card" style="--order: 1">
-              <h3>Business reviews and executive alignment</h3>
-              <p class="muted">Quarterly check-ins and EBRs keep stakeholders aligned on outcomes.</p>
-              <ul class="resource-list" data-list="learning-cadence"></ul>
-            </article>
-            <article class="card guide-card" style="--order: 2">
-              <h3>How this dashboard is used</h3>
-              <p class="muted">Operationalize monthly reviews, quarterly exec readouts, and continuous workshops.</p>
-              <ul class="resource-list" data-list="operating-cadence"></ul>
-            </article>
-            <article class="card guide-card" style="--order: 3">
-              <h3>Customer Success playbooks</h3>
-              <p class="muted">Workshop-driven enablement to expand CI/CD and DevSecOps adoption.</p>
-              <ul class="resource-list" data-list="learning-playbooks"></ul>
-            </article>
-            <article class="card guide-card" style="--order: 4">
-              <h3>Customer Collaboration Project</h3>
-              <p class="muted">Use the shared project as the system of action for issues, agendas, and enablement.</p>
-              <ul class="resource-list" data-list="learning-collaboration"></ul>
-              <div class="collab-templates">
-                <p class="muted">Suggested issue templates</p>
-                <ul class="resource-list" data-list="collaboration-templates"></ul>
-              </div>
-            </article>
-            <article class="card guide-card" style="--order: 5">
-              <h3>Reporting philosophy</h3>
-              <p class="muted">Separate operational dashboards from executive narratives and recommendations.</p>
-              <ul class="resource-list" data-list="learning-reporting"></ul>
-            </article>
+            <div class="section-controls">
+              <button class="ghost-btn" type="button" data-details-action="expand">Expand all</button>
+              <button class="ghost-btn" type="button" data-details-action="collapse">Collapse all</button>
+            </div>
           </div>
 
           <div class="summary-grid">
-            <article class="card" style="--order: 6">
-              <h3>Recommended learning</h3>
-              <ul class="resource-list" data-list="learning-recommended"></ul>
+            <article class="card" style="--order: 1">
+              <h3>Digital health score</h3>
+              <div class="health-score" data-digital-score>
+                <span class="score-num" data-field="touchpoints.digital_health_score">71</span>
+                <span class="score-label" data-field="touchpoints.digital_health_label">Yellow</span>
+              </div>
+              <p class="muted">Based on email engagement, self-service usage, and in-app messaging.</p>
+              <details class="drawer">
+                <summary>Digital breakdown</summary>
+                <ul class="event-list" data-list="digital-breakdown"></ul>
+              </details>
             </article>
-            <article class="card" style="--order: 7">
-              <h3>Webinars and guides</h3>
-              <ul class="resource-list" data-list="learning-webinars"></ul>
-            </article>
-            <article class="card" style="--order: 8">
-              <h3>Templates and playbooks</h3>
-              <ul class="resource-list" data-list="learning-templates"></ul>
+            <article class="card" style="--order: 2">
+              <h3>Cadence calendar</h3>
+              <p class="muted">Current engagement cadence and ownership.</p>
+              <ul class="event-list" data-list="cadence-calendar"></ul>
             </article>
           </div>
 
-          <div class="card faq" style="--order: 9">
-            <h3>Support path</h3>
-            <p>
-              If milestones are off track, escalate to your CSM and Technical Account Manager. Capture blockers
-              in the success plan and prioritize enablement workshops.
-            </p>
-          </div>
-        </section>
-          </div>
-          <aside class="sidebar">
-            <div class="card sticky-card" id="next-actions">
-              <div class="sticky-head">
-                <h3>Next best actions</h3>
-                <span class="mode-pill" data-mode-label>Executive Summary</span>
-              </div>
-              <p class="muted">Suggested actions update based on the active mode.</p>
-              <ul class="action-list" data-list="next-actions"></ul>
+          <details class="drawer" id="ebr-prep">
+            <summary>EBR / QBR preparation</summary>
+            <div class="summary-grid">
+              <article class="card">
+                <h3>Upcoming reviews</h3>
+                <ul class="event-list" data-list="ebr-dates"></ul>
+                <button class="inline-button" type="button" data-export-ebr>Export executive summary</button>
+              </article>
+              <article class="card">
+                <h3>EBR agenda template</h3>
+                <div class="template" data-template="ebr_agenda"></div>
+                <button class="inline-button" type="button" data-copy-template="ebr_agenda">Copy agenda</button>
+              </article>
+              <article class="card">
+                <h3>EBR slide outline</h3>
+                <div class="template" data-template="ebr_slides"></div>
+                <button class="inline-button" type="button" data-copy-template="ebr_slides">Copy outline</button>
+              </article>
+              <article class="card">
+                <h3>EBR checklist</h3>
+                <div class="template" data-template="ebr_checklist"></div>
+                <button class="inline-button" type="button" data-copy-template="ebr_checklist">Copy checklist</button>
+              </article>
             </div>
-          </aside>
-        </div>
+          </details>
+
+          <details class="drawer" id="enablement">
+            <summary>Enablement workshops</summary>
+            <div class="guide-grid" data-list="workshops"></div>
+          </details>
+
+          <details class="drawer" id="collaboration">
+            <summary>Collaboration project</summary>
+            <div class="summary-grid">
+              <article class="card">
+                <h3>Project overview</h3>
+                <p class="stat" data-field="collaboration_project.url">https://gitlab.com/northwind/collaboration</p>
+                <ul class="event-list" data-list="collaboration-metrics"></ul>
+              </article>
+              <article class="card">
+                <h3>Issue templates</h3>
+                <div class="template" data-template="collab_agenda"></div>
+                <button class="inline-button" type="button" data-copy-template="collab_agenda">Copy agenda</button>
+                <div class="template" data-template="collab_action_items"></div>
+                <button class="inline-button" type="button" data-copy-template="collab_action_items">Copy action items</button>
+                <div class="template" data-template="collab_escalation"></div>
+                <button class="inline-button" type="button" data-copy-template="collab_escalation">Copy escalation</button>
+                <div class="template" data-template="collab_success_report"></div>
+                <button class="inline-button" type="button" data-copy-template="collab_success_report">Copy success report</button>
+              </article>
+            </div>
+          </details>
+        </section>
+
+        <section class="section" id="resources" data-section data-audience="all exec devops csm" data-details-scope>
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Resources</p>
+              <h2>Handbook and documentation links</h2>
+              <p class="section-question">Question: Where can I go deeper?</p>
+            </div>
+            <div class="section-controls">
+              <button class="ghost-btn" type="button" data-details-action="expand">Expand all</button>
+              <button class="ghost-btn" type="button" data-details-action="collapse">Collapse all</button>
+            </div>
+          </div>
+
+          <div class="summary-grid">
+            <article class="card">
+              <h3>Health scoring</h3>
+              <ul class="resource-list" data-list="resources-health"></ul>
+            </article>
+            <article class="card">
+              <h3>Success plans</h3>
+              <ul class="resource-list" data-list="resources-success"></ul>
+            </article>
+            <article class="card">
+              <h3>Onboarding and cadence</h3>
+              <ul class="resource-list" data-list="resources-onboarding"></ul>
+            </article>
+            <article class="card">
+              <h3>Playbooks and workshops</h3>
+              <ul class="resource-list" data-list="resources-playbooks"></ul>
+            </article>
+          </div>
+
+          <details class="drawer">
+            <summary>Additional resources</summary>
+            <div class="summary-grid">
+              <article class="card">
+                <h3>EBR / QBR</h3>
+                <ul class="resource-list" data-list="resources-ebr"></ul>
+              </article>
+              <article class="card">
+                <h3>Collaboration project</h3>
+                <ul class="resource-list" data-list="resources-collaboration"></ul>
+              </article>
+              <article class="card">
+                <h3>Value streams and DORA</h3>
+                <ul class="resource-list" data-list="resources-analytics"></ul>
+              </article>
+            </div>
+          </details>
+        </section>
       </main>
 
       <footer class="footer">
         <div>
-          <p class="muted">Static dashboard for GitLab enterprise customer success. Update data in <code>data/metrics.json</code>.</p>
+          <p class="muted">Update customer data in <code>data/dashboard.json</code>.</p>
         </div>
       </footer>
     </div>
+
+    <div class="quick-actions" aria-label="Quick actions">
+      <button class="quick-btn" type="button" data-open-health>Update Health</button>
+      <button class="quick-btn" type="button" data-open-touchpoint>Log Touchpoint</button>
+      <button class="quick-btn" type="button" data-open-collab>Collaboration Issue</button>
+      <button class="quick-btn" type="button" data-export-ebr>Export PDF</button>
+      <button class="quick-btn" type="button" data-share-link>Share link</button>
+    </div>
+
+    <div class="palette" id="palette" aria-hidden="true">
+      <div class="palette-backdrop" data-close-palette></div>
+      <div class="palette-panel" role="dialog" aria-modal="true" aria-label="Search">
+        <input id="palette-input" type="search" placeholder="Search sections, metrics, playbooks..." aria-label="Search" />
+        <ul id="palette-results" class="palette-results"></ul>
+      </div>
+    </div>
+
+    <dialog class="modal" id="health-modal" aria-labelledby="health-modal-title">
+      <form method="dialog" class="modal-content">
+        <h3 id="health-modal-title">Update health scores</h3>
+        <label class="field">
+          Adoption score
+          <input type="number" min="0" max="100" step="1" name="adoption_score" />
+        </label>
+        <label class="field">
+          Engagement score
+          <input type="number" min="0" max="100" step="1" name="engagement_score" />
+        </label>
+        <label class="field">
+          Outcomes score
+          <input type="number" min="0" max="100" step="1" name="outcomes_score" />
+        </label>
+        <div class="modal-actions">
+          <button type="submit">Save</button>
+          <button type="button" data-close-modal>Cancel</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="touchpoint-modal" aria-labelledby="touchpoint-modal-title">
+      <form method="dialog" class="modal-content">
+        <h3 id="touchpoint-modal-title">Log digital touchpoint</h3>
+        <label class="field">
+          Channel
+          <select name="channel">
+            <option>Email</option>
+            <option>In-app</option>
+            <option>Self-service</option>
+            <option>Workshop</option>
+          </select>
+        </label>
+        <label class="field">
+          Summary
+          <input type="text" name="summary" placeholder="Summary" required />
+        </label>
+        <label class="field">
+          Date
+          <input type="date" name="date" required />
+        </label>
+        <div class="modal-actions">
+          <button type="submit">Add</button>
+          <button type="button" data-close-modal>Cancel</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="collab-modal" aria-labelledby="collab-modal-title">
+      <form method="dialog" class="modal-content">
+        <h3 id="collab-modal-title">Create collaboration issue</h3>
+        <label class="field">
+          Template
+          <select name="template" data-collab-template></select>
+        </label>
+        <label class="field">
+          Issue body
+          <textarea name="issue" rows="8" data-collab-body></textarea>
+        </label>
+        <div class="modal-actions">
+          <button type="button" data-copy-collab>Copy issue</button>
+          <button type="button" data-close-modal>Close</button>
+        </div>
+      </form>
+    </dialog>
 
     <script src="assets/js/app.js"></script>
   </body>
