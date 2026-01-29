@@ -408,11 +408,16 @@
           <details class="drawer">
             <summary>Milestone definitions</summary>
             <ul class="definition-list">
-              <li><span class="definition-term">Engagement</span> First CSM meeting with the customer.</li>
-              <li><span class="definition-term">Infrastructure ready</span> GitLab deployed or integrated and ready for users.</li>
-              <li><span class="definition-term">Onboarding complete</span> All onboarding tasks finished.</li>
-              <li><span class="definition-term">First value</span> 10% of production licenses activated.</li>
-              <li><span class="definition-term">Outcome achieved</span> Primary purchase intent delivered.</li>
+              <li><span class="definition-term">Engagement</span> First CSM meeting held with the customer.</li>
+              <li>
+                <span class="definition-term">Infrastructure ready</span> Environment is operational and integrated into the
+                customer landscape (SSO, networking, and access validated).
+              </li>
+              <li><span class="definition-term">Onboarding complete</span> All onboarding tasks finished and verified.</li>
+              <li><span class="definition-term">First value</span> 10% of production licenses activated and in use.</li>
+              <li>
+                <span class="definition-term">Outcome achieved</span> Original business goal delivered (mapped to purchase intent).
+              </li>
             </ul>
           </details>
 
@@ -454,7 +459,7 @@
             <article class="card" style="--order: 1">
               <h3>Platform adoption score</h3>
               <p class="stat" data-field="adoption.platform_adoption_summary">2 of 4 use cases green</p>
-              <p class="muted">Target: 3+ green use cases for successful adoption.</p>
+              <p class="muted">Full platform adoption is achieved with 3+ green use cases.</p>
             </article>
             <article class="card" style="--order: 2">
               <h3>Recommended workshop</h3>
@@ -543,6 +548,16 @@
                 <span class="progress-bar"></span>
               </div>
               <p class="muted">Outcomes weight 30%</p>
+              <details class="drawer">
+                <summary>Health scoring framework (PROVE-aligned)</summary>
+                <ul class="definition-list">
+                  <li><span class="definition-term">Product usage</span> Adoption and platform use-case scores.</li>
+                  <li><span class="definition-term">Risk</span> Early warning flags, renewal signals, and blockers.</li>
+                  <li><span class="definition-term">Outcomes</span> Success plan progress and value realization.</li>
+                  <li><span class="definition-term">Voice</span> Sentiment and executive feedback.</li>
+                  <li><span class="definition-term">Engagement</span> Cadence attendance and enablement participation.</li>
+                </ul>
+              </details>
             </article>
 
             <article class="card" style="--order: 2">
@@ -675,6 +690,24 @@
               </details>
             </article>
             <article class="card" style="--order: 2">
+              <h3>Engagement metrics</h3>
+              <div class="kpi-grid kpi-compact">
+                <div class="kpi">
+                  <span class="kpi-label">Cadence frequency</span>
+                  <span class="kpi-value" data-field="engagement.cadence_frequency">Biweekly</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Cadence attendance</span>
+                  <span class="kpi-value" data-field="engagement.cadence_attendance">76%</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">EBR attendance</span>
+                  <span class="kpi-value" data-field="engagement.ebr_attendance">82%</span>
+                </div>
+              </div>
+              <p class="muted">Cadence calls cover operational adoption; EBRs focus on executive outcomes.</p>
+            </article>
+            <article class="card" style="--order: 3">
               <h3>Cadence calendar</h3>
               <p class="muted">Current engagement cadence and ownership.</p>
               <ul class="event-list" data-list="cadence-calendar"></ul>
@@ -688,6 +721,7 @@
                 <h3>Upcoming reviews</h3>
                 <ul class="event-list" data-list="ebr-dates"></ul>
                 <button class="inline-button" type="button" data-export-ebr>Export executive summary</button>
+                <p class="muted">Cadence calls = operational check-ins. EBRs = strategic executive alignment.</p>
               </article>
               <article class="card">
                 <h3>EBR agenda template</h3>
@@ -802,7 +836,10 @@
 
       <footer class="footer">
         <div>
-          <p class="muted">Update customer data in <code>data/dashboard.json</code>.</p>
+          <p class="muted">
+            Data freshness: <span data-field="meta.data_freshness_note">Updated January 2026</span> | Update customer data in
+            <code>data/dashboard.json</code>.
+          </p>
         </div>
       </footer>
     </div>

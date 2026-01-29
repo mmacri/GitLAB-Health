@@ -1,9 +1,9 @@
-
 {
   "meta": {
     "last_updated": "2026-01-20",
     "updated_by": "Jordan Lee",
-    "notes": "Monthly health review and renewal readiness update"
+    "notes": "Monthly health review and renewal readiness update",
+    "data_freshness_note": "Updated January 2026"
   },
   "customer": {
     "name": "Northwind Industries",
@@ -20,34 +20,99 @@
     "purchased": 500,
     "active": 210,
     "utilization_30d_series": [
-      { "date": "2025-11-15", "value": 0.34 },
-      { "date": "2025-12-01", "value": 0.36 },
-      { "date": "2025-12-15", "value": 0.38 },
-      { "date": "2025-12-30", "value": 0.40 },
-      { "date": "2026-01-15", "value": 0.42 }
+      {
+        "date": "2025-11-15",
+        "value": 0.34
+      },
+      {
+        "date": "2025-12-01",
+        "value": 0.36
+      },
+      {
+        "date": "2025-12-15",
+        "value": 0.38
+      },
+      {
+        "date": "2025-12-30",
+        "value": 0.4
+      },
+      {
+        "date": "2026-01-15",
+        "value": 0.42
+      }
     ]
   },
   "onboarding": {
     "phase": "First value",
     "completion_pct": 0.92,
     "milestones": {
-      "engagement": { "date": "2025-09-01" },
-      "infra_ready": { "date": "2025-09-15" },
-      "onboarding_complete": { "date": "2025-10-20" },
-      "first_value": { "date": "2025-10-25" },
-      "outcome": { "date": "" }
+      "engagement": {
+        "date": "2025-09-01"
+      },
+      "infra_ready": {
+        "date": "2025-09-15"
+      },
+      "onboarding_complete": {
+        "date": "2025-10-20"
+      },
+      "first_value": {
+        "date": "2025-10-25"
+      },
+      "outcome": {
+        "date": ""
+      }
     },
     "checklist": [
-      { "task": "Executive kickoff and success criteria aligned", "done": true, "date": "2025-08-29" },
-      { "task": "GitLab instance deployed and validated", "done": true, "date": "2025-09-10" },
-      { "task": "SSO configured and tested", "done": true, "date": "2025-09-12" },
-      { "task": "Pilot teams onboarded", "done": true, "date": "2025-09-20" },
-      { "task": "Repository migration complete", "done": true, "date": "2025-09-25" },
-      { "task": "CI runners configured", "done": true, "date": "2025-09-28" },
-      { "task": "First pipelines running", "done": true, "date": "2025-10-02" },
-      { "task": "Security baseline defined", "done": true, "date": "2025-10-05" },
-      { "task": "Enablement training delivered", "done": true, "date": "2025-10-18" },
-      { "task": "Success plan validated", "done": true, "date": "2025-10-20" }
+      {
+        "task": "Executive kickoff and success criteria aligned",
+        "done": true,
+        "date": "2025-08-29"
+      },
+      {
+        "task": "GitLab instance deployed and validated",
+        "done": true,
+        "date": "2025-09-10"
+      },
+      {
+        "task": "SSO configured and tested",
+        "done": true,
+        "date": "2025-09-12"
+      },
+      {
+        "task": "Pilot teams onboarded",
+        "done": true,
+        "date": "2025-09-20"
+      },
+      {
+        "task": "Repository migration complete",
+        "done": true,
+        "date": "2025-09-25"
+      },
+      {
+        "task": "CI runners configured",
+        "done": true,
+        "date": "2025-09-28"
+      },
+      {
+        "task": "First pipelines running",
+        "done": true,
+        "date": "2025-10-02"
+      },
+      {
+        "task": "Security baseline defined",
+        "done": true,
+        "date": "2025-10-05"
+      },
+      {
+        "task": "Enablement training delivered",
+        "done": true,
+        "date": "2025-10-18"
+      },
+      {
+        "task": "Success plan validated",
+        "done": true,
+        "date": "2025-10-20"
+      }
     ],
     "risks": [
       "License activation below 50% after first value",
@@ -63,8 +128,15 @@
         "name": "Create (SCM)",
         "score": 68,
         "trend_30d_pct": 6,
-        "drivers": ["Merge request usage growing", "Code review coverage at 55%"],
-        "thresholds": ["Green >= 76", "Yellow 51-75", "Red <= 50"],
+        "drivers": [
+          "Merge request usage growing",
+          "Code review coverage at 55%"
+        ],
+        "thresholds": [
+          "Green >= 76",
+          "Yellow 51-75",
+          "Red <= 50"
+        ],
         "playbook": "https://handbook.gitlab.com/handbook/customer-success/playbooks/"
       },
       {
@@ -72,8 +144,15 @@
         "name": "Verify (CI)",
         "score": 60,
         "trend_30d_pct": 8,
-        "drivers": ["CI builds per billable user at 18", "Pipeline success rate 72%"],
-        "thresholds": ["Green > 40 builds per user", "Yellow 3-40", "Red <= 2"],
+        "drivers": [
+          "CI builds per billable user at 18",
+          "Pipeline success rate 72%"
+        ],
+        "thresholds": [
+          "Green > 40 builds per user",
+          "Yellow 3-40",
+          "Red <= 2"
+        ],
         "playbook": "https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"
       },
       {
@@ -81,8 +160,15 @@
         "name": "Secure (DevSecOps)",
         "score": 58,
         "trend_30d_pct": 4,
-        "drivers": ["Scanner utilization 8%", "DAST not enabled"],
-        "thresholds": ["Green >= 20% utilization", "Yellow 5-19%", "Red < 5%"],
+        "drivers": [
+          "Scanner utilization 8%",
+          "DAST not enabled"
+        ],
+        "thresholds": [
+          "Green >= 20% utilization",
+          "Yellow 5-19%",
+          "Red < 5%"
+        ],
         "playbook": "https://handbook.gitlab.com/handbook/customer-success/playbooks/"
       },
       {
@@ -90,8 +176,15 @@
         "name": "Release (CD)",
         "score": 55,
         "trend_30d_pct": 2,
-        "drivers": ["Deployments per user 1.8", "Only 4 teams deploying"],
-        "thresholds": ["Green > 7 deployments per user", "Yellow 2-7", "Red < 2"],
+        "drivers": [
+          "Deployments per user 1.8",
+          "Only 4 teams deploying"
+        ],
+        "thresholds": [
+          "Green > 7 deployments per user",
+          "Yellow 2-7",
+          "Red < 2"
+        ],
         "playbook": "https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/"
       }
     ],
@@ -100,56 +193,140 @@
         {
           "key": "pre_engagement",
           "label": "Pre-engagement",
-          "goals": ["Align executive sponsor", "Confirm success criteria"],
-          "tasks": ["Document business outcomes", "Identify technical champions"],
-          "risks": ["Unclear ownership", "Undefined success metrics"],
-          "workshops": ["Discovery and planning session"],
-          "success_criteria": ["Success plan draft approved", "Executive sponsor confirmed"]
+          "goals": [
+            "Align executive sponsor",
+            "Confirm success criteria"
+          ],
+          "tasks": [
+            "Document business outcomes",
+            "Identify technical champions"
+          ],
+          "risks": [
+            "Unclear ownership",
+            "Undefined success metrics"
+          ],
+          "workshops": [
+            "Discovery and planning session"
+          ],
+          "success_criteria": [
+            "Success plan draft approved",
+            "Executive sponsor confirmed"
+          ]
         },
         {
           "key": "engagement",
           "label": "Engagement",
-          "goals": ["Kickoff and stakeholder alignment", "Success plan baseline"],
-          "tasks": ["Hold kickoff", "Create collaboration project"],
-          "risks": ["Missed stakeholder attendance"],
-          "workshops": ["Onboarding kickoff"],
-          "success_criteria": ["Kickoff completed", "Success plan objectives logged"]
+          "goals": [
+            "Kickoff and stakeholder alignment",
+            "Success plan baseline"
+          ],
+          "tasks": [
+            "Hold kickoff",
+            "Create collaboration project"
+          ],
+          "risks": [
+            "Missed stakeholder attendance"
+          ],
+          "workshops": [
+            "Onboarding kickoff"
+          ],
+          "success_criteria": [
+            "Kickoff completed",
+            "Success plan objectives logged"
+          ]
         },
         {
           "key": "infra_ready",
           "label": "Infra ready",
-          "goals": ["Platform available", "SSO and access configured"],
-          "tasks": ["Deploy GitLab", "Configure SSO", "Validate runners"],
-          "risks": ["Infrastructure delays", "Access issues"],
-          "workshops": ["Admin enablement"],
-          "success_criteria": ["GitLab production ready", "Runners online"]
+          "goals": [
+            "Platform available",
+            "SSO and access configured"
+          ],
+          "tasks": [
+            "Deploy GitLab",
+            "Configure SSO",
+            "Validate runners"
+          ],
+          "risks": [
+            "Infrastructure delays",
+            "Access issues"
+          ],
+          "workshops": [
+            "Admin enablement"
+          ],
+          "success_criteria": [
+            "GitLab production ready",
+            "Runners online"
+          ]
         },
         {
           "key": "onboarding_complete",
           "label": "Onboarding complete",
-          "goals": ["Teams onboarded", "Training complete"],
-          "tasks": ["Migrate repositories", "Deliver training sessions"],
-          "risks": ["Low training attendance"],
-          "workshops": ["CI/Verify workshop"],
-          "success_criteria": ["Training completed", "Pilot teams live"]
+          "goals": [
+            "Teams onboarded",
+            "Training complete"
+          ],
+          "tasks": [
+            "Migrate repositories",
+            "Deliver training sessions"
+          ],
+          "risks": [
+            "Low training attendance"
+          ],
+          "workshops": [
+            "CI/Verify workshop"
+          ],
+          "success_criteria": [
+            "Training completed",
+            "Pilot teams live"
+          ]
         },
         {
           "key": "first_value",
           "label": "First value",
-          "goals": ["Reach 10% license activation", "First production pipeline"],
-          "tasks": ["Enable CI in priority projects", "Drive adoption campaigns"],
-          "risks": ["Low license utilization", "Pipeline instability"],
-          "workshops": ["CI/Verify workshop"],
-          "success_criteria": ["10% licenses active", "First deployment via GitLab"]
+          "goals": [
+            "Reach 10% license activation",
+            "First production pipeline"
+          ],
+          "tasks": [
+            "Enable CI in priority projects",
+            "Drive adoption campaigns"
+          ],
+          "risks": [
+            "Low license utilization",
+            "Pipeline instability"
+          ],
+          "workshops": [
+            "CI/Verify workshop"
+          ],
+          "success_criteria": [
+            "10% licenses active",
+            "First deployment via GitLab"
+          ]
         },
         {
           "key": "outcome",
           "label": "Outcome achieved",
-          "goals": ["Primary use case delivered", "Business outcomes verified"],
-          "tasks": ["Scale CI/CD coverage", "Enable security scans"],
-          "risks": ["Outcome lag", "Security gaps"],
-          "workshops": ["Secure workshop", "CD/Release playbook"],
-          "success_criteria": ["Use case green", "ROI validated"]
+          "goals": [
+            "Primary use case delivered",
+            "Business outcomes verified"
+          ],
+          "tasks": [
+            "Scale CI/CD coverage",
+            "Enable security scans"
+          ],
+          "risks": [
+            "Outcome lag",
+            "Security gaps"
+          ],
+          "workshops": [
+            "Secure workshop",
+            "CD/Release playbook"
+          ],
+          "success_criteria": [
+            "Use case green",
+            "ROI validated"
+          ]
         }
       ]
     }
@@ -216,7 +393,10 @@
       "agenda": "EBR Agenda\n1. Executive summary and outcomes\n2. Adoption and health score\n3. Success plan progress\n4. Risks and mitigations\n5. Roadmap alignment\n6. Next quarter priorities",
       "slides": "EBR Slide Outline\n1. Executive summary\n2. Health score and adoption\n3. Success plan objectives\n4. DORA and value streams\n5. Risks and mitigation plan\n6. Roadmap alignment\n7. Next quarter priorities",
       "checklist": "EBR Checklist\n- Confirm KPIs and success plan status\n- Update renewal risk and mitigation\n- Validate DORA and VSA metrics\n- Capture executive feedback"
-    }
+    },
+    "cadence_call_frequency": "Biweekly",
+    "ebr_attendance_rate": 0.82,
+    "cadence_notes": "Cadence calls focus on operational adoption; EBRs focus on executive outcomes."
   },
   "touchpoints": {
     "email_metrics": {
@@ -227,18 +407,26 @@
     "self_service_metrics": {
       "doc_views": 860,
       "training_completion": 0.62,
-      "ticket_deflection": 0.24
+      "ticket_deflection": 0.24,
+      "self_service_adoption": 0.54
     },
     "in_app_metrics": {
       "views": 320,
       "clicks": 70,
       "survey_completion": 0.56
     },
-    "digital_health_score": 71,
+    "digital_health_score": 66,
     "breakdown": {
       "email": 68,
       "self_service": 74,
-      "in_app": 70
+      "in_app": 70,
+      "community": 55
+    },
+    "community_metrics": {
+      "active_members": 38,
+      "posts": 12,
+      "responses": 22,
+      "participation_rate": 0.55
     }
   },
   "risks": [
@@ -251,8 +439,16 @@
       "due_date": "2026-02-15",
       "playbook": "https://handbook.gitlab.com/handbook/customer-success/playbooks/",
       "mitigation": [
-        { "task": "Launch adoption campaign with team leads", "owner": "CSM", "due_date": "2026-02-05" },
-        { "task": "Schedule onboarding refresher session", "owner": "TAM", "due_date": "2026-02-12" }
+        {
+          "task": "Launch adoption campaign with team leads",
+          "owner": "CSM",
+          "due_date": "2026-02-05"
+        },
+        {
+          "task": "Schedule onboarding refresher session",
+          "owner": "TAM",
+          "due_date": "2026-02-12"
+        }
       ]
     },
     {
@@ -264,19 +460,39 @@
       "due_date": "2026-03-01",
       "playbook": "https://handbook.gitlab.com/handbook/customer-success/playbooks/",
       "mitigation": [
-        { "task": "Enable SAST and dependency scanning", "owner": "Security", "due_date": "2026-02-20" },
-        { "task": "Run Secure workshop", "owner": "CSM", "due_date": "2026-02-28" }
+        {
+          "task": "Enable SAST and dependency scanning",
+          "owner": "Security",
+          "due_date": "2026-02-20"
+        },
+        {
+          "task": "Run Secure workshop",
+          "owner": "CSM",
+          "due_date": "2026-02-28"
+        }
       ]
     }
   ],
   "risk_playbooks": {
     "red": [
-      { "title": "Health score triage", "link": "https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/" },
-      { "title": "Customer health scoring", "link": "https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/" }
+      {
+        "title": "Health score triage",
+        "link": "https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"
+      },
+      {
+        "title": "Customer health scoring",
+        "link": "https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"
+      }
     ],
     "yellow": [
-      { "title": "Playbooks index", "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/" },
-      { "title": "Success plans", "link": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/" }
+      {
+        "title": "Playbooks index",
+        "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/"
+      },
+      {
+        "title": "Success plans",
+        "link": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/"
+      }
     ]
   },
   "success_plan": {
@@ -289,8 +505,18 @@
         "owner": "DevOps lead",
         "target_date": "2026-03-30",
         "evidence": "https://gitlab.com/northwind/collaboration/-/issues/34",
-        "dependencies": ["Runner scaling", "Release pipeline approval"],
-        "next_milestone": "First Tier-1 app release"
+        "dependencies": [
+          "Runner scaling",
+          "Release pipeline approval"
+        ],
+        "next_milestone": "First Tier-1 app release",
+        "baseline": "Release cadence at 1x per week across Tier-1 apps",
+        "success_criteria": "Deploy Tier-1 apps daily with automated approvals",
+        "timeline": "Jan\u2013Mar 2026",
+        "verifiable_outcomes": [
+          "Daily release pipeline for Tier-1 services",
+          "Change failure rate below 10%"
+        ]
       },
       {
         "title": "Expand CI adoption to 60% of projects",
@@ -299,8 +525,17 @@
         "owner": "Platform engineering",
         "target_date": "2026-03-15",
         "evidence": "https://gitlab.com/northwind/collaboration/-/issues/28",
-        "dependencies": ["CI templates rollout"],
-        "next_milestone": "50% projects with CI"
+        "dependencies": [
+          "CI templates rollout"
+        ],
+        "next_milestone": "50% projects with CI",
+        "baseline": "CI enabled on 35% of projects",
+        "success_criteria": "CI enabled on 60% of projects with >75% success rate",
+        "timeline": "Feb\u2013Mar 2026",
+        "verifiable_outcomes": [
+          "CI templates rolled out to top 20 projects",
+          "Runner capacity scaled to 80% utilization"
+        ]
       },
       {
         "title": "Enable security scanning for regulated apps",
@@ -309,8 +544,17 @@
         "owner": "Security",
         "target_date": "2026-02-28",
         "evidence": "https://gitlab.com/northwind/collaboration/-/issues/41",
-        "dependencies": ["SAST pipeline updates"],
-        "next_milestone": "SAST baseline enabled"
+        "dependencies": [
+          "SAST pipeline updates"
+        ],
+        "next_milestone": "SAST baseline enabled",
+        "baseline": "Security scans on 12% of regulated apps",
+        "success_criteria": "SAST + dependency scans on all regulated apps",
+        "timeline": "Jan\u2013Feb 2026",
+        "verifiable_outcomes": [
+          "SAST baseline on regulated pipelines",
+          "Dependency scanning policy enforced"
+        ]
       }
     ]
   },
@@ -328,10 +572,22 @@
         "current": 0.6,
         "target": 1.0,
         "series": [
-          { "date": "2025-11-01", "value": 0.2 },
-          { "date": "2025-12-01", "value": 0.3 },
-          { "date": "2026-01-01", "value": 0.5 },
-          { "date": "2026-01-20", "value": 0.6 }
+          {
+            "date": "2025-11-01",
+            "value": 0.2
+          },
+          {
+            "date": "2025-12-01",
+            "value": 0.3
+          },
+          {
+            "date": "2026-01-01",
+            "value": 0.5
+          },
+          {
+            "date": "2026-01-20",
+            "value": 0.6
+          }
         ]
       },
       "lead_time": {
@@ -341,10 +597,22 @@
         "current": 7,
         "target": 3,
         "series": [
-          { "date": "2025-11-01", "value": 14 },
-          { "date": "2025-12-01", "value": 10 },
-          { "date": "2026-01-01", "value": 8 },
-          { "date": "2026-01-20", "value": 7 }
+          {
+            "date": "2025-11-01",
+            "value": 14
+          },
+          {
+            "date": "2025-12-01",
+            "value": 10
+          },
+          {
+            "date": "2026-01-01",
+            "value": 8
+          },
+          {
+            "date": "2026-01-20",
+            "value": 7
+          }
         ]
       },
       "change_failure": {
@@ -354,10 +622,22 @@
         "current": 11,
         "target": 5,
         "series": [
-          { "date": "2025-11-01", "value": 18 },
-          { "date": "2025-12-01", "value": 14 },
-          { "date": "2026-01-01", "value": 12 },
-          { "date": "2026-01-20", "value": 11 }
+          {
+            "date": "2025-11-01",
+            "value": 18
+          },
+          {
+            "date": "2025-12-01",
+            "value": 14
+          },
+          {
+            "date": "2026-01-01",
+            "value": 12
+          },
+          {
+            "date": "2026-01-20",
+            "value": 11
+          }
         ]
       },
       "mttr": {
@@ -367,18 +647,46 @@
         "current": 6,
         "target": 2,
         "series": [
-          { "date": "2025-11-01", "value": 10 },
-          { "date": "2025-12-01", "value": 8 },
-          { "date": "2026-01-01", "value": 7 },
-          { "date": "2026-01-20", "value": 6 }
+          {
+            "date": "2025-11-01",
+            "value": 10
+          },
+          {
+            "date": "2025-12-01",
+            "value": 8
+          },
+          {
+            "date": "2026-01-01",
+            "value": 7
+          },
+          {
+            "date": "2026-01-20",
+            "value": 6
+          }
         ]
       }
     },
     "levels": {
-      "deployment_frequency": { "elite": 1.0, "high": 0.2, "medium": 0.03 },
-      "lead_time": { "elite": 1.0, "high": 7.0, "medium": 30.0 },
-      "change_failure": { "elite": 5.0, "high": 10.0, "medium": 20.0 },
-      "mttr": { "elite": 1.0, "high": 24.0, "medium": 72.0 }
+      "deployment_frequency": {
+        "elite": 1.0,
+        "high": 0.2,
+        "medium": 0.03
+      },
+      "lead_time": {
+        "elite": 1.0,
+        "high": 7.0,
+        "medium": 30.0
+      },
+      "change_failure": {
+        "elite": 5.0,
+        "high": 10.0,
+        "medium": 20.0
+      },
+      "mttr": {
+        "elite": 1.0,
+        "high": 24.0,
+        "medium": 72.0
+      }
     }
   },
   "vsa": {
