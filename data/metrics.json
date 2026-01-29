@@ -629,5 +629,203 @@
         "link": "#resources"
       }
     ]
+  },
+  "action_center": {
+    "critical": [
+      {
+        "title": "Enable first production pipeline",
+        "detail": "Due in 7 days - unblock first value milestone",
+        "link": "#onboarding"
+      }
+    ],
+    "important": [
+      {
+        "title": "Schedule CI/Verify workshop",
+        "detail": "Due in 30 days - accelerate CI adoption",
+        "link": "#playbooks"
+      },
+      {
+        "title": "Configure security scanning baseline",
+        "detail": "Due in 30 days - begin Secure adoption",
+        "link": "#adoption"
+      }
+    ],
+    "recommended": [
+      {
+        "title": "Review DevOps maturity map",
+        "detail": "Align on next use case to bring to green",
+        "link": "#adoption"
+      }
+    ]
+  },
+  "success_plan_development": [
+    {
+      "title": "Discovery question library",
+      "detail": "Open-ended and metrics-based prompts for success plan discovery",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/questions-techniques/"
+    },
+    {
+      "title": "Continuous planning workflow",
+      "detail": "Use collaboration project data to keep success plans current",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/continuous-planning/"
+    },
+    {
+      "title": "Success criteria examples",
+      "detail": "Baseline metrics and success criteria examples",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/"
+    }
+  ],
+  "health_methodology": [
+    {
+      "title": "Customer health scoring overview",
+      "detail": "Purpose, lifecycle usage, and scoring framework",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"
+    },
+    {
+      "title": "Health assessment & triage",
+      "detail": "Yellow/Red indicators and management guidance",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"
+    },
+    {
+      "title": "Use case adoption scoring methodology",
+      "detail": "How lighthouse metrics and thresholds are defined",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"
+    },
+    {
+      "title": "Platform adoption scoring",
+      "detail": "Platform adoption score definition and usage",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/"
+    }
+  ],
+  "risk_mitigation": [
+    {
+      "title": "Risk mitigation strategies",
+      "detail": "Playbooks for reducing risk and driving adoption",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/risk-mitigation/"
+    },
+    {
+      "title": "Non-engaged customer strategies",
+      "detail": "Playbook steps for re-engagement",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/engagement/non-engaged-customer-strategies/"
+    },
+    {
+      "title": "Customer success escalations",
+      "detail": "Account escalation process and severity definitions",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/escalations/"
+    }
+  ],
+  "onboarding_best_practices": [
+    {
+      "title": "Customer onboarding guide",
+      "detail": "Onboarding steps and time-to-value KPIs",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/"
+    },
+    {
+      "title": "Onboarding best practices deck",
+      "detail": "Foundational technical onboarding focus areas",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/customer-onboarding-best-practices/"
+    },
+    {
+      "title": "Deployment types",
+      "detail": "Self-managed vs SaaS deployment definitions",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/gainsight/deployment-types/"
+    }
+  ],
+  "adoption_landing_zones": [
+    {
+      "title": "Adoption landing zones index",
+      "detail": "Collection of adoption enablement resources",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/adoption-landing-zones/"
+    },
+    {
+      "title": "CI adoption landing zone",
+      "detail": "CI enablement resources and migration guidance",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/adoption-landing-zones/ci/"
+    },
+    {
+      "title": "DevSecOps adoption landing zone",
+      "detail": "Security adoption resources",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/adoption-landing-zones/devsecops/"
+    },
+    {
+      "title": "AI/ML adoption landing zone",
+      "detail": "AI/ML enablement resources",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/adoption-landing-zones/ai-ml/"
+    }
+  ],
+  "playbooks_library": [
+    {
+      "title": "CI / Verify workshop",
+      "detail": "Enablement workshop for CI adoption",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"
+    },
+    {
+      "title": "CD / Release playbook",
+      "detail": "Adoption guidance for Release stage",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/"
+    },
+    {
+      "title": "Secure workshop",
+      "detail": "Enablement workshop for Secure stage",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/workshops/secure/"
+    },
+    {
+      "title": "Playbooks catalog",
+      "detail": "Customer Success playbooks index",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/"
+    }
+  ],
+  "workshops_library": [
+    {
+      "title": "Customer workshops index",
+      "detail": "Overview of CS workshops",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/workshops/"
+    }
+  ],
+  "executive_resources": [
+    {
+      "title": "Executive business reviews (EBR)",
+      "detail": "Strategic review framework and preparation steps",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/ebr/"
+    },
+    {
+      "title": "CSM QBRs",
+      "detail": "Quarterly review cadence and process",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/qbr/"
+    },
+    {
+      "title": "Executive relationships",
+      "detail": "Guidance on building executive partnerships",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/executive-relationships/"
+    }
+  ],
+  "renewal_resources": [
+    {
+      "title": "Customer renewal tracking",
+      "detail": "Renewal timeline and CTA guidance",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/renewals/"
+    }
+  ],
+  "dora_resources": [
+    {
+      "title": "DORA metrics in GitLab",
+      "detail": "How DORA metrics are measured and displayed",
+      "link": "https://docs.gitlab.com/user/analytics/dora_metrics/"
+    },
+    {
+      "title": "DORA metrics API",
+      "detail": "Retrieve DORA metrics via REST API",
+      "link": "https://docs.gitlab.com/api/dora/metrics/"
+    },
+    {
+      "title": "Jira to GitLab DORA integration",
+      "detail": "Incident replication for DORA metrics",
+      "link": "https://docs.gitlab.com/solutions/components/jira_dora/"
+    }
+  ],
+  "health_scoring": {
+    "red": "0-49",
+    "yellow": "50-74",
+    "green": "75-100"
   }
 }
