@@ -1611,6 +1611,10 @@ html[data-mode="csm"]
   color: var(--muted);
 }
 
+html[data-mode="exec"] [data-hide-on-empty][data-empty="true"] {
+  display: none;
+}
+
 .freshness-badge {
   display: inline-flex;
   align-items: center;

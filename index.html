@@ -375,15 +375,15 @@
           </div>
 
           <div class="two-column">
-            <article class="card" style="--order: 5" id="next-actions">
+            <article class="card" style="--order: 5" id="next-actions" data-hide-on-empty>
               <h3>Next best actions</h3>
               <p class="muted">Rules-based actions generated from current metrics.</p>
-              <div class="action-list" data-list="next-best-actions"></div>
+              <div class="action-list" data-list="next-best-actions" data-empty-trigger="true"></div>
             </article>
-            <article class="card" style="--order: 6">
+            <article class="card" style="--order: 6" data-hide-on-empty>
               <h3>What changed since last update</h3>
               <p class="muted">Highlights from touchpoints and usage reviews.</p>
-              <ul class="event-list" data-list="activity-feed"></ul>
+              <ul class="event-list" data-list="activity-feed" data-empty-trigger="true"></ul>
             </article>
           </div>
           </div>
@@ -487,9 +487,9 @@
             <ul class="task-list" data-list="onboarding-tasks"></ul>
           </details>
 
-          <details class="drawer">
+          <details class="drawer" data-hide-on-empty>
             <summary>Onboarding risks and triggers</summary>
-            <ul class="event-list" data-list="onboarding-risks"></ul>
+            <ul class="event-list" data-list="onboarding-risks" data-empty-trigger="true"></ul>
           </details>
           </div>
         </section>
@@ -540,7 +540,7 @@
             </article>
           </div>
 
-            <details class="drawer">
+            <details class="drawer" data-hide-on-empty>
               <summary>Use case scorecards</summary>
               <p class="muted">
                 Thresholds based on GitLab use case adoption scoring.
@@ -553,10 +553,10 @@
                   >Handbook</a
                 >
               </p>
-              <div class="usecase-grid" data-usecase-cards></div>
+              <div class="usecase-grid" data-usecase-cards data-empty-trigger="true"></div>
             </details>
 
-          <details class="drawer" id="landing-zone">
+          <details class="drawer" id="landing-zone" data-hide-on-empty>
             <summary>Adoption landing zone</summary>
             <div class="landing-zone">
               <label class="field-label" for="landing-zone-phase">Onboarding phase</label>
@@ -564,7 +564,7 @@
               <div class="landing-grid">
                 <div>
                   <h4>Top goals</h4>
-                  <ul class="event-list" data-landing-zone="goals"></ul>
+                  <ul class="event-list" data-landing-zone="goals" data-empty-trigger="true"></ul>
                 </div>
                 <div>
                   <h4>Required tasks</h4>
@@ -661,24 +661,24 @@
               </details>
             </article>
 
-            <article class="card" style="--order: 2">
+            <article class="card" style="--order: 2" data-hide-on-empty>
               <h3>Early warning flags</h3>
               <p class="muted">Predictive signals for renewal and adoption risks.</p>
-              <ul class="health-list" data-list="early-warnings"></ul>
+              <ul class="health-list" data-list="early-warnings" data-empty-trigger="true"></ul>
             </article>
           </div>
 
-          <details class="drawer">
+          <details class="drawer" data-hide-on-empty>
             <summary>Risk register and mitigation checklists</summary>
-            <div class="risk-grid" data-list="risk-register"></div>
+            <div class="risk-grid" data-list="risk-register" data-empty-trigger="true"></div>
           </details>
 
-          <details class="drawer">
+          <details class="drawer" data-hide-on-empty>
             <summary>Health drivers and improvement actions</summary>
-            <ul class="event-list" data-list="health-drivers"></ul>
+            <ul class="event-list" data-list="health-drivers" data-empty-trigger="true"></ul>
           </details>
 
-          <details class="drawer">
+          <details class="drawer" data-hide-on-empty>
             <summary>Red and Yellow response playbooks</summary>
             <div class="resource-grid">
               <article class="card">
@@ -718,7 +718,7 @@
           <div class="summary-grid">
             <article class="card" style="--order: 1">
               <h3>Success plan progress</h3>
-              <p class="stat" data-field="success_plan.progress_summary">2 of 5 objectives on track</p>
+              <p class="stat" data-field="success_plan.progress_summary">2 of 3 objectives on track</p>
               <p class="muted">Next review: <span data-field="success_plan.next_review">Feb 5, 2026</span></p>
               <span class="freshness-badge" data-freshness-badge="success_plan">Manual update</span>
               <details class="drawer" id="success-plan">
@@ -735,21 +735,45 @@
                 <summary>Value narrative</summary>
                 <p data-field="outcomes.narrative">Delivery velocity improved across Tier-1 services with GitLab CI/CD adoption.</p>
                 <ul class="event-list" data-list="value-points"></ul>
+                <p class="muted" data-field="outcomes.impact.customer_quote"></p>
               </details>
+            </article>
+            <article class="card" style="--order: 3">
+              <h3>Business impact</h3>
+              <p class="stat" data-field="outcomes.impact.cost_avoidance_annual">$216,000/year</p>
+              <p class="muted">Estimated annual cost avoidance from delivery efficiency.</p>
+              <ul class="event-list">
+                <li class="event-item">
+                  <div class="event-title">Developer time saved</div>
+                  <div class="event-meta" data-field="outcomes.impact.time_saved">120 hours/month</div>
+                </li>
+                <li class="event-item">
+                  <div class="event-title">Monthly cost avoidance</div>
+                  <div class="event-meta" data-field="outcomes.impact.cost_avoidance_monthly">$18,000/month</div>
+                </li>
+                <li class="event-item">
+                  <div class="event-title">Tool consolidation savings</div>
+                  <div class="event-meta" data-field="outcomes.impact.tool_consolidation_annual">$45,000/year</div>
+                </li>
+                <li class="event-item">
+                  <div class="event-title">Quality improvement</div>
+                  <div class="event-meta" data-field="outcomes.impact.quality_improvement">Production defects down 22% since onboarding.</div>
+                </li>
+              </ul>
             </article>
           </div>
 
-          <details class="drawer">
+          <details class="drawer" data-hide-on-empty>
             <summary>DORA performance snapshot</summary>
-            <div class="dora-grid" data-list="dora-cards"></div>
+            <div class="dora-grid" data-list="dora-cards" data-empty-trigger="true"></div>
           </details>
 
-          <details class="drawer">
+          <details class="drawer" data-hide-on-empty>
             <summary>Value stream analytics</summary>
             <div class="summary-grid">
               <article class="card">
                 <h3>Key VSA metrics</h3>
-                <ul class="event-list" data-list="vsa-metrics"></ul>
+                <ul class="event-list" data-list="vsa-metrics" data-empty-trigger="true"></ul>
                 <a class="inline-link" href="https://docs.gitlab.com/user/analytics/value_streams_dashboard/">Value Streams dashboard docs</a>
               </article>
               <article class="card">
@@ -851,9 +875,9 @@
             </div>
           </details>
 
-          <details class="drawer" id="enablement">
+          <details class="drawer" id="enablement" data-hide-on-empty>
             <summary>Enablement workshops</summary>
-            <div class="guide-grid" data-list="workshops"></div>
+            <div class="guide-grid" data-list="workshops" data-empty-trigger="true"></div>
           </details>
 
           <details class="drawer" id="collaboration">

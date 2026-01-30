@@ -627,7 +627,15 @@
       "Deployment frequency increased from 0.2/day to 0.6/day.",
       "Change failure rate decreased from 18% to 11%.",
       "MTTR improved from 10 hours to 6 hours."
-    ]
+    ],
+    "impact": {
+      "time_saved_hours_per_month": 120,
+      "cost_avoidance_monthly": 18000,
+      "cost_avoidance_annual": 216000,
+      "tool_consolidation_annual": 45000,
+      "quality_improvement": "Production defects down 22% since onboarding.",
+      "customer_quote": "Customer quote: \"GitLab cut our delivery cycles in half and gave us clear visibility across teams.\""
+    }
   },
   "dora": {
     "metrics": {
