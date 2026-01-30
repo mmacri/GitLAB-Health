@@ -108,7 +108,7 @@
               </div>
               <div class="meta-card">
                 <span class="meta-label">Last updated</span>
-                <span class="meta-value" data-field="meta.last_updated">Jan 20, 2026</span>
+                <span class="meta-value" data-field="meta.last_updated">Jan 29, 2026</span>
               </div>
             </div>
             <div class="hero-tags">
@@ -129,7 +129,7 @@
                 </div>
                 <div class="kpi">
                   <span class="kpi-label">Platform adoption</span>
-                  <span class="kpi-value" data-field="adoption.platform_adoption_summary">2 of 4 green</span>
+                  <span class="kpi-value" data-field="adoption.platform_adoption_summary">3 of 4 green</span>
                   <span class="kpi-meta" data-field="adoption.platform_adoption_target">Target 3+</span>
                 </div>
                 <div class="kpi">
@@ -140,7 +140,9 @@
                 <div class="kpi">
                   <span class="kpi-label">Renewal countdown</span>
                   <span class="kpi-value" data-field="customer.renewal_countdown">151 days</span>
-                  <span class="kpi-meta">Renewal window open</span>
+                  <span class="kpi-meta">
+                    <span class="status-pill" data-renewal-badge>Planning window</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -269,7 +271,8 @@
                 <span class="score-num" data-field="health.overall_score">68</span>
                 <span class="score-label" data-field="health.band_label">Yellow</span>
               </div>
-                <p class="muted" data-field="health.weights_summary">
+              <span class="freshness-badge" data-freshness-badge="health">Stale</span>
+              <p class="muted" data-field="health.weights_summary">
                   PROVE weights: Product 50%, Risk 25%, Outcomes 10%, Voice 5%, Engagement 10%.
                 </p>
                 <details class="drawer">
@@ -327,7 +330,7 @@
 
             <article class="card" style="--order: 2" data-audience="all devops csm">
               <h3>Platform adoption</h3>
-              <p class="stat" data-field="adoption.platform_adoption_summary">2 of 4 use cases green</p>
+              <p class="stat" data-field="adoption.platform_adoption_summary">3 of 4 use cases green</p>
                 <p class="muted">
                   GitLab recommends 3+ green use cases.
                   <a
@@ -349,6 +352,7 @@
               <h3>License utilization trend</h3>
               <p class="stat" data-field="seats.utilization_pct">42%</p>
               <p class="muted">Last 90 days utilization movement.</p>
+              <span class="freshness-badge" data-freshness-badge="license">Fresh</span>
               <ul class="event-list" data-list="seat-trend"></ul>
             </article>
 
@@ -356,10 +360,17 @@
               <h3>Renewal outlook</h3>
               <p class="stat" data-field="customer.renewal_countdown">151 days</p>
               <p class="muted">Renewal date: <span data-field="customer.renewal_date">Jun 30, 2026</span></p>
+              <span class="status-pill" data-renewal-badge>Planning window</span>
               <details class="drawer">
                 <summary>Renewal readiness checklist</summary>
                 <ul class="event-list" data-list="renewal-checklist"></ul>
               </details>
+            </article>
+            <article class="card" style="--order: 5" data-audience="all exec csm">
+              <h3>Data freshness</h3>
+              <p class="stat">Last sync: <span data-field="freshness.overall_last_sync">Jan 29, 2026</span></p>
+              <p class="muted">Next sync: <span data-field="freshness.next_sync">Jan 30, 2026</span></p>
+              <ul class="event-list" data-list="data-freshness"></ul>
             </article>
           </div>
 
@@ -367,7 +378,7 @@
             <article class="card" style="--order: 5" id="next-actions">
               <h3>Next best actions</h3>
               <p class="muted">Rules-based actions generated from current metrics.</p>
-              <ul class="action-list" data-list="next-best-actions"></ul>
+              <div class="action-list" data-list="next-best-actions"></div>
             </article>
             <article class="card" style="--order: 6">
               <h3>What changed since last update</h3>
@@ -508,7 +519,7 @@
           <div class="summary-grid">
             <article class="card" style="--order: 1">
               <h3>Platform adoption score</h3>
-              <p class="stat" data-field="adoption.platform_adoption_summary">2 of 4 use cases green</p>
+              <p class="stat" data-field="adoption.platform_adoption_summary">3 of 4 use cases green</p>
                 <p class="muted">
                   Full platform adoption is achieved with 3+ green use cases.
                   <a
@@ -663,6 +674,11 @@
           </details>
 
           <details class="drawer">
+            <summary>Health drivers and improvement actions</summary>
+            <ul class="event-list" data-list="health-drivers"></ul>
+          </details>
+
+          <details class="drawer">
             <summary>Red and Yellow response playbooks</summary>
             <div class="resource-grid">
               <article class="card">
@@ -704,6 +720,7 @@
               <h3>Success plan progress</h3>
               <p class="stat" data-field="success_plan.progress_summary">2 of 5 objectives on track</p>
               <p class="muted">Next review: <span data-field="success_plan.next_review">Feb 5, 2026</span></p>
+              <span class="freshness-badge" data-freshness-badge="success_plan">Manual update</span>
               <details class="drawer" id="success-plan">
                 <summary>Objectives and dependencies</summary>
                 <div class="success-list" data-list="success-plan"></div>
@@ -713,9 +730,11 @@
               <h3>Value realization</h3>
               <p class="stat" data-field="outcomes.value_summary">Release frequency up 2.5x</p>
               <p class="muted" data-field="outcomes.value_detail">Lead time down from 14 to 7 days.</p>
+              <span class="freshness-badge" data-freshness-badge="dora">Fresh</span>
               <details class="drawer">
                 <summary>Value narrative</summary>
                 <p data-field="outcomes.narrative">Delivery velocity improved across Tier-1 services with GitLab CI/CD adoption.</p>
+                <ul class="event-list" data-list="value-points"></ul>
               </details>
             </article>
           </div>
@@ -774,6 +793,7 @@
                 <span class="score-label" data-field="touchpoints.digital_health_label">Yellow</span>
               </div>
               <p class="muted">Based on email engagement, self-service usage, and in-app messaging.</p>
+              <span class="freshness-badge" data-freshness-badge="touchpoints">Stale</span>
               <details class="drawer">
                 <summary>Digital breakdown</summary>
                 <ul class="event-list" data-list="digital-breakdown"></ul>
@@ -839,11 +859,11 @@
           <details class="drawer" id="collaboration">
             <summary>Collaboration project</summary>
             <div class="summary-grid">
-              <article class="card">
-                <h3>Project overview</h3>
-                <p class="stat" data-field="collaboration_project.url">https://gitlab.com/northwind/collaboration</p>
-                <ul class="event-list" data-list="collaboration-metrics"></ul>
-              </article>
+            <article class="card">
+              <h3>Project overview</h3>
+              <p class="stat" data-field="collaboration_project.url">https://gitlab.com/northwind/collaboration</p>
+              <ul class="event-list" data-list="collaboration-metrics"></ul>
+            </article>
               <article class="card">
                 <h3>Issue templates</h3>
                 <div class="template" data-template="collab_agenda"></div>
@@ -927,7 +947,7 @@
       <footer class="footer">
         <div>
           <p class="muted">
-            Data freshness: <span data-field="meta.data_freshness_note">Updated January 2026</span> | Update customer data in
+            Data freshness: <span data-field="meta.data_freshness_note">Updated Jan 29, 2026</span> | Update customer data in
             <code>data/dashboard.json</code>.
           </p>
         </div>

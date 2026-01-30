@@ -1,9 +1,9 @@
 {
   "meta": {
-    "last_updated": "2026-01-20",
+    "last_updated": "2026-01-29",
     "updated_by": "Jordan Lee",
     "notes": "Monthly health review and renewal readiness update",
-    "data_freshness_note": "Updated January 2026"
+    "data_freshness_note": "Updated Jan 29, 2026"
   },
   "customer": {
     "name": "Northwind Industries",
@@ -370,7 +370,39 @@
       "outcomes": 0.1,
       "voice": 0.05,
       "engagement": 0.1
-    }
+    },
+    "drivers": [
+      {
+        "pillar": "Product usage",
+        "status": "good",
+        "detail": "Use case adoption at 3 green, but license utilization is 42% (target 80%).",
+        "action": "Launch activation campaign and onboard the next 50 users."
+      },
+      {
+        "pillar": "Risk",
+        "status": "watch",
+        "detail": "Engagement declining and renewal window opened at 151 days.",
+        "action": "Schedule executive alignment call and confirm renewal success criteria."
+      },
+      {
+        "pillar": "Outcomes",
+        "status": "watch",
+        "detail": "2 of 3 success plan objectives on track; security objective behind.",
+        "action": "Run Secure workshop and unblock regulated app scanning."
+      },
+      {
+        "pillar": "Voice of customer",
+        "status": "good",
+        "detail": "NPS 34 and exec feedback positive in last EBR.",
+        "action": "Capture a reference story for Q2."
+      },
+      {
+        "pillar": "Engagement",
+        "status": "good",
+        "detail": "Cadence attendance at 76% with strong workshop participation.",
+        "action": "Confirm next cadence agenda and maintain attendance above 80%."
+      }
+    ]
   },
   "engagement": {
     "cadence_attendance_rate": 0.76,
@@ -531,6 +563,10 @@
         "verifiable_outcomes": [
           "Daily release pipeline for Tier-1 services",
           "Change failure rate below 10%"
+        ],
+        "status_detail": "On track; pipeline approvals configured for 6 of 12 apps.",
+        "blockers": [
+          "Finalize release approval workflow for remaining apps"
         ]
       },
       {
@@ -550,6 +586,10 @@
         "verifiable_outcomes": [
           "CI templates rolled out to top 20 projects",
           "Runner capacity scaled to 80% utilization"
+        ],
+        "status_detail": "On track; CI templates rolling out to top projects.",
+        "blockers": [
+          "Complete runner scale-out for high-traffic repos"
         ]
       },
       {
@@ -569,6 +609,11 @@
         "verifiable_outcomes": [
           "SAST baseline on regulated pipelines",
           "Dependency scanning policy enforced"
+        ],
+        "status_detail": "At risk; regulated app teams awaiting security policy approval.",
+        "blockers": [
+          "Security policy approval pending",
+          "DAST rollout not scheduled"
         ]
       }
     ]
@@ -576,7 +621,13 @@
   "outcomes": {
     "value_summary": "Release frequency up 2.5x",
     "value_detail": "Lead time down from 14 to 7 days",
-    "narrative": "Delivery velocity improved across Tier-1 services with GitLab CI/CD adoption. The next focus is scaling Secure tooling to regulated apps."
+    "narrative": "Delivery velocity improved across Tier-1 services with GitLab CI/CD adoption. The next focus is scaling Secure tooling to regulated apps.",
+    "value_points": [
+      "Lead time reduced from 14 days to 7 days (50% faster).",
+      "Deployment frequency increased from 0.2/day to 0.6/day.",
+      "Change failure rate decreased from 18% to 11%.",
+      "MTTR improved from 10 hours to 6 hours."
+    ]
   },
   "dora": {
     "metrics": {
@@ -851,6 +902,54 @@
         "title": "DORA charts",
         "detail": "DORA charts documentation",
         "link": "https://docs.gitlab.com/user/analytics/dora_metrics_charts/"
+      }
+    ]
+  },
+  "freshness": {
+    "overall_last_sync": "2026-01-29T08:00:00-08:00",
+    "next_sync": "2026-01-30T08:00:00-08:00",
+    "metrics": [
+      {
+        "key": "license",
+        "label": "License data",
+        "last_sync": "2026-01-29T06:00:00-08:00",
+        "status": "fresh",
+        "note": "Synced 2 hours ago"
+      },
+      {
+        "key": "health",
+        "label": "Health score",
+        "last_sync": "2026-01-22T09:00:00-08:00",
+        "status": "stale",
+        "note": "Last calculated 7 days ago"
+      },
+      {
+        "key": "usage",
+        "label": "Usage metrics",
+        "last_sync": "2026-01-29T06:00:00-08:00",
+        "status": "fresh",
+        "note": "Synced 2 hours ago"
+      },
+      {
+        "key": "success_plan",
+        "label": "Success plan",
+        "last_sync": "2026-01-18T09:00:00-08:00",
+        "status": "manual",
+        "note": "Manual update required"
+      },
+      {
+        "key": "dora",
+        "label": "DORA metrics",
+        "last_sync": "2026-01-28T20:00:00-08:00",
+        "status": "fresh",
+        "note": "Synced 12 hours ago"
+      },
+      {
+        "key": "touchpoints",
+        "label": "Digital touchpoints",
+        "last_sync": "2026-01-27T18:00:00-08:00",
+        "status": "stale",
+        "note": "Sync overdue by 2 days"
       }
     ]
   }

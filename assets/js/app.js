@@ -11,13 +11,20 @@ const STORAGE_KEYS = {
   lastSection: 'gl-health-last-section'
 };
 
-const DEFAULT_DATA = {"meta":{"last_updated":"2026-01-20","updated_by":"Jordan Lee","notes":"Monthly health review and renewal readiness update","data_freshness_note":"Updated January 2026"},"customer":{"name":"Northwind Industries","segment":"Enterprise","plan":"Ultimate","renewal_date":"2026-06-30","deployment_type":"Self-managed","instance_type":"Dedicated instance","start_date":"2025-08-27","csm":"Jordan Lee","tam":"Avery Chen"},"seats":{"purchased":500,"active":210,"utilization_30d_series":[{"date":"2025-11-15","value":0.34},{"date":"2025-12-01","value":0.36},{"date":"2025-12-15","value":0.38},{"date":"2025-12-30","value":0.4},{"date":"2026-01-15","value":0.42}]},"onboarding":{"phase":"First value","completion_pct":0.92,"milestones":{"engagement":{"date":"2025-09-01"},"infra_ready":{"date":"2025-09-15"},"onboarding_complete":{"date":"2025-10-20"},"first_value":{"date":"2025-10-25"},"outcome":{"date":""}},"checklist":[{"task":"Executive kickoff and success criteria aligned","done":true,"date":"2025-08-29"},{"task":"GitLab instance deployed and validated","done":true,"date":"2025-09-10"},{"task":"SSO configured and tested","done":true,"date":"2025-09-12"},{"task":"Pilot teams onboarded","done":true,"date":"2025-09-20"},{"task":"Repository migration complete","done":true,"date":"2025-09-25"},{"task":"CI runners configured","done":true,"date":"2025-09-28"},{"task":"First pipelines running","done":true,"date":"2025-10-02"},{"task":"Security baseline defined","done":true,"date":"2025-10-05"},{"task":"Enablement training delivered","done":true,"date":"2025-10-18"},{"task":"Success plan validated","done":true,"date":"2025-10-20"}],"risks":["License activation below 50% after first value","Limited DevSecOps scanning coverage","Workshop participation below target"],"definitions_source":"https://handbook.gitlab.com/handbook/customer-success/customer-success-vision/"},"adoption":{"platform_adoption_target":3,"use_case_scores":[{"key":"create","name":"Create (SCM)","score":82,"trend_30d_pct":7,"drivers":["Merge request usage growing","Code review coverage at 78%"],"thresholds":["Green >= 76","Yellow 51-75","Red <= 50"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/","threshold_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"},{"key":"verify","name":"Verify (CI)","score":79,"trend_30d_pct":9,"drivers":["CI builds per billable user at 46","Pipeline success rate 86%"],"thresholds":["Green > 40 builds per user","Yellow 3-40","Red <= 2"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/","threshold_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"},{"key":"secure","name":"Secure (DevSecOps)","score":76,"trend_30d_pct":6,"drivers":["Scanner utilization 24%","SAST + dependency scanning active"],"thresholds":["Green >= 20% utilization","Yellow 5-19%","Red < 5%"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/","threshold_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"},{"key":"release","name":"Release (CD)","score":62,"trend_30d_pct":3,"drivers":["Deployments per user 2.6","6 teams deploying via GitLab"],"thresholds":["Green > 7 deployments per user","Yellow 2-7","Red < 2"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/","threshold_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"}],"landing_zone":{"phases":[{"key":"pre_engagement","label":"Pre-engagement","goals":["Align executive sponsor","Confirm success criteria"],"tasks":["Document business outcomes","Identify technical champions"],"risks":["Unclear ownership","Undefined success metrics"],"workshops":["Discovery and planning session"],"success_criteria":["Success plan draft approved","Executive sponsor confirmed"]},{"key":"engagement","label":"Engagement","goals":["Kickoff and stakeholder alignment","Success plan baseline"],"tasks":["Hold kickoff","Create collaboration project"],"risks":["Missed stakeholder attendance"],"workshops":["Onboarding kickoff"],"success_criteria":["Kickoff completed","Success plan objectives logged"]},{"key":"infra_ready","label":"Infra ready","goals":["Platform available","SSO and access configured"],"tasks":["Deploy GitLab","Configure SSO","Validate runners"],"risks":["Infrastructure delays","Access issues"],"workshops":["Admin enablement"],"success_criteria":["GitLab production ready","Runners online"]},{"key":"onboarding_complete","label":"Onboarding complete","goals":["Teams onboarded","Training complete"],"tasks":["Migrate repositories","Deliver training sessions"],"risks":["Low training attendance"],"workshops":["CI/Verify workshop"],"success_criteria":["Training completed","Pilot teams live"]},{"key":"first_value","label":"First value","goals":["Reach 10% license activation","First production pipeline"],"tasks":["Enable CI in priority projects","Drive adoption campaigns"],"risks":["Low license utilization","Pipeline instability"],"workshops":["CI/Verify workshop"],"success_criteria":["10% licenses active","First deployment via GitLab"]},{"key":"outcome","label":"Outcome achieved","goals":["Primary use case delivered","Business outcomes verified"],"tasks":["Scale CI/CD coverage","Enable security scans"],"risks":["Outcome lag","Security gaps"],"workshops":["Secure workshop","CD/Release playbook"],"success_criteria":["Use case green","ROI validated"]}]},"platform_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/"},"health":{"engagement_score":74,"outcomes_score":65,"overall_score":72,"early_warning_flags":[{"severity":"yellow","title":"Usage drop 22% month over month","detail":"Pipeline activity dipped after holiday freeze","playbook":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"},{"severity":"yellow","title":"Engagement decline","detail":"Cadence attendance fell below 70%","playbook":"https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"},{"severity":"red","title":"Renewal risk at 162 days","detail":"Success plan objective #2 behind schedule","playbook":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"}],"product_score":78,"risk_score":62,"voice_score":70,"weights":{"product":0.5,"risk":0.25,"outcomes":0.1,"voice":0.05,"engagement":0.1}},"engagement":{"cadence_attendance_rate":0.76,"last_exec_meeting":"2025-12-18","next_exec_meeting":"2026-03-18","last_ebr_date":"2025-12-18","next_ebr_date":"2026-03-20","last_qbr_date":"2025-10-15","next_qbr_date":"2026-04-15","workshop_participation":0.62,"response_time_days":2.4,"nps":34,"sentiment":"Mixed","cadence_calendar":[{"cadence":"Monthly","focus":"Adoption review","owner":"CSM","next_date":"2026-02-10"},{"cadence":"Quarterly","focus":"Executive business review","owner":"CSM + Exec sponsor","next_date":"2026-03-20"},{"cadence":"Biweekly","focus":"Delivery workshop checkpoint","owner":"DevOps lead","next_date":"2026-02-03"}],"ebr_templates":{"agenda":"EBR Agenda\n1. Executive summary and outcomes\n2. Adoption and health score\n3. Success plan progress\n4. Risks and mitigations\n5. Roadmap alignment\n6. Next quarter priorities","slides":"EBR Slide Outline\n1. Executive summary\n2. Health score and adoption\n3. Success plan objectives\n4. DORA and value streams\n5. Risks and mitigation plan\n6. Roadmap alignment\n7. Next quarter priorities","checklist":"EBR Checklist\n- Confirm KPIs and success plan status\n- Update renewal risk and mitigation\n- Validate DORA and VSA metrics\n- Capture executive feedback"},"cadence_call_frequency":"Biweekly","ebr_attendance_rate":0.82,"cadence_notes":"Cadence calls focus on operational adoption; EBRs focus on executive outcomes."},"touchpoints":{"email_metrics":{"open_rate":0.42,"ctr":0.08,"response_rate":0.18},"self_service_metrics":{"doc_views":860,"training_completion":0.62,"ticket_deflection":0.24,"self_service_adoption":0.54},"in_app_metrics":{"views":320,"clicks":70,"survey_completion":0.56},"digital_health_score":66,"breakdown":{"email":68,"self_service":74,"in_app":70,"community":55},"community_metrics":{"active_members":38,"posts":12,"responses":22,"participation_rate":0.55}},"risks":[{"id":"risk-license","severity":"red","driver":"License utilization below 50%","detail":"Only 210 of 500 seats active","owner":"CSM","due_date":"2026-02-15","playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/","mitigation":[{"task":"Launch adoption campaign with team leads","owner":"CSM","due_date":"2026-02-05"},{"task":"Schedule onboarding refresher session","owner":"TAM","due_date":"2026-02-12"}]},{"id":"risk-security","severity":"yellow","driver":"Security scans enabled in only 12% of projects","detail":"SAST not running on regulated apps","owner":"Security lead","due_date":"2026-03-01","playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/","mitigation":[{"task":"Enable SAST and dependency scanning","owner":"Security","due_date":"2026-02-20"},{"task":"Run Secure workshop","owner":"CSM","due_date":"2026-02-28"}]}],"risk_playbooks":{"red":[{"title":"Health score triage","link":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"},{"title":"Customer health scoring","link":"https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"}],"yellow":[{"title":"Playbooks index","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/"},{"title":"Success plans","link":"https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/"}]},"success_plan":{"next_review":"2026-02-05","objectives":[{"title":"Automate Tier-1 release workflows","status":"in_progress","progress_pct":0.45,"owner":"DevOps lead","target_date":"2026-03-30","evidence":"https://gitlab.com/northwind/collaboration/-/issues/34","dependencies":["Runner scaling","Release pipeline approval"],"next_milestone":"First Tier-1 app release","baseline":"Release cadence at 1x per week across Tier-1 apps","success_criteria":"Deploy Tier-1 apps daily with automated approvals","timeline":"Jan\u2013Mar 2026","verifiable_outcomes":["Daily release pipeline for Tier-1 services","Change failure rate below 10%"]},{"title":"Expand CI adoption to 60% of projects","status":"in_progress","progress_pct":0.55,"owner":"Platform engineering","target_date":"2026-03-15","evidence":"https://gitlab.com/northwind/collaboration/-/issues/28","dependencies":["CI templates rollout"],"next_milestone":"50% projects with CI","baseline":"CI enabled on 35% of projects","success_criteria":"CI enabled on 60% of projects with >75% success rate","timeline":"Feb\u2013Mar 2026","verifiable_outcomes":["CI templates rolled out to top 20 projects","Runner capacity scaled to 80% utilization"]},{"title":"Enable security scanning for regulated apps","status":"at_risk","progress_pct":0.3,"owner":"Security","target_date":"2026-02-28","evidence":"https://gitlab.com/northwind/collaboration/-/issues/41","dependencies":["SAST pipeline updates"],"next_milestone":"SAST baseline enabled","baseline":"Security scans on 12% of regulated apps","success_criteria":"SAST + dependency scans on all regulated apps","timeline":"Jan\u2013Feb 2026","verifiable_outcomes":["SAST baseline on regulated pipelines","Dependency scanning policy enforced"]}]},"outcomes":{"value_summary":"Release frequency up 2.5x","value_detail":"Lead time down from 14 to 7 days","narrative":"Delivery velocity improved across Tier-1 services with GitLab CI/CD adoption. The next focus is scaling Secure tooling to regulated apps."},"dora":{"metrics":{"deployment_frequency":{"label":"Deployment frequency","unit":"deploys/day","baseline":0.2,"current":0.6,"target":1.0,"series":[{"date":"2025-11-01","value":0.2},{"date":"2025-12-01","value":0.3},{"date":"2026-01-01","value":0.5},{"date":"2026-01-20","value":0.6}]},"lead_time":{"label":"Lead time for changes","unit":"days","baseline":14,"current":7,"target":3,"series":[{"date":"2025-11-01","value":14},{"date":"2025-12-01","value":10},{"date":"2026-01-01","value":8},{"date":"2026-01-20","value":7}]},"change_failure":{"label":"Change failure rate","unit":"%","baseline":18,"current":11,"target":5,"series":[{"date":"2025-11-01","value":18},{"date":"2025-12-01","value":14},{"date":"2026-01-01","value":12},{"date":"2026-01-20","value":11}]},"mttr":{"label":"Time to restore service","unit":"hours","baseline":10,"current":6,"target":2,"series":[{"date":"2025-11-01","value":10},{"date":"2025-12-01","value":8},{"date":"2026-01-01","value":7},{"date":"2026-01-20","value":6}]}},"levels":{"deployment_frequency":{"elite":1.0,"high":0.2,"medium":0.03},"lead_time":{"elite":1.0,"high":7.0,"medium":30.0},"change_failure":{"elite":5.0,"high":10.0,"medium":20.0},"mttr":{"elite":1.0,"high":24.0,"medium":72.0}}},"vsa":{"lead_time_days":7.2,"cycle_time_days":5.1,"throughput_per_week":18,"bottleneck_stage":"Code review","recommendations":["Introduce merge request templates for faster reviews","Add reviewers to critical paths","Automate approval rules for low-risk changes"]},"collaboration_project":{"url":"https://gitlab.com/northwind/collaboration","open_issues":24,"overdue":5,"comment_velocity":"34 comments/week","templates":{"agenda":"Agenda\n- Progress review\n- Risks and blockers\n- Upcoming workshops\n- Action items","action_items":"Action Items\n- Task\n- Owner\n- Due date\n- Status","escalation":"Escalation\n- Issue description\n- Severity\n- Impact\n- Requested support","success_report":"Success Report\n- Objective\n- Outcome\n- Evidence\n- Next steps"}},"activity":[{"date":"2026-01-18","title":"CI usage review","detail":"Pipeline success rate improved to 72%"},{"date":"2026-01-10","title":"Security workshop scheduled","detail":"Secure enablement set for Feb 20"},{"date":"2026-01-05","title":"Executive summary shared","detail":"Renewal readiness checkpoint sent to sponsor"}],"renewal_readiness":["Success plan objectives mapped to renewal goals","Health score above 60","Executive sponsor aligned on Q2 priorities","Expansion opportunity identified"],"workshops":[{"title":"CI / Verify Workshop","detail":"Half-day enablement for pipeline onboarding","duration":"4 hours","prerequisites":"Runner access and sample project","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"},{"title":"CD / Release Playbook","detail":"Deployment automation planning","duration":"3 hours","prerequisites":"CI pipeline baseline","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/"},{"title":"Secure Workshop","detail":"SAST and dependency scanning rollout","duration":"3 hours","prerequisites":"Security team alignment","link":"https://handbook.gitlab.com/handbook/customer-success/workshops/secure/"}],"resources":{"health":[{"title":"Customer health scoring","detail":"Health score framework and definitions","link":"https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"},{"title":"Health score triage","detail":"Guidance for red and yellow accounts","link":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"}],"success":[{"title":"Success plans","detail":"Success plan framework and objectives","link":"https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/"}],"onboarding":[{"title":"Customer onboarding","detail":"Onboarding process and milestones","link":"https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/"},{"title":"Cadence calls","detail":"Cadence call structure and expectations","link":"https://handbook.gitlab.com/handbook/customer-success/csm/cadence-calls/"}],"playbooks":[{"title":"CS playbooks index","detail":"Customer Success playbooks catalog","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/"},{"title":"CI / Verify playbook","detail":"CI adoption enablement","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"},{"title":"CD / Release playbook","detail":"Release adoption enablement","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/"}],"ebr":[{"title":"Executive business reviews","detail":"EBR guidance and preparation","link":"https://handbook.gitlab.com/handbook/customer-success/csm/ebr/"}],"collaboration":[{"title":"Customer collaboration project","detail":"Shared project guide","link":"https://handbook.gitlab.com/handbook/customer-success/csm/customer-collaboration-project/"}],"analytics":[{"title":"Value Streams dashboard","detail":"Value Streams dashboard docs","link":"https://docs.gitlab.com/user/analytics/value_streams_dashboard/"},{"title":"DORA metrics","detail":"DORA metrics documentation","link":"https://docs.gitlab.com/user/analytics/dora_metrics/"},{"title":"DORA charts","detail":"DORA charts documentation","link":"https://docs.gitlab.com/user/analytics/dora_metrics_charts/"}]}};
+const DEFAULT_DATA = {"meta":{"last_updated":"2026-01-29","updated_by":"Jordan Lee","notes":"Monthly health review and renewal readiness update","data_freshness_note":"Updated Jan 29, 2026"},"customer":{"name":"Northwind Industries","segment":"Enterprise","plan":"Ultimate","renewal_date":"2026-06-30","deployment_type":"Self-managed","instance_type":"Dedicated instance","start_date":"2025-08-27","csm":"Jordan Lee","tam":"Avery Chen"},"seats":{"purchased":500,"active":210,"utilization_30d_series":[{"date":"2025-11-15","value":0.34},{"date":"2025-12-01","value":0.36},{"date":"2025-12-15","value":0.38},{"date":"2025-12-30","value":0.4},{"date":"2026-01-15","value":0.42}]},"onboarding":{"phase":"First value","completion_pct":0.92,"milestones":{"engagement":{"date":"2025-09-01"},"infra_ready":{"date":"2025-09-15"},"onboarding_complete":{"date":"2025-10-20"},"first_value":{"date":"2025-10-25"},"outcome":{"date":""}},"checklist":[{"task":"Executive kickoff and success criteria aligned","done":true,"date":"2025-08-29"},{"task":"GitLab instance deployed and validated","done":true,"date":"2025-09-10"},{"task":"SSO configured and tested","done":true,"date":"2025-09-12"},{"task":"Pilot teams onboarded","done":true,"date":"2025-09-20"},{"task":"Repository migration complete","done":true,"date":"2025-09-25"},{"task":"CI runners configured","done":true,"date":"2025-09-28"},{"task":"First pipelines running","done":true,"date":"2025-10-02"},{"task":"Security baseline defined","done":true,"date":"2025-10-05"},{"task":"Enablement training delivered","done":true,"date":"2025-10-18"},{"task":"Success plan validated","done":true,"date":"2025-10-20"}],"risks":["License activation below 50% after first value","Limited DevSecOps scanning coverage","Workshop participation below target"],"definitions_source":"https://handbook.gitlab.com/handbook/customer-success/customer-success-vision/"},"adoption":{"platform_adoption_target":3,"use_case_scores":[{"key":"create","name":"Create (SCM)","score":82,"trend_30d_pct":7,"drivers":["Merge request usage growing","Code review coverage at 78%"],"thresholds":["Green >= 76","Yellow 51-75","Red <= 50"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/","threshold_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"},{"key":"verify","name":"Verify (CI)","score":79,"trend_30d_pct":9,"drivers":["CI builds per billable user at 46","Pipeline success rate 86%"],"thresholds":["Green > 40 builds per user","Yellow 3-40","Red <= 2"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/","threshold_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"},{"key":"secure","name":"Secure (DevSecOps)","score":76,"trend_30d_pct":6,"drivers":["Scanner utilization 24%","SAST + dependency scanning active"],"thresholds":["Green >= 20% utilization","Yellow 5-19%","Red < 5%"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/","threshold_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"},{"key":"release","name":"Release (CD)","score":62,"trend_30d_pct":3,"drivers":["Deployments per user 2.6","6 teams deploying via GitLab"],"thresholds":["Green > 7 deployments per user","Yellow 2-7","Red < 2"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/","threshold_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"}],"landing_zone":{"phases":[{"key":"pre_engagement","label":"Pre-engagement","goals":["Align executive sponsor","Confirm success criteria"],"tasks":["Document business outcomes","Identify technical champions"],"risks":["Unclear ownership","Undefined success metrics"],"workshops":["Discovery and planning session"],"success_criteria":["Success plan draft approved","Executive sponsor confirmed"]},{"key":"engagement","label":"Engagement","goals":["Kickoff and stakeholder alignment","Success plan baseline"],"tasks":["Hold kickoff","Create collaboration project"],"risks":["Missed stakeholder attendance"],"workshops":["Onboarding kickoff"],"success_criteria":["Kickoff completed","Success plan objectives logged"]},{"key":"infra_ready","label":"Infra ready","goals":["Platform available","SSO and access configured"],"tasks":["Deploy GitLab","Configure SSO","Validate runners"],"risks":["Infrastructure delays","Access issues"],"workshops":["Admin enablement"],"success_criteria":["GitLab production ready","Runners online"]},{"key":"onboarding_complete","label":"Onboarding complete","goals":["Teams onboarded","Training complete"],"tasks":["Migrate repositories","Deliver training sessions"],"risks":["Low training attendance"],"workshops":["CI/Verify workshop"],"success_criteria":["Training completed","Pilot teams live"]},{"key":"first_value","label":"First value","goals":["Reach 10% license activation","First production pipeline"],"tasks":["Enable CI in priority projects","Drive adoption campaigns"],"risks":["Low license utilization","Pipeline instability"],"workshops":["CI/Verify workshop"],"success_criteria":["10% licenses active","First deployment via GitLab"]},{"key":"outcome","label":"Outcome achieved","goals":["Primary use case delivered","Business outcomes verified"],"tasks":["Scale CI/CD coverage","Enable security scans"],"risks":["Outcome lag","Security gaps"],"workshops":["Secure workshop","CD/Release playbook"],"success_criteria":["Use case green","ROI validated"]}]},"platform_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/"},"health":{"engagement_score":74,"outcomes_score":65,"overall_score":72,"early_warning_flags":[{"severity":"yellow","title":"Usage drop 22% month over month","detail":"Pipeline activity dipped after holiday freeze","playbook":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"},{"severity":"yellow","title":"Engagement decline","detail":"Cadence attendance fell below 70%","playbook":"https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"},{"severity":"red","title":"Renewal risk at 162 days","detail":"Success plan objective #2 behind schedule","playbook":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"}],"product_score":78,"risk_score":62,"voice_score":70,"weights":{"product":0.5,"risk":0.25,"outcomes":0.1,"voice":0.05,"engagement":0.1},"drivers":[{"pillar":"Product usage","status":"good","detail":"Use case adoption at 3 green, but license utilization is 42% (target 80%).","action":"Launch activation campaign and onboard the next 50 users."},{"pillar":"Risk","status":"watch","detail":"Engagement declining and renewal window opened at 151 days.","action":"Schedule executive alignment call and confirm renewal success criteria."},{"pillar":"Outcomes","status":"watch","detail":"2 of 3 success plan objectives on track; security objective behind.","action":"Run Secure workshop and unblock regulated app scanning."},{"pillar":"Voice of customer","status":"good","detail":"NPS 34 and exec feedback positive in last EBR.","action":"Capture a reference story for Q2."},{"pillar":"Engagement","status":"good","detail":"Cadence attendance at 76% with strong workshop participation.","action":"Confirm next cadence agenda and maintain attendance above 80%."}]},"engagement":{"cadence_attendance_rate":0.76,"last_exec_meeting":"2025-12-18","next_exec_meeting":"2026-03-18","last_ebr_date":"2025-12-18","next_ebr_date":"2026-03-20","last_qbr_date":"2025-10-15","next_qbr_date":"2026-04-15","workshop_participation":0.62,"response_time_days":2.4,"nps":34,"sentiment":"Mixed","cadence_calendar":[{"cadence":"Monthly","focus":"Adoption review","owner":"CSM","next_date":"2026-02-10"},{"cadence":"Quarterly","focus":"Executive business review","owner":"CSM + Exec sponsor","next_date":"2026-03-20"},{"cadence":"Biweekly","focus":"Delivery workshop checkpoint","owner":"DevOps lead","next_date":"2026-02-03"}],"ebr_templates":{"agenda":"EBR Agenda\n1. Executive summary and outcomes\n2. Adoption and health score\n3. Success plan progress\n4. Risks and mitigations\n5. Roadmap alignment\n6. Next quarter priorities","slides":"EBR Slide Outline\n1. Executive summary\n2. Health score and adoption\n3. Success plan objectives\n4. DORA and value streams\n5. Risks and mitigation plan\n6. Roadmap alignment\n7. Next quarter priorities","checklist":"EBR Checklist\n- Confirm KPIs and success plan status\n- Update renewal risk and mitigation\n- Validate DORA and VSA metrics\n- Capture executive feedback"},"cadence_call_frequency":"Biweekly","ebr_attendance_rate":0.82,"cadence_notes":"Cadence calls focus on operational adoption; EBRs focus on executive outcomes."},"touchpoints":{"email_metrics":{"open_rate":0.42,"ctr":0.08,"response_rate":0.18},"self_service_metrics":{"doc_views":860,"training_completion":0.62,"ticket_deflection":0.24,"self_service_adoption":0.54},"in_app_metrics":{"views":320,"clicks":70,"survey_completion":0.56},"digital_health_score":66,"breakdown":{"email":68,"self_service":74,"in_app":70,"community":55},"community_metrics":{"active_members":38,"posts":12,"responses":22,"participation_rate":0.55}},"risks":[{"id":"risk-license","severity":"red","driver":"License utilization below 50%","detail":"Only 210 of 500 seats active","owner":"CSM","due_date":"2026-02-15","playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/","mitigation":[{"task":"Launch adoption campaign with team leads","owner":"CSM","due_date":"2026-02-05"},{"task":"Schedule onboarding refresher session","owner":"TAM","due_date":"2026-02-12"}]},{"id":"risk-security","severity":"yellow","driver":"Security scans enabled in only 12% of projects","detail":"SAST not running on regulated apps","owner":"Security lead","due_date":"2026-03-01","playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/","mitigation":[{"task":"Enable SAST and dependency scanning","owner":"Security","due_date":"2026-02-20"},{"task":"Run Secure workshop","owner":"CSM","due_date":"2026-02-28"}]}],"risk_playbooks":{"red":[{"title":"Health score triage","link":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"},{"title":"Customer health scoring","link":"https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"}],"yellow":[{"title":"Playbooks index","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/"},{"title":"Success plans","link":"https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/"}]},"success_plan":{"next_review":"2026-02-05","objectives":[{"title":"Automate Tier-1 release workflows","status":"in_progress","progress_pct":0.45,"owner":"DevOps lead","target_date":"2026-03-30","evidence":"https://gitlab.com/northwind/collaboration/-/issues/34","dependencies":["Runner scaling","Release pipeline approval"],"next_milestone":"First Tier-1 app release","baseline":"Release cadence at 1x per week across Tier-1 apps","success_criteria":"Deploy Tier-1 apps daily with automated approvals","timeline":"Jan\u2013Mar 2026","verifiable_outcomes":["Daily release pipeline for Tier-1 services","Change failure rate below 10%"],"status_detail":"On track; pipeline approvals configured for 6 of 12 apps.","blockers":["Finalize release approval workflow for remaining apps"]},{"title":"Expand CI adoption to 60% of projects","status":"in_progress","progress_pct":0.55,"owner":"Platform engineering","target_date":"2026-03-15","evidence":"https://gitlab.com/northwind/collaboration/-/issues/28","dependencies":["CI templates rollout"],"next_milestone":"50% projects with CI","baseline":"CI enabled on 35% of projects","success_criteria":"CI enabled on 60% of projects with >75% success rate","timeline":"Feb\u2013Mar 2026","verifiable_outcomes":["CI templates rolled out to top 20 projects","Runner capacity scaled to 80% utilization"],"status_detail":"On track; CI templates rolling out to top projects.","blockers":["Complete runner scale-out for high-traffic repos"]},{"title":"Enable security scanning for regulated apps","status":"at_risk","progress_pct":0.3,"owner":"Security","target_date":"2026-02-28","evidence":"https://gitlab.com/northwind/collaboration/-/issues/41","dependencies":["SAST pipeline updates"],"next_milestone":"SAST baseline enabled","baseline":"Security scans on 12% of regulated apps","success_criteria":"SAST + dependency scans on all regulated apps","timeline":"Jan\u2013Feb 2026","verifiable_outcomes":["SAST baseline on regulated pipelines","Dependency scanning policy enforced"],"status_detail":"At risk; regulated app teams awaiting security policy approval.","blockers":["Security policy approval pending","DAST rollout not scheduled"]}]},"outcomes":{"value_summary":"Release frequency up 2.5x","value_detail":"Lead time down from 14 to 7 days","narrative":"Delivery velocity improved across Tier-1 services with GitLab CI/CD adoption. The next focus is scaling Secure tooling to regulated apps.","value_points":["Lead time reduced from 14 days to 7 days (50% faster).","Deployment frequency increased from 0.2/day to 0.6/day.","Change failure rate decreased from 18% to 11%.","MTTR improved from 10 hours to 6 hours."]},"dora":{"metrics":{"deployment_frequency":{"label":"Deployment frequency","unit":"deploys/day","baseline":0.2,"current":0.6,"target":1.0,"series":[{"date":"2025-11-01","value":0.2},{"date":"2025-12-01","value":0.3},{"date":"2026-01-01","value":0.5},{"date":"2026-01-20","value":0.6}]},"lead_time":{"label":"Lead time for changes","unit":"days","baseline":14,"current":7,"target":3,"series":[{"date":"2025-11-01","value":14},{"date":"2025-12-01","value":10},{"date":"2026-01-01","value":8},{"date":"2026-01-20","value":7}]},"change_failure":{"label":"Change failure rate","unit":"%","baseline":18,"current":11,"target":5,"series":[{"date":"2025-11-01","value":18},{"date":"2025-12-01","value":14},{"date":"2026-01-01","value":12},{"date":"2026-01-20","value":11}]},"mttr":{"label":"Time to restore service","unit":"hours","baseline":10,"current":6,"target":2,"series":[{"date":"2025-11-01","value":10},{"date":"2025-12-01","value":8},{"date":"2026-01-01","value":7},{"date":"2026-01-20","value":6}]}},"levels":{"deployment_frequency":{"elite":1.0,"high":0.2,"medium":0.03},"lead_time":{"elite":1.0,"high":7.0,"medium":30.0},"change_failure":{"elite":5.0,"high":10.0,"medium":20.0},"mttr":{"elite":1.0,"high":24.0,"medium":72.0}}},"vsa":{"lead_time_days":7.2,"cycle_time_days":5.1,"throughput_per_week":18,"bottleneck_stage":"Code review","recommendations":["Introduce merge request templates for faster reviews","Add reviewers to critical paths","Automate approval rules for low-risk changes"]},"collaboration_project":{"url":"https://gitlab.com/northwind/collaboration","open_issues":24,"overdue":5,"comment_velocity":"34 comments/week","templates":{"agenda":"Agenda\n- Progress review\n- Risks and blockers\n- Upcoming workshops\n- Action items","action_items":"Action Items\n- Task\n- Owner\n- Due date\n- Status","escalation":"Escalation\n- Issue description\n- Severity\n- Impact\n- Requested support","success_report":"Success Report\n- Objective\n- Outcome\n- Evidence\n- Next steps"}},"activity":[{"date":"2026-01-18","title":"CI usage review","detail":"Pipeline success rate improved to 72%"},{"date":"2026-01-10","title":"Security workshop scheduled","detail":"Secure enablement set for Feb 20"},{"date":"2026-01-05","title":"Executive summary shared","detail":"Renewal readiness checkpoint sent to sponsor"}],"renewal_readiness":["Success plan objectives mapped to renewal goals","Health score above 60","Executive sponsor aligned on Q2 priorities","Expansion opportunity identified"],"workshops":[{"title":"CI / Verify Workshop","detail":"Half-day enablement for pipeline onboarding","duration":"4 hours","prerequisites":"Runner access and sample project","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"},{"title":"CD / Release Playbook","detail":"Deployment automation planning","duration":"3 hours","prerequisites":"CI pipeline baseline","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/"},{"title":"Secure Workshop","detail":"SAST and dependency scanning rollout","duration":"3 hours","prerequisites":"Security team alignment","link":"https://handbook.gitlab.com/handbook/customer-success/workshops/secure/"}],"resources":{"health":[{"title":"Customer health scoring","detail":"Health score framework and definitions","link":"https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"},{"title":"Health score triage","detail":"Guidance for red and yellow accounts","link":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"}],"success":[{"title":"Success plans","detail":"Success plan framework and objectives","link":"https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/"}],"onboarding":[{"title":"Customer onboarding","detail":"Onboarding process and milestones","link":"https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/"},{"title":"Cadence calls","detail":"Cadence call structure and expectations","link":"https://handbook.gitlab.com/handbook/customer-success/csm/cadence-calls/"}],"playbooks":[{"title":"CS playbooks index","detail":"Customer Success playbooks catalog","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/"},{"title":"CI / Verify playbook","detail":"CI adoption enablement","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"},{"title":"CD / Release playbook","detail":"Release adoption enablement","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/"}],"ebr":[{"title":"Executive business reviews","detail":"EBR guidance and preparation","link":"https://handbook.gitlab.com/handbook/customer-success/csm/ebr/"}],"collaboration":[{"title":"Customer collaboration project","detail":"Shared project guide","link":"https://handbook.gitlab.com/handbook/customer-success/csm/customer-collaboration-project/"}],"analytics":[{"title":"Value Streams dashboard","detail":"Value Streams dashboard docs","link":"https://docs.gitlab.com/user/analytics/value_streams_dashboard/"},{"title":"DORA metrics","detail":"DORA metrics documentation","link":"https://docs.gitlab.com/user/analytics/dora_metrics/"},{"title":"DORA charts","detail":"DORA charts documentation","link":"https://docs.gitlab.com/user/analytics/dora_metrics_charts/"}]},"freshness":{"overall_last_sync":"2026-01-29T08:00:00-08:00","next_sync":"2026-01-30T08:00:00-08:00","metrics":[{"key":"license","label":"License data","last_sync":"2026-01-29T06:00:00-08:00","status":"fresh","note":"Synced 2 hours ago"},{"key":"health","label":"Health score","last_sync":"2026-01-22T09:00:00-08:00","status":"stale","note":"Last calculated 7 days ago"},{"key":"usage","label":"Usage metrics","last_sync":"2026-01-29T06:00:00-08:00","status":"fresh","note":"Synced 2 hours ago"},{"key":"success_plan","label":"Success plan","last_sync":"2026-01-18T09:00:00-08:00","status":"manual","note":"Manual update required"},{"key":"dora","label":"DORA metrics","last_sync":"2026-01-28T20:00:00-08:00","status":"fresh","note":"Synced 12 hours ago"},{"key":"touchpoints","label":"Digital touchpoints","last_sync":"2026-01-27T18:00:00-08:00","status":"stale","note":"Sync overdue by 2 days"}]}};
 
 const numberFormat = new Intl.NumberFormat('en-US');
 const dateFormat = new Intl.DateTimeFormat('en-US', {
   month: 'short',
   day: 'numeric',
   year: 'numeric'
+});
+const dateTimeFormat = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit'
 });
 
 const parseDate = (value) => {
@@ -29,6 +36,11 @@ const parseDate = (value) => {
 const formatDate = (value) => {
   const date = parseDate(value);
   return date ? dateFormat.format(date) : 'TBD';
+};
+
+const formatDateTime = (value) => {
+  const date = parseDate(value);
+  return date ? dateTimeFormat.format(date) : 'TBD';
 };
 
 const formatPercent = (value) => {
@@ -329,7 +341,27 @@ const buildEbrDates = (engagement) => {
 const buildNextActions = (data, healthScores, digitalScore) => {
   const actions = [];
   const lastUpdated = parseDate(data.meta?.last_updated) || new Date();
+  const renewalDate = parseDate(data.customer?.renewal_date);
+  const renewalDays = renewalDate ? daysBetween(lastUpdated, renewalDate) : null;
   const seatUtil = data.seats?.purchased ? data.seats.active / data.seats.purchased : 0;
+  const useCases = data.adoption?.use_case_scores || [];
+  const greenUseCases = useCases.filter((useCase) => useCase.score >= 76).length;
+  const atRiskObjectives = (data.success_plan?.objectives || []).filter((objective) => objective.status === 'at_risk');
+  const lastEbr = parseDate(data.engagement?.last_ebr_date);
+  const daysSinceEbr = lastEbr ? daysBetween(lastEbr, lastUpdated) : null;
+
+  if (renewalDays !== null && renewalDays <= 180) {
+    actions.push({
+      id: 'renewal-prep',
+      title: 'Begin renewal readiness plan',
+      why: `Renewal in ${renewalDays} days`,
+      owner: data.customer?.csm || 'CSM',
+      due_date: formatDate(addDays(lastUpdated, renewalDays <= 90 ? 7 : 21)),
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/ebr/',
+      priority: renewalDays <= 90 ? 'high' : 'medium'
+    });
+  }
+
   if (seatUtil < 0.5) {
     actions.push({
       id: 'license-activation',
@@ -337,10 +369,12 @@ const buildNextActions = (data, healthScores, digitalScore) => {
       why: 'Seat utilization below 50%',
       owner: data.customer?.csm || 'CSM',
       due_date: formatDate(addDays(lastUpdated, 14)),
-      link: 'https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/'
+      link: 'https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/',
+      priority: 'high'
     });
   }
-  const verifyUseCase = (data.adoption?.use_case_scores || []).find((useCase) => useCase.key === 'verify');
+
+  const verifyUseCase = useCases.find((useCase) => useCase.key === 'verify');
   if (verifyUseCase && verifyUseCase.score < 76) {
     actions.push({
       id: 'verify-workshop',
@@ -348,9 +382,47 @@ const buildNextActions = (data, healthScores, digitalScore) => {
       why: `Verify score ${verifyUseCase.score} (${bandFromScore(verifyUseCase.score).label})`,
       owner: data.customer?.tam || 'TAM',
       due_date: formatDate(addDays(lastUpdated, 21)),
-      link: verifyUseCase.playbook
+      link: verifyUseCase.playbook,
+      priority: 'medium'
     });
   }
+
+  if (greenUseCases < (data.adoption?.platform_adoption_target || 3)) {
+    actions.push({
+      id: 'adoption-gap',
+      title: 'Close remaining use case adoption gaps',
+      why: `${greenUseCases} of ${useCases.length} use cases green`,
+      owner: data.customer?.tam || 'TAM',
+      due_date: formatDate(addDays(lastUpdated, 30)),
+      link: 'https://handbook.gitlab.com/handbook/customer-success/playbooks/',
+      priority: 'medium'
+    });
+  }
+
+  if (healthScores.overall <= 50) {
+    actions.push({
+      id: 'health-triage',
+      title: 'Run health score triage',
+      why: `Health score ${healthScores.overall}`,
+      owner: data.customer?.csm || 'CSM',
+      due_date: formatDate(addDays(lastUpdated, 7)),
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/',
+      priority: 'high'
+    });
+  }
+
+  if (atRiskObjectives.length) {
+    actions.push({
+      id: 'unblock-objectives',
+      title: 'Unblock at-risk success plan objectives',
+      why: `${atRiskObjectives.length} objectives at risk`,
+      owner: data.customer?.csm || 'CSM',
+      due_date: formatDate(addDays(lastUpdated, 10)),
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/',
+      priority: 'high'
+    });
+  }
+
   if (healthScores.outcomes < 60) {
     actions.push({
       id: 'success-plan-review',
@@ -358,9 +430,11 @@ const buildNextActions = (data, healthScores, digitalScore) => {
       why: `Outcomes score ${healthScores.outcomes}`,
       owner: data.customer?.csm || 'CSM',
       due_date: formatDate(parseDate(data.success_plan?.next_review) || addDays(lastUpdated, 10)),
-      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/'
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/',
+      priority: 'medium'
     });
   }
+
   if (digitalScore < 70) {
     actions.push({
       id: 'digital-engagement',
@@ -368,9 +442,23 @@ const buildNextActions = (data, healthScores, digitalScore) => {
       why: `Digital health ${digitalScore}`,
       owner: 'Customer marketing',
       due_date: formatDate(addDays(lastUpdated, 14)),
-      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/cadence-calls/'
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/cadence-calls/',
+      priority: 'medium'
     });
   }
+
+  if (daysSinceEbr !== null && daysSinceEbr > 90) {
+    actions.push({
+      id: 'schedule-ebr',
+      title: 'Schedule executive business review',
+      why: `Last EBR ${daysSinceEbr} days ago`,
+      owner: data.customer?.csm || 'CSM',
+      due_date: formatDate(addDays(lastUpdated, 14)),
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/ebr/',
+      priority: 'high'
+    });
+  }
+
   if (actions.length === 0) {
     actions.push({
       id: 'keep-momentum',
@@ -378,7 +466,8 @@ const buildNextActions = (data, healthScores, digitalScore) => {
       why: 'All key signals are on track',
       owner: data.customer?.csm || 'CSM',
       due_date: formatDate(addDays(lastUpdated, 30)),
-      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/cadence-calls/'
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/cadence-calls/',
+      priority: 'low'
     });
   }
   return actions;
@@ -388,7 +477,16 @@ const buildView = (data, overrides, actionState) => {
   const merged = mergeOverrides(data, overrides);
   const lastUpdated = parseDate(merged.meta?.last_updated) || new Date();
   const renewalDate = parseDate(merged.customer?.renewal_date);
-  const renewalCountdown = renewalDate ? `${daysBetween(lastUpdated, renewalDate)} days` : '0 days';
+  const renewalDays = renewalDate ? daysBetween(lastUpdated, renewalDate) : null;
+  const renewalCountdown = renewalDate ? `${renewalDays} days` : '0 days';
+  const renewalBand =
+    renewalDays === null
+      ? { status: 'watch', label: 'Unknown' }
+      : renewalDays < 90
+      ? { status: 'risk', label: 'Urgent' }
+      : renewalDays <= 180
+      ? { status: 'watch', label: 'Planning window' }
+      : { status: 'good', label: 'On track' };
 
   const seatUtil = merged.seats?.purchased ? merged.seats.active / merged.seats.purchased : 0;
   const seatTrend = computeTrend(merged.seats?.utilization_30d_series || []);
@@ -430,10 +528,16 @@ const buildView = (data, overrides, actionState) => {
       last_updated: formatDate(merged.meta?.last_updated),
       data_freshness_note: merged.meta?.data_freshness_note || formatDate(merged.meta?.last_updated)
     },
+    freshness: {
+      overall_last_sync: formatDateTime(merged.freshness?.overall_last_sync),
+      next_sync: formatDateTime(merged.freshness?.next_sync)
+    },
     customer: {
       ...merged.customer,
       renewal_date: formatDate(merged.customer?.renewal_date),
-      renewal_countdown: renewalCountdown
+      renewal_countdown: renewalCountdown,
+      renewal_status: renewalBand.status,
+      renewal_status_label: renewalBand.label
     },
     seats: {
       purchased: formatNumber(merged.seats?.purchased || 0),
@@ -512,11 +616,14 @@ const buildView = (data, overrides, actionState) => {
       successPlan: merged.success_plan?.objectives || [],
       dora: merged.dora || {},
       vsa: merged.vsa || {},
+      valuePoints: merged.outcomes?.value_points || [],
       digitalBreakdown: merged.touchpoints || {},
       cadenceCalendar: merged.engagement?.cadence_calendar || [],
       ebrDates: buildEbrDates(merged.engagement || {}),
       workshops: merged.workshops || [],
       collaboration: merged.collaboration_project || {},
+      freshness: merged.freshness || {},
+      healthDrivers: merged.health?.drivers || [],
       resources: merged.resources || {},
       landingZone: merged.adoption?.landing_zone || { phases: [] },
       nextActions: buildNextActions(merged, healthScores, digitalScore)
@@ -599,51 +706,86 @@ const updateTimeline = (view) => {
   });
 };
 
-const renderEventList = (list, items, build) => {
+const renderEmptyState = (list, message, link) => {
+  if (!list) return;
+  const li = document.createElement('li');
+  li.className = 'empty-state';
+  li.innerHTML = `
+    <div class="empty-title">${message}</div>
+    ${link ? `<a class="inline-link" href="${link.href}">${link.label}</a>` : ''}
+  `;
+  list.appendChild(li);
+};
+
+const renderEventList = (list, items, build, empty) => {
   if (!list) return;
   list.innerHTML = '';
+  if (!items || items.length === 0) {
+    const message = empty?.message || 'No updates yet.';
+    renderEmptyState(list, message, empty?.link);
+    return;
+  }
   items.forEach((item) => {
     list.appendChild(build(item));
   });
 };
 
 const renderSeatTrend = (list, items) => {
-  renderEventList(list, items, (item) => {
-    const li = document.createElement('li');
-    li.className = 'event-item';
-    li.innerHTML = `
-      <div class="event-title">${formatDate(item.date)}</div>
-      <div class="event-meta">${formatPercent(item.value)}</div>
-    `;
-    return li;
-  });
+  renderEventList(
+    list,
+    items,
+    (item) => {
+      const li = document.createElement('li');
+      li.className = 'event-item';
+      li.innerHTML = `
+        <div class="event-title">${formatDate(item.date)}</div>
+        <div class="event-meta">${formatPercent(item.value)}</div>
+      `;
+      return li;
+    },
+    { message: 'No utilization trend captured yet.' }
+  );
 };
 
 const renderRenewalChecklist = (list, items) => {
-  renderEventList(list, items, (item) => {
-    const li = document.createElement('li');
-    li.className = 'event-item';
-    li.innerHTML = `<div class="event-title">${item}</div>`;
-    return li;
-  });
+  renderEventList(
+    list,
+    items,
+    (item) => {
+      const li = document.createElement('li');
+      li.className = 'event-item';
+      li.innerHTML = `<div class="event-title">${item}</div>`;
+      return li;
+    },
+    { message: 'No renewal readiness items logged yet.' }
+  );
 };
 
 const renderActivityFeed = (list, items) => {
-  renderEventList(list, items, (item) => {
-    const li = document.createElement('li');
-    li.className = 'event-item';
-    const meta = formatDate(item.date);
-    li.innerHTML = `
-      <div class="event-title">${item.title}</div>
-      <div class="event-meta">${meta} | ${item.detail}</div>
-    `;
-    return li;
-  });
+  renderEventList(
+    list,
+    items,
+    (item) => {
+      const li = document.createElement('li');
+      li.className = 'event-item';
+      const meta = formatDate(item.date);
+      li.innerHTML = `
+        <div class="event-title">${item.title}</div>
+        <div class="event-meta">${meta} | ${item.detail}</div>
+      `;
+      return li;
+    },
+    { message: 'No activity updates logged yet.', link: { href: '#engagement', label: 'Log a touchpoint' } }
+  );
 };
 
 const renderTaskList = (list, items) => {
   if (!list) return;
   list.innerHTML = '';
+  if (!items || items.length === 0) {
+    renderEmptyState(list, 'No onboarding tasks logged yet.', { href: '#journey', label: 'Add checklist items' });
+    return;
+  }
   items.forEach((task) => {
     const li = document.createElement('li');
     li.className = `task${task.done ? ' is-done' : ''}`;
@@ -658,18 +800,30 @@ const renderTaskList = (list, items) => {
   });
 };
 
-const renderSimpleEventList = (list, items) => {
-  renderEventList(list, items, (item) => {
-    const li = document.createElement('li');
-    li.className = 'event-item';
-    li.innerHTML = `<div class="event-title">${item}</div>`;
-    return li;
-  });
+const renderSimpleEventList = (list, items, empty) => {
+  renderEventList(
+    list,
+    items,
+    (item) => {
+      const li = document.createElement('li');
+      li.className = 'event-item';
+      li.innerHTML = `<div class="event-title">${item}</div>`;
+      return li;
+    },
+    empty
+  );
 };
 
 const renderUsecaseSummary = (list, items) => {
   if (!list) return;
   list.innerHTML = '';
+  if (!items || items.length === 0) {
+    renderEmptyState(list, 'No use case scores yet. Connect adoption data to begin scoring.', {
+      href: '#adoption',
+      label: 'Review adoption'
+    });
+    return;
+  }
   items.forEach((item) => {
     const li = document.createElement('li');
     li.className = 'usecase-item';
@@ -687,6 +841,10 @@ const renderUsecaseSummary = (list, items) => {
 const renderUsecaseCards = (container, items) => {
   if (!container) return;
   container.innerHTML = '';
+  if (!items || items.length === 0) {
+    container.innerHTML = '<p class="empty-text">No use case scorecards available yet.</p>';
+    return;
+  }
   items.forEach((useCase) => {
     const band = bandFromScore(useCase.score);
     const card = document.createElement('article');
@@ -746,6 +904,10 @@ const renderUsecaseCards = (container, items) => {
 const renderHealthList = (list, items) => {
   if (!list) return;
   list.innerHTML = '';
+  if (!items || items.length === 0) {
+    renderEmptyState(list, 'No early warning flags detected yet.', { href: '#health-risk', label: 'Review health' });
+    return;
+  }
   items.forEach((item) => {
     const status = statusFromSeverity(item.severity);
     const li = document.createElement('li');
@@ -765,6 +927,10 @@ const renderHealthList = (list, items) => {
 const renderRiskRegister = (container, items) => {
   if (!container) return;
   container.innerHTML = '';
+  if (!items || items.length === 0) {
+    container.innerHTML = '<p class="empty-text">No risk items logged yet.</p>';
+    return;
+  }
   items.forEach((risk) => {
     const card = document.createElement('article');
     card.className = 'risk-card';
@@ -810,11 +976,16 @@ const renderResourceList = (list, items) => {
 const renderSuccessPlan = (container, items) => {
   if (!container) return;
   container.innerHTML = '';
+  if (!items || items.length === 0) {
+    container.innerHTML = '<p class="empty-text">No success plan objectives defined yet.</p>';
+    return;
+  }
   items.forEach((objective) => {
     const band = objective.status === 'at_risk' ? 'risk' : objective.status === 'complete' ? 'good' : 'watch';
     const card = document.createElement('article');
     card.className = 'success-item';
     const dependencies = objective.dependencies || [];
+    const blockers = objective.blockers || [];
     const outcomes = objective.verifiable_outcomes || [];
     card.innerHTML = `
       <h4>${objective.title}</h4>
@@ -828,8 +999,10 @@ const renderSuccessPlan = (container, items) => {
         <span class="progress-bar" style="width: ${Math.round(objective.progress_pct * 100)}%"></span>
       </div>
       <div class="success-meta">Status: <span class="status-pill" data-status="${band}">${objective.status.replace('_', ' ')}</span></div>
+      <div class="success-meta">Status detail: ${objective.status_detail || 'No detail provided.'}</div>
       <div class="success-meta">Next milestone: ${objective.next_milestone}</div>
-      <div class="success-meta">Dependencies: ${dependencies.join(', ')}</div>
+      <div class="success-meta">Dependencies: ${dependencies.join(', ') || 'None'}</div>
+      ${blockers.length ? `<div class="success-meta">Blockers: ${blockers.join(', ')}</div>` : ''}
       ${outcomes.length ? `<div class="success-meta">Verifiable outcomes</div>` : ''}
       ${outcomes.length ? `<ul class="mini-list">${outcomes.map((item) => `<li class="mini-item">${item}</li>`).join('')}</ul>` : ''}
       <a class="inline-link" href="${objective.evidence}" target="_blank" rel="noopener">Evidence</a>
@@ -844,6 +1017,11 @@ const renderDoraCards = (container, dora, objectives) => {
   const metrics = dora.metrics || {};
   const levels = dora.levels || {};
   const objectiveTitle = objectives?.[0]?.title || 'Success plan objective';
+
+  if (!Object.keys(metrics).length) {
+    container.innerHTML = '<p class="empty-text">No DORA metrics available yet.</p>';
+    return;
+  }
 
   Object.keys(metrics).forEach((key) => {
     const metric = metrics[key];
@@ -896,19 +1074,30 @@ const renderVsaMetrics = (list, vsa) => {
     { label: 'Cycle time', value: `${cycle} days` },
     { label: 'Throughput', value: `${throughput} items/week` }
   ];
-  renderEventList(list, items, (item) => {
-    const li = document.createElement('li');
-    li.className = 'event-item';
-    li.innerHTML = `
-      <div class="event-title">${item.label}</div>
-      <div class="event-meta">${item.value}</div>
-    `;
-    return li;
-  });
+  renderEventList(
+    list,
+    items,
+    (item) => {
+      const li = document.createElement('li');
+      li.className = 'event-item';
+      li.innerHTML = `
+        <div class="event-title">${item.label}</div>
+        <div class="event-meta">${item.value}</div>
+      `;
+      return li;
+    },
+    {
+      message: 'No value stream metrics captured yet.',
+      link: { href: 'https://docs.gitlab.com/user/analytics/value_streams_dashboard/', label: 'View VSA docs' }
+    }
+  );
 };
 
 const renderRecommendations = (list, items) => {
-  renderSimpleEventList(list, items);
+  renderSimpleEventList(list, items, {
+    message: 'No bottleneck recommendations logged yet.',
+    link: { href: '#outcomes', label: 'Review value stream' }
+  });
 };
 
 const renderDigitalBreakdown = (list, touchpoints) => {
@@ -928,36 +1117,53 @@ const renderDigitalBreakdown = (list, touchpoints) => {
     `In-app clicks ${formatNumber(touchpoints.in_app_metrics?.clicks || 0)}`,
     `Survey completion ${formatPercent(touchpoints.in_app_metrics?.survey_completion || 0)}`
   ];
-  renderSimpleEventList(list, items);
+  renderSimpleEventList(list, items, {
+    message: 'No digital touchpoints captured yet.',
+    link: { href: '#engagement', label: 'Log touchpoint' }
+  });
 };
 
 const renderCadenceCalendar = (list, items) => {
-  renderEventList(list, items, (item) => {
-    const li = document.createElement('li');
-    li.className = 'event-item';
-    li.innerHTML = `
-      <div class="event-title">${item.cadence} | ${item.focus}</div>
-      <div class="event-meta">Owner: ${item.owner} | Next: ${formatDate(item.next_date)}</div>
-    `;
-    return li;
-  });
+  renderEventList(
+    list,
+    items,
+    (item) => {
+      const li = document.createElement('li');
+      li.className = 'event-item';
+      li.innerHTML = `
+        <div class="event-title">${item.cadence} | ${item.focus}</div>
+        <div class="event-meta">Owner: ${item.owner} | Next: ${formatDate(item.next_date)}</div>
+      `;
+      return li;
+    },
+    { message: 'No cadence sessions scheduled yet.', link: { href: '#engagement', label: 'Add cadence' } }
+  );
 };
 
 const renderEbrDates = (list, items) => {
-  renderEventList(list, items, (item) => {
-    const li = document.createElement('li');
-    li.className = 'event-item';
-    li.innerHTML = `
-      <div class="event-title">${item.label}</div>
-      <div class="event-meta">${item.value}</div>
-    `;
-    return li;
-  });
+  renderEventList(
+    list,
+    items,
+    (item) => {
+      const li = document.createElement('li');
+      li.className = 'event-item';
+      li.innerHTML = `
+        <div class="event-title">${item.label}</div>
+        <div class="event-meta">${item.value}</div>
+      `;
+      return li;
+    },
+    { message: 'No EBR/QBR dates scheduled yet.', link: { href: '#engagement', label: 'Add cadence' } }
+  );
 };
 
 const renderWorkshops = (container, items) => {
   if (!container) return;
   container.innerHTML = '';
+  if (!items || items.length === 0) {
+    container.innerHTML = '<p class="empty-text">No workshops scheduled yet. Add enablement sessions to drive adoption.</p>';
+    return;
+  }
   items.forEach((item) => {
     const card = document.createElement('article');
     card.className = 'card';
@@ -979,26 +1185,139 @@ const renderCollaborationMetrics = (list, collab) => {
     `Overdue items: ${formatNumber(collab.overdue || 0)}`,
     `Comment velocity: ${collab.comment_velocity || 'N/A'}`
   ];
-  renderSimpleEventList(list, items);
+  renderSimpleEventList(list, items, {
+    message: 'No collaboration metrics tracked yet.',
+    link: { href: '#collaboration', label: 'Connect project' }
+  });
+};
+
+const renderHealthDrivers = (list, drivers) => {
+  if (!list) return;
+  list.innerHTML = '';
+  if (!drivers || drivers.length === 0) {
+    renderEmptyState(list, 'No health driver narrative yet.', {
+      href: '#health-risk',
+      label: 'Update health rubric'
+    });
+    return;
+  }
+  drivers.forEach((driver) => {
+    const li = document.createElement('li');
+    li.className = 'event-item';
+    li.innerHTML = `
+      <div class="event-title">
+        <span class="status-pill" data-status="${driver.status}">${driver.pillar}</span>
+      </div>
+      <div class="event-meta">${driver.detail}</div>
+      <div class="event-meta">Action: ${driver.action}</div>
+    `;
+    list.appendChild(li);
+  });
+};
+
+const renderValuePoints = (list, items) => {
+  renderSimpleEventList(list, items, {
+    message: 'No quantified value points captured yet.',
+    link: { href: '#outcomes', label: 'Add value evidence' }
+  });
+};
+
+const renderFreshnessList = (list, freshness) => {
+  if (!list) return;
+  const metrics = freshness.metrics || [];
+  list.innerHTML = '';
+  if (!metrics.length) {
+    renderEmptyState(list, 'No freshness data available yet.', {
+      href: '#overview-summary',
+      label: 'Update data'
+    });
+    return;
+  }
+  metrics.forEach((metric) => {
+    const li = document.createElement('li');
+    li.className = 'event-item';
+    const statusLabel = metric.status === 'fresh' ? 'Fresh' : metric.status === 'manual' ? 'Manual' : 'Stale';
+    li.innerHTML = `
+      <div class="event-title">${metric.label}</div>
+      <div class="event-meta">
+        <span class="status-pill" data-status="${metric.status === 'fresh' ? 'good' : metric.status === 'stale' ? 'watch' : 'watch'}">
+          ${statusLabel}
+        </span>
+        ${metric.note ? ` • ${metric.note}` : ''}
+      </div>
+      <div class="event-meta">Last sync: ${formatDateTime(metric.last_sync)}</div>
+    `;
+    list.appendChild(li);
+  });
+};
+
+const updateFreshnessBadges = (view) => {
+  const metrics = view.lists.freshness.metrics || [];
+  document.querySelectorAll('[data-freshness-badge]').forEach((el) => {
+    const key = el.dataset.freshnessBadge;
+    const metric = metrics.find((item) => item.key === key);
+    if (!metric) return;
+    const statusLabel = metric.status === 'fresh' ? 'Fresh' : metric.status === 'manual' ? 'Manual update' : 'Stale';
+    el.textContent = statusLabel;
+    el.dataset.status = metric.status;
+    if (metric.note) {
+      el.setAttribute('title', metric.note);
+    }
+  });
+};
+
+const updateRenewalBadges = (view) => {
+  document.querySelectorAll('[data-renewal-badge]').forEach((el) => {
+    el.textContent = view.customer.renewal_status_label;
+    el.dataset.status = view.customer.renewal_status;
+  });
 };
 
 const renderNextActions = (list, actions, actionState, onToggle) => {
   if (!list) return;
   list.innerHTML = '';
-  actions.forEach((action) => {
-    const li = document.createElement('li');
-    li.className = 'action-task';
-    const checked = actionState[action.id];
-    li.innerHTML = `
-      <label class="action-check">
-        <input type="checkbox" data-action-id="${action.id}" ${checked ? 'checked' : ''} />
-        <span class="action-title">${action.title}</span>
-      </label>
-      <div class="action-meta">Why: ${action.why}</div>
-      <div class="action-meta">Owner: ${action.owner} | Due ${action.due_date}</div>
-      <a class="inline-link" href="${action.link}" target="_blank" rel="noopener">Playbook</a>
-    `;
-    list.appendChild(li);
+  if (!actions || actions.length === 0) {
+    list.innerHTML = '<p class="empty-text">No actions generated yet. Update data to generate recommendations.</p>';
+    return;
+  }
+
+  const grouped = {
+    high: actions.filter((action) => action.priority === 'high'),
+    medium: actions.filter((action) => action.priority === 'medium'),
+    low: actions.filter((action) => action.priority === 'low')
+  };
+  const groupLabels = {
+    high: 'High priority (this week)',
+    medium: 'Medium priority (next two weeks)',
+    low: 'Low priority (this quarter)'
+  };
+
+  Object.keys(grouped).forEach((priority) => {
+    const items = grouped[priority];
+    if (!items.length) return;
+    const group = document.createElement('div');
+    group.className = 'action-group';
+    group.innerHTML = `<div class="action-group-title">${groupLabels[priority]}</div>`;
+
+    const listEl = document.createElement('ul');
+    listEl.className = 'action-list';
+    items.forEach((action) => {
+      const li = document.createElement('li');
+      li.className = 'action-task';
+      const checked = actionState[action.id];
+      li.innerHTML = `
+        <label class="action-check">
+          <input type="checkbox" data-action-id="${action.id}" ${checked ? 'checked' : ''} />
+          <span class="action-title">${action.title}</span>
+        </label>
+        <div class="action-meta">Why: ${action.why}</div>
+        <div class="action-meta">Owner: ${action.owner} | Due ${action.due_date}</div>
+        <a class="inline-link" href="${action.link}" target="_blank" rel="noopener">Playbook</a>
+      `;
+      listEl.appendChild(li);
+    });
+    group.appendChild(listEl);
+    list.appendChild(group);
   });
 
   list.querySelectorAll('[data-action-id]').forEach((input) => {
@@ -1882,6 +2201,8 @@ const initExport = (getView) => {
 const render = (view, state) => {
   applyBindings(view);
   updateHealthStatus(view);
+  updateFreshnessBadges(view);
+  updateRenewalBadges(view);
   updateProgressBars(view);
   updateRing(view);
   updateTimeline(view);
@@ -1896,18 +2217,21 @@ const render = (view, state) => {
   renderSeatTrend(document.querySelector('[data-list="seat-trend"]'), view.lists.seatTrend);
   renderRenewalChecklist(document.querySelector('[data-list="renewal-checklist"]'), view.lists.renewalChecklist);
   renderActivityFeed(document.querySelector('[data-list="activity-feed"]'), view.lists.activityFeed);
+  renderFreshnessList(document.querySelector('[data-list="data-freshness"]'), view.lists.freshness);
   renderTaskList(document.querySelector('[data-list="onboarding-tasks"]'), view.lists.onboardingTasks);
   renderSimpleEventList(document.querySelector('[data-list="onboarding-risks"]'), view.lists.onboardingRisks);
   renderUsecaseSummary(document.querySelector('[data-list="usecase-summary"]'), view.lists.useCaseSummary);
   renderUsecaseCards(document.querySelector('[data-usecase-cards]'), view.lists.useCaseCards);
   renderHealthList(document.querySelector('[data-list="early-warnings"]'), view.lists.earlyWarnings);
   renderRiskRegister(document.querySelector('[data-list="risk-register"]'), view.lists.risks);
+  renderHealthDrivers(document.querySelector('[data-list="health-drivers"]'), view.lists.healthDrivers);
   renderResourceList(document.querySelector('[data-list="risk-playbooks-red"]'), view.lists.riskPlaybooks.red || []);
   renderResourceList(document.querySelector('[data-list="risk-playbooks-yellow"]'), view.lists.riskPlaybooks.yellow || []);
   renderSuccessPlan(document.querySelector('[data-list="success-plan"]'), view.lists.successPlan);
   renderDoraCards(document.querySelector('[data-list="dora-cards"]'), view.lists.dora, view.lists.successPlan);
   renderVsaMetrics(document.querySelector('[data-list="vsa-metrics"]'), view.lists.vsa);
   renderRecommendations(document.querySelector('[data-list="vsa-recommendations"]'), view.lists.vsa.recommendations || []);
+  renderValuePoints(document.querySelector('[data-list="value-points"]'), view.lists.valuePoints);
   renderDigitalBreakdown(document.querySelector('[data-list="digital-breakdown"]'), view.lists.digitalBreakdown);
   renderCadenceCalendar(document.querySelector('[data-list="cadence-calendar"]'), view.lists.cadenceCalendar);
   renderEbrDates(document.querySelector('[data-list="ebr-dates"]'), view.lists.ebrDates);
