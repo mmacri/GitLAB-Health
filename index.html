@@ -1,6 +1,6 @@
 
 <!doctype html>
-<html lang="en" data-mode="all">
+<html lang="en" data-mode="all" data-audience="internal">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -21,7 +21,7 @@
         id="overview"
         data-section
         data-section-label="Overview"
-        data-audience="all exec devops csm"
+        data-persona="all exec devops csm"
       >
         <div class="nav-shell">
           <nav class="nav primary-nav" aria-label="Primary navigation">
@@ -49,7 +49,7 @@
                 Search (Ctrl+K)
               </button>
               <button class="ghost-btn" type="button" data-export-ebr>Export</button>
-              <button class="ghost-btn" type="button" data-open-settings>Settings</button>
+              <button class="ghost-btn" type="button" data-open-settings data-audience="internal">Settings</button>
             </div>
           </nav>
 
@@ -63,6 +63,11 @@
               <span class="mode-hint" data-mode-hint>Showing all sections.</span>
             </div>
             <div class="modebar-right">
+              <div class="audience-toggle" role="group" aria-label="Audience toggle">
+                <span class="modebar-label">Audience</span>
+                <button class="mode-btn is-active" type="button" data-audience-toggle="internal">Internal</button>
+                <button class="mode-btn" type="button" data-audience-toggle="customer">Customer</button>
+              </div>
               <a class="qa" href="#next-actions">Next actions</a>
               <a class="qa" href="#success-plan">Success plan</a>
               <a class="qa" href="#collaboration">Collaboration</a>
@@ -82,6 +87,9 @@
               <button class="ghost-btn" type="button" data-sections-expand>Expand all sections</button>
               <button class="ghost-btn" type="button" data-sections-collapse>Collapse all sections</button>
             </div>
+          </div>
+          <div class="audience-banner" data-audience-banner>
+            Customer view: internal notes hidden.
           </div>
         </div>
 
@@ -246,7 +254,7 @@
             data-section
             data-section-label="Executive snapshot"
             data-section-alias="overview"
-            data-audience="all exec devops csm"
+            data-persona="all exec devops csm"
             data-details-scope
           >
           <div class="section-head">
@@ -265,7 +273,7 @@
 
           <div class="section-body" data-section-body>
           <div class="summary-grid">
-            <article class="card" style="--order: 1" data-audience="all exec csm">
+            <article class="card" style="--order: 1" data-persona="all exec csm">
               <h3>Health score</h3>
               <div class="health-score" data-health-score>
                 <span class="score-num" data-field="health.overall_score">68</span>
@@ -328,7 +336,7 @@
                 </details>
             </article>
 
-            <article class="card" style="--order: 2" data-audience="all devops csm">
+            <article class="card" style="--order: 2" data-persona="all devops csm">
               <h3>Platform adoption</h3>
               <p class="stat" data-field="adoption.platform_adoption_summary">3 of 4 use cases green</p>
                 <p class="muted">
@@ -348,7 +356,7 @@
               </details>
             </article>
 
-            <article class="card" style="--order: 3" data-audience="all">
+            <article class="card" style="--order: 3" data-persona="all">
               <h3>License utilization trend</h3>
               <p class="stat" data-field="seats.utilization_pct">42%</p>
               <p class="muted">Last 90 days utilization movement.</p>
@@ -356,7 +364,7 @@
               <ul class="event-list" data-list="seat-trend"></ul>
             </article>
 
-            <article class="card" style="--order: 4" data-audience="exec csm">
+            <article class="card" style="--order: 4" data-persona="exec csm">
               <h3>Renewal outlook</h3>
               <p class="stat" data-field="customer.renewal_countdown">151 days</p>
               <p class="muted">Renewal date: <span data-field="customer.renewal_date">Jun 30, 2026</span></p>
@@ -366,7 +374,7 @@
                 <ul class="event-list" data-list="renewal-checklist"></ul>
               </details>
             </article>
-            <article class="card" style="--order: 5" data-audience="all exec csm">
+            <article class="card" style="--order: 5" data-persona="all exec csm">
               <h3>Data freshness</h3>
               <p class="stat">Last sync: <span data-field="freshness.overall_last_sync">Jan 29, 2026</span></p>
               <p class="muted">Next sync: <span data-field="freshness.next_sync">Jan 30, 2026</span></p>
@@ -379,6 +387,7 @@
               <h3>Next best actions</h3>
               <p class="muted">Rules-based actions generated from current metrics.</p>
               <div class="action-list" data-list="next-best-actions" data-empty-trigger="true"></div>
+              <button class="inline-button" type="button" data-copy-actions>Copy actions</button>
             </article>
             <article class="card" style="--order: 6" data-hide-on-empty>
               <h3>What changed since last update</h3>
@@ -394,7 +403,7 @@
           id="journey"
           data-section
           data-section-label="Journey"
-          data-audience="all exec devops csm"
+          data-persona="all exec devops csm"
           data-details-scope
         >
           <div class="section-head">
@@ -461,7 +470,7 @@
                 Definitions aligned to GitLab time-to-value milestones.
                 <a
                   class="tooltip inline-link"
-                  href="https://handbook.gitlab.com/handbook/customer-success/customer-success-vision/"
+                  href="https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/"
                   target="_blank"
                   rel="noopener"
                   data-tooltip="GitLab onboarding milestone definitions and first value criteria."
@@ -469,15 +478,61 @@
                 >
               </p>
               <ul class="definition-list">
-              <li><span class="definition-term">Engagement</span> First CSM meeting held with the customer.</li>
+              <li>
+                <span class="definition-term">Engagement</span> First CSM meeting held with the customer.
+                <a
+                  class="tooltip inline-link"
+                  href="https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/"
+                  target="_blank"
+                  rel="noopener"
+                  data-tooltip="Onboarding milestone definition."
+                  >Handbook</a
+                >
+              </li>
               <li>
                 <span class="definition-term">Infrastructure ready</span> Environment is operational and integrated into the
                 customer landscape (SSO, networking, and access validated).
+                <a
+                  class="tooltip inline-link"
+                  href="https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/"
+                  target="_blank"
+                  rel="noopener"
+                  data-tooltip="Infrastructure-ready milestone guidance."
+                  >Handbook</a
+                >
               </li>
-              <li><span class="definition-term">Onboarding complete</span> All onboarding tasks finished and verified.</li>
-              <li><span class="definition-term">First value</span> 10% of production licenses activated and in use.</li>
+              <li>
+                <span class="definition-term">Onboarding complete</span> All onboarding tasks finished and verified.
+                <a
+                  class="tooltip inline-link"
+                  href="https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/"
+                  target="_blank"
+                  rel="noopener"
+                  data-tooltip="Onboarding completion criteria."
+                  >Handbook</a
+                >
+              </li>
+              <li>
+                <span class="definition-term">First value</span> 10% of production licenses activated and in use.
+                <a
+                  class="tooltip inline-link"
+                  href="https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/"
+                  target="_blank"
+                  rel="noopener"
+                  data-tooltip="First value definition and thresholds."
+                  >Handbook</a
+                >
+              </li>
               <li>
                 <span class="definition-term">Outcome achieved</span> Original business goal delivered (mapped to purchase intent).
+                <a
+                  class="tooltip inline-link"
+                  href="https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/"
+                  target="_blank"
+                  rel="noopener"
+                  data-tooltip="Outcome verification and success plan alignment."
+                  >Handbook</a
+                >
               </li>
             </ul>
           </details>
@@ -498,7 +553,7 @@
           id="adoption"
           data-section
           data-section-label="Adoption"
-          data-audience="all devops csm"
+          data-persona="all devops csm"
           data-details-scope
         >
           <div class="section-head">
@@ -537,6 +592,12 @@
               <p class="stat" data-field="adoption.recommended_workshop">CI / Verify Workshop</p>
               <p class="muted" data-field="adoption.recommended_reason">CI builds per billable user below green threshold.</p>
               <a class="inline-link" data-field="adoption.recommended_link" href="https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/">Open playbook</a>
+            </article>
+            <article class="card" style="--order: 3" data-persona="exec csm">
+              <h3>Lowest scoring use case</h3>
+              <p class="stat" data-field="adoption.lowest_use_case">Release (CD) — 62</p>
+              <p class="muted">Focus area to move next use case to green.</p>
+              <a class="inline-link" data-field="adoption.lowest_use_case_link" href="#usecase-release">Jump to scorecard</a>
             </article>
           </div>
 
@@ -593,7 +654,7 @@
           id="health-risk"
           data-section
           data-section-label="Health & Risk"
-          data-audience="all exec csm"
+          data-persona="all exec csm"
           data-details-scope
         >
           <div class="section-head">
@@ -668,7 +729,7 @@
             </article>
           </div>
 
-          <details class="drawer" data-hide-on-empty>
+          <details class="drawer" data-hide-on-empty data-audience="internal">
             <summary>Risk register and mitigation checklists</summary>
             <div class="risk-grid" data-list="risk-register" data-empty-trigger="true"></div>
           </details>
@@ -679,15 +740,43 @@
           </details>
 
           <details class="drawer" data-hide-on-empty>
-            <summary>Red and Yellow response playbooks</summary>
+            <summary>Health response playbooks</summary>
             <div class="resource-grid">
-              <article class="card">
-                <h3>Red response</h3>
-                <ul class="resource-list" data-list="risk-playbooks-red"></ul>
+              <article class="card" data-audience="internal">
+                <h3>Yellow response plan</h3>
+                <p class="muted">Week 1 actions</p>
+                <ul class="action-list" data-playbook="yellow-week1" data-empty-trigger="true"></ul>
+                <p class="muted">Week 2 actions</p>
+                <ul class="action-list" data-playbook="yellow-week2"></ul>
+                <p class="muted">Ongoing monitoring</p>
+                <ul class="action-list" data-playbook="yellow-ongoing"></ul>
+                <p class="muted">Escalation triggers</p>
+                <ul class="event-list" data-playbook="yellow-escalation"></ul>
+                <p class="muted">Success criteria</p>
+                <ul class="event-list" data-playbook="yellow-success"></ul>
               </article>
-              <article class="card">
-                <h3>Yellow response</h3>
-                <ul class="resource-list" data-list="risk-playbooks-yellow"></ul>
+              <article class="card" data-audience="internal">
+                <h3>Red response plan</h3>
+                <p class="muted">Week 1 actions</p>
+                <ul class="action-list" data-playbook="red-week1" data-empty-trigger="true"></ul>
+                <p class="muted">Week 2 actions</p>
+                <ul class="action-list" data-playbook="red-week2"></ul>
+                <p class="muted">Ongoing monitoring</p>
+                <ul class="action-list" data-playbook="red-ongoing"></ul>
+                <p class="muted">Escalation triggers</p>
+                <ul class="event-list" data-playbook="red-escalation"></ul>
+                <p class="muted">Success criteria</p>
+                <ul class="event-list" data-playbook="red-success"></ul>
+              </article>
+              <article class="card" data-audience="customer">
+                <h3>Yellow response summary</h3>
+                <p class="muted">What we will do next to return to green health.</p>
+                <ul class="event-list" data-playbook-summary="yellow"></ul>
+              </article>
+              <article class="card" data-audience="customer">
+                <h3>Red response summary</h3>
+                <p class="muted">Immediate recovery actions and checkpoints.</p>
+                <ul class="event-list" data-playbook-summary="red"></ul>
               </article>
             </div>
           </details>
@@ -697,7 +786,7 @@
           id="outcomes"
           data-section
           data-section-label="Outcomes"
-          data-audience="all exec csm devops"
+          data-persona="all exec csm devops"
           data-details-scope
         >
           <div class="section-head">
@@ -791,7 +880,7 @@
           id="engagement"
           data-section
           data-section-label="Engagement & Enablement"
-          data-audience="all exec devops csm"
+          data-persona="all exec devops csm"
           data-details-scope
         >
           <div class="section-head">
@@ -894,8 +983,8 @@
                 <button class="inline-button" type="button" data-copy-template="collab_agenda">Copy agenda</button>
                 <div class="template" data-template="collab_action_items"></div>
                 <button class="inline-button" type="button" data-copy-template="collab_action_items">Copy action items</button>
-                <div class="template" data-template="collab_escalation"></div>
-                <button class="inline-button" type="button" data-copy-template="collab_escalation">Copy escalation</button>
+                <div class="template" data-template="collab_escalation" data-audience="internal"></div>
+                <button class="inline-button" type="button" data-copy-template="collab_escalation" data-audience="internal">Copy escalation</button>
                 <div class="template" data-template="collab_success_report"></div>
                 <button class="inline-button" type="button" data-copy-template="collab_success_report">Copy success report</button>
               </article>
@@ -909,7 +998,7 @@
           id="resources"
           data-section
           data-section-label="Resources"
-          data-audience="all exec devops csm"
+          data-persona="all exec devops csm"
           data-details-scope
         >
           <div class="section-head">
@@ -978,7 +1067,7 @@
       </footer>
     </div>
 
-    <div class="fab" data-fab aria-label="Quick actions">
+    <div class="fab" data-fab aria-label="Quick actions" data-audience="internal">
       <button class="fab-trigger" type="button" data-fab-toggle aria-expanded="false">
         Quick actions
       </button>
@@ -1020,7 +1109,7 @@
       </nav>
     </div>
 
-    <dialog class="modal" id="settings-modal" aria-labelledby="settings-modal-title">
+    <dialog class="modal" id="settings-modal" aria-labelledby="settings-modal-title" data-audience="internal">
       <form method="dialog" class="modal-content">
         <h3 id="settings-modal-title">Dashboard settings</h3>
         <label class="field">
@@ -1041,7 +1130,7 @@
       </form>
     </dialog>
 
-      <dialog class="modal" id="health-modal" aria-labelledby="health-modal-title">
+      <dialog class="modal" id="health-modal" aria-labelledby="health-modal-title" data-audience="internal">
         <form method="dialog" class="modal-content">
           <h3 id="health-modal-title">Update health scores</h3>
           <p class="muted">
@@ -1127,6 +1216,8 @@
       </form>
     </dialog>
 
+    <script src="assets/js/rules.js"></script>
     <script src="assets/js/app.js"></script>
   </body>
 </html>
+
