@@ -350,8 +350,20 @@ const computeSectionMetrics = (view) => {
 
   const healthBand = bandFromScore(view.health.overall_score || 0);
   const digitalBand = bandFromScore(view.touchpoints.digital_health_score || 0);
+  const todayActions = view.lists.todayNextActions || [];
+  const overdueToday = todayActions.filter((action) => action.status === 'overdue').length;
+  const dueToday = todayActions.filter((action) => action.status !== 'upcoming').length;
+  const todayProgress = todayActions.length ? clamp((todayActions.length - dueToday) / todayActions.length) : 1;
 
   return {
+    'today-console': {
+      progress: todayProgress,
+      status: overdueToday > 0 ? 'risk' : dueToday > 0 ? 'watch' : 'good',
+      value:
+        todayActions.length === 0
+          ? 'Clear'
+          : `${dueToday} due / ${todayActions.length}`
+    },
     overview: {
       progress: clamp((view.health.overall_score || 0) / 100),
       status: healthBand.status,
@@ -461,10 +473,38 @@ const buildEbrDates = (engagement) => {
   ];
 };
 
-const buildNextActions = (data, healthScores, digitalScore) => {
-  if (window.Rules && typeof window.Rules.buildNextActions === 'function') {
-    return window.Rules.buildNextActions(data, healthScores, digitalScore);
+const buildNextActions = (data, derivedMetrics, healthScores, digitalScore, now = new Date()) => {
+  const normalizeAction = (action, fallbackId) => {
+    const status = action.status || (action.urgency === 'urgent' ? 'overdue' : action.urgency === 'important' ? 'due_soon' : 'upcoming');
+    const dueDate = action.dueDate || action.due_date || null;
+    return {
+      id: action.id || fallbackId,
+      title: action.title || 'Action',
+      status,
+      statusLabel: status === 'overdue' ? 'Overdue' : status === 'due_soon' ? 'Due soon' : 'Upcoming',
+      reason: action.reason || action.rationale || action.why || 'Review account state and follow operating motion.',
+      rationale: action.reason || action.rationale || action.why || 'Review account state and follow operating motion.',
+      steps: action.steps || [],
+      owner: action.owner || data.customer?.csm || 'CSM',
+      dueDate,
+      due_date: formatDate(dueDate),
+      jumpTo: action.jumpTo || '#today-console',
+      link: action.link || null,
+      audience: action.audience || 'both',
+      priority: action.priority || 0
+    };
+  };
+
+  if (window.NextActions && typeof window.NextActions.buildNextActions === 'function') {
+    const generated = window.NextActions.buildNextActions(data, derivedMetrics, { now });
+    return (generated || []).map((action, index) => normalizeAction(action, `derived-${index}`));
   }
+
+  if (window.Rules && typeof window.Rules.buildNextActions === 'function') {
+    const legacy = window.Rules.buildNextActions(data, healthScores, digitalScore) || [];
+    return legacy.map((action, index) => normalizeAction(action, `legacy-${index}`));
+  }
+
   return [];
 };
 
@@ -659,6 +699,71 @@ const buildView = (data, overrides, actionState, audience = 'internal', resource
     return acc;
   }, {});
 
+  const nextActions = buildNextActions(merged, derivedMetrics, healthScores, digitalScore, now);
+  const visibleActions = nextActions.filter((action) =>
+    audience === 'customer' ? action.audience !== 'internal' : true
+  );
+  const dueSoonActions = visibleActions.filter((action) => action.status !== 'upcoming');
+  const dueSoonList = (dueSoonActions.length ? dueSoonActions : visibleActions)
+    .slice(0, 6)
+    .map((action) => ({
+      title: action.title,
+      detail: `${action.statusLabel} • ${action.reason}`,
+      status: action.status === 'overdue' ? 'risk' : action.status === 'due_soon' ? 'watch' : 'good',
+      link: action.jumpTo || '#today-console'
+    }));
+
+  const quickExpectationIds = [
+    'cadence-call',
+    'cadence-frequency',
+    'triage-state',
+    'ebr-annual',
+    'workshop-quarter',
+    'success-plan-quarter',
+    'risk-update-cadence'
+  ];
+  const todayExpectations = quickExpectationIds
+    .map((id) => compliance.checks.find((check) => check.id === id))
+    .filter(Boolean)
+    .map((check) => ({
+      name: check.name,
+      reason: check.reason,
+      status: check.status,
+      statusLabel: check.statusLabel,
+      link: check.anchor
+    }));
+  (compliance.alerts || []).forEach((alert) => {
+    todayExpectations.push({
+      name: alert.label,
+      reason: alert.reason,
+      status: alert.status || 'risk',
+      statusLabel: alert.status === 'risk' ? 'Red' : 'Yellow',
+      link: alert.anchor || '#health-risk'
+    });
+  });
+
+  const topRiskDriver =
+    merged.health?.early_warning_flags?.[0]?.title ||
+    merged.risks?.[0]?.driver ||
+    'No active risk driver logged';
+  const validationSummary =
+    derivedMetrics?.successPlanValidationsComplete === true
+      ? 'Customer + manager validated'
+      : 'Validation pending';
+  const readinessStatus = renewalReadinessItems.every((item) => item.value === true) ? 'Ready' : 'At Risk';
+  const cadenceAutomationCue =
+    audience === 'customer'
+      ? derivedMetrics?.cadenceViolated
+        ? 'Cadence is outside the monthly expectation; align on immediate re-engagement call.'
+        : 'Cadence is inside the monthly expectation.'
+      : derivedMetrics?.triageAutomationCue || 'Cadence baseline is missing; capture the last call date.';
+  const cadenceRecommendedAction =
+    audience === 'customer'
+      ? derivedMetrics?.cadenceViolated
+        ? 'Schedule the next customer call and confirm a recovery agenda.'
+        : 'Maintain cadence and confirm next agenda.'
+      : derivedMetrics?.recommendedCadenceAction || 'Maintain cadence; confirm next agenda';
+
   return {
     accountId: merged.account_id,
     accountName: merged.account_name || merged.customer?.name,
@@ -731,8 +836,8 @@ const buildView = (data, overrides, actionState, audience = 'internal', resource
       recommended_frequency: derivedMetrics?.recommendedCadenceFrequency || 'Biweekly',
       triage_state: derivedMetrics?.triageState || 'At Risk',
       suggested_state: derivedMetrics?.suggestedTriageState || 'At Risk',
-      automation_cue: derivedMetrics?.triageAutomationCue || 'Cadence baseline is missing; capture the last call date.',
-      recommended_action: derivedMetrics?.recommendedCadenceAction || 'Maintain cadence; confirm next agenda',
+      automation_cue: cadenceAutomationCue,
+      recommended_action: cadenceRecommendedAction,
       violated: Boolean(derivedMetrics?.cadenceViolated),
       triage_required: Boolean(derivedMetrics?.triageRecoveryRequired),
       triage_complete: Boolean(derivedMetrics?.triageRecoveryComplete),
@@ -855,6 +960,51 @@ const buildView = (data, overrides, actionState, audience = 'internal', resource
       risk_status: expansionRiskStatus,
       risk_note: expansionRiskText
     },
+    today: {
+      health: {
+        health_label: `${healthBand.label} (${healthScores.overall})`,
+        top_risk: topRiskDriver,
+        last_update: formatDate(merged.last_health_update_date),
+        next_due: formatDate(derivedMetrics?.nextHealthUpdateDue),
+        escalated: derivedMetrics?.escalated ? `Yes${derivedMetrics?.escalationSeverity ? ` (${derivedMetrics.escalationSeverity})` : ''}` : 'No'
+      },
+      engagement: {
+        frequency: derivedMetrics?.cadenceFrequency || engagement.cadence_call_frequency || 'Biweekly',
+        days_since_call:
+          derivedMetrics?.daysSinceLastCall === null || derivedMetrics?.daysSinceLastCall === undefined
+            ? 'TBD'
+            : String(derivedMetrics.daysSinceLastCall),
+        next_call: formatDate(derivedMetrics?.nextCadenceCallDate),
+        workshop_quarter: (derivedMetrics?.workshopCountThisQuarter || 0) >= 1 ? 'Yes' : 'No',
+        ebr_due:
+          derivedMetrics?.ebrCountdownDays === null || derivedMetrics?.ebrCountdownDays === undefined
+            ? 'TBD'
+            : derivedMetrics.ebrCountdownDays < 0
+            ? `${Math.abs(derivedMetrics.ebrCountdownDays)} days overdue`
+            : `${derivedMetrics.ebrCountdownDays} days`
+      },
+      outcomes: {
+        status:
+          derivedMetrics?.successPlanStatus === 'active'
+            ? 'Active'
+            : derivedMetrics?.successPlanStatus === 'stale'
+            ? 'Stale'
+            : 'In progress',
+        last_updated: formatDate(derivedMetrics?.successPlanLastUpdated),
+        next_review: formatDate(derivedMetrics?.successPlanNextReview),
+        validation: validationSummary
+      },
+      renewal: {
+        date: formatDate(derivedMetrics?.renewalDate),
+        countdown:
+          derivedMetrics?.daysToRenewal === null || derivedMetrics?.daysToRenewal === undefined
+            ? 'TBD'
+            : `${derivedMetrics.daysToRenewal} days`,
+        readiness: readinessStatus,
+        sentiment: expansion.sentiment_trend || 'Flat',
+        active_plays: formatNumber(expansion.plays_opened_qoq || 0)
+      }
+    },
     outcomes: {
       ...merged.outcomes,
       impact: impactView
@@ -911,7 +1061,10 @@ const buildView = (data, overrides, actionState, audience = 'internal', resource
       },
       responsePlaybooks: merged.response_playbooks || {},
       landingZone: merged.adoption?.landing_zone || { phases: [] },
-      nextActions: buildNextActions(merged, healthScores, digitalScore),
+      nextActions: visibleActions,
+      todayNextActions: visibleActions.slice(0, 6),
+      todayDueSoon: dueSoonList,
+      todayExpectations,
       growthObjectives: merged.growth_plan?.objectives || [],
       growthHypotheses: merged.growth_plan?.hypotheses || [],
       growthPlays: merged.growth_plan?.active_plays || [],
@@ -1849,10 +2002,13 @@ const applyOperationalStatuses = (view) => {
   if (cadenceBanner) {
     if (view.cadence.violated) {
       cadenceBanner.dataset.status = view.cadence.status === 'risk' ? 'risk' : 'watch';
-      cadenceBanner.textContent =
-        view.cadence.status === 'risk'
-          ? 'Cadence exceeded 45 days. Elevate to Red and execute triage recovery plan.'
-          : 'Cadence exceeded 30 days. Flag as Non-Engaged and start triage.';
+      cadenceBanner.textContent = view.audience === 'customer'
+        ? view.cadence.status === 'risk'
+          ? 'Cadence exceeded 45 days. Immediate re-engagement plan is required.'
+          : 'Cadence exceeded 30 days. Schedule the next call immediately.'
+        : view.cadence.status === 'risk'
+        ? 'Cadence exceeded 45 days. Elevate to Red and execute triage recovery plan.'
+        : 'Cadence exceeded 30 days. Flag as Non-Engaged and start triage.';
     } else {
       cadenceBanner.dataset.status = 'good';
       cadenceBanner.textContent = 'Cadence is within expectation.';
@@ -2116,6 +2272,79 @@ const renderOrientationDueItems = (list, items) => {
   );
 };
 
+const renderTodayDueSoon = (list, items) => {
+  renderEventList(
+    list,
+    items,
+    (item) => {
+      const li = document.createElement('li');
+      li.className = 'event-item';
+      li.innerHTML = `
+        <div class="event-title">${item.title}</div>
+        <div class="event-meta">
+          <span class="status-pill" data-status="${item.status}">${
+            item.status === 'risk' ? 'Overdue' : item.status === 'watch' ? 'Due soon' : 'Upcoming'
+          }</span>
+          ${item.detail}
+        </div>
+        <button class="inline-button" type="button" data-open-target="${item.link || '#today-console'}">Open</button>
+      `;
+      return li;
+    },
+    { message: 'No due actions right now.' }
+  );
+};
+
+const renderTodayExpectations = (list, items) => {
+  renderEventList(
+    list,
+    items,
+    (item) => {
+      const li = document.createElement('li');
+      li.className = 'event-item';
+      li.innerHTML = `
+        <div class="event-title">${item.name}</div>
+        <div class="event-meta">
+          <span class="status-pill" data-status="${item.status}">${item.statusLabel}</span>
+          ${item.reason}
+        </div>
+        <button class="inline-button" type="button" data-open-target="${item.link || '#handbook-compliance'}">View</button>
+      `;
+      return li;
+    },
+    { message: 'No AMER expectation checks available.' }
+  );
+};
+
+const renderTodayActions = (list, actions) => {
+  if (!list) return;
+  list.innerHTML = '';
+  if (!actions || !actions.length) {
+    renderEmptyState(list, 'No actions generated.');
+    return;
+  }
+
+  actions.forEach((action) => {
+    const li = document.createElement('li');
+    li.className = 'today-action-item';
+    li.innerHTML = `
+      <div class="today-action-head">
+        <span class="today-action-title">${action.title}</span>
+        <span class="status-pill" data-status="${
+          action.status === 'overdue' ? 'risk' : action.status === 'due_soon' ? 'watch' : 'good'
+        }">${action.statusLabel}</span>
+      </div>
+      <div class="event-meta">${action.reason}</div>
+      <div class="event-meta">Owner: ${action.owner} • Due ${action.due_date || 'TBD'}</div>
+      <div class="today-action-controls">
+        <button class="inline-button" type="button" data-open-target="${action.jumpTo || '#today-console'}">Open</button>
+        ${action.link ? `<a class="inline-link" href="${action.link}" target="_blank" rel="noopener">Playbook</a>` : ''}
+      </div>
+    `;
+    list.appendChild(li);
+  });
+};
+
 const renderEbrDates = (list, items) => {
   renderEventList(
     list,
@@ -2372,14 +2601,14 @@ const renderNextActions = (list, actions, actionState, onToggle, audience = 'int
   setEmptyFlag(list, false);
 
   const grouped = {
-    urgent: actions.filter((action) => action.urgency === 'urgent'),
-    important: actions.filter((action) => action.urgency === 'important'),
-    opportunity: actions.filter((action) => action.urgency === 'opportunity')
+    overdue: actions.filter((action) => action.status === 'overdue'),
+    due_soon: actions.filter((action) => action.status === 'due_soon'),
+    upcoming: actions.filter((action) => action.status === 'upcoming')
   };
   const groupLabels = {
-    urgent: 'Urgent (this week)',
-    important: 'Important (next two weeks)',
-    opportunity: 'Opportunity'
+    overdue: 'Overdue',
+    due_soon: 'Due soon',
+    upcoming: 'Upcoming'
   };
 
   Object.keys(grouped).forEach((priority) => {
@@ -2405,13 +2634,19 @@ const renderNextActions = (list, actions, actionState, onToggle, audience = 'int
           }
           <span class="action-title">${action.title}</span>
         </label>
-        <div class="action-meta">Why: ${action.rationale || action.why}</div>
-        <div class="action-meta">Owner: ${ownerLabel} | Due ${action.due_date}</div>
+        <div class="action-meta">
+          <span class="status-pill" data-status="${
+            action.status === 'overdue' ? 'risk' : action.status === 'due_soon' ? 'watch' : 'good'
+          }">${action.statusLabel || (action.status === 'overdue' ? 'Overdue' : action.status === 'due_soon' ? 'Due soon' : 'Upcoming')}</span>
+          ${action.reason || action.rationale || action.why}
+        </div>
+        <div class="action-meta">Owner: ${ownerLabel} | Due ${action.due_date || 'TBD'}</div>
         ${
           action.steps && action.steps.length
             ? `<ul class="mini-list">${action.steps.map((step) => `<li class="mini-item">${step}</li>`).join('')}</ul>`
             : ''
         }
+        <button class="inline-button" type="button" data-open-target="${action.jumpTo || '#today-console'}">Open</button>
         ${action.link ? `<a class="inline-link" href="${action.link}" target="_blank" rel="noopener">Playbook</a>` : ''}
       `;
       listEl.appendChild(li);
@@ -2644,60 +2879,125 @@ const applySectionState = (section, collapsed) => {
   }
 };
 
-const initSectionControls = (metrics) => {
-  const storedState = loadStorage(STORAGE_KEYS.sections, {});
+const initSectionControls = (metrics, getGuidedMode) => {
   const sections = [...document.querySelectorAll('.section[data-section]')];
-  const defaults = {};
-  sections.forEach((section) => {
-    const metric = metrics[section.id];
-    if (storedState[section.id] !== undefined) return;
-    if (section.id === 'overview-summary') {
-      defaults[section.id] = false;
-      return;
-    }
-    if (metric && metric.progress >= 0.95 && metric.status === 'good') {
-      defaults[section.id] = true;
-      return;
-    }
-    defaults[section.id] = metric ? metric.status === 'good' && metric.progress >= 0.8 : false;
-  });
-  const mergedState = { ...defaults, ...storedState };
-
-  sections.forEach((section) => {
-    applySectionState(section, mergedState[section.id]);
-  });
+  const sectionMap = new Map(sections.map((section) => [section.id, section]));
+  const storedState = loadStorage(STORAGE_KEYS.sections, {});
+  const mergedState = { ...storedState };
 
   const persist = () => saveStorage(STORAGE_KEYS.sections, mergedState);
 
+  const setSectionState = (sectionId, collapsed, persistNow = true) => {
+    const section = sectionMap.get(sectionId);
+    if (!section) return;
+    mergedState[sectionId] = Boolean(collapsed);
+    applySectionState(section, Boolean(collapsed));
+    if (persistNow) persist();
+  };
+
+  const applyDetailsMode = (mode) => {
+    const details = [...document.querySelectorAll('.section details')];
+    if (mode === 'deep') {
+      details.forEach((detail) => {
+        detail.open = true;
+      });
+      return;
+    }
+    details.forEach((detail) => {
+      detail.open = false;
+    });
+    if (mode === 'review') {
+      ['#success-plan', '#expand-renew', '#ebr-prep'].forEach((selector) => {
+        const detail = document.querySelector(selector);
+        if (detail && detail.tagName === 'DETAILS') {
+          detail.open = true;
+        }
+      });
+    }
+  };
+
+  const modeDefaults = (mode) => {
+    const defaults = {};
+    sections.forEach((section) => {
+      const metric = metrics[section.id];
+      defaults[section.id] = metric ? metric.status === 'good' && metric.progress >= 0.9 : false;
+    });
+
+    if (mode === 'today') {
+      sections.forEach((section) => {
+        defaults[section.id] = section.id !== 'today-console';
+      });
+      defaults['today-console'] = false;
+    } else if (mode === 'review') {
+      defaults['today-console'] = false;
+      defaults['overview-summary'] = true;
+      defaults['journey'] = true;
+      defaults['adoption'] = false;
+      defaults['health-risk'] = true;
+      defaults['outcomes'] = false;
+      defaults['engagement'] = false;
+      defaults['resources'] = true;
+    } else {
+      sections.forEach((section) => {
+        defaults[section.id] = false;
+      });
+    }
+
+    return defaults;
+  };
+
+  const setModeDefaults = (mode, persistNow = true) => {
+    const normalizedMode = mode === 'deepdive' ? 'deep' : mode;
+    const defaults = modeDefaults(normalizedMode);
+    sections.forEach((section) => {
+      setSectionState(section.id, defaults[section.id] ?? false, false);
+    });
+    applyDetailsMode(normalizedMode);
+    if (persistNow) persist();
+  };
+
+  const expandAll = (persistNow = true) => {
+    sections.forEach((section) => setSectionState(section.id, false, false));
+    if (persistNow) persist();
+  };
+
+  const collapseAll = (persistNow = true) => {
+    sections.forEach((section) => setSectionState(section.id, true, false));
+    if (persistNow) persist();
+  };
+
   sections.forEach((section) => {
     const btn = section.querySelector('[data-section-toggle]');
-    if (!btn) return;
+    if (!btn || btn.dataset.bound) return;
+    btn.dataset.bound = 'true';
     btn.addEventListener('click', () => {
-      mergedState[section.id] = !mergedState[section.id];
-      applySectionState(section, mergedState[section.id]);
-      persist();
+      const next = !mergedState[section.id];
+      setSectionState(section.id, next);
     });
   });
 
   document.querySelectorAll('[data-sections-expand]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      sections.forEach((section) => {
-        mergedState[section.id] = false;
-        applySectionState(section, false);
-      });
-      persist();
-    });
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = 'true';
+    btn.addEventListener('click', () => expandAll());
   });
 
   document.querySelectorAll('[data-sections-collapse]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      sections.forEach((section) => {
-        mergedState[section.id] = true;
-        applySectionState(section, true);
-      });
-      persist();
-    });
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = 'true';
+    btn.addEventListener('click', () => collapseAll());
   });
+
+  const initialMode = typeof getGuidedMode === 'function' ? getGuidedMode() : 'today';
+  setModeDefaults(initialMode, false);
+
+  return {
+    setModeDefaults,
+    openSection: (sectionId) => setSectionState(sectionId, false),
+    collapseSection: (sectionId) => setSectionState(sectionId, true),
+    expandAll,
+    collapseAll
+  };
 };
 
 const initSidebar = () => {
@@ -2874,7 +3174,14 @@ const initModeSwitch = () => {
     }
   };
   const params = new URLSearchParams(window.location.search);
-  const paramMode = params.get('mode');
+  const paramModeFromQuery = params.get('mode');
+  const paramPersona = params.get('persona');
+  const paramMode =
+    ['all', 'exec', 'devops', 'csm'].includes(paramPersona)
+      ? paramPersona
+      : ['all', 'exec', 'devops', 'csm'].includes(paramModeFromQuery)
+      ? paramModeFromQuery
+      : null;
   const storedMode = loadStorage(STORAGE_KEYS.mode, 'all');
   const initialMode = ['all', 'exec', 'devops', 'csm'].includes(paramMode) ? paramMode : storedMode;
   setMode(initialMode, false);
@@ -2886,69 +3193,43 @@ const initModeSwitch = () => {
   return () => document.documentElement.dataset.mode || 'all';
 };
 
-const initGuidedModeSwitch = () => {
+const initGuidedModeSwitch = (onModeChange) => {
   const buttons = [...document.querySelectorAll('[data-guided-mode]')];
   const hint = document.querySelector('[data-guided-hint]');
-  const sections = [...document.querySelectorAll('.section[data-section]')];
-  const navLinks = [...document.querySelectorAll('[data-nav-link]')];
-  const progressItems = [...document.querySelectorAll('[data-progress-item]')];
-
-  const visibilityMap = {
-    today: new Set(['overview-summary', 'health-risk', 'engagement']),
-    review: new Set(['overview-summary', 'outcomes', 'engagement', 'health-risk']),
-    deep: null
-  };
   const copy = {
-    today: 'Today mode: immediate due actions and triage.',
-    review: 'Review mode: EBR/QBR outcomes, risks, and narrative.',
-    deep: 'Deep Dive: full dashboard with all sections.'
+    today: 'Today mode: task-first summary with lifecycle cards collapsed by default.',
+    review: 'Review mode: outcomes, adoption, and EBR prep expanded by default.',
+    deep: 'Deep Dive mode: full diagnostics and all sections expanded.'
   };
-
-  const applyVisibility = (mode) => {
-    const allowed = visibilityMap[mode];
-    sections.forEach((section) => {
-      const visible = !allowed || allowed.has(section.id);
-      section.hidden = !visible;
-    });
-
-    navLinks.forEach((link) => {
-      const sectionId = link.getAttribute('href')?.replace('#', '');
-      if (!sectionId || sectionId === 'overview') {
-        link.classList.remove('is-hidden');
-        return;
-      }
-      const visible = !allowed || allowed.has(sectionId);
-      link.classList.toggle('is-hidden', !visible);
-    });
-
-    progressItems.forEach((item) => {
-      const sectionId = item.dataset.sectionId;
-      if (!sectionId || sectionId === 'overview') {
-        item.classList.remove('is-hidden');
-        return;
-      }
-      const visible = !allowed || allowed.has(sectionId);
-      item.classList.toggle('is-hidden', !visible);
-    });
-  };
+  const normalize = (mode) => (mode === 'deepdive' ? 'deep' : mode);
 
   const setGuidedMode = (mode, persist = true) => {
-    document.documentElement.dataset.guidedMode = mode;
-    buttons.forEach((button) => button.classList.toggle('is-active', button.dataset.guidedMode === mode));
+    const normalized = normalize(mode);
+    document.documentElement.dataset.guidedMode = normalized;
+    buttons.forEach((button) => button.classList.toggle('is-active', button.dataset.guidedMode === normalized));
     if (hint) {
-      hint.textContent = copy[mode] || copy.today;
+      hint.textContent = copy[normalized] || copy.today;
     }
-    applyVisibility(mode);
     if (persist) {
-      saveStorage(STORAGE_KEYS.guided, mode);
+      saveStorage(STORAGE_KEYS.guided, normalized);
+    }
+    if (typeof onModeChange === 'function') {
+      onModeChange(normalized);
     }
   };
 
   const params = new URLSearchParams(window.location.search);
-  const paramMode = params.get('guided');
+  const modeParam = params.get('mode');
+  const guidedParam = params.get('guided');
+  const paramMode =
+    ['today', 'review', 'deep', 'deepdive'].includes(modeParam)
+      ? modeParam
+      : ['today', 'review', 'deep', 'deepdive'].includes(guidedParam)
+      ? guidedParam
+      : null;
   const storedMode = loadStorage(STORAGE_KEYS.guided, 'today');
-  const initial = ['today', 'review', 'deep'].includes(paramMode) ? paramMode : storedMode;
-  setGuidedMode(['today', 'review', 'deep'].includes(initial) ? initial : 'today', false);
+  const initial = ['today', 'review', 'deep', 'deepdive'].includes(paramMode) ? paramMode : storedMode;
+  setGuidedMode(['today', 'review', 'deep', 'deepdive'].includes(initial) ? initial : 'today', false);
 
   buttons.forEach((button) => {
     button.addEventListener('click', () => setGuidedMode(button.dataset.guidedMode));
@@ -3028,7 +3309,7 @@ const initNavSpy = (breadcrumbs) => {
   return () => activeId;
 };
 
-const initPalette = (view) => {
+const initPalette = (view, getSectionControls) => {
   const palette = document.getElementById('palette');
   const input = document.getElementById('palette-input');
   const results = document.getElementById('palette-results');
@@ -3220,9 +3501,7 @@ const initPalette = (view) => {
     if (item.type === 'section') {
       const target = document.querySelector(item.target);
       if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        target.classList.add('section-flash');
-        setTimeout(() => target.classList.remove('section-flash'), 1400);
+        openTargetAndFocus(item.target, getSectionControls?.());
       } else {
         window.location.hash = item.target;
       }
@@ -3297,22 +3576,58 @@ const initPalette = (view) => {
   return { open: openPalette, update };
 };
 
+const openTargetAndFocus = (targetSelector, sectionControls) => {
+  if (!targetSelector) return;
+  const target = document.querySelector(targetSelector);
+  if (!target) return;
+
+  const section = target.closest('.section[data-section]');
+  if (section && sectionControls?.openSection) {
+    sectionControls.openSection(section.id);
+  }
+
+  if (target.tagName === 'DETAILS') {
+    target.open = true;
+  }
+  const detail = target.closest('details');
+  if (detail) {
+    detail.open = true;
+  }
+
+  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  target.classList.add('section-flash');
+  setTimeout(() => target.classList.remove('section-flash'), 1400);
+};
+
+const initOpenTargetHandlers = (getSectionControls) => {
+  document.addEventListener('click', (event) => {
+    const trigger = event.target.closest('[data-open-target]');
+    if (!trigger) return;
+    event.preventDefault();
+    openTargetAndFocus(trigger.dataset.openTarget, getSectionControls?.());
+  });
+};
+
 const initQuickActions = (getMode, getGuidedMode, getSection, getView, getAudience) => {
-  document.querySelectorAll('[data-share-link]').forEach((btn) => {
+  const buildShareUrl = () => {
+    const url = new URL(window.location.href);
+    const guidedMode = getGuidedMode ? getGuidedMode() : 'today';
+    const shareMode = guidedMode === 'deep' ? 'deepdive' : guidedMode;
+    url.searchParams.set('mode', shareMode);
+    url.searchParams.set('persona', getMode());
+    if (getAudience) {
+      url.searchParams.set('audience', getAudience());
+    }
+    const section = getSection();
+    if (section) {
+      url.hash = `#${section}`;
+    }
+    return url.toString();
+  };
+
+  document.querySelectorAll('[data-share-link], [data-copy-share-view]').forEach((btn) => {
     btn.addEventListener('click', async () => {
-      const url = new URL(window.location.href);
-      url.searchParams.set('mode', getMode());
-      if (getGuidedMode) {
-        url.searchParams.set('guided', getGuidedMode());
-      }
-      if (getAudience) {
-        url.searchParams.set('audience', getAudience());
-      }
-      const section = getSection();
-      if (section) {
-        url.hash = `#${section}`;
-      }
-      await copyToClipboard(url.toString());
+      await copyToClipboard(buildShareUrl());
       flashButton(btn, 'Copied');
     });
   });
@@ -3339,6 +3654,122 @@ const initQuickActions = (getMode, getGuidedMode, getSection, getView, getAudien
       }
     });
   });
+};
+
+const initQuickJump = (getView, getSectionControls) => {
+  const input = document.querySelector('[data-quick-jump-input]');
+  const results = document.querySelector('[data-list="quick-jump-results"]');
+  if (!input || !results) return { update: () => {} };
+
+  let index = [];
+  let filtered = [];
+  let activeIndex = 0;
+
+  const baseItems = [
+    { label: 'Today Console', target: '#today-console', meta: 'Console' },
+    { label: 'Cadence tracker', target: '#cadence-tracker', meta: 'Engagement' },
+    { label: 'Workshop tracker', target: '#workshop-tracker', meta: 'Engagement' },
+    { label: 'EBR roadmap', target: '#ebr-roadmap', meta: 'Engagement' },
+    { label: 'Renewal readiness', target: '#expand-renew', meta: 'Expand & Renew' },
+    { label: 'Escalation cadence', target: '#health-updates', meta: 'Health & Risk' },
+    { label: 'Success plan validation', target: '#success-plan', meta: 'Outcomes' },
+    { label: 'Resources registry', target: '#resources', meta: 'Resources' }
+  ];
+
+  const buildIndex = () => {
+    const view = getView?.();
+    const actionItems = (view?.lists?.nextActions || []).map((action) => ({
+      label: action.title,
+      target: action.jumpTo || '#today-console',
+      meta: 'Action'
+    }));
+    const expectationItems = (view?.lists?.todayExpectations || []).map((check) => ({
+      label: check.name,
+      target: check.link || '#handbook-compliance',
+      meta: 'Expectation'
+    }));
+    index = [...baseItems, ...actionItems, ...expectationItems];
+  };
+
+  const render = () => {
+    results.innerHTML = '';
+    if (!filtered.length || !input.value.trim()) {
+      results.classList.remove('is-open');
+      return;
+    }
+    filtered.slice(0, 8).forEach((item, idx) => {
+      const li = document.createElement('li');
+      li.className = `quick-jump-item${idx === activeIndex ? ' is-active' : ''}`;
+      li.innerHTML = `
+        <span class="quick-jump-label">${highlightMatch(item.label, input.value.trim())}</span>
+        <span class="quick-jump-meta">${item.meta}</span>
+      `;
+      li.addEventListener('mousedown', (event) => {
+        event.preventDefault();
+        openTargetAndFocus(item.target, getSectionControls?.());
+        input.value = '';
+        results.classList.remove('is-open');
+      });
+      results.appendChild(li);
+    });
+    results.classList.add('is-open');
+  };
+
+  const runFilter = () => {
+    const query = input.value.trim().toLowerCase();
+    if (!query) {
+      filtered = [];
+      render();
+      return;
+    }
+    filtered = index.filter((item) => item.label.toLowerCase().includes(query));
+    activeIndex = 0;
+    render();
+  };
+
+  input.addEventListener('focus', () => {
+    buildIndex();
+    runFilter();
+  });
+  input.addEventListener('input', runFilter);
+  input.addEventListener('keydown', (event) => {
+    if (!filtered.length) return;
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      activeIndex = Math.min(activeIndex + 1, Math.min(filtered.length, 8) - 1);
+      render();
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      activeIndex = Math.max(activeIndex - 1, 0);
+      render();
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      const item = filtered[activeIndex];
+      if (!item) return;
+      openTargetAndFocus(item.target, getSectionControls?.());
+      input.value = '';
+      results.classList.remove('is-open');
+    }
+    if (event.key === 'Escape') {
+      results.classList.remove('is-open');
+      input.blur();
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (event.target === input || results.contains(event.target)) return;
+    results.classList.remove('is-open');
+  });
+
+  buildIndex();
+  return {
+    update: () => {
+      buildIndex();
+      runFilter();
+    }
+  };
 };
 
 const restoreScrollPosition = () => {
@@ -3520,11 +3951,17 @@ const render = (view, state) => {
   const sectionMetrics = computeSectionMetrics(view);
   updateSectionBadges(sectionMetrics);
   updateProgressSidebar(sectionMetrics);
-  if (!state.sectionControlsReady) {
-    initSectionControls(sectionMetrics);
-    state.sectionControlsReady = true;
+  if (!state.sectionControls) {
+    state.sectionControls = initSectionControls(sectionMetrics, state.getGuidedMode);
+  }
+  if (state.pendingGuidedMode && state.sectionControls?.setModeDefaults) {
+    state.sectionControls.setModeDefaults(state.pendingGuidedMode);
+    state.pendingGuidedMode = null;
   }
 
+  renderTodayActions(document.querySelector('[data-list="today-next-actions"]'), view.lists.todayNextActions);
+  renderTodayDueSoon(document.querySelector('[data-list="today-due-soon"]'), view.lists.todayDueSoon);
+  renderTodayExpectations(document.querySelector('[data-list="today-expectations"]'), view.lists.todayExpectations);
   renderSeatTrend(document.querySelector('[data-list="seat-trend"]'), view.lists.seatTrend);
   renderOrientationDueItems(document.querySelector('[data-list="orientation-due-items"]'), view.lists.orientationDueItems);
   renderRenewalChecklist(document.querySelector('[data-list="renewal-checklist"]'), view.lists.renewalChecklist);
@@ -3599,6 +4036,9 @@ const render = (view, state) => {
   if (state.palette && state.palette.update) {
     state.palette.update(view);
   }
+  if (state.quickJump && state.quickJump.update) {
+    state.quickJump.update(view);
+  }
 
   if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && view.handbook) {
     const rows = view.handbook.checks.map((check) => ({
@@ -3641,7 +4081,10 @@ const init = async () => {
     view: null,
     portfolio: null,
     palette: null,
-    sectionControlsReady: false,
+    quickJump: null,
+    sectionControls: null,
+    getGuidedMode: () => document.documentElement.dataset.guidedMode || 'today',
+    pendingGuidedMode: null,
     resourceQuery: '',
     resourceCategory: 'all',
     persistActionState: null
@@ -3656,13 +4099,22 @@ const init = async () => {
 
   const breadcrumbs = initBreadcrumbs();
   const getMode = initModeSwitch();
-  const getGuidedMode = initGuidedModeSwitch();
+  const getGuidedMode = initGuidedModeSwitch((mode) => {
+    state.pendingGuidedMode = mode;
+    if (state.sectionControls?.setModeDefaults) {
+      state.sectionControls.setModeDefaults(mode);
+      state.pendingGuidedMode = null;
+    }
+  });
+  state.getGuidedMode = getGuidedMode;
   const getAudience = initAudienceSwitch();
   const getSection = initNavSpy(breadcrumbs);
   initDetailBreadcrumbs(breadcrumbs);
   initDetailsControls();
+  initOpenTargetHandlers(() => state.sectionControls);
   initQuickActions(getMode, getGuidedMode, getSection, () => state.view, getAudience);
   initExport(() => state.view);
+  state.quickJump = initQuickJump(() => state.view, () => state.sectionControls);
 
   state.selectedAccountId = initAccountSwitcher(accounts, storedAccount, (accountId) => {
     state.selectedAccountId = accountId;
@@ -3712,7 +4164,7 @@ const init = async () => {
 
   initResourceControls(state, refresh);
   refresh();
-  state.palette = initPalette(state.view);
+  state.palette = initPalette(state.view, () => state.sectionControls);
   initTemplateCopy();
   initModals(state, refresh);
   restoreScrollPosition();

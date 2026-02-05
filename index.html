@@ -1,6 +1,6 @@
 
 <!doctype html>
-<html lang="en" data-mode="all" data-audience="internal">
+<html lang="en" data-mode="all" data-audience="internal" data-guided-mode="today">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -36,6 +36,7 @@
               Menu
             </button>
             <div class="nav-links" aria-label="Primary">
+              <a href="#today-console" data-nav-link>Today</a>
               <a href="#overview" data-nav-link>Overview</a>
               <a href="#journey" data-nav-link>Journey</a>
               <a href="#adoption" data-nav-link>Adoption</a>
@@ -53,25 +54,37 @@
             </div>
           </nav>
 
-          <section class="modebar" aria-label="Mode and quick links">
+          <section class="modebar console-header" aria-label="CSM operational header">
             <div class="modebar-left">
-              <span class="modebar-label">View mode</span>
-              <button class="mode-btn is-active" type="button" data-mode="all">View all</button>
-              <button class="mode-btn" type="button" data-mode="exec">Executive</button>
-              <button class="mode-btn" type="button" data-mode="devops">DevOps leader</button>
-              <button class="mode-btn" type="button" data-mode="csm">CSM</button>
-              <span class="mode-hint" data-mode-hint>Showing all sections.</span>
+              <div class="console-context">
+                <span class="modebar-label">Account</span>
+                <span class="console-value" data-field="customer.name">Northwind Industries</span>
+                <span class="status-pill" data-field="health.band_label">Yellow</span>
+                <span class="console-tag">Renewal <strong data-field="customer.renewal_countdown">151 days</strong></span>
+                <span class="console-tag">State <strong data-field="cadence.triage_state">Engaged</strong></span>
+              </div>
+              <details class="advanced-controls" data-audience="internal">
+                <summary>Advanced filters</summary>
+                <div class="advanced-controls-grid">
+                  <span class="modebar-label">Persona</span>
+                  <button class="mode-btn is-active" type="button" data-mode="all">View all</button>
+                  <button class="mode-btn" type="button" data-mode="exec">Executive</button>
+                  <button class="mode-btn" type="button" data-mode="devops">DevOps leader</button>
+                  <button class="mode-btn" type="button" data-mode="csm">CSM</button>
+                  <span class="mode-hint" data-mode-hint>Showing all sections.</span>
+                </div>
+              </details>
+            </div>
+            <div class="modebar-right">
               <div class="guided-toggle" role="group" aria-label="Guided workflow mode">
-                <span class="modebar-label">Workflow</span>
+                <span class="modebar-label">Mode</span>
                 <button class="mode-btn is-active" type="button" data-guided-mode="today">Today</button>
                 <button class="mode-btn" type="button" data-guided-mode="review">Review</button>
                 <button class="mode-btn" type="button" data-guided-mode="deep">Deep Dive</button>
                 <span class="mode-hint" data-guided-hint>Today mode: immediate due actions and triage.</span>
               </div>
-            </div>
-            <div class="modebar-right">
               <div class="account-picker">
-                <label class="modebar-label" for="account-switcher">Account</label>
+                <label class="modebar-label" for="account-switcher">Switch</label>
                 <select
                   id="account-switcher"
                   class="field-select account-select"
@@ -82,12 +95,22 @@
               <div class="audience-toggle" role="group" aria-label="Audience toggle">
                 <span class="modebar-label">Audience</span>
                 <button class="mode-btn is-active" type="button" data-audience-toggle="internal">Internal</button>
-                <button class="mode-btn" type="button" data-audience-toggle="customer">Customer</button>
+                <button class="mode-btn" type="button" data-audience-toggle="customer">Customer Safe</button>
               </div>
-              <a class="qa" href="#next-actions">Next actions</a>
-              <a class="qa" href="#success-plan">Success plan</a>
-              <a class="qa" href="#collaboration">Collaboration</a>
-              <button class="qa" type="button" data-open-palette>Search</button>
+              <div class="quick-jump">
+                <label class="modebar-label" for="quick-jump-input">Jump</label>
+                <input
+                  id="quick-jump-input"
+                  class="field-select quick-jump-input"
+                  type="search"
+                  data-quick-jump-input
+                  placeholder="Jump to cadence, workshop, EBR..."
+                  aria-label="Quick jump"
+                />
+                <ul class="quick-jump-results" data-list="quick-jump-results"></ul>
+              </div>
+              <button class="qa" type="button" data-copy-share-view>Share view</button>
+              <button class="qa" type="button" data-open-palette>Find anything</button>
             </div>
           </section>
 
@@ -100,6 +123,7 @@
               <span class="crumb crumb-sub" data-breadcrumb-subsection>Summary</span>
             </nav>
             <div class="section-global-controls">
+              <a class="ghost-btn" href="#today-console">Back to Today Console</a>
               <button class="ghost-btn" type="button" data-sections-expand>Expand all sections</button>
               <button class="ghost-btn" type="button" data-sections-collapse>Collapse all sections</button>
             </div>
@@ -209,6 +233,93 @@
         </div>
       </header>
 
+      <section
+        class="section today-console"
+        id="today-console"
+        data-section
+        data-section-label="Today Console"
+        data-persona="all exec devops csm"
+        data-details-scope
+      >
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Today Console</p>
+            <h2>What to do next</h2>
+            <p class="section-question">Question: What requires action in the next 30 minutes?</p>
+          </div>
+          <div class="section-controls">
+            <span class="section-status" data-section-status></span>
+            <button class="ghost-btn" type="button" data-section-toggle>Collapse section</button>
+            <a class="ghost-btn" href="#resources">Open playbooks &amp; templates</a>
+          </div>
+        </div>
+        <div class="section-body" data-section-body>
+          <div class="today-grid">
+            <article class="card">
+              <h3>Next actions</h3>
+              <p class="muted">Prioritized from cadence, risk, renewal, and success plan signals.</p>
+              <ul class="today-action-list" data-list="today-next-actions"></ul>
+            </article>
+            <article class="card">
+              <h3>Due soon</h3>
+              <p class="muted">Time-based actions coming due.</p>
+              <ul class="event-list" data-list="today-due-soon"></ul>
+            </article>
+            <article class="card">
+              <h3>AMER expectations quick check</h3>
+              <p class="muted">Compact pass/fail summary aligned to AMER operating expectations.</p>
+              <ul class="event-list" data-list="today-expectations"></ul>
+              <a class="inline-link" href="#handbook-compliance">Open full compliance detail</a>
+            </article>
+          </div>
+          <div class="today-lifecycle-grid">
+            <article class="card lifecycle-summary-card">
+              <h3>Health &amp; Risk</h3>
+              <ul class="mini-list">
+                <li class="mini-item">Health: <strong data-field="today.health.health_label">Yellow</strong></li>
+                <li class="mini-item">Top risk: <span data-field="today.health.top_risk">No risk logged</span></li>
+                <li class="mini-item">Last update: <span data-field="today.health.last_update">TBD</span></li>
+                <li class="mini-item">Next due: <span data-field="today.health.next_due">TBD</span></li>
+                <li class="mini-item">Escalated: <span data-field="today.health.escalated">No</span></li>
+              </ul>
+              <button class="inline-button" type="button" data-open-target="#health-risk">Open</button>
+            </article>
+            <article class="card lifecycle-summary-card">
+              <h3>Engagement &amp; Enablement</h3>
+              <ul class="mini-list">
+                <li class="mini-item">Cadence: <strong data-field="today.engagement.frequency">Biweekly</strong></li>
+                <li class="mini-item">Days since call: <span data-field="today.engagement.days_since_call">TBD</span></li>
+                <li class="mini-item">Next call: <span data-field="today.engagement.next_call">TBD</span></li>
+                <li class="mini-item">Workshop this quarter: <span data-field="today.engagement.workshop_quarter">No</span></li>
+                <li class="mini-item">EBR due: <span data-field="today.engagement.ebr_due">TBD</span></li>
+              </ul>
+              <button class="inline-button" type="button" data-open-target="#engagement">Open</button>
+            </article>
+            <article class="card lifecycle-summary-card">
+              <h3>Outcomes &amp; Success Plan</h3>
+              <ul class="mini-list">
+                <li class="mini-item">Plan status: <strong data-field="today.outcomes.status">In progress</strong></li>
+                <li class="mini-item">Last updated: <span data-field="today.outcomes.last_updated">TBD</span></li>
+                <li class="mini-item">Next review: <span data-field="today.outcomes.next_review">TBD</span></li>
+                <li class="mini-item">Validation: <span data-field="today.outcomes.validation">Pending</span></li>
+              </ul>
+              <button class="inline-button" type="button" data-open-target="#outcomes">Open</button>
+            </article>
+            <article class="card lifecycle-summary-card">
+              <h3>Expand &amp; Renew</h3>
+              <ul class="mini-list">
+                <li class="mini-item">Renewal: <strong data-field="today.renewal.date">TBD</strong></li>
+                <li class="mini-item">Countdown: <span data-field="today.renewal.countdown">TBD</span></li>
+                <li class="mini-item">Readiness: <span data-field="today.renewal.readiness">At Risk</span></li>
+                <li class="mini-item">Sentiment: <span data-field="today.renewal.sentiment">Flat</span></li>
+                <li class="mini-item">Active plays: <span data-field="today.renewal.active_plays">0</span></li>
+              </ul>
+              <button class="inline-button" type="button" data-open-target="#expand-renew">Open</button>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <section class="compliance-strip card" id="handbook-compliance" aria-label="AMER handbook compliance">
         <div class="compliance-head">
           <div>
@@ -288,13 +399,21 @@
                 <p class="eyebrow">Progress</p>
                 <p class="progress-label">Section status</p>
               </div>
-              <button class="ghost-btn" type="button" data-sidebar-toggle>Hide</button>
+              <div class="section-controls">
+                <a class="ghost-btn" href="#today-console">Back to Today</a>
+                <button class="ghost-btn" type="button" data-sidebar-toggle>Hide</button>
+              </div>
             </div>
             <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100">
               <span class="progress-fill" data-overall-progress></span>
             </div>
             <span class="progress-value" data-overall-progress-label>0%</span>
             <ul class="progress-list" data-progress-list>
+              <li data-progress-item data-section-id="today-console">
+                <a href="#today-console">Today Console</a>
+                <span class="progress-meta" data-progress-value>--</span>
+                <span class="progress-status" data-progress-status aria-hidden="true"></span>
+              </li>
               <li data-progress-item data-section-id="overview">
                 <a href="#overview">Overview</a>
                 <span class="progress-meta" data-progress-value>--</span>
@@ -841,11 +960,11 @@
               <details class="drawer">
                 <summary>Escalation cadence</summary>
                 <div class="kpi-grid kpi-compact">
-                  <div class="kpi">
-                    <span class="kpi-label">Escalated</span>
-                    <span class="kpi-value" data-field="risk_updates.escalated_label">Yes</span>
-                  </div>
-                  <div class="kpi">
+                <div class="kpi">
+                  <span class="kpi-label">Escalated</span>
+                  <span class="kpi-value" data-field="risk_updates.escalated_label">Yes</span>
+                </div>
+                  <div class="kpi" data-audience="internal">
                     <span class="kpi-label">Severity</span>
                     <span class="kpi-value" data-field="risk_updates.escalation_severity">P2</span>
                   </div>
@@ -1112,6 +1231,7 @@
                 <a class="mini-chip" href="#workshop-tracker">Workshops</a>
                 <a class="mini-chip" href="#workshop-plan">Workshop plan</a>
                 <a class="mini-chip" href="#ebr-roadmap">EBR roadmap</a>
+                <a class="mini-chip" href="#collaboration">Templates</a>
               </div>
             </div>
             <div class="section-controls">
@@ -1182,20 +1302,20 @@
                   <span class="kpi-label">Recommended cadence</span>
                   <span class="kpi-value" data-field="cadence.recommended_frequency">Biweekly</span>
                 </div>
-                <div class="kpi">
+                <div class="kpi" data-audience="internal">
                   <span class="kpi-label">Triage state</span>
                   <span class="status-pill" data-field="cadence.triage_state">Engaged</span>
                 </div>
               </div>
               <div class="metric-banner" data-cadence-banner></div>
-              <div class="metric-banner" data-triage-banner></div>
+              <div class="metric-banner" data-triage-banner data-audience="internal"></div>
               <p class="muted" data-field="cadence.automation_cue">
                 Cadence is inside the one-month expectation.
               </p>
               <p class="muted" data-field="cadence.recommended_action">
                 Maintain cadence; confirm next agenda.
               </p>
-              <ul class="event-list" data-list="triage-recovery-checklist"></ul>
+              <ul class="event-list" data-list="triage-recovery-checklist" data-audience="internal"></ul>
             </article>
             <article class="card" id="workshop-tracker">
               <h3>Workshop tracker</h3>
@@ -1392,6 +1512,7 @@
           <span>Navigate</span>
           <button class="ghost-btn" type="button" data-close-nav>Close</button>
         </div>
+        <a href="#today-console" data-mobile-link>Today</a>
         <a href="#overview" data-mobile-link>Overview</a>
         <a href="#journey" data-mobile-link>Journey</a>
         <a href="#adoption" data-mobile-link>Adoption</a>
@@ -1512,6 +1633,7 @@
     <script src="src/lib/dateUtils.js"></script>
     <script src="src/lib/deriveAccountMetrics.js"></script>
     <script src="src/lib/handbookRules.js"></script>
+    <script src="src/lib/nextActions.js"></script>
     <script src="assets/js/rules.js"></script>
     <script src="assets/js/app.js"></script>
   </body>
