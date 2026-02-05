@@ -5,6 +5,7 @@ const RESOURCES_URL = 'data/resources.json';
 const LEGACY_DATA_URL = 'data/account.sample.json';
 const STORAGE_KEYS = {
   mode: 'gl-health-mode',
+  guided: 'gl-health-guided-mode',
   actions: 'gl-health-action-state',
   overrides: 'gl-health-overrides',
   sections: 'gl-health-sections',
@@ -172,6 +173,14 @@ const normalizeAccountForView = (account) => {
     normalized.success_plan_next_review_date || normalized.success_plan.next_review || null;
 
   normalized.workshops = Array.isArray(normalized.workshops) ? normalized.workshops : [];
+  normalized.workshop_outcomes = Array.isArray(normalized.workshop_outcomes) ? normalized.workshop_outcomes : [];
+  normalized.workshop_plan = normalized.workshop_plan || {
+    title: null,
+    target_use_case: null,
+    success_criteria: null,
+    expected_health_delta: null,
+    next_milestone: null
+  };
   normalized.workshop_catalog = Array.isArray(normalized.workshop_catalog)
     ? normalized.workshop_catalog
     : Array.isArray(normalized.workshops)
@@ -189,6 +198,13 @@ const normalizeAccountForView = (account) => {
     : Array.isArray(normalized.renewal_readiness)
     ? normalized.renewal_readiness
     : [];
+
+  normalized.triage_state = normalized.triage_state || null;
+  normalized.triage_recovery_plan = normalized.triage_recovery_plan || {
+    schedule_next_call: { value: false, date: null },
+    stakeholders_aligned: { value: false, date: null },
+    workshop_scheduled: { value: false, date: null }
+  };
 
   normalized.meta = normalized.meta || {};
   normalized.meta.last_updated = normalized.meta.last_updated || new Date().toISOString().slice(0, 10);
@@ -493,6 +509,14 @@ const buildView = (data, overrides, actionState, audience = 'internal', resource
   const lowestUseCaseLink = lowestUseCase
     ? `#usecase-${lowestUseCase.key || lowestUseCase.name?.toLowerCase().replace(/\\s+/g, '-')}`
     : '#adoption';
+  const workshopPlan = merged.workshop_plan || {};
+  const workshopOutcomesRaw = Array.isArray(merged.workshop_outcomes) ? merged.workshop_outcomes : [];
+  const workshopOutcomes = workshopOutcomesRaw.map((entry) => ({
+    date: entry.date || null,
+    attendance_pct: typeof entry.attendance_percent === 'number' ? entry.attendance_percent : null,
+    decisions: entry.decisions || 'No decision notes captured.',
+    next_step: entry.next_step || 'No next step logged.'
+  }));
 
   const successObjectives = merged.success_plan?.objectives || [];
   const onTrack = successObjectives.filter((objective) => objective.status !== 'at_risk').length;
@@ -533,6 +557,46 @@ const buildView = (data, overrides, actionState, audience = 'internal', resource
           derivedMetrics
         })
       : { checks: [], alerts: [], overallStatus: 'watch', overallStatusLabel: 'Yellow' };
+
+  const nextCadenceDate = parseDate(derivedMetrics?.nextCadenceCallDate);
+  const daysToNextCadence =
+    nextCadenceDate && !Number.isNaN(nextCadenceDate.getTime()) ? daysBetween(now, nextCadenceDate) : null;
+  const orientationDueItems = [
+    {
+      title: 'Health update due',
+      detail: `${formatDate(derivedMetrics?.nextHealthUpdateDue)} (${derivedMetrics?.healthUpdateFrequency || 'Biweekly'})`,
+      status: derivedMetrics?.isHealthUpdateOverdue ? 'risk' : 'watch',
+      link: '#health-updates'
+    },
+    {
+      title: derivedMetrics?.escalated ? `Escalation update due (${derivedMetrics?.escalationSeverity || 'P3'})` : 'Escalation status',
+      detail: derivedMetrics?.escalated
+        ? `${formatDate(derivedMetrics?.nextEscalationUpdateDue)}`
+        : 'No active escalation',
+      status: derivedMetrics?.escalated
+        ? derivedMetrics?.isEscalationUpdateOverdue
+          ? 'risk'
+          : 'watch'
+        : 'good',
+      link: '#health-updates'
+    },
+    {
+      title: 'Next cadence call',
+      detail:
+        daysToNextCadence === null
+          ? formatDate(derivedMetrics?.nextCadenceCallDate)
+          : `${formatDate(derivedMetrics?.nextCadenceCallDate)} (${daysToNextCadence} day${daysToNextCadence === 1 ? '' : 's'})`,
+      status:
+        daysToNextCadence === null
+          ? 'watch'
+          : daysToNextCadence < 0
+          ? 'risk'
+          : daysToNextCadence <= 7
+          ? 'watch'
+          : 'good',
+      link: '#cadence-tracker'
+    }
+  ];
 
   const cadenceStatus = derivedMetrics?.cadenceStatus || 'watch';
   const workshopStatus = derivedMetrics?.workshopStatus || 'watch';
@@ -666,6 +730,7 @@ const buildView = (data, overrides, actionState, audience = 'internal', resource
           : `${derivedMetrics.daysSinceLastCall}`,
       recommended_frequency: derivedMetrics?.recommendedCadenceFrequency || 'Biweekly',
       triage_state: derivedMetrics?.triageState || 'At Risk',
+      suggested_state: derivedMetrics?.suggestedTriageState || 'At Risk',
       automation_cue: derivedMetrics?.triageAutomationCue || 'Cadence baseline is missing; capture the last call date.',
       recommended_action: derivedMetrics?.recommendedCadenceAction || 'Maintain cadence; confirm next agenda',
       violated: Boolean(derivedMetrics?.cadenceViolated),
@@ -679,6 +744,19 @@ const buildView = (data, overrides, actionState, audience = 'internal', resource
       count_this_quarter: String(derivedMetrics?.workshopCountThisQuarter ?? 0),
       next_date: formatDate(derivedMetrics?.nextWorkshopDate),
       next_theme: merged.next_workshop_theme || 'Not scheduled',
+      target_use_case: workshopPlan.target_use_case || recommendedUseCase?.name || 'No targeted use case',
+      plan_title:
+        workshopPlan.title ||
+        (recommendedUseCase?.name ? `${recommendedUseCase.name} Workshop` : 'Adoption Workshop'),
+      plan_success_criteria:
+        workshopPlan.success_criteria ||
+        recommendedUseCase?.recommended_actions?.[0]?.expected_impact ||
+        'Define success criteria in workshop_plan.success_criteria.',
+      expected_health_delta: workshopPlan.expected_health_delta || '+3 to +5 Product usage score points',
+      plan_next_milestone:
+        workshopPlan.next_milestone ||
+        recommendedUseCase?.recommended_actions?.[0]?.action ||
+        'Define follow-up milestone in workshop_plan.next_milestone.',
       expectation_label:
         workshopStatus === 'good'
           ? 'Meets quarterly expectation'
@@ -692,6 +770,12 @@ const buildView = (data, overrides, actionState, audience = 'internal', resource
           ? 'No workshop delivered yet, but one is scheduled before quarter end.'
           : 'No workshop delivered this quarter and none scheduled.',
       status: workshopStatus
+    },
+    orientation: {
+      overall_status: compliance.overallStatusLabel || 'Yellow',
+      health_summary: `${healthBand.label} (${healthScores.overall})`,
+      renewal_summary: renewalCountdown,
+      engagement_state: derivedMetrics?.triageState || 'At Risk'
     },
     ebr: {
       last_date: formatDate(derivedMetrics?.lastEbrDate),
@@ -814,7 +898,9 @@ const buildView = (data, overrides, actionState, audience = 'internal', resource
       triageRecoveryChecklist: derivedMetrics?.triageRecoveryChecklist || [],
       ebrDates: buildEbrDates(merged.engagement || {}),
       ebrPrepChecklist: derivedMetrics?.ebrPrepChecklist || [],
+      orientationDueItems: orientationDueItems,
       workshops: merged.workshop_catalog || [],
+      workshopOutcomes: workshopOutcomes,
       collaboration: merged.collaboration_project || {},
       freshness: merged.freshness || {},
       healthDrivers: merged.health?.drivers || [],
@@ -955,6 +1041,12 @@ const computePortfolioRollup = (accounts, options = {}) => {
   const successPlanCoverageCount = accountRows.filter((row) => row.successPlanGreen).length;
   const totalPlaysOpened = accountRows.reduce((sum, row) => sum + row.playsOpened, 0);
   const totalPlaysCompleted = accountRows.reduce((sum, row) => sum + row.playsCompleted, 0);
+  const redAccountsMissingWeekly = accountRows.filter(
+    (row) => row.derived?.healthStatus === 'Red' && row.derived?.isHealthUpdateOverdue
+  ).length;
+  const greenAccountsMissingMonthly = accountRows.filter(
+    (row) => row.derived?.healthStatus === 'Green' && row.derived?.isHealthUpdateOverdue
+  ).length;
 
   const toPct = (value) => (total ? Math.round((value / total) * 100) : 0);
   const ebrCoveragePct = toPct(completedEbrCount);
@@ -1002,6 +1094,19 @@ const computePortfolioRollup = (accounts, options = {}) => {
       detail: `${successPlanCoverageCount}/${total} accounts`,
       target: 'Target = 100%',
       status: successPlanCoveragePct === 100 ? 'good' : successPlanCoveragePct >= 75 ? 'watch' : 'risk'
+    },
+    {
+      id: 'health-update-misses',
+      label: 'Health update misses by risk band',
+      value: `Red weekly missed: ${redAccountsMissingWeekly}`,
+      detail: `Green monthly missed: ${greenAccountsMissingMonthly}`,
+      target: 'Target = 0 misses',
+      status:
+        redAccountsMissingWeekly > 0
+          ? 'risk'
+          : greenAccountsMissingMonthly > 0
+          ? 'watch'
+          : 'good'
     }
   ];
 
@@ -1548,14 +1653,23 @@ const renderRenewalReadiness = (list, items) => {
 
 const renderTriageRecoveryChecklist = (list, cadence) => {
   if (!list) return;
+  const triageStates = ['Non-Engaged', 'Triaged', 'Triage In Progress'];
+  const shouldShow = triageStates.includes(cadence?.triage_state);
+  const wrapperCard = list.closest('.card');
+  if (wrapperCard) {
+    wrapperCard.classList.toggle('triage-active', shouldShow);
+  }
+  list.style.display = shouldShow ? '' : 'none';
+  if (!shouldShow) {
+    list.innerHTML = '';
+    return;
+  }
   list.innerHTML = '';
-  const items = cadence?.triage_required ? cadence?.triage_recovery_checklist || [] : [];
+  const items = cadence?.triage_recovery_checklist || [];
   if (!items.length) {
     renderEmptyState(
       list,
-      cadence?.triage_required
-        ? 'Recovery checklist required. Update triage plan fields in account data.'
-        : 'Recovery checklist not required while cadence is within threshold.'
+      'Recovery checklist required. Update triage plan fields in account data.'
     );
     return;
   }
@@ -1729,6 +1843,7 @@ const applyOperationalStatuses = (view) => {
   applyStatus('[data-field="risk_updates.health_badge"]', view.risk_updates.health_status || 'watch');
   applyStatus('[data-field="risk_updates.escalation_badge"]', view.risk_updates.escalation_status || 'watch');
   applyStatus('[data-field="cadence.triage_state"]', view.cadence.triage_status || 'watch');
+  applyStatus('[data-field="orientation.overall_status"]', view.handbook?.overallStatus || 'watch');
 
   const cadenceBanner = document.querySelector('[data-cadence-banner]');
   if (cadenceBanner) {
@@ -1751,9 +1866,9 @@ const applyOperationalStatuses = (view) => {
       triageBanner.textContent = view.cadence.triage_complete
         ? 'Triage recovery checklist is complete. Keep weekly check-ins until re-engaged.'
         : 'Triage recovery checklist is incomplete. Complete schedule, stakeholder, and workshop actions.';
-    } else if (view.cadence.violated) {
+    } else if (view.cadence.violated || view.cadence.triage_status !== 'good') {
       triageBanner.dataset.status = 'watch';
-      triageBanner.textContent = `Triage state: ${view.cadence.triage_state}.`;
+      triageBanner.textContent = `Triage state: ${view.cadence.triage_state}. Suggested state: ${view.cadence.suggested_state}.`;
     } else {
       triageBanner.dataset.status = 'good';
       triageBanner.textContent = 'No triage actions required.';
@@ -1978,6 +2093,29 @@ const renderCadenceCalendar = (list, items) => {
   );
 };
 
+const renderOrientationDueItems = (list, items) => {
+  renderEventList(
+    list,
+    items,
+    (item) => {
+      const li = document.createElement('li');
+      li.className = 'event-item';
+      li.innerHTML = `
+        <div class="event-title">${item.title}</div>
+        <div class="event-meta">
+          <span class="status-pill" data-status="${item.status}">${
+            item.status === 'good' ? 'On track' : item.status === 'watch' ? 'Due soon' : 'Overdue'
+          }</span>
+          ${item.detail}
+        </div>
+        <a class="inline-link" href="${item.link}">View</a>
+      `;
+      return li;
+    },
+    { message: 'No due items available for this account.' }
+  );
+};
+
 const renderEbrDates = (list, items) => {
   renderEventList(
     list,
@@ -1992,6 +2130,26 @@ const renderEbrDates = (list, items) => {
       return li;
     },
     { message: 'No EBR/QBR dates scheduled yet.', link: { href: '#engagement', label: 'Add cadence' } }
+  );
+};
+
+const renderWorkshopOutcomes = (list, items) => {
+  renderEventList(
+    list,
+    items,
+    (item) => {
+      const li = document.createElement('li');
+      li.className = 'event-item';
+      li.innerHTML = `
+        <div class="event-title">${formatDate(item.date)} • Attendance ${
+          item.attendance_pct === null || item.attendance_pct === undefined ? 'N/A' : `${item.attendance_pct}%`
+        }</div>
+        <div class="event-meta">Decisions: ${item.decisions}</div>
+        <div class="event-meta">Next step: ${item.next_step}</div>
+      `;
+      return li;
+    },
+    { message: 'No workshop outcomes logged yet.' }
   );
 };
 
@@ -2728,6 +2886,77 @@ const initModeSwitch = () => {
   return () => document.documentElement.dataset.mode || 'all';
 };
 
+const initGuidedModeSwitch = () => {
+  const buttons = [...document.querySelectorAll('[data-guided-mode]')];
+  const hint = document.querySelector('[data-guided-hint]');
+  const sections = [...document.querySelectorAll('.section[data-section]')];
+  const navLinks = [...document.querySelectorAll('[data-nav-link]')];
+  const progressItems = [...document.querySelectorAll('[data-progress-item]')];
+
+  const visibilityMap = {
+    today: new Set(['overview-summary', 'health-risk', 'engagement']),
+    review: new Set(['overview-summary', 'outcomes', 'engagement', 'health-risk']),
+    deep: null
+  };
+  const copy = {
+    today: 'Today mode: immediate due actions and triage.',
+    review: 'Review mode: EBR/QBR outcomes, risks, and narrative.',
+    deep: 'Deep Dive: full dashboard with all sections.'
+  };
+
+  const applyVisibility = (mode) => {
+    const allowed = visibilityMap[mode];
+    sections.forEach((section) => {
+      const visible = !allowed || allowed.has(section.id);
+      section.hidden = !visible;
+    });
+
+    navLinks.forEach((link) => {
+      const sectionId = link.getAttribute('href')?.replace('#', '');
+      if (!sectionId || sectionId === 'overview') {
+        link.classList.remove('is-hidden');
+        return;
+      }
+      const visible = !allowed || allowed.has(sectionId);
+      link.classList.toggle('is-hidden', !visible);
+    });
+
+    progressItems.forEach((item) => {
+      const sectionId = item.dataset.sectionId;
+      if (!sectionId || sectionId === 'overview') {
+        item.classList.remove('is-hidden');
+        return;
+      }
+      const visible = !allowed || allowed.has(sectionId);
+      item.classList.toggle('is-hidden', !visible);
+    });
+  };
+
+  const setGuidedMode = (mode, persist = true) => {
+    document.documentElement.dataset.guidedMode = mode;
+    buttons.forEach((button) => button.classList.toggle('is-active', button.dataset.guidedMode === mode));
+    if (hint) {
+      hint.textContent = copy[mode] || copy.today;
+    }
+    applyVisibility(mode);
+    if (persist) {
+      saveStorage(STORAGE_KEYS.guided, mode);
+    }
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  const paramMode = params.get('guided');
+  const storedMode = loadStorage(STORAGE_KEYS.guided, 'today');
+  const initial = ['today', 'review', 'deep'].includes(paramMode) ? paramMode : storedMode;
+  setGuidedMode(['today', 'review', 'deep'].includes(initial) ? initial : 'today', false);
+
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => setGuidedMode(button.dataset.guidedMode));
+  });
+
+  return () => document.documentElement.dataset.guidedMode || 'today';
+};
+
 const initAudienceSwitch = () => {
   const buttons = [...document.querySelectorAll('[data-audience-toggle]')];
   const setAudience = (audience, persist = true) => {
@@ -2902,6 +3131,43 @@ const initPalette = (view) => {
       });
     });
 
+    (currentView.handbook?.checks || []).forEach((check) => {
+      items.push({
+        label: check.name,
+        meta: 'Compliance check',
+        breadcrumb: 'Dashboard / AMER Handbook Compliance',
+        type: 'section',
+        target: check.anchor || '#handbook-compliance'
+      });
+    });
+
+    (currentView.lists.orientationDueItems || []).forEach((item) => {
+      items.push({
+        label: item.title,
+        meta: 'Due item',
+        breadcrumb: 'Dashboard / Orientation',
+        type: 'section',
+        target: item.link || '#orientation-strip'
+      });
+    });
+
+    [
+      { label: 'cadence breach', target: '#cadence-tracker' },
+      { label: 'success plan validation', target: '#success-plan' },
+      { label: 'EBR checklist', target: '#ebr-prep' },
+      { label: 'escalation cadence', target: '#health-updates' },
+      { label: 'workshop plan', target: '#workshop-plan' },
+      { label: 'triage state', target: '#cadence-tracker' }
+    ].forEach((item) => {
+      items.push({
+        label: item.label,
+        meta: 'Shortcut',
+        breadcrumb: 'Dashboard / Quick jump',
+        type: 'section',
+        target: item.target
+      });
+    });
+
     const resources = currentView.lists.resources || {};
     Object.keys(resources).forEach((group) => {
       resources[group].forEach((resource) => {
@@ -3031,11 +3297,14 @@ const initPalette = (view) => {
   return { open: openPalette, update };
 };
 
-const initQuickActions = (getMode, getSection, getView, getAudience) => {
+const initQuickActions = (getMode, getGuidedMode, getSection, getView, getAudience) => {
   document.querySelectorAll('[data-share-link]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const url = new URL(window.location.href);
       url.searchParams.set('mode', getMode());
+      if (getGuidedMode) {
+        url.searchParams.set('guided', getGuidedMode());
+      }
       if (getAudience) {
         url.searchParams.set('audience', getAudience());
       }
@@ -3257,6 +3526,7 @@ const render = (view, state) => {
   }
 
   renderSeatTrend(document.querySelector('[data-list="seat-trend"]'), view.lists.seatTrend);
+  renderOrientationDueItems(document.querySelector('[data-list="orientation-due-items"]'), view.lists.orientationDueItems);
   renderRenewalChecklist(document.querySelector('[data-list="renewal-checklist"]'), view.lists.renewalChecklist);
   renderActivityFeed(document.querySelector('[data-list="activity-feed"]'), view.lists.activityFeed);
   renderFreshnessList(document.querySelector('[data-list="data-freshness"]'), view.lists.freshness);
@@ -3278,6 +3548,7 @@ const render = (view, state) => {
   renderDigitalBreakdown(document.querySelector('[data-list="digital-breakdown"]'), view.lists.digitalBreakdown);
   renderCadenceCalendar(document.querySelector('[data-list="cadence-calendar"]'), view.lists.cadenceCalendar);
   renderTriageRecoveryChecklist(document.querySelector('[data-list="triage-recovery-checklist"]'), view.cadence);
+  renderWorkshopOutcomes(document.querySelector('[data-list="workshop-outcomes"]'), view.lists.workshopOutcomes);
   renderEbrDates(document.querySelector('[data-list="ebr-dates"]'), view.lists.ebrDates);
   renderEbrPrepChecklist(document.querySelector('[data-list="ebr-prep-checklist"]'), view.lists.ebrPrepChecklist);
   renderWorkshops(document.querySelector('[data-list="workshops"]'), view.lists.workshops);
@@ -3385,11 +3656,12 @@ const init = async () => {
 
   const breadcrumbs = initBreadcrumbs();
   const getMode = initModeSwitch();
+  const getGuidedMode = initGuidedModeSwitch();
   const getAudience = initAudienceSwitch();
   const getSection = initNavSpy(breadcrumbs);
   initDetailBreadcrumbs(breadcrumbs);
   initDetailsControls();
-  initQuickActions(getMode, getSection, () => state.view, getAudience);
+  initQuickActions(getMode, getGuidedMode, getSection, () => state.view, getAudience);
   initExport(() => state.view);
 
   state.selectedAccountId = initAccountSwitcher(accounts, storedAccount, (accountId) => {

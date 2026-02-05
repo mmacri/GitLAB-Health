@@ -28,6 +28,11 @@ node scripts/verify-links.js
 - DevOps leader: focus on Adoption, Landing Zone, and Enablement workshops.
 - CSM: use Health & Risk, Engagement cadence, and Collaboration templates.
 
+## Guided workflow modes
+- `Today`: compliance checks, triage signals, and immediate due actions.
+- `Review`: outcomes narrative + EBR/QBR preparation.
+- `Deep Dive`: full section-by-section diagnostic view.
+
 ## Local preview
 Use a local web server to load the live JSON data:
 

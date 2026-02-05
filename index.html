@@ -61,6 +61,13 @@
               <button class="mode-btn" type="button" data-mode="devops">DevOps leader</button>
               <button class="mode-btn" type="button" data-mode="csm">CSM</button>
               <span class="mode-hint" data-mode-hint>Showing all sections.</span>
+              <div class="guided-toggle" role="group" aria-label="Guided workflow mode">
+                <span class="modebar-label">Workflow</span>
+                <button class="mode-btn is-active" type="button" data-guided-mode="today">Today</button>
+                <button class="mode-btn" type="button" data-guided-mode="review">Review</button>
+                <button class="mode-btn" type="button" data-guided-mode="deep">Deep Dive</button>
+                <span class="mode-hint" data-guided-hint>Today mode: immediate due actions and triage.</span>
+              </div>
             </div>
             <div class="modebar-right">
               <div class="account-picker">
@@ -213,7 +220,7 @@
             <div class="compliance-counts">
               <div class="compliance-count">
                 <span class="compliance-count-label">Checks passed</span>
-                <span class="compliance-count-value" data-handbook-passed>0/6</span>
+                <span class="compliance-count-value" data-handbook-passed>0/0</span>
               </div>
               <div class="compliance-count">
                 <span class="compliance-count-label">Checks failing</span>
@@ -242,6 +249,34 @@
           <h3>Priority outliers</h3>
           <p class="muted">Accounts with handbook gaps requiring action.</p>
           <ul class="event-list" data-list="portfolio-outliers"></ul>
+        </div>
+      </section>
+
+      <section class="orientation-strip card" id="orientation-strip" aria-label="Orientation and top due work">
+        <div class="orientation-head">
+          <div>
+            <p class="eyebrow">Where to Focus Now</p>
+            <h2>Current account orientation</h2>
+          </div>
+          <span class="status-pill" data-field="orientation.overall_status">Watch</span>
+        </div>
+        <div class="orientation-grid">
+          <article class="orientation-item">
+            <div class="orientation-label">Current health</div>
+            <div class="orientation-value" data-field="orientation.health_summary">Yellow (72)</div>
+          </article>
+          <article class="orientation-item">
+            <div class="orientation-label">Renewal window</div>
+            <div class="orientation-value" data-field="orientation.renewal_summary">151 days</div>
+          </article>
+          <article class="orientation-item">
+            <div class="orientation-label">Engagement state</div>
+            <div class="orientation-value" data-field="orientation.engagement_state">Engaged</div>
+          </article>
+        </div>
+        <div class="orientation-due">
+          <h3>Top due items</h3>
+          <ul class="event-list" data-list="orientation-due-items"></ul>
         </div>
       </section>
 
@@ -714,6 +749,12 @@
               <p class="eyebrow">Health &amp; risk</p>
               <h2>Health score and risk mitigation</h2>
               <p class="section-question">Question: Should we worry?</p>
+              <div class="section-mini-nav">
+                <a class="mini-chip" href="#health-risk">Rubric</a>
+                <a class="mini-chip" href="#health-updates">Cadence</a>
+                <a class="mini-chip" href="#risk-register">Risk register</a>
+                <a class="mini-chip" href="#health-playbooks">Playbooks</a>
+              </div>
             </div>
             <div class="section-controls">
               <span class="section-status" data-section-status></span>
@@ -779,7 +820,7 @@
               <p class="muted">Predictive signals for renewal and adoption risks.</p>
               <ul class="health-list" data-list="early-warnings" data-empty-trigger="true"></ul>
             </article>
-            <article class="card" style="--order: 3">
+            <article class="card" id="health-updates" style="--order: 3">
               <h3>Health update cadence</h3>
               <div class="kpi-grid kpi-compact">
                 <div class="kpi">
@@ -819,7 +860,7 @@
             </article>
           </div>
 
-          <details class="drawer" data-hide-on-empty data-audience="internal">
+          <details class="drawer" id="risk-register" data-hide-on-empty data-audience="internal">
             <summary>Risk register and mitigation checklists</summary>
             <div class="risk-grid" data-list="risk-register" data-empty-trigger="true"></div>
           </details>
@@ -829,7 +870,7 @@
             <ul class="event-list" data-list="health-drivers" data-empty-trigger="true"></ul>
           </details>
 
-          <details class="drawer" data-hide-on-empty>
+          <details class="drawer" id="health-playbooks" data-hide-on-empty>
             <summary>Health response playbooks</summary>
             <div class="resource-grid">
               <article class="card" data-audience="internal">
@@ -1066,6 +1107,12 @@
               <p class="eyebrow">Engagement &amp; enablement</p>
               <h2>Touchpoints, cadence, and enablement</h2>
               <p class="section-question">Question: Are stakeholders engaged and enabled?</p>
+              <div class="section-mini-nav">
+                <a class="mini-chip" href="#cadence-tracker">Cadence</a>
+                <a class="mini-chip" href="#workshop-tracker">Workshops</a>
+                <a class="mini-chip" href="#workshop-plan">Workshop plan</a>
+                <a class="mini-chip" href="#ebr-roadmap">EBR roadmap</a>
+              </div>
             </div>
             <div class="section-controls">
               <span class="section-status" data-section-status></span>
@@ -1170,6 +1217,24 @@
               <p class="muted" data-field="workshops.expectation_note">
                 At least one workshop is delivered this quarter.
               </p>
+            </article>
+            <article class="card" id="workshop-plan">
+              <h3>Workshop plan</h3>
+              <p class="muted">Adoption-targeted workshop tied to the lowest scoring use case.</p>
+              <div class="kpi-grid kpi-compact">
+                <div class="kpi">
+                  <span class="kpi-label">Target use case</span>
+                  <span class="kpi-value" data-field="workshops.target_use_case">Release (CD)</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Planned workshop</span>
+                  <span class="kpi-value" data-field="workshops.plan_title">CD / Release Workshop</span>
+                </div>
+              </div>
+              <p class="muted"><strong>Success criteria:</strong> <span data-field="workshops.plan_success_criteria">Increase Release to green threshold by next quarter.</span></p>
+              <p class="muted"><strong>Expected health delta:</strong> <span data-field="workshops.expected_health_delta">+5 points in Product usage</span></p>
+              <p class="muted"><strong>Next milestone:</strong> <span data-field="workshops.plan_next_milestone">Expand deployments to additional teams.</span></p>
+              <ul class="event-list" data-list="workshop-outcomes"></ul>
             </article>
             <article class="card" id="ebr-roadmap">
               <h3>EBR roadmap</h3>

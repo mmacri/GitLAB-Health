@@ -26,4 +26,5 @@
 5. Handbook compliance checks are computed (`HandbookRules.evaluateHandbookCompliance`).
 6. Portfolio rollups are computed across all accounts (`computePortfolioRollup` in `assets/js/app.js`).
 7. `buildView(...)` composes formatted fields + list structures for rendering.
-8. Render functions populate section lists/cards, compliance strip, portfolio rollup, cadence/triage engine, expand/renew panel, and searchable resources.
+8. Render functions populate section lists/cards, compliance strip, portfolio rollup, orientation strip, cadence/triage engine, expand/renew panel, and searchable resources.
+9. Guided workflow mode toggles (`Today`, `Review`, `Deep Dive`) control section visibility client-side via `assets/js/app.js`.

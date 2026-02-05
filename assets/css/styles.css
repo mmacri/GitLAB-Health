@@ -403,6 +403,10 @@ a:hover {
   display: none;
 }
 
+.progress-list li.is-hidden {
+  display: none;
+}
+
 .modebar {
   position: relative;
   z-index: 5;
@@ -425,6 +429,15 @@ a:hover {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-sm);
+}
+
+.guided-toggle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  padding-left: var(--space-sm);
+  border-left: 1px solid rgba(20, 20, 26, 0.12);
 }
 
 .audience-toggle {
@@ -812,6 +825,89 @@ html[data-audience="customer"] .audience-banner {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.orientation-strip {
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.orientation-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.orientation-head h2 {
+  margin: 0;
+  font-family: 'Bebas Neue', cursive;
+  letter-spacing: 1px;
+  font-size: 30px;
+}
+
+.orientation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-sm);
+}
+
+.orientation-item {
+  border: 1px solid rgba(20, 20, 26, 0.12);
+  border-radius: var(--radius-sm);
+  background: rgba(20, 20, 26, 0.03);
+  padding: var(--space-sm);
+  display: grid;
+  gap: 6px;
+}
+
+.orientation-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+.orientation-value {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.orientation-due {
+  border: 1px solid rgba(20, 20, 26, 0.12);
+  border-radius: var(--radius-sm);
+  background: rgba(20, 20, 26, 0.03);
+  padding: var(--space-sm);
+}
+
+.orientation-due h3 {
+  margin: 0 0 6px;
+}
+
+.section-mini-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.mini-chip {
+  border: 1px solid rgba(20, 20, 26, 0.14);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--cool);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.mini-chip:hover {
+  border-color: rgba(20, 20, 26, 0.3);
+  background: rgba(20, 20, 26, 0.06);
 }
 
 .card {
@@ -2641,6 +2737,12 @@ code {
 
   .portfolio-summary {
     justify-items: start;
+  }
+
+  .guided-toggle {
+    width: 100%;
+    border-left: 0;
+    padding-left: 0;
   }
 }
 

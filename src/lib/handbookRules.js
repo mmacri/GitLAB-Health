@@ -134,6 +134,145 @@
     };
   }
 
+  function evaluateCadenceFrequency(derived) {
+    var frequency = derived?.cadenceFrequency;
+    if (!frequency) {
+      return {
+        status: 'watch',
+        reason: missingFieldReason(['engagement.cadence_call_frequency']),
+        frequency: null
+      };
+    }
+
+    if (frequency === 'Weekly' || frequency === 'Biweekly') {
+      return {
+        status: 'good',
+        reason: 'Cadence frequency is ' + frequency + '; matches weekly/biweekly expectation.',
+        frequency: frequency
+      };
+    }
+
+    return {
+      status: 'risk',
+      reason: 'Cadence frequency is ' + frequency + '; outside weekly/biweekly expectation.',
+      frequency: frequency
+    };
+  }
+
+  function evaluateTriageState(derived) {
+    var state = derived?.triageState;
+    if (!state) {
+      return {
+        status: 'watch',
+        reason: missingFieldReason(['triage_state']),
+        state: null
+      };
+    }
+
+    if (derived?.triageStateAligned) {
+      return {
+        status: 'good',
+        reason: 'Engagement state is ' + state + ' and aligned to cadence behavior.',
+        state: state
+      };
+    }
+
+    var suggested = derived?.suggestedTriageState || 'At Risk';
+    return {
+      status: derived?.daysSinceLastCall > 45 ? 'risk' : 'watch',
+      reason: 'Engagement state is ' + state + '; expected ' + suggested + ' based on cadence thresholds.',
+      state: state
+    };
+  }
+
+  function evaluateWorkshop(derived) {
+    var count = derived?.workshopCountThisQuarter;
+    if (count === null || count === undefined) {
+      return {
+        status: 'watch',
+        reason: missingFieldReason(['workshops']),
+        count: null
+      };
+    }
+
+    if (count >= 1) {
+      return {
+        status: 'good',
+        reason: count + ' workshop(s) delivered this quarter; meets quarterly expectation.',
+        count: count
+      };
+    }
+
+    if (derived?.workshopStatus === 'watch') {
+      return {
+        status: 'watch',
+        reason: 'No workshop delivered yet this quarter, but one is scheduled before quarter end.',
+        count: count
+      };
+    }
+
+    return {
+      status: 'risk',
+      reason: 'No workshop delivered or scheduled this quarter.',
+      count: count
+    };
+  }
+
+  function evaluateRiskUpdateCadence(derived) {
+    if (!derived) {
+      return {
+        status: 'watch',
+        reason: 'Risk update cadence unavailable because derived metrics are missing.'
+      };
+    }
+
+    if (derived.isHealthUpdateOverdue) {
+      return {
+        status: 'risk',
+        reason:
+          'Health update cadence missed by ' +
+          Math.abs(derived.healthUpdateOverdueByDays || 0) +
+          ' day(s); next due was ' +
+          (derived.nextHealthUpdateDue || 'unknown') +
+          '.'
+      };
+    }
+
+    if (derived.escalated && derived.isEscalationUpdateOverdue) {
+      return {
+        status: 'risk',
+        reason:
+          'Escalation cadence missed by ' +
+          Math.abs(derived.escalationOverdueByDays || 0) +
+          ' day(s); next due was ' +
+          (derived.nextEscalationUpdateDue || 'unknown') +
+          '.'
+      };
+    }
+
+    if (derived.escalated) {
+      return {
+        status: 'good',
+        reason:
+          'Escalation cadence is current (' +
+          (derived.escalationSeverity || 'P3') +
+          ' updates every ' +
+          (derived.escalationCadenceDays || 7) +
+          ' day(s)).'
+      };
+    }
+
+    return {
+      status: 'good',
+      reason:
+        'Health update cadence is current (' +
+        (derived.healthUpdateFrequency || 'Biweekly') +
+        ', next due ' +
+        (derived.nextHealthUpdateDue || 'unknown') +
+        ').'
+    };
+  }
+
   function evaluateEbr(account, timezone, now) {
     var lastEbr = parse(account.last_ebr_date);
     if (!lastEbr) {
@@ -302,13 +441,52 @@
       anchor: '#engagement'
     });
 
+    var cadenceFrequency = evaluateCadenceFrequency(derived);
+    checks.push({
+      id: 'cadence-frequency',
+      name: 'Cadence Frequency weekly/biweekly',
+      status: cadenceFrequency.status,
+      statusLabel: toStatusLabel(cadenceFrequency.status),
+      reason: cadenceFrequency.reason,
+      anchor: '#engagement'
+    });
+
+    var triage = evaluateTriageState(derived);
+    checks.push({
+      id: 'triage-state',
+      name: 'Non-Engaged and Triage State aligned',
+      status: triage.status,
+      statusLabel: toStatusLabel(triage.status),
+      reason: triage.reason,
+      anchor: '#cadence-tracker'
+    });
+
+    var workshop = evaluateWorkshop(derived);
+    checks.push({
+      id: 'workshop-quarter',
+      name: 'Workshop delivered this quarter',
+      status: workshop.status,
+      statusLabel: toStatusLabel(workshop.status),
+      reason: workshop.reason,
+      anchor: '#workshop-tracker'
+    });
+
     var ebr = evaluateEbr(accountData, timezone, now);
+    var ebrRoadmapDate = derived?.ebrDueDate || null;
+    var ebrStatus = ebr.status;
+    var ebrReason = ebr.reason;
+    if (!ebrRoadmapDate) {
+      if (ebrStatus === 'good') ebrStatus = 'watch';
+      ebrReason += ' Roadmap target date is missing.';
+    } else {
+      ebrReason += ' Roadmap target: ' + ebrRoadmapDate + '.';
+    }
     checks.push({
       id: 'ebr-annual',
       name: 'EBR within last 12 months',
-      status: ebr.status,
-      statusLabel: toStatusLabel(ebr.status),
-      reason: ebr.reason,
+      status: ebrStatus,
+      statusLabel: toStatusLabel(ebrStatus),
+      reason: ebrReason,
       anchor: '#engagement'
     });
 
@@ -320,6 +498,16 @@
       statusLabel: toStatusLabel(successPlan.status),
       reason: successPlan.reason,
       anchor: '#success-plan'
+    });
+
+    var riskCadence = evaluateRiskUpdateCadence(derived);
+    checks.push({
+      id: 'risk-update-cadence',
+      name: 'Risk update cadence by health and escalation',
+      status: riskCadence.status,
+      statusLabel: toStatusLabel(riskCadence.status),
+      reason: riskCadence.reason,
+      anchor: '#health-updates'
     });
 
     var overallStatus = checks.reduce(function (status, check) {

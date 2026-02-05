@@ -73,6 +73,18 @@
     return 'risk';
   }
 
+  function normalizeCadenceFrequency(value) {
+    if (!value || typeof value !== 'string') return null;
+    var text = value.trim().toLowerCase();
+    if (!text) return null;
+    if (text.indexOf('weekly') > -1 && text.indexOf('bi') === -1) return 'Weekly';
+    if (text.indexOf('biweekly') > -1 || text.indexOf('bi-weekly') > -1 || text.indexOf('every 2') > -1) {
+      return 'Biweekly';
+    }
+    if (text.indexOf('monthly') > -1) return 'Monthly';
+    return value.trim();
+  }
+
   function normalizeAccountData(account) {
     var clone = JSON.parse(JSON.stringify(account || {}));
     clone.timezone = normalizeTimezone(clone.timezone);
@@ -81,6 +93,14 @@
     clone.account_id = clone.account_id || clone.account_name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
     clone.workshops = ensureArray(clone.workshops);
+    clone.workshop_outcomes = ensureArray(clone.workshop_outcomes);
+    clone.workshop_plan = clone.workshop_plan || {
+      title: null,
+      target_use_case: null,
+      success_criteria: null,
+      expected_health_delta: null,
+      next_milestone: null
+    };
     clone.workshop_catalog = ensureArray(clone.workshop_catalog || clone.workshops_catalog || clone.workshops_library || []);
     clone.growth_plan = clone.growth_plan || {
       objectives: [],
@@ -184,13 +204,29 @@
       }
     });
 
+    normalized.workshop_outcomes.forEach(function (entry, index) {
+      validateDateField(errors, 'workshop_outcomes[' + index + '].date', entry.date, false);
+      if (entry.attendance_percent !== undefined && entry.attendance_percent !== null) {
+        var pct = Number(entry.attendance_percent);
+        if (Number.isNaN(pct) || pct < 0 || pct > 100) {
+          errors.push('workshop_outcomes[' + index + '].attendance_percent must be between 0 and 100');
+        }
+      }
+      if (!entry.decisions) {
+        errors.push('workshop_outcomes[' + index + '].decisions is required');
+      }
+      if (!entry.next_step) {
+        errors.push('workshop_outcomes[' + index + '].next_step is required');
+      }
+    });
+
     ['objectives', 'hypotheses', 'active_plays', 'owners'].forEach(function (key) {
       if (!Array.isArray(normalized.growth_plan[key])) {
         errors.push('growth_plan.' + key + ' must be an array');
       }
     });
 
-    var triageStates = ['Engaged', 'At Risk', 'Non-Engaged', 'Triage In Progress', 'Re-Engaged'];
+    var triageStates = ['Engaged', 'At Risk', 'Non-Engaged', 'Triaged', 'Triage In Progress', 'Re-Engaged'];
     if (normalized.triage_state && triageStates.indexOf(normalized.triage_state) === -1) {
       errors.push('triage_state must be one of: ' + triageStates.join(', '));
     }
@@ -287,6 +323,10 @@
     }
 
     var cadenceViolated = daysSinceLastCall !== null && daysSinceLastCall > 30;
+    var cadenceFrequency = normalizeCadenceFrequency(
+      normalized.engagement?.cadence_call_frequency || normalized.engagement?.cadence_frequency || null
+    );
+    var cadenceFrequencyStatus = cadenceFrequency === null ? 'watch' : cadenceFrequency === 'Weekly' || cadenceFrequency === 'Biweekly' ? 'good' : 'risk';
     var recommendedCadenceAction =
       daysSinceLastCall === null
         ? 'Capture cadence baseline and schedule next customer call'
@@ -296,16 +336,27 @@
         ? 'Flag as Non-Engaged + Triage and schedule next customer call'
         : 'Maintain cadence; confirm next agenda';
 
-    var triageState =
-      normalized.triage_state ||
-      (daysSinceLastCall === null
+    var suggestedTriageState =
+      daysSinceLastCall === null
         ? 'At Risk'
         : daysSinceLastCall > 45
-        ? 'Non-Engaged'
+        ? 'Triaged'
         : daysSinceLastCall > 30
-        ? 'At Risk'
-        : 'Engaged');
+        ? 'Non-Engaged'
+        : 'Engaged';
+
+    var triageState =
+      normalized.triage_state ||
+      suggestedTriageState;
     var triageStatus = triageStateStatus(triageState);
+    var triageStateAligned =
+      daysSinceLastCall === null
+        ? triageState === 'At Risk' || triageState === 'Non-Engaged'
+        : daysSinceLastCall > 45
+        ? triageState === 'Triaged' || triageState === 'Triage In Progress'
+        : daysSinceLastCall > 30
+        ? triageState === 'Non-Engaged' || triageState === 'Triage In Progress' || triageState === 'Triaged'
+        : triageState === 'Engaged' || triageState === 'Re-Engaged';
     var triageRecoveryChecklist = [
       {
         key: 'schedule_next_call',
@@ -470,9 +521,13 @@
       daysSinceLastCall: daysSinceLastCall,
       cadenceStatus: cadenceStatus,
       cadenceViolated: cadenceViolated,
+      cadenceFrequency: cadenceFrequency,
+      cadenceFrequencyStatus: cadenceFrequencyStatus,
       recommendedCadenceAction: recommendedCadenceAction,
       recommendedCadenceFrequency: recommendedCadenceFrequency,
       triageState: triageState,
+      suggestedTriageState: suggestedTriageState,
+      triageStateAligned: triageStateAligned,
       triageStatus: triageStatus,
       triageAutomationCue: triageAutomationCue,
       triageRecoveryChecklist: triageRecoveryChecklist,

@@ -1298,7 +1298,28 @@
           "value": true,
           "date": "2026-02-18"
         }
-      }
+      },
+      "workshop_plan": {
+        "title": "Release Enablement Workshop",
+        "target_use_case": "Release (CD)",
+        "success_criteria": "Increase Release use case score from 62 to 76 and expand deployment coverage from 6 to 10 teams.",
+        "expected_health_delta": "+4 Product usage score points",
+        "next_milestone": "Confirm deployment template rollout to four additional teams by 2026-03-10."
+      },
+      "workshop_outcomes": [
+        {
+          "date": "2026-01-22",
+          "attendance_percent": 88,
+          "decisions": "Agreed on shared release template standard and feature-flag rollout sequence.",
+          "next_step": "Track template adoption in monthly cadence with platform engineering."
+        },
+        {
+          "date": "2025-10-28",
+          "attendance_percent": 91,
+          "decisions": "Aligned onboarding milestones and CI ownership model.",
+          "next_step": "Schedule Secure baseline follow-up workshop with security lead."
+        }
+      ]
     },
     {
       "meta": {
@@ -2563,7 +2584,22 @@
           "value": true,
           "date": "2026-02-03"
         }
-      }
+      },
+      "workshop_plan": {
+        "title": "CI Adoption Recovery Workshop",
+        "target_use_case": "Verify (CI)",
+        "success_criteria": "Move Verify score above 70 and enable CI on at least 50% of priority projects this quarter.",
+        "expected_health_delta": "+6 Product usage score points",
+        "next_milestone": "Close runner-capacity blocker and publish migration owners by 2026-02-20."
+      },
+      "workshop_outcomes": [
+        {
+          "date": "2026-02-03",
+          "attendance_percent": 74,
+          "decisions": "Escalated runner capacity issue and reassigned migration ownership.",
+          "next_step": "Finalize remediation plan in triage review and confirm workshop follow-up by 2026-02-19."
+        }
+      ]
     }
   ]
 }
