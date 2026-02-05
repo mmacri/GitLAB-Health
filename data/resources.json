@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "updated_on": "2026-02-05",
+  "categories": [
+    {
+      "id": "amer-handbook",
+      "label": "AMER Handbook",
+      "description": "Operational expectations for AMER CSM account motions."
+    },
+    {
+      "id": "engagement",
+      "label": "Engagement",
+      "description": "Cadence, EBR, and customer engagement execution guides."
+    },
+    {
+      "id": "success-planning",
+      "label": "Success Planning",
+      "description": "Success plan workflows, discovery, and continuous planning."
+    },
+    {
+      "id": "risk-triage",
+      "label": "Risk & Triage",
+      "description": "Health scoring, mitigation, and escalation playbooks."
+    },
+    {
+      "id": "workshops",
+      "label": "Workshops",
+      "description": "Enablement assets for CI, CD, and Secure motions."
+    },
+    {
+      "id": "adoption-analytics",
+      "label": "Adoption & Analytics",
+      "description": "Use case scoring, DORA, and value stream analytics references."
+    }
+  ],
+  "resources": [
+    {
+      "id": "amer-overview",
+      "title": "AMER CSM Segment Handbook",
+      "description": "Primary AMER operating model for Align & Onboard, Enable, and Expand & Renew motions.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#overview",
+      "categories": ["amer-handbook"]
+    },
+    {
+      "id": "amer-cadence-frequency",
+      "title": "AMER Cadence Frequency Expectations",
+      "description": "Defines expectation to avoid going more than one month without a customer call.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#cadence-frequency",
+      "categories": ["amer-handbook", "engagement"]
+    },
+    {
+      "id": "amer-ebr-expectations",
+      "title": "AMER EBR Expectations",
+      "description": "Describes annual EBR execution expectations and governance for strategic alignment.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#ebrs",
+      "categories": ["amer-handbook", "engagement"]
+    },
+    {
+      "id": "amer-workshop-expectations",
+      "title": "AMER Workshop Expectations",
+      "description": "Documents workshop operating cadence and customer enablement expectations.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#workshops",
+      "categories": ["amer-handbook", "workshops"]
+    },
+    {
+      "id": "amer-success-plan-expectations",
+      "title": "AMER Success Plan Expectations",
+      "description": "Quarterly success plan updates and validation expectations for customer + manager alignment.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#success-plans",
+      "categories": ["amer-handbook", "success-planning"]
+    },
+    {
+      "id": "amer-growth-plan",
+      "title": "AMER Account Growth Plan Expectations",
+      "description": "Subsection focused on growth hypotheses, expansion objectives, and account growth planning.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#account-growth-plans",
+      "categories": ["amer-handbook", "success-planning"]
+    },
+    {
+      "id": "amer-risk-triage",
+      "title": "AMER Risk Management & Triage",
+      "description": "Risk management expectations including triage motions and escalation paths.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#account-risk-management--triage",
+      "categories": ["amer-handbook", "risk-triage"]
+    },
+    {
+      "id": "cadence-calls",
+      "title": "CSM Cadence Calls",
+      "description": "Detailed cadence call structure, ownership, and meeting execution practices.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/cadence-calls/",
+      "categories": ["engagement"]
+    },
+    {
+      "id": "account-engagement",
+      "title": "Account Engagement",
+      "description": "Broader account engagement operating principles for CSMs.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/engagement/",
+      "categories": ["engagement"]
+    },
+    {
+      "id": "non-engaged-strategies",
+      "title": "Strategies for Non-Engaged Customers",
+      "description": "Recovery motion for accounts that have fallen out of regular engagement cadence.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/engagement/non-engaged-customer-strategies/",
+      "categories": ["engagement", "risk-triage"]
+    },
+    {
+      "id": "ebr-guide",
+      "title": "Executive Business Reviews (EBRs)",
+      "description": "Core EBR preparation and execution guidance for executive outcomes discussions.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/ebr/",
+      "categories": ["engagement"]
+    },
+    {
+      "id": "success-plans",
+      "title": "Success Plans",
+      "description": "Success plan framework, construction standards, and measurable outcome practices.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/",
+      "categories": ["success-planning"]
+    },
+    {
+      "id": "success-plan-discovery",
+      "title": "Success Plan Discovery Questions",
+      "description": "Question bank and facilitation techniques for strong success plan discovery.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/questions-techniques/",
+      "categories": ["success-planning"]
+    },
+    {
+      "id": "success-plan-continuous",
+      "title": "Continuous Planning",
+      "description": "Maintains success plans as living documents updated through recurring operating cadence.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/continuous-planning/",
+      "categories": ["success-planning"]
+    },
+    {
+      "id": "health-scoring",
+      "title": "Customer Health Scoring",
+      "description": "Methodology for product, risk, outcomes, voice, and engagement health signals.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/",
+      "categories": ["risk-triage"]
+    },
+    {
+      "id": "health-triage",
+      "title": "Customer Health Assessment and Management",
+      "description": "Red/yellow triage practices and expectations for escalated account management.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/",
+      "categories": ["risk-triage"]
+    },
+    {
+      "id": "risk-mitigation",
+      "title": "CSM Strategies for Mitigating Risk",
+      "description": "Risk identification and mitigation patterns for customer account stabilization.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/risk-mitigation/",
+      "categories": ["risk-triage"]
+    },
+    {
+      "id": "workshops-index",
+      "title": "Workshops and Enablement Sessions",
+      "description": "Catalog of CSM-led enablement workshops and planning references.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/workshops/",
+      "categories": ["workshops"]
+    },
+    {
+      "id": "ci-verify-playbook",
+      "title": "CI / Verify Playbook",
+      "description": "Hands-on playbook for CI adoption acceleration and pipeline rollout.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/",
+      "categories": ["workshops", "adoption-analytics"]
+    },
+    {
+      "id": "cd-release-playbook",
+      "title": "CD / Release Playbook",
+      "description": "Guidance for operationalizing deployment automation and release motions.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/",
+      "categories": ["workshops", "adoption-analytics"]
+    },
+    {
+      "id": "secure-workshop",
+      "title": "Secure Workshop",
+      "description": "Enablement resources to expand security scanning and DevSecOps outcomes.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/workshops/secure/",
+      "categories": ["workshops", "adoption-analytics"]
+    },
+    {
+      "id": "maturity-scoring",
+      "title": "Use Case Maturity Scoring",
+      "description": "Threshold framework for use case adoption scoring and maturity progression.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/",
+      "categories": ["adoption-analytics"]
+    },
+    {
+      "id": "platform-value-score",
+      "title": "Platform Value Score",
+      "description": "Platform-level rollup methodology across key use cases and value stages.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/",
+      "categories": ["adoption-analytics"]
+    },
+    {
+      "id": "vsa-docs",
+      "title": "Value Streams Dashboard Docs",
+      "description": "GitLab documentation for value stream analytics metrics and workflow insights.",
+      "link": "https://docs.gitlab.com/user/analytics/value_streams_dashboard/",
+      "categories": ["adoption-analytics"]
+    },
+    {
+      "id": "dora-docs",
+      "title": "DORA Metrics Docs",
+      "description": "Reference documentation for deployment frequency, lead time, change failure rate, and MTTR.",
+      "link": "https://docs.gitlab.com/user/analytics/dora_metrics/",
+      "categories": ["adoption-analytics"]
+    }
+  ]
+}

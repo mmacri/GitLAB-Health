@@ -8,17 +8,19 @@ Static dashboard site ready for GitHub Pages deployment.
 3. Save. GitHub Pages will publish the site and provide a URL.
 
 ## Update data
-Edit `data/dashboard.json` to reflect customer metrics, targets, and milestone dates. This file drives every section:
-- Customer profile, renewal timing, deployment type
-- Seat utilization + onboarding milestones
-- Adoption use case scores + landing zones
-- Health scores, risks, and success plan objectives
-- DORA + Value Stream Analytics metrics
-- Engagement cadence, touchpoints, and collaboration project templates
+Edit these canonical data files:
+- `data/accounts.json`: multi-account operational data (milestones, cadence, success plan, expansion, risk).
+- `data/resources.json`: searchable handbook and docs registry.
 
-When the site is served via a static server, the dashboard loads `data/dashboard.json` directly. If you open the HTML file without a server, the dashboard falls back to the embedded sample data in `assets/js/app.js`.
-To add a new customer, duplicate `data/dashboard.json`, update values, and point the dashboard to the new file (or replace the contents for a single-customer instance).
-The executive PDF export uses `print/ebr.html` and pulls from the same data source.
+When the site is served via a static server, the dashboard loads both files directly. If data cannot be loaded, the dashboard falls back to the embedded sample object in `assets/js/app.js`.
+The executive PDF export uses `print/ebr.html`.
+
+### Validate resource links
+Run the built-in verifier before publishing:
+
+```powershell
+node scripts/verify-links.js
+```
 
 ## Persona guide
 - Executive: review Overview, Success Plan, Top Risks, and DORA snapshot.

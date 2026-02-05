@@ -63,6 +63,15 @@
               <span class="mode-hint" data-mode-hint>Showing all sections.</span>
             </div>
             <div class="modebar-right">
+              <div class="account-picker">
+                <label class="modebar-label" for="account-switcher">Account</label>
+                <select
+                  id="account-switcher"
+                  class="field-select account-select"
+                  data-account-switcher
+                  aria-label="Select account"
+                ></select>
+              </div>
               <div class="audience-toggle" role="group" aria-label="Audience toggle">
                 <span class="modebar-label">Audience</span>
                 <button class="mode-btn is-active" type="button" data-audience-toggle="internal">Internal</button>
@@ -192,6 +201,20 @@
           </div>
         </div>
       </header>
+
+      <section class="compliance-strip card" id="handbook-compliance" aria-label="AMER handbook compliance">
+        <div class="compliance-head">
+          <div>
+            <p class="eyebrow">AMER Handbook Compliance</p>
+            <h2>Operational Expectations</h2>
+          </div>
+          <div class="compliance-summary">
+            <span class="status-pill" data-handbook-overall>Yellow</span>
+            <div class="compliance-alerts" data-list="compliance-alerts"></div>
+          </div>
+        </div>
+        <div class="compliance-grid" data-list="handbook-compliance"></div>
+      </section>
 
       <div class="layout">
         <aside class="progress-sidebar" data-progress-sidebar aria-label="Section progress">
@@ -727,6 +750,44 @@
               <p class="muted">Predictive signals for renewal and adoption risks.</p>
               <ul class="health-list" data-list="early-warnings" data-empty-trigger="true"></ul>
             </article>
+            <article class="card" style="--order: 3">
+              <h3>Health update cadence</h3>
+              <div class="kpi-grid kpi-compact">
+                <div class="kpi">
+                  <span class="kpi-label">Last update</span>
+                  <span class="kpi-value" data-field="risk_updates.last_health_update">Jan 22, 2026</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Next due</span>
+                  <span class="kpi-value" data-field="risk_updates.next_health_due">Feb 5, 2026</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Frequency</span>
+                  <span class="kpi-value" data-field="risk_updates.health_frequency">Biweekly</span>
+                </div>
+              </div>
+              <span class="status-pill" data-field="risk_updates.health_badge">On Track</span>
+              <p class="muted" data-field="risk_updates.health_note">Health updates are current.</p>
+              <details class="drawer">
+                <summary>Escalation cadence</summary>
+                <div class="kpi-grid kpi-compact">
+                  <div class="kpi">
+                    <span class="kpi-label">Escalated</span>
+                    <span class="kpi-value" data-field="risk_updates.escalated_label">Yes</span>
+                  </div>
+                  <div class="kpi">
+                    <span class="kpi-label">Severity</span>
+                    <span class="kpi-value" data-field="risk_updates.escalation_severity">P2</span>
+                  </div>
+                  <div class="kpi">
+                    <span class="kpi-label">Next escalation due</span>
+                    <span class="kpi-value" data-field="risk_updates.next_escalation_due">Feb 5, 2026</span>
+                  </div>
+                </div>
+                <span class="status-pill" data-field="risk_updates.escalation_badge">Due Soon</span>
+                <p class="muted" data-field="risk_updates.escalation_note">Escalation updates are in cadence.</p>
+              </details>
+            </article>
           </div>
 
           <details class="drawer" data-hide-on-empty data-audience="internal">
@@ -809,6 +870,30 @@
               <h3>Success plan progress</h3>
               <p class="stat" data-field="success_plan.progress_summary">2 of 3 objectives on track</p>
               <p class="muted">Next review: <span data-field="success_plan.next_review">Feb 5, 2026</span></p>
+              <div class="kpi-grid kpi-compact">
+                <div class="kpi">
+                  <span class="kpi-label">Plan status</span>
+                  <span class="kpi-value" data-field="success_plan.status_label">Active</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Last updated</span>
+                  <span class="kpi-value" data-field="success_plan.last_updated">Jan 18, 2026</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Update due by</span>
+                  <span class="kpi-value" data-field="success_plan.update_due_by">Mar 31, 2026</span>
+                </div>
+              </div>
+              <ul class="event-list">
+                <li class="event-item">
+                  <div class="event-title">Customer validation</div>
+                  <div class="event-meta" data-field="success_plan.customer_validation">Validated Jan 22, 2026</div>
+                </li>
+                <li class="event-item">
+                  <div class="event-title">Manager validation</div>
+                  <div class="event-meta" data-field="success_plan.manager_validation">Validated Jan 23, 2026</div>
+                </li>
+              </ul>
               <span class="freshness-badge" data-freshness-badge="success_plan">Manual update</span>
               <details class="drawer" id="success-plan">
                 <summary>Objectives and dependencies</summary>
@@ -850,6 +935,28 @@
                 </li>
               </ul>
             </article>
+            <article class="card" style="--order: 4">
+              <h3>Account growth plan</h3>
+              <p class="muted">Expansion objectives and active growth plays owned jointly with customer leadership.</p>
+              <div class="growth-grid">
+                <div>
+                  <h4>Growth objectives</h4>
+                  <ul class="event-list" data-list="growth-plan-objectives"></ul>
+                </div>
+                <div>
+                  <h4>Expansion hypotheses</h4>
+                  <ul class="event-list" data-list="growth-plan-hypotheses"></ul>
+                </div>
+                <div>
+                  <h4>Active plays</h4>
+                  <ul class="event-list" data-list="growth-plan-plays"></ul>
+                </div>
+                <div>
+                  <h4>Owners</h4>
+                  <ul class="event-list" data-list="growth-plan-owners"></ul>
+                </div>
+              </div>
+            </article>
           </div>
 
           <details class="drawer" data-hide-on-empty>
@@ -869,6 +976,48 @@
                 <h3>Bottleneck analysis</h3>
                 <p class="stat" data-field="vsa.bottleneck_stage">Code review</p>
                 <ul class="event-list" data-list="vsa-recommendations"></ul>
+              </article>
+            </div>
+          </details>
+
+          <details class="drawer" id="expand-renew">
+            <summary>Expand &amp; Renew</summary>
+            <div class="summary-grid">
+              <article class="card renewal-panel" data-renewal-panel>
+                <div class="metric-head">
+                  <h3>Renewal readiness</h3>
+                  <span class="status-pill" data-field="renewal.priority_label">Standard</span>
+                </div>
+                <p class="muted">
+                  Renewal date: <span data-field="renewal.date">Jun 30, 2026</span> (<span data-field="renewal.days_to">151 days</span>)
+                </p>
+                <p class="muted">Renewal owner: <span data-field="renewal.owner">Jordan Lee</span></p>
+                <div class="metric-banner" data-renewal-risk-banner></div>
+                <ul class="event-list" data-list="renewal-readiness"></ul>
+              </article>
+              <article class="card">
+                <h3>Expansion motion</h3>
+                <div class="kpi-grid kpi-compact">
+                  <div class="kpi">
+                    <span class="kpi-label">Plays opened (QoQ)</span>
+                    <span class="kpi-value" data-field="expansion.opened_qoq">4</span>
+                  </div>
+                  <div class="kpi">
+                    <span class="kpi-label">Plays completed (QoQ)</span>
+                    <span class="kpi-value" data-field="expansion.completed_qoq">2</span>
+                  </div>
+                  <div class="kpi">
+                    <span class="kpi-label">Win rate</span>
+                    <span class="kpi-value" data-field="expansion.win_rate">50%</span>
+                  </div>
+                  <div class="kpi">
+                    <span class="kpi-label">Sentiment trend</span>
+                    <span class="kpi-value" data-field="expansion.sentiment">Flat</span>
+                  </div>
+                </div>
+                <p class="muted">Last sentiment update: <span data-field="expansion.last_sentiment">Jan 27, 2026</span></p>
+                <p class="muted">Top expansion use case: <span data-field="expansion.top_use_case">Secure Compliance at Scale</span></p>
+                <div class="metric-banner" data-expansion-risk-banner></div>
               </article>
             </div>
           </details>
@@ -934,6 +1083,69 @@
               <h3>Cadence calendar</h3>
               <p class="muted">Current engagement cadence and ownership.</p>
               <ul class="event-list" data-list="cadence-calendar"></ul>
+            </article>
+          </div>
+
+          <div class="summary-grid">
+            <article class="card" id="cadence-tracker">
+              <h3>Cadence tracker</h3>
+              <div class="kpi-grid kpi-compact">
+                <div class="kpi">
+                  <span class="kpi-label">Last cadence call</span>
+                  <span class="kpi-value" data-field="cadence.last_call_date">Jan 17, 2026</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Next cadence call</span>
+                  <span class="kpi-value" data-field="cadence.next_call_date">Feb 11, 2026</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Days since last call</span>
+                  <span class="kpi-value" data-field="cadence.days_since_last_call">19</span>
+                </div>
+              </div>
+              <div class="metric-banner" data-cadence-banner></div>
+              <p class="muted" data-field="cadence.recommended_action">
+                Maintain cadence; confirm next agenda.
+              </p>
+            </article>
+            <article class="card" id="workshop-tracker">
+              <h3>Workshop tracker</h3>
+              <div class="kpi-grid kpi-compact">
+                <div class="kpi">
+                  <span class="kpi-label">Delivered this quarter</span>
+                  <span class="kpi-value" data-field="workshops.count_this_quarter">1</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Next workshop date</span>
+                  <span class="kpi-value" data-field="workshops.next_date">Feb 20, 2026</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Next workshop theme</span>
+                  <span class="kpi-value" data-field="workshops.next_theme">Secure Baseline Rollout</span>
+                </div>
+              </div>
+              <span class="status-pill" data-field="workshops.expectation_label">Meets quarterly expectation</span>
+              <p class="muted" data-field="workshops.expectation_note">
+                At least one workshop is delivered this quarter.
+              </p>
+            </article>
+            <article class="card" id="ebr-roadmap">
+              <h3>EBR roadmap</h3>
+              <div class="kpi-grid kpi-compact">
+                <div class="kpi">
+                  <span class="kpi-label">Last EBR</span>
+                  <span class="kpi-value" data-field="ebr.last_date">Dec 18, 2025</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Next EBR target</span>
+                  <span class="kpi-value" data-field="ebr.target_date">Dec 18, 2026</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">EBR due in</span>
+                  <span class="kpi-value" data-field="ebr.countdown">317 days</span>
+                </div>
+              </div>
+              <ul class="event-list" data-list="ebr-prep-checklist"></ul>
             </article>
           </div>
 
@@ -1016,42 +1228,16 @@
           </div>
 
           <div class="section-body" data-section-body>
-          <div class="summary-grid">
             <article class="card">
-              <h3>Health scoring</h3>
-              <ul class="resource-list" data-list="resources-health"></ul>
+              <h3>Resource registry</h3>
+              <p class="muted">Search and filter AMER CSM handbook motions, playbooks, and analytics references.</p>
+              <div class="resource-toolbar">
+                <input type="search" class="field-select resource-search" data-resource-search placeholder="Search title or description" aria-label="Search resources" />
+                <div class="resource-categories" data-resource-categories></div>
+              </div>
+              <p class="muted" data-resource-count></p>
+              <ul class="resource-list" data-list="resources-registry"></ul>
             </article>
-            <article class="card">
-              <h3>Success plans</h3>
-              <ul class="resource-list" data-list="resources-success"></ul>
-            </article>
-            <article class="card">
-              <h3>Onboarding and cadence</h3>
-              <ul class="resource-list" data-list="resources-onboarding"></ul>
-            </article>
-            <article class="card">
-              <h3>Playbooks and workshops</h3>
-              <ul class="resource-list" data-list="resources-playbooks"></ul>
-            </article>
-          </div>
-
-          <details class="drawer">
-            <summary>Additional resources</summary>
-            <div class="summary-grid">
-              <article class="card">
-                <h3>EBR / QBR</h3>
-                <ul class="resource-list" data-list="resources-ebr"></ul>
-              </article>
-              <article class="card">
-                <h3>Collaboration project</h3>
-                <ul class="resource-list" data-list="resources-collaboration"></ul>
-              </article>
-              <article class="card">
-                <h3>Value streams and DORA</h3>
-                <ul class="resource-list" data-list="resources-analytics"></ul>
-              </article>
-            </div>
-          </details>
           </div>
         </section>
       </main>
@@ -1061,7 +1247,7 @@
         <div>
           <p class="muted">
             Data freshness: <span data-field="meta.data_freshness_note">Updated Jan 29, 2026</span> | Update customer data in
-            <code>data/dashboard.json</code>.
+            <code>data/accounts.json</code> and <code>data/resources.json</code>.
           </p>
         </div>
       </footer>
@@ -1216,6 +1402,9 @@
       </form>
     </dialog>
 
+    <script src="src/lib/dateUtils.js"></script>
+    <script src="src/lib/deriveAccountMetrics.js"></script>
+    <script src="src/lib/handbookRules.js"></script>
     <script src="assets/js/rules.js"></script>
     <script src="assets/js/app.js"></script>
   </body>
