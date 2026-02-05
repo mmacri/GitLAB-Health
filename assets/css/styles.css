@@ -635,6 +635,34 @@ html[data-audience="customer"] .audience-banner {
   justify-items: end;
 }
 
+.compliance-counts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.compliance-count {
+  border: 1px solid rgba(20, 20, 26, 0.12);
+  border-radius: var(--radius-sm);
+  background: rgba(20, 20, 26, 0.03);
+  padding: 8px 10px;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.compliance-count-label {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.compliance-count-value {
+  font-weight: 700;
+  font-size: 14px;
+}
+
 .compliance-alerts {
   display: grid;
   gap: 6px;
@@ -698,6 +726,92 @@ html[data-audience="customer"] .audience-banner {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--accent-strong);
+}
+
+.portfolio-strip {
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.portfolio-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.portfolio-head h2 {
+  margin: 0;
+  font-family: 'Bebas Neue', cursive;
+  letter-spacing: 1px;
+  font-size: 30px;
+}
+
+.portfolio-summary {
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+}
+
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-sm);
+}
+
+.portfolio-metric {
+  border: 1px solid rgba(20, 20, 26, 0.12);
+  border-radius: var(--radius-sm);
+  background: rgba(20, 20, 26, 0.03);
+  padding: var(--space-sm);
+  display: grid;
+  gap: 6px;
+}
+
+.portfolio-metric-label {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.4px;
+}
+
+.portfolio-metric-value {
+  font-family: 'Bebas Neue', cursive;
+  letter-spacing: 1px;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.portfolio-metric-target {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.portfolio-outliers {
+  border: 1px solid rgba(20, 20, 26, 0.12);
+  border-radius: var(--radius-sm);
+  background: rgba(20, 20, 26, 0.03);
+  padding: var(--space-sm);
+  display: grid;
+  gap: 8px;
+}
+
+.portfolio-outliers h3 {
+  margin: 0;
+}
+
+.portfolio-outlier {
+  display: grid;
+  gap: 6px;
+}
+
+.portfolio-outlier .event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
 }
 
 .card {
@@ -2518,6 +2632,14 @@ code {
   }
 
   .compliance-summary {
+    justify-items: start;
+  }
+
+  .compliance-counts {
+    grid-template-columns: 1fr;
+  }
+
+  .portfolio-summary {
     justify-items: start;
   }
 }

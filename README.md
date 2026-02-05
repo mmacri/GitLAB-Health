@@ -10,6 +10,7 @@ Static dashboard site ready for GitHub Pages deployment.
 ## Update data
 Edit these canonical data files:
 - `data/accounts.json`: multi-account operational data (milestones, cadence, success plan, expansion, risk).
+  - Includes non-engaged triage fields (`triage_state`, `triage_recovery_plan.*`) used by cadence automation cues.
 - `data/resources.json`: searchable handbook and docs registry.
 
 When the site is served via a static server, the dashboard loads both files directly. If data cannot be loaded, the dashboard falls back to the embedded sample object in `assets/js/app.js`.

@@ -8,6 +8,7 @@
 | Time to first value <= 30 days | Compliance Strip check: **First Value <= 30 days** (`#journey`) | `start_date`, `first_value_date` |
 | Onboarding complete <= 45 days | Compliance Strip check: **Onboarding Complete <= 45 days** (`#journey`) | `start_date`, `onboarding_complete_date` |
 | Never go more than one month without a customer call | Compliance Strip check: **Cadence Call within last 30 days** + Cadence Tracker banner/recommended action (`#engagement`) | `last_cadence_call_date`, `next_cadence_call_date` |
+| Non-engaged and triage handling when cadence lapses | Cadence Tracker triage state + automation cue + recovery checklist (`#engagement`) | `last_cadence_call_date`, `triage_state`, `triage_recovery_plan.*`, `overall_health`, `renewal_date`, `escalated`, `escalation_severity` |
 | At least 1 workshop per quarter per customer | Workshop Tracker status (Green/Yellow/Red) in Engagement & Enablement (`#engagement`) | `workshops[]`, `next_workshop_date`, `next_workshop_theme`, `timezone` |
 | At least 1 EBR per year | Compliance Strip check: **EBR within last 12 months** + EBR roadmap countdown (`#engagement`) | `last_ebr_date`, `next_ebr_target_date`, `timezone` |
 | Success plan updated minimum quarterly and validated by customer + manager | Compliance Strip check: **Success Plan updated this quarter + validated** + Success Plan governance card (`#success-plan`) | `success_plan_last_updated_date`, `success_plan_next_review_date`, `success_plan_customer_validated`, `success_plan_manager_validated`, `timezone` |
@@ -20,6 +21,7 @@
 | Account growth planning | **Account Growth Plan** card in Outcomes | `growth_plan.objectives[]`, `growth_plan.hypotheses[]`, `growth_plan.active_plays[]`, `growth_plan.owners[]` |
 | Expand & Renew readiness | **Expand & Renew** drawer with renewal checklist + expansion motion | `renewal_date`, `renewal_owner`, `renewal_readiness.*`, `expansion_motion.*` |
 | AMER handbook deep-link guidance | Searchable Resource Registry categories + AMER anchor links | `data/resources.json` entries and category metadata |
+| Portfolio pooled-account operating review | Portfolio View strip with handbook coverage KPIs and outlier account jump actions | `data/accounts.json` account collection + per-account compliance outputs |
 
 ## Rule engines and logic files
 - `src/lib/dateUtils.js`: `parseISO`, `diffInDays`, `addDays`, `addMonths`, `getQuarterStart`, `getQuarterEnd`, `isSameQuarter`.

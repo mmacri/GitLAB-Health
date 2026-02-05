@@ -664,8 +664,15 @@ const buildView = (data, overrides, actionState, audience = 'internal', resource
         derivedMetrics?.daysSinceLastCall === null || derivedMetrics?.daysSinceLastCall === undefined
           ? 'TBD'
           : `${derivedMetrics.daysSinceLastCall}`,
+      recommended_frequency: derivedMetrics?.recommendedCadenceFrequency || 'Biweekly',
+      triage_state: derivedMetrics?.triageState || 'At Risk',
+      automation_cue: derivedMetrics?.triageAutomationCue || 'Cadence baseline is missing; capture the last call date.',
       recommended_action: derivedMetrics?.recommendedCadenceAction || 'Maintain cadence; confirm next agenda',
       violated: Boolean(derivedMetrics?.cadenceViolated),
+      triage_required: Boolean(derivedMetrics?.triageRecoveryRequired),
+      triage_complete: Boolean(derivedMetrics?.triageRecoveryComplete),
+      triage_recovery_checklist: derivedMetrics?.triageRecoveryChecklist || [],
+      triage_status: derivedMetrics?.triageStatus || 'watch',
       status: cadenceStatus
     },
     workshops: {
@@ -804,6 +811,7 @@ const buildView = (data, overrides, actionState, audience = 'internal', resource
       valuePoints: merged.outcomes?.value_points || [],
       digitalBreakdown: merged.touchpoints || {},
       cadenceCalendar: merged.engagement?.cadence_calendar || [],
+      triageRecoveryChecklist: derivedMetrics?.triageRecoveryChecklist || [],
       ebrDates: buildEbrDates(merged.engagement || {}),
       ebrPrepChecklist: derivedMetrics?.ebrPrepChecklist || [],
       workshops: merged.workshop_catalog || [],
@@ -839,6 +847,190 @@ const buildView = (data, overrides, actionState, audience = 'internal', resource
       phase: merged.onboarding?.phase || ''
     },
     actionState: actionState || {}
+  };
+};
+
+const computePortfolioRollup = (accounts, options = {}) => {
+  const now = options.now || new Date();
+  const safeAccounts = Array.isArray(accounts) ? accounts : [];
+  const total = safeAccounts.length || 0;
+  if (!total) {
+    return {
+      total: 0,
+      metrics: [],
+      outliers: [],
+      overallStatus: 'watch',
+      overallLabel: 'Yellow',
+      summary: 'No accounts available for portfolio review'
+    };
+  }
+  const statusRank = { good: 0, watch: 1, risk: 2 };
+  const maxStatus = (left, right) => (statusRank[left] >= statusRank[right] ? left : right);
+  const checkStatus = (checks, id) => checks.find((check) => check.id === id)?.status || 'watch';
+
+  const accountRows = safeAccounts.map((account) => {
+    let normalized = account;
+    if (window.DerivedMetrics && typeof window.DerivedMetrics.validateAccountData === 'function') {
+      const validation = window.DerivedMetrics.validateAccountData(account);
+      normalized = validation.normalized || account;
+    }
+
+    const derived =
+      window.DerivedMetrics && typeof window.DerivedMetrics.deriveAccountMetrics === 'function'
+        ? window.DerivedMetrics.deriveAccountMetrics(normalized, { now })
+        : null;
+
+    const compliance =
+      window.HandbookRules && typeof window.HandbookRules.evaluateHandbookCompliance === 'function'
+        ? window.HandbookRules.evaluateHandbookCompliance(normalized, { now, derivedMetrics: derived })
+        : { checks: [], alerts: [], overallStatus: 'watch' };
+
+    const checks = compliance.checks || [];
+    const cadenceBreach = (derived?.daysSinceLastCall ?? Number.POSITIVE_INFINITY) > 30;
+    const ebrGreen = checkStatus(checks, 'ebr-annual') === 'good';
+    const workshopMet = (derived?.workshopCountThisQuarter ?? 0) >= 1;
+    const successPlanGreen = checkStatus(checks, 'success-plan-quarter') === 'good';
+    const playsOpened = Number(normalized.expansion_motion?.plays_opened_qoq || 0);
+    const playsCompleted = Number(normalized.expansion_motion?.plays_completed_qoq || 0);
+
+    const reasons = [];
+    if (cadenceBreach) {
+      const cadenceStatus = (derived?.daysSinceLastCall ?? 0) > 45 ? 'risk' : 'watch';
+      reasons.push({
+        status: cadenceStatus,
+        text: `${derived?.daysSinceLastCall ?? 'Unknown'} days since last call`
+      });
+    }
+    if (!ebrGreen) {
+      const status = checkStatus(checks, 'ebr-annual');
+      reasons.push({
+        status,
+        text: 'EBR not within the last 12 months'
+      });
+    }
+    if (!workshopMet) {
+      reasons.push({
+        status: derived?.workshopStatus === 'watch' ? 'watch' : 'risk',
+        text:
+          derived?.workshopStatus === 'watch'
+            ? 'No workshop delivered yet this quarter (one is scheduled)'
+            : 'No workshop delivered or scheduled this quarter'
+      });
+    }
+    if (!successPlanGreen) {
+      reasons.push({
+        status: checkStatus(checks, 'success-plan-quarter'),
+        text: 'Success plan is not current and validated this quarter'
+      });
+    }
+    (compliance.alerts || []).forEach((alert) => {
+      reasons.push({
+        status: alert.status || 'risk',
+        text: alert.label || 'Compliance alert'
+      });
+    });
+
+    const accountStatus = reasons.reduce((status, reason) => maxStatus(status, reason.status), 'good');
+
+    return {
+      account_id: normalized.account_id,
+      account_name: normalized.account_name || normalized.customer?.name || 'Unknown account',
+      derived,
+      checks,
+      compliance,
+      cadenceBreach,
+      ebrGreen,
+      workshopMet,
+      successPlanGreen,
+      playsOpened,
+      playsCompleted,
+      reasons,
+      status: accountStatus
+    };
+  });
+
+  const completedEbrCount = accountRows.filter((row) => row.ebrGreen).length;
+  const cadenceBreaches = accountRows.filter((row) => row.cadenceBreach).length;
+  const workshopCoverageCount = accountRows.filter((row) => row.workshopMet).length;
+  const successPlanCoverageCount = accountRows.filter((row) => row.successPlanGreen).length;
+  const totalPlaysOpened = accountRows.reduce((sum, row) => sum + row.playsOpened, 0);
+  const totalPlaysCompleted = accountRows.reduce((sum, row) => sum + row.playsCompleted, 0);
+
+  const toPct = (value) => (total ? Math.round((value / total) * 100) : 0);
+  const ebrCoveragePct = toPct(completedEbrCount);
+  const workshopCoveragePct = toPct(workshopCoverageCount);
+  const successPlanCoveragePct = toPct(successPlanCoverageCount);
+  const playCompletionRate = totalPlaysOpened > 0 ? Math.round((totalPlaysCompleted / totalPlaysOpened) * 100) : 0;
+
+  const metrics = [
+    {
+      id: 'ebr-coverage',
+      label: 'EBR coverage (last 12 months)',
+      value: `${ebrCoveragePct}%`,
+      detail: `${completedEbrCount}/${total} accounts`,
+      target: 'Target >= 75%',
+      status: ebrCoveragePct >= 75 ? 'good' : ebrCoveragePct >= 60 ? 'watch' : 'risk'
+    },
+    {
+      id: 'cadence-breaches',
+      label: 'Cadence breaches (>30 days)',
+      value: `${cadenceBreaches}/${total}`,
+      detail: `${total - cadenceBreaches}/${total} in compliance`,
+      target: 'Target = 0 breaches',
+      status: cadenceBreaches === 0 ? 'good' : cadenceBreaches <= Math.max(1, Math.floor(total * 0.2)) ? 'watch' : 'risk'
+    },
+    {
+      id: 'workshop-coverage',
+      label: 'Workshop coverage (this quarter)',
+      value: `${workshopCoveragePct}%`,
+      detail: `${workshopCoverageCount}/${total} accounts`,
+      target: 'Target = 100%',
+      status: workshopCoveragePct === 100 ? 'good' : workshopCoveragePct >= 75 ? 'watch' : 'risk'
+    },
+    {
+      id: 'qoq-plays',
+      label: 'QoQ plays completed/opened',
+      value: `${totalPlaysCompleted}/${totalPlaysOpened}`,
+      detail: `${playCompletionRate}% completion rate`,
+      target: 'Track play execution QoQ',
+      status: totalPlaysOpened === 0 ? 'watch' : playCompletionRate >= 60 ? 'good' : playCompletionRate >= 40 ? 'watch' : 'risk'
+    },
+    {
+      id: 'success-plan-coverage',
+      label: 'Success plans updated + validated',
+      value: `${successPlanCoveragePct}%`,
+      detail: `${successPlanCoverageCount}/${total} accounts`,
+      target: 'Target = 100%',
+      status: successPlanCoveragePct === 100 ? 'good' : successPlanCoveragePct >= 75 ? 'watch' : 'risk'
+    }
+  ];
+
+  const outliers = accountRows
+    .filter((row) => row.reasons.length > 0)
+    .map((row) => ({
+      account_id: row.account_id,
+      account_name: row.account_name,
+      status: row.status,
+      reasons: row.reasons
+        .sort((left, right) => statusRank[right.status] - statusRank[left.status])
+        .map((reason) => reason.text)
+    }))
+    .sort((left, right) => {
+      const statusDelta = statusRank[right.status] - statusRank[left.status];
+      if (statusDelta) return statusDelta;
+      return right.reasons.length - left.reasons.length;
+    });
+
+  const overallStatus = metrics.reduce((status, metric) => maxStatus(status, metric.status), 'good');
+  const overallLabel = overallStatus === 'good' ? 'Green' : overallStatus === 'watch' ? 'Yellow' : 'Red';
+
+  return {
+    total,
+    metrics,
+    outliers,
+    overallStatus,
+    overallLabel,
+    summary: `${total} account${total === 1 ? '' : 's'} in pooled review`
   };
 };
 
@@ -1261,10 +1453,22 @@ const renderResourceList = (list, items) => {
   });
 };
 
-const renderComplianceStrip = (checksContainer, alertsContainer, overallEl, handbook) => {
+const renderComplianceStrip = (checksContainer, alertsContainer, overallEl, handbook, passedEl, failingEl) => {
   if (!checksContainer || !handbook) return;
   checksContainer.innerHTML = '';
-  (handbook.checks || []).forEach((check) => {
+  const checks = handbook.checks || [];
+  const passedCount = checks.filter((check) => check.status === 'good').length;
+  const failingCount = checks.filter((check) => check.status === 'risk').length;
+
+  if (passedEl) {
+    passedEl.textContent = `${passedCount}/${checks.length || 0}`;
+  }
+  if (failingEl) {
+    failingEl.textContent = String(failingCount);
+  }
+
+  checks.forEach((check) => {
+    const stateLabel = check.status === 'good' ? 'Pass' : check.status === 'risk' ? 'Fail' : 'Watch';
     const item = document.createElement('article');
     item.className = 'compliance-item';
     item.innerHTML = `
@@ -1272,11 +1476,16 @@ const renderComplianceStrip = (checksContainer, alertsContainer, overallEl, hand
         <span class="compliance-item-name">${check.name}</span>
         <span class="status-pill" data-status="${check.status}">${check.statusLabel}</span>
       </div>
+      <div class="event-meta"><span class="status-pill" data-status="${check.status}">${stateLabel}</span></div>
       <p class="compliance-item-reason">${check.reason}</p>
       <a href="${check.anchor}">View</a>
     `;
     checksContainer.appendChild(item);
   });
+
+  if (!checks.length) {
+    checksContainer.innerHTML = '<p class="empty-text">No compliance checks available. Verify account fields and rerun.</p>';
+  }
 
   if (overallEl) {
     overallEl.textContent = handbook.overallStatusLabel || 'Yellow';
@@ -1323,6 +1532,34 @@ const renderRenewalReadiness = (list, items) => {
     renderEmptyState(list, 'No renewal readiness checkpoints captured yet.');
     return;
   }
+  items.forEach((item) => {
+    const li = document.createElement('li');
+    li.className = 'event-item';
+    li.innerHTML = `
+      <div class="event-title">${item.label}</div>
+      <div class="event-meta">
+        <span class="status-pill" data-status="${item.status}">${item.value ? 'Complete' : 'Pending'}</span>
+        ${item.date ? ` • ${formatDate(item.date)}` : ''}
+      </div>
+    `;
+    list.appendChild(li);
+  });
+};
+
+const renderTriageRecoveryChecklist = (list, cadence) => {
+  if (!list) return;
+  list.innerHTML = '';
+  const items = cadence?.triage_required ? cadence?.triage_recovery_checklist || [] : [];
+  if (!items.length) {
+    renderEmptyState(
+      list,
+      cadence?.triage_required
+        ? 'Recovery checklist required. Update triage plan fields in account data.'
+        : 'Recovery checklist not required while cadence is within threshold.'
+    );
+    return;
+  }
+
   items.forEach((item) => {
     const li = document.createElement('li');
     li.className = 'event-item';
@@ -1404,6 +1641,81 @@ const renderResourceRegistry = (view, state) => {
   }
 };
 
+const renderPortfolioRollup = (portfolio, selectedAccountId) => {
+  const overallEl = document.querySelector('[data-portfolio-overall]');
+  const summaryEl = document.querySelector('[data-portfolio-summary]');
+  const metricsContainer = document.querySelector('[data-list="portfolio-metrics"]');
+  const outliersList = document.querySelector('[data-list="portfolio-outliers"]');
+
+  if (!portfolio || !metricsContainer || !outliersList) return;
+
+  if (overallEl) {
+    overallEl.textContent = portfolio.overallLabel || 'Yellow';
+    overallEl.dataset.status = portfolio.overallStatus || 'watch';
+  }
+  if (summaryEl) {
+    summaryEl.textContent = portfolio.summary || '';
+  }
+
+  metricsContainer.innerHTML = '';
+  const metrics = portfolio.metrics || [];
+  if (!metrics.length) {
+    metricsContainer.innerHTML = '<p class="empty-text">No portfolio metrics available.</p>';
+  }
+  metrics.forEach((metric) => {
+    const card = document.createElement('article');
+    card.className = 'portfolio-metric';
+    card.innerHTML = `
+      <div class="portfolio-metric-label">${metric.label}</div>
+      <div class="portfolio-metric-value">${metric.value}</div>
+      <div class="portfolio-metric-target">${metric.target}</div>
+      <div class="event-meta">
+        <span class="status-pill" data-status="${metric.status}">${
+          metric.status === 'good' ? 'On track' : metric.status === 'watch' ? 'Watch' : 'At risk'
+        }</span>
+        ${metric.detail || ''}
+      </div>
+    `;
+    metricsContainer.appendChild(card);
+  });
+
+  outliersList.innerHTML = '';
+  if (!(portfolio.outliers || []).length) {
+    renderEmptyState(outliersList, 'No portfolio outliers detected.');
+    return;
+  }
+
+  portfolio.outliers.forEach((outlier) => {
+    const li = document.createElement('li');
+    li.className = 'event-item portfolio-outlier';
+    const reason = (outlier.reasons || []).slice(0, 2).join(' • ');
+    li.innerHTML = `
+      <div class="event-title">
+        ${outlier.account_name}
+        ${outlier.account_id === selectedAccountId ? '<span class="status-pill" data-status="good">Selected</span>' : ''}
+      </div>
+      <div class="event-meta">
+        <span class="status-pill" data-status="${outlier.status}">${
+          outlier.status === 'good' ? 'On track' : outlier.status === 'watch' ? 'Watch' : 'At risk'
+        }</span>
+        ${reason}
+      </div>
+    `;
+    const action = document.createElement('button');
+    action.type = 'button';
+    action.className = 'inline-button';
+    action.textContent = 'Open account';
+    action.addEventListener('click', () => {
+      const select = document.querySelector('[data-account-switcher]');
+      if (!select) return;
+      select.value = outlier.account_id;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    li.appendChild(action);
+    outliersList.appendChild(li);
+  });
+};
+
 const applyOperationalStatuses = (view) => {
   const applyStatus = (selector, status) => {
     document.querySelectorAll(selector).forEach((el) => {
@@ -1416,15 +1728,35 @@ const applyOperationalStatuses = (view) => {
   applyStatus('[data-field="renewal.priority_label"]', view.renewal.priority_status || 'watch');
   applyStatus('[data-field="risk_updates.health_badge"]', view.risk_updates.health_status || 'watch');
   applyStatus('[data-field="risk_updates.escalation_badge"]', view.risk_updates.escalation_status || 'watch');
+  applyStatus('[data-field="cadence.triage_state"]', view.cadence.triage_status || 'watch');
 
   const cadenceBanner = document.querySelector('[data-cadence-banner]');
   if (cadenceBanner) {
     if (view.cadence.violated) {
       cadenceBanner.dataset.status = view.cadence.status === 'risk' ? 'risk' : 'watch';
-      cadenceBanner.textContent = 'Cadence violated (>30 days since last call).';
+      cadenceBanner.textContent =
+        view.cadence.status === 'risk'
+          ? 'Cadence exceeded 45 days. Elevate to Red and execute triage recovery plan.'
+          : 'Cadence exceeded 30 days. Flag as Non-Engaged and start triage.';
     } else {
       cadenceBanner.dataset.status = 'good';
       cadenceBanner.textContent = 'Cadence is within expectation.';
+    }
+  }
+
+  const triageBanner = document.querySelector('[data-triage-banner]');
+  if (triageBanner) {
+    if (view.cadence.triage_required) {
+      triageBanner.dataset.status = view.cadence.triage_complete ? 'watch' : 'risk';
+      triageBanner.textContent = view.cadence.triage_complete
+        ? 'Triage recovery checklist is complete. Keep weekly check-ins until re-engaged.'
+        : 'Triage recovery checklist is incomplete. Complete schedule, stakeholder, and workshop actions.';
+    } else if (view.cadence.violated) {
+      triageBanner.dataset.status = 'watch';
+      triageBanner.textContent = `Triage state: ${view.cadence.triage_state}.`;
+    } else {
+      triageBanner.dataset.status = 'good';
+      triageBanner.textContent = 'No triage actions required.';
     }
   }
 
@@ -2905,8 +3237,11 @@ const render = (view, state) => {
     document.querySelector('[data-list="handbook-compliance"]'),
     document.querySelector('[data-list="compliance-alerts"]'),
     document.querySelector('[data-handbook-overall]'),
-    view.handbook
+    view.handbook,
+    document.querySelector('[data-handbook-passed]'),
+    document.querySelector('[data-handbook-failing]')
   );
+  renderPortfolioRollup(state.portfolio, state.selectedAccountId);
   updateHealthStatus(view);
   updateFreshnessBadges(view);
   updateRenewalBadges(view);
@@ -2942,6 +3277,7 @@ const render = (view, state) => {
   renderValuePoints(document.querySelector('[data-list="value-points"]'), view.lists.valuePoints);
   renderDigitalBreakdown(document.querySelector('[data-list="digital-breakdown"]'), view.lists.digitalBreakdown);
   renderCadenceCalendar(document.querySelector('[data-list="cadence-calendar"]'), view.lists.cadenceCalendar);
+  renderTriageRecoveryChecklist(document.querySelector('[data-list="triage-recovery-checklist"]'), view.cadence);
   renderEbrDates(document.querySelector('[data-list="ebr-dates"]'), view.lists.ebrDates);
   renderEbrPrepChecklist(document.querySelector('[data-list="ebr-prep-checklist"]'), view.lists.ebrPrepChecklist);
   renderWorkshops(document.querySelector('[data-list="workshops"]'), view.lists.workshops);
@@ -3032,6 +3368,7 @@ const init = async () => {
     playbookState,
     actionState: {},
     view: null,
+    portfolio: null,
     palette: null,
     sectionControlsReady: false,
     resourceQuery: '',
@@ -3074,6 +3411,7 @@ const init = async () => {
     const account = getSelectedAccount();
     if (!account) return;
     state.selectedAccountId = account.account_id;
+    state.portfolio = computePortfolioRollup(state.accounts, { now: new Date() });
     let normalizedAccount = account;
     if (window.DerivedMetrics && typeof window.DerivedMetrics.validateAccountData === 'function') {
       const validation = window.DerivedMetrics.validateAccountData(account);

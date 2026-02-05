@@ -798,7 +798,7 @@
             "unit": "deploys/day",
             "baseline": 0.2,
             "current": 0.6,
-            "target": 1.0,
+            "target": 1,
             "series": [
               {
                 "date": "2025-11-01",
@@ -896,24 +896,24 @@
         },
         "levels": {
           "deployment_frequency": {
-            "elite": 1.0,
+            "elite": 1,
             "high": 0.2,
             "medium": 0.03
           },
           "lead_time": {
-            "elite": 1.0,
-            "high": 7.0,
-            "medium": 30.0
+            "elite": 1,
+            "high": 7,
+            "medium": 30
           },
           "change_failure": {
-            "elite": 5.0,
-            "high": 10.0,
-            "medium": 20.0
+            "elite": 5,
+            "high": 10,
+            "medium": 20
           },
           "mttr": {
-            "elite": 1.0,
-            "high": 24.0,
-            "medium": 72.0
+            "elite": 1,
+            "high": 24,
+            "medium": 72
           }
         }
       },
@@ -1283,7 +1283,22 @@
         "Health score above 60",
         "Executive sponsor aligned on Q2 priorities",
         "Expansion opportunity identified"
-      ]
+      ],
+      "triage_state": "Engaged",
+      "triage_recovery_plan": {
+        "schedule_next_call": {
+          "value": true,
+          "date": "2026-02-01"
+        },
+        "stakeholders_aligned": {
+          "value": true,
+          "date": "2026-01-30"
+        },
+        "workshop_scheduled": {
+          "value": true,
+          "date": "2026-02-18"
+        }
+      }
     },
     {
       "meta": {
@@ -2062,7 +2077,7 @@
             "unit": "deploys/day",
             "baseline": 0.2,
             "current": 0.22,
-            "target": 1.0,
+            "target": 1,
             "series": [
               {
                 "date": "2025-11-01",
@@ -2160,24 +2175,24 @@
         },
         "levels": {
           "deployment_frequency": {
-            "elite": 1.0,
+            "elite": 1,
             "high": 0.2,
             "medium": 0.03
           },
           "lead_time": {
-            "elite": 1.0,
-            "high": 7.0,
-            "medium": 30.0
+            "elite": 1,
+            "high": 7,
+            "medium": 30
           },
           "change_failure": {
-            "elite": 5.0,
-            "high": 10.0,
-            "medium": 20.0
+            "elite": 5,
+            "high": 10,
+            "medium": 20
           },
           "mttr": {
-            "elite": 1.0,
-            "high": 24.0,
-            "medium": 72.0
+            "elite": 1,
+            "high": 24,
+            "medium": 72
           }
         }
       },
@@ -2533,7 +2548,22 @@
         "Outcome validation incomplete",
         "Commercial terms discussion pending",
         "Risk mitigation plan drafted"
-      ]
+      ],
+      "triage_state": "Triage In Progress",
+      "triage_recovery_plan": {
+        "schedule_next_call": {
+          "value": true,
+          "date": "2026-02-06"
+        },
+        "stakeholders_aligned": {
+          "value": false,
+          "date": null
+        },
+        "workshop_scheduled": {
+          "value": true,
+          "date": "2026-02-03"
+        }
+      }
     }
   ]
 }

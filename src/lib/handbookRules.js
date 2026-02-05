@@ -122,14 +122,14 @@
     if (daysSince <= 45) {
       return {
         status: 'watch',
-        reason: daysSince + ' days since last call; exceeds 30-day target but inside grace window.',
+        reason: daysSince + ' days since last call; exceeds 30-day target. Flag as Non-Engaged + Triage.',
         daysSince: daysSince
       };
     }
 
     return {
       status: 'risk',
-      reason: daysSince + ' days since last call; cadence violation (>45 days).',
+      reason: daysSince + ' days since last call; cadence violation (>45 days). Recovery plan checklist required.',
       daysSince: daysSince
     };
   }

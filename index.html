@@ -210,10 +210,39 @@
           </div>
           <div class="compliance-summary">
             <span class="status-pill" data-handbook-overall>Yellow</span>
+            <div class="compliance-counts">
+              <div class="compliance-count">
+                <span class="compliance-count-label">Checks passed</span>
+                <span class="compliance-count-value" data-handbook-passed>0/6</span>
+              </div>
+              <div class="compliance-count">
+                <span class="compliance-count-label">Checks failing</span>
+                <span class="compliance-count-value" data-handbook-failing>0</span>
+              </div>
+            </div>
             <div class="compliance-alerts" data-list="compliance-alerts"></div>
           </div>
         </div>
         <div class="compliance-grid" data-list="handbook-compliance"></div>
+      </section>
+
+      <section class="portfolio-strip card" id="portfolio-rollup" aria-label="Portfolio rollup">
+        <div class="portfolio-head">
+          <div>
+            <p class="eyebrow">Portfolio View</p>
+            <h2>Pooled account handbook coverage</h2>
+          </div>
+          <div class="portfolio-summary">
+            <span class="status-pill" data-portfolio-overall>Yellow</span>
+            <p class="muted" data-portfolio-summary>0 accounts loaded</p>
+          </div>
+        </div>
+        <div class="portfolio-grid" data-list="portfolio-metrics"></div>
+        <div class="portfolio-outliers">
+          <h3>Priority outliers</h3>
+          <p class="muted">Accounts with handbook gaps requiring action.</p>
+          <ul class="event-list" data-list="portfolio-outliers"></ul>
+        </div>
       </section>
 
       <div class="layout">
@@ -1102,11 +1131,24 @@
                   <span class="kpi-label">Days since last call</span>
                   <span class="kpi-value" data-field="cadence.days_since_last_call">19</span>
                 </div>
+                <div class="kpi">
+                  <span class="kpi-label">Recommended cadence</span>
+                  <span class="kpi-value" data-field="cadence.recommended_frequency">Biweekly</span>
+                </div>
+                <div class="kpi">
+                  <span class="kpi-label">Triage state</span>
+                  <span class="status-pill" data-field="cadence.triage_state">Engaged</span>
+                </div>
               </div>
               <div class="metric-banner" data-cadence-banner></div>
+              <div class="metric-banner" data-triage-banner></div>
+              <p class="muted" data-field="cadence.automation_cue">
+                Cadence is inside the one-month expectation.
+              </p>
               <p class="muted" data-field="cadence.recommended_action">
                 Maintain cadence; confirm next agenda.
               </p>
+              <ul class="event-list" data-list="triage-recovery-checklist"></ul>
             </article>
             <article class="card" id="workshop-tracker">
               <h3>Workshop tracker</h3>

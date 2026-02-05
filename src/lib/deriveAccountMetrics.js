@@ -67,6 +67,12 @@
     return timezone || DEFAULT_TIMEZONE;
   }
 
+  function triageStateStatus(state) {
+    if (state === 'Engaged' || state === 'Re-Engaged') return 'good';
+    if (state === 'At Risk') return 'watch';
+    return 'risk';
+  }
+
   function normalizeAccountData(account) {
     var clone = JSON.parse(JSON.stringify(account || {}));
     clone.timezone = normalizeTimezone(clone.timezone);
@@ -121,6 +127,16 @@
 
     clone.response_playbooks = clone.response_playbooks || { yellow: {}, red: {} };
 
+    clone.triage_state = clone.triage_state || null;
+    clone.triage_recovery_plan = clone.triage_recovery_plan || {
+      schedule_next_call: { value: false, date: null },
+      stakeholders_aligned: { value: false, date: null },
+      workshop_scheduled: { value: false, date: null }
+    };
+    ['schedule_next_call', 'stakeholders_aligned', 'workshop_scheduled'].forEach(function (key) {
+      clone.triage_recovery_plan[key] = normalizeBooleanDateField(clone.triage_recovery_plan[key]);
+    });
+
     return clone;
   }
 
@@ -172,6 +188,20 @@
       if (!Array.isArray(normalized.growth_plan[key])) {
         errors.push('growth_plan.' + key + ' must be an array');
       }
+    });
+
+    var triageStates = ['Engaged', 'At Risk', 'Non-Engaged', 'Triage In Progress', 'Re-Engaged'];
+    if (normalized.triage_state && triageStates.indexOf(normalized.triage_state) === -1) {
+      errors.push('triage_state must be one of: ' + triageStates.join(', '));
+    }
+
+    ['schedule_next_call', 'stakeholders_aligned', 'workshop_scheduled'].forEach(function (key) {
+      var planItem = normalized.triage_recovery_plan[key];
+      if (!planItem || typeof planItem.value !== 'boolean') {
+        errors.push('triage_recovery_plan.' + key + '.value must be boolean');
+        return;
+      }
+      validateDateField(errors, 'triage_recovery_plan.' + key + '.date', planItem.date, true);
     });
 
     return {
@@ -257,9 +287,62 @@
     }
 
     var cadenceViolated = daysSinceLastCall !== null && daysSinceLastCall > 30;
-    var recommendedCadenceAction = cadenceViolated
-      ? 'Triage as Non-Engaged and schedule next call'
-      : 'Maintain cadence; confirm next agenda';
+    var recommendedCadenceAction =
+      daysSinceLastCall === null
+        ? 'Capture cadence baseline and schedule next customer call'
+        : daysSinceLastCall > 45
+        ? 'Escalate Non-Engaged status and execute recovery plan checklist'
+        : daysSinceLastCall > 30
+        ? 'Flag as Non-Engaged + Triage and schedule next customer call'
+        : 'Maintain cadence; confirm next agenda';
+
+    var triageState =
+      normalized.triage_state ||
+      (daysSinceLastCall === null
+        ? 'At Risk'
+        : daysSinceLastCall > 45
+        ? 'Non-Engaged'
+        : daysSinceLastCall > 30
+        ? 'At Risk'
+        : 'Engaged');
+    var triageStatus = triageStateStatus(triageState);
+    var triageRecoveryChecklist = [
+      {
+        key: 'schedule_next_call',
+        label: 'Schedule next customer call',
+        data: normalized.triage_recovery_plan.schedule_next_call
+      },
+      {
+        key: 'stakeholders_aligned',
+        label: 'Confirm stakeholder alignment',
+        data: normalized.triage_recovery_plan.stakeholders_aligned
+      },
+      {
+        key: 'workshop_scheduled',
+        label: 'Schedule adoption workshop',
+        data: normalized.triage_recovery_plan.workshop_scheduled
+      }
+    ].map(function (item) {
+      return {
+        key: item.key,
+        label: item.label,
+        value: item.data.value === true,
+        date: item.data.date || null,
+        status: item.data.value === true ? 'good' : 'risk'
+      };
+    });
+    var triageRecoveryRequired = daysSinceLastCall !== null && daysSinceLastCall > 45;
+    var triageRecoveryComplete = triageRecoveryChecklist.every(function (item) {
+      return item.value === true;
+    });
+    var triageAutomationCue =
+      daysSinceLastCall === null
+        ? 'Cadence baseline is missing; capture last call date and set next call.'
+        : daysSinceLastCall > 45
+        ? 'Cadence exceeded 45 days: require triage recovery plan and weekly leadership updates.'
+        : daysSinceLastCall > 30
+        ? 'Cadence exceeded 30 days: flag as Non-Engaged and start triage motion.'
+        : 'Cadence is inside the one-month expectation.';
 
     var quarterStart = getQuarterStart(now, timezone);
     var quarterEnd = getQuarterEnd(now, timezone);
@@ -354,6 +437,15 @@
     var escalationSeverity = escalated ? normalized.escalation_severity : null;
     var escalationCadenceDays = escalationSeverity ? ESCALATION_CADENCE_DAYS[escalationSeverity] || 7 : null;
 
+    var recommendedCadenceFrequency = 'Biweekly';
+    if (escalated || healthStatus === 'Red' || (daysToRenewal !== null && daysToRenewal <= 90)) {
+      recommendedCadenceFrequency = 'Weekly';
+    } else if (healthStatus === 'Yellow') {
+      recommendedCadenceFrequency = 'Biweekly';
+    } else {
+      recommendedCadenceFrequency = 'Monthly';
+    }
+
     var lastEscalationUpdate = parse(normalized.last_escalation_update_date);
     var nextEscalationUpdateDue =
       escalated && escalationCadenceDays
@@ -379,6 +471,13 @@
       cadenceStatus: cadenceStatus,
       cadenceViolated: cadenceViolated,
       recommendedCadenceAction: recommendedCadenceAction,
+      recommendedCadenceFrequency: recommendedCadenceFrequency,
+      triageState: triageState,
+      triageStatus: triageStatus,
+      triageAutomationCue: triageAutomationCue,
+      triageRecoveryChecklist: triageRecoveryChecklist,
+      triageRecoveryRequired: triageRecoveryRequired,
+      triageRecoveryComplete: triageRecoveryComplete,
 
       workshopCountThisQuarter: workshopCountThisQuarter,
       workshopStatus: workshopStatus,
