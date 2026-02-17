@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="GitLab customer and CSM operational cheatsheet based on handbook guidance." />
+    <title>GitLab CSM Cheatsheet</title>
+    <style>
+      :root {
+        --bg: #f8f0e6;
+        --bg-soft: #fff6ef;
+        --ink: #16161c;
+        --muted: #4f4f5b;
+        --stroke: rgba(22, 22, 28, 0.12);
+        --card: #ffffff;
+        --accent: #fc6d26;
+        --accent-strong: #de4f11;
+        --good: #1c8a4c;
+        --watch: #9b6a00;
+        --radius: 16px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", "Segoe UI", Arial, sans-serif;
+        color: var(--ink);
+        background: linear-gradient(130deg, var(--bg) 0%, var(--bg-soft) 100%);
+      }
+
+      .page {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 28px 20px 56px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+
+      .eyebrow {
+        margin: 0;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--accent-strong);
+        font-weight: 700;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(28px, 5vw, 42px);
+        line-height: 1.1;
+      }
+
+      .lede {
+        margin: 0;
+        font-size: 15px;
+        color: var(--muted);
+        max-width: 840px;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--stroke);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--ink);
+        text-decoration: none;
+        padding: 8px 12px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+      }
+
+      .btn.primary {
+        border-color: rgba(252, 109, 38, 0.45);
+        background: rgba(252, 109, 38, 0.12);
+        color: var(--accent-strong);
+      }
+
+      section {
+        margin-top: 18px;
+      }
+
+      .card {
+        border: 1px solid var(--stroke);
+        border-radius: var(--radius);
+        background: var(--card);
+        padding: 14px;
+      }
+
+      h2 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+
+      .muted {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .links-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+      }
+
+      .flow-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+      }
+
+      .flow-step {
+        border: 1px solid var(--stroke);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 10px;
+        display: grid;
+        gap: 6px;
+      }
+
+      .flow-stage {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--accent-strong);
+        font-weight: 700;
+      }
+
+      .flow-goal {
+        font-weight: 700;
+        font-size: 13px;
+      }
+
+      .flow-exit {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .matrix-grid,
+      .rhythm-grid,
+      .usecase-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .matrix-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      }
+
+      .matrix-columns {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .meta-title {
+        margin: 0 0 4px;
+        font-size: 11px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .mini-list {
+        margin: 0;
+        padding-left: 16px;
+        display: grid;
+        gap: 4px;
+        font-size: 12px;
+      }
+
+      .pill {
+        border-radius: 999px;
+        border: 1px solid rgba(252, 109, 38, 0.45);
+        background: rgba(252, 109, 38, 0.12);
+        color: var(--accent-strong);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 3px 9px;
+        font-weight: 700;
+      }
+
+      .row-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+      }
+
+      .row-head h3 {
+        margin: 0;
+        font-size: 15px;
+      }
+
+      .usecase-grid {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      }
+
+      .risk {
+        border-left: 4px solid #d64545;
+      }
+
+      .better {
+        border-left: 4px solid var(--good);
+      }
+
+      .label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--muted);
+      }
+
+      @media (max-width: 720px) {
+        .matrix-columns {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <p class="eyebrow">GitLab CSM Operational Console</p>
+        <h1 data-field="title">GitLab Customer + CSM Operational Cheatsheet</h1>
+        <p class="lede" data-field="subtitle">
+          A fast, handbook-aligned review of what enterprise customers should manage and how CSMs guide the motion.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary" href="./index.html#cheatsheet">Open In Dashboard</a>
+          <a class="btn" href="./print/cheatsheet.html" target="_blank" rel="noopener">Printable Version</a>
+          <a class="btn" href="https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/" target="_blank" rel="noopener">AMER Handbook</a>
+        </div>
+      </header>
+
+      <section class="card stack">
+        <h2>Core References</h2>
+        <p class="muted">Primary handbook pages used in this cheatsheet.</p>
+        <div class="links-grid" data-list="links"></div>
+      </section>
+
+      <section class="card stack">
+        <h2>Lifecycle Diagram</h2>
+        <p class="muted">How customers progress from onboarding to renewal and expansion.</p>
+        <div class="flow-grid" data-list="flow"></div>
+      </section>
+
+      <section class="card stack">
+        <h2>Customer Priorities vs CSM Guidance</h2>
+        <p class="muted">Use this during planning and stakeholder alignment calls.</p>
+        <div class="matrix-grid" data-list="matrix"></div>
+      </section>
+
+      <section class="card stack">
+        <h2>Operating Rhythm</h2>
+        <p class="muted">Cadence and governance expectations for AMER motion compliance.</p>
+        <div class="rhythm-grid" data-list="rhythm"></div>
+      </section>
+
+      <section class="card stack">
+        <h2>Use-case Examples</h2>
+        <p class="muted">Examples of what to improve and how CSMs typically guide it.</p>
+        <div class="usecase-grid" data-list="use-cases"></div>
+      </section>
+
+      <section class="card stack">
+        <h2>Anti-patterns to Avoid</h2>
+        <p class="muted">Common execution misses and better handbook-aligned alternatives.</p>
+        <div class="stack" data-list="anti-patterns"></div>
+      </section>
+    </div>
+
+    <script>
+      'use strict';
+
+      const DATA_URL = './data/cheatsheet.json';
+
+      const fallback = {
+        title: 'GitLab Customer + CSM Operational Cheatsheet',
+        subtitle:
+          'A fast, handbook-aligned review of what enterprise customers should manage and how CSMs guide the motion.',
+        handbook_links: [],
+        lifecycle_flow: [],
+        priority_matrix: [],
+        operating_rhythm: [],
+        use_cases: [],
+        anti_patterns: []
+      };
+
+      const escapeHtml = (value) =>
+        String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+
+      const loadData = async () => {
+        try {
+          const response = await fetch(DATA_URL, { cache: 'no-store' });
+          if (!response.ok) throw new Error('Failed to load cheatsheet data');
+          return await response.json();
+        } catch (error) {
+          return fallback;
+        }
+      };
+
+      const setText = (selector, value) => {
+        const el = document.querySelector(`[data-field="${selector}"]`);
+        if (el && value !== undefined && value !== null) {
+          el.textContent = value;
+        }
+      };
+
+      const render = async () => {
+        const data = await loadData();
+        setText('title', data.title);
+        setText('subtitle', data.subtitle);
+
+        const links = document.querySelector('[data-list="links"]');
+        (data.handbook_links || []).forEach((item) => {
+          const card = document.createElement('article');
+          card.className = 'card';
+          card.innerHTML = `
+            <div class="row-head">
+              <h3>${escapeHtml(item.label)}</h3>
+              <span class="pill">Reference</span>
+            </div>
+            <p class="muted">${escapeHtml(item.description)}</p>
+            <a class="btn" href="${item.link}" target="_blank" rel="noopener">Open</a>
+          `;
+          links.appendChild(card);
+        });
+
+        const flow = document.querySelector('[data-list="flow"]');
+        (data.lifecycle_flow || []).forEach((item) => {
+          const step = document.createElement('article');
+          step.className = 'flow-step';
+          step.innerHTML = `
+            <div class="flow-stage">${escapeHtml(item.stage)}</div>
+            <div class="flow-goal">${escapeHtml(item.goal)}</div>
+            <div class="flow-exit"><strong>Done when:</strong> ${escapeHtml(item.exit_criteria)}</div>
+          `;
+          flow.appendChild(step);
+        });
+
+        const matrix = document.querySelector('[data-list="matrix"]');
+        (data.priority_matrix || []).forEach((item) => {
+          const customerFocus = (item.customer_focus || [])
+            .map((point) => `<li>${escapeHtml(point)}</li>`)
+            .join('');
+          const csmGuidance = (item.csm_guidance || [])
+            .map((point) => `<li>${escapeHtml(point)}</li>`)
+            .join('');
+          const signals = (item.success_signals || []).map((point) => `<li>${escapeHtml(point)}</li>`).join('');
+
+          const card = document.createElement('article');
+          card.className = 'card';
+          card.innerHTML = `
+            <div class="row-head">
+              <h3>${escapeHtml(item.motion)}</h3>
+              <span class="pill">Motion</span>
+            </div>
+            <p class="muted"><strong>Customer cares about:</strong> ${escapeHtml(item.customer_cares)}</p>
+            <div class="matrix-columns">
+              <div>
+                <p class="meta-title">Customer focus</p>
+                <ul class="mini-list">${customerFocus}</ul>
+              </div>
+              <div>
+                <p class="meta-title">CSM guidance</p>
+                <ul class="mini-list">${csmGuidance}</ul>
+              </div>
+            </div>
+            <p class="meta-title">Success signals</p>
+            <ul class="mini-list">${signals}</ul>
+            <p class="muted"><strong>Example:</strong> ${escapeHtml(item.example)}</p>
+            <a class="btn" href="${item.link}" target="_blank" rel="noopener">Handbook Link</a>
+          `;
+          matrix.appendChild(card);
+        });
+
+        const rhythm = document.querySelector('[data-list="rhythm"]');
+        (data.operating_rhythm || []).forEach((item) => {
+          const row = document.createElement('article');
+          row.className = 'card';
+          row.innerHTML = `
+            <div class="row-head">
+              <h3>${escapeHtml(item.name)}</h3>
+              <span class="pill">${escapeHtml(item.target)}</span>
+            </div>
+            <p class="muted"><strong>Customer need:</strong> ${escapeHtml(item.customer_need)}</p>
+            <p class="muted"><strong>CSM motion:</strong> ${escapeHtml(item.csm_motion)}</p>
+            <p class="muted"><strong>If missed:</strong> ${escapeHtml(item.if_missed)}</p>
+            <a class="btn" href="${item.link}" target="_blank" rel="noopener">Reference</a>
+          `;
+          rhythm.appendChild(row);
+        });
+
+        const useCases = document.querySelector('[data-list="use-cases"]');
+        (data.use_cases || []).forEach((item) => {
+          const metrics = (item.metrics || []).map((metric) => `<li>${escapeHtml(metric)}</li>`).join('');
+          const links = (item.links || [])
+            .map((link) => `<a href="${link.link}" target="_blank" rel="noopener">${escapeHtml(link.label)}</a>`)
+            .join(' | ');
+
+          const card = document.createElement('article');
+          card.className = 'card';
+          card.innerHTML = `
+            <div class="row-head">
+              <h3>${escapeHtml(item.name)}</h3>
+              <span class="pill">Use case</span>
+            </div>
+            <p class="muted"><strong>Scenario:</strong> ${escapeHtml(item.scenario)}</p>
+            <p class="muted"><strong>Customer goal:</strong> ${escapeHtml(item.customer_goal)}</p>
+            <p class="muted"><strong>CSM motion:</strong> ${escapeHtml(item.recommended_motion)}</p>
+            <p class="meta-title">Metrics to watch</p>
+            <ul class="mini-list">${metrics}</ul>
+            <p class="muted"><strong>Example:</strong> ${escapeHtml(item.example)}</p>
+            <p class="label">${links}</p>
+          `;
+          useCases.appendChild(card);
+        });
+
+        const antiPatterns = document.querySelector('[data-list="anti-patterns"]');
+        (data.anti_patterns || []).forEach((item) => {
+          const row = document.createElement('article');
+          row.className = 'card';
+          row.innerHTML = `
+            <p class="muted risk"><strong>Risk:</strong> ${escapeHtml(item.risk)}</p>
+            <p class="muted better"><strong>Better motion:</strong> ${escapeHtml(item.better_motion)}</p>
+            <a class="btn" href="${item.link}" target="_blank" rel="noopener">Reference</a>
+          `;
+          antiPatterns.appendChild(row);
+        });
+      };
+
+      render();
+    </script>
+  </body>
+</html>
