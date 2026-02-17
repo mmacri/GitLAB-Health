@@ -1741,12 +1741,15 @@ const renderResourceList = (list, items) => {
     return;
   }
   items.forEach((item) => {
+    const title = escapeHtml(item.title || 'Resource');
+    const detail = escapeHtml(item.detail || item.description || '');
+    const link = escapeHtml(item.link || '#resources');
     const li = document.createElement('li');
     li.className = 'resource-item';
     li.innerHTML = `
-      <span class="resource-title">${item.title}</span>
-      <span class="resource-meta">${item.detail}</span>
-      <a href="${item.link}" target="_blank" rel="noopener">Open</a>
+      <span class="resource-title">${title}</span>
+      ${detail ? `<span class="resource-meta">${detail}</span>` : ''}
+      <a href="${link}" target="_blank" rel="noopener">Open</a>
     `;
     list.appendChild(li);
   });
@@ -4122,7 +4125,11 @@ const buildCsv = (view) => {
 const initExport = (getView) => {
   document.querySelectorAll('[data-export-ebr]').forEach((btn) => {
     btn.addEventListener('click', () => {
+      const view = getView();
       const url = new URL('print/ebr.html', window.location.href);
+      if (view?.accountId) {
+        url.searchParams.set('account', view.accountId);
+      }
       window.open(url.toString(), '_blank', 'noopener');
     });
   });

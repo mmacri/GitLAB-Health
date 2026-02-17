@@ -12,6 +12,11 @@ Edit these canonical data files:
 - `data/accounts.json`: multi-account operational data (milestones, cadence, success plan, expansion, risk).
   - Includes non-engaged triage fields (`triage_state`, `triage_recovery_plan.*`) used by cadence automation cues.
 - `data/resources.json`: searchable handbook and docs registry.
+- `data/cheatsheet.json`: in-app and printable cheatsheet visuals/content.
+
+Legacy snapshots:
+- `data/dashboard.json` and `data/metrics.json` are retained for backward compatibility with older exports/scripts.
+- The main dashboard (`index.html`) reads from `data/accounts.json`, `data/resources.json`, and `data/cheatsheet.json`.
 
 When the site is served via a static server, the dashboard loads both files directly. If data cannot be loaded, the dashboard falls back to the embedded sample object in `assets/js/app.js`.
 The executive PDF export uses `print/ebr.html`.
