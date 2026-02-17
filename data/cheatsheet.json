@@ -1,0 +1,258 @@
+{
+  "version": 1,
+  "updated_on": "2026-02-17",
+  "title": "GitLab Customer + CSM Operational Cheatsheet",
+  "subtitle": "A fast, handbook-aligned review of what enterprise customers should manage and how CSMs guide the motion.",
+  "overview_points": [
+    "Use this as a one-screen operating reference before cadence calls, workshops, EBRs, and renewal checkpoints.",
+    "Customer priorities focus on outcomes and adoption velocity; CSM guidance focuses on repeatable execution and risk prevention.",
+    "Targets align to AMER CSM handbook expectations: onboarding speed, engagement rhythm, value delivery, and renewal readiness."
+  ],
+  "handbook_links": [
+    {
+      "label": "AMER CSM Segment",
+      "description": "Primary operating model for Align & Onboard, Enable, and Expand & Renew.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/"
+    },
+    {
+      "label": "Success Plans",
+      "description": "How to structure measurable objectives and keep plans updated quarterly.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/"
+    },
+    {
+      "label": "Customer Health Scoring",
+      "description": "PROVE health framework and signal interpretation.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"
+    },
+    {
+      "label": "CSM Playbooks",
+      "description": "Operational playbooks for CI, CD, Secure, and risk handling.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/"
+    }
+  ],
+  "priority_matrix": [
+    {
+      "motion": "Align & Onboard",
+      "customer_cares": "Get teams productive quickly and prove early value.",
+      "customer_focus": [
+        "Clear success outcomes and owners",
+        "Working platform access (SSO, runners, project setup)",
+        "First production value with active users"
+      ],
+      "csm_guidance": [
+        "Run kickoff and document success criteria in the success plan",
+        "Track first engage (<=14d), first value (<=30d), onboarding complete (<=45d)",
+        "Escalate blocked onboarding dependencies early"
+      ],
+      "success_signals": [
+        "First engage met",
+        "First value met",
+        "Onboarding complete met"
+      ],
+      "example": "Use case: New enterprise customer migrating from multiple tools. CSM sequences kickoff, onboarding checklist, and CI workshop to reach first value in the first month.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/"
+    },
+    {
+      "motion": "Enable",
+      "customer_cares": "Drive adoption in daily workflows and remove execution bottlenecks.",
+      "customer_focus": [
+        "Consistent cadence calls",
+        "Use-case adoption growth across SCM, CI, Secure, and Release",
+        "Quarterly workshops tied to adoption gaps"
+      ],
+      "csm_guidance": [
+        "Maintain weekly or biweekly cadence and never exceed 30 days without a customer call",
+        "Use playbooks to move lowest-scoring use case to green",
+        "Deliver at least one workshop per quarter per account"
+      ],
+      "success_signals": [
+        "No cadence breach",
+        "Workshop expectation met",
+        "Use-case score trend positive"
+      ],
+      "example": "Use case: CI adoption stalled at 35% project coverage. CSM runs CI/Verify workshop, tracks template rollout, and confirms increased pipeline coverage in 30 days.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"
+    },
+    {
+      "motion": "Expand & Renew",
+      "customer_cares": "Demonstrate business outcomes and de-risk renewal while identifying growth paths.",
+      "customer_focus": [
+        "EBR story grounded in measurable outcomes",
+        "Renewal readiness across stakeholders, outcomes, and commercial alignment",
+        "Expansion plays with clear owners and win rate tracking"
+      ],
+      "csm_guidance": [
+        "Run at least one EBR every 12 months and maintain forward roadmap",
+        "Keep success plan updated quarterly with customer + manager validation",
+        "Elevate renewal risk when readiness gaps remain inside 90 days"
+      ],
+      "success_signals": [
+        "EBR in last 12 months",
+        "Success plan current and validated",
+        "Renewal readiness checklist complete"
+      ],
+      "example": "Use case: Renewal in 75 days with mixed sentiment. CSM prioritizes outcomes validation, executive alignment, and risk plan closure before commercial finalization.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#expand--renew"
+    }
+  ],
+  "operating_rhythm": [
+    {
+      "name": "Cadence calls",
+      "target": "Weekly or biweekly; never more than 30 days between calls",
+      "customer_need": "Fast blocker removal and momentum",
+      "csm_motion": "Track attendance, agenda outcomes, and next commitments each session",
+      "if_missed": "At 30+ days trigger non-engaged triage; at 45+ days run recovery plan",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#cadence-frequency"
+    },
+    {
+      "name": "Workshops",
+      "target": "At least 1 workshop per quarter per customer",
+      "customer_need": "Practical enablement against real adoption gaps",
+      "csm_motion": "Tie workshop theme to lowest-scoring use case and target metric lift",
+      "if_missed": "Mark enablement gap and schedule before quarter end",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#workshops"
+    },
+    {
+      "name": "EBR cadence",
+      "target": "At least 1 EBR every 12 months",
+      "customer_need": "Executive alignment on outcomes and roadmap",
+      "csm_motion": "Use 60/30/14/7 prep timeline and outcome narrative",
+      "if_missed": "Flag governance gap and schedule next EBR target immediately",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#ebrs"
+    },
+    {
+      "name": "Success plan governance",
+      "target": "Updated quarterly and validated by customer + manager",
+      "customer_need": "Shared, current plan tied to measurable value",
+      "csm_motion": "Review objective progress, evidence, blockers, and owner accountability",
+      "if_missed": "Mark plan stale, update in quarter, and recover validations",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#success-plans"
+    },
+    {
+      "name": "Health + escalation updates",
+      "target": "Green monthly, Yellow biweekly, Red weekly; escalation severity overrides",
+      "customer_need": "Predictable risk management and rapid response",
+      "csm_motion": "Publish updates on schedule and adjust cadence for P1/P2/P3 escalations",
+      "if_missed": "Treat as operating risk and prioritize overdue update",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#account-risk-management--triage"
+    }
+  ],
+  "lifecycle_flow": [
+    {
+      "stage": "Kickoff",
+      "goal": "Align outcomes, owners, and baseline metrics",
+      "exit_criteria": "Success criteria and governance cadence approved"
+    },
+    {
+      "stage": "Onboard",
+      "goal": "Deploy and enable platform for initial teams",
+      "exit_criteria": "Onboarding tasks complete and first users active"
+    },
+    {
+      "stage": "Adopt",
+      "goal": "Increase use-case depth across SCM, CI, Secure, and Release",
+      "exit_criteria": "Priority use cases trend toward green thresholds"
+    },
+    {
+      "stage": "Scale",
+      "goal": "Operationalize workshops, EBRs, and value storytelling",
+      "exit_criteria": "Quarterly motions run on cadence with measurable impact"
+    },
+    {
+      "stage": "Renew + Expand",
+      "goal": "De-risk renewal and open expansion plays",
+      "exit_criteria": "Readiness complete and growth plan owners active"
+    }
+  ],
+  "use_cases": [
+    {
+      "name": "SCM consolidation",
+      "scenario": "Teams are split across Git providers and code review tools.",
+      "customer_goal": "One source of truth for repositories and merge request workflows.",
+      "recommended_motion": "Sequence migration waves, standardize merge request workflow, and coach team leads.",
+      "metrics": [
+        "Projects hosted in GitLab repositories",
+        "Merge request adoption and review coverage",
+        "Monthly active contributors"
+      ],
+      "example": "A global manufacturer moved remaining legacy repositories and increased merge request coverage above internal quality targets.",
+      "links": [
+        {
+          "label": "Maturity scoring",
+          "link": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/"
+        }
+      ]
+    },
+    {
+      "name": "CI standardization",
+      "scenario": "Pipeline coverage is inconsistent and runner utilization is unstable.",
+      "customer_goal": "Reliable CI at scale with higher pipeline success.",
+      "recommended_motion": "Run CI/Verify workshop, ship reusable templates, and track adoption by priority projects.",
+      "metrics": [
+        "Projects with pipelines",
+        "Pipeline success rate",
+        "Builds per billable user"
+      ],
+      "example": "A financial services platform raised CI-enabled project coverage after a template rollout and runner capacity plan.",
+      "links": [
+        {
+          "label": "CI/Verify playbook",
+          "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"
+        }
+      ]
+    },
+    {
+      "name": "Secure baseline rollout",
+      "scenario": "Regulated applications are missing security scan coverage.",
+      "customer_goal": "Integrate SAST and dependency scanning into delivery workflow.",
+      "recommended_motion": "Hold Secure workshop, align policy owners, and phase rollout by critical app tier.",
+      "metrics": [
+        "Projects with security scans",
+        "SAST coverage for regulated apps",
+        "Dependency scanning policy compliance"
+      ],
+      "example": "A healthcare software team used policy alignment plus a secure workshop to expand scan coverage for regulated repos.",
+      "links": [
+        {
+          "label": "Secure workshop",
+          "link": "https://handbook.gitlab.com/handbook/customer-success/workshops/secure/"
+        }
+      ]
+    },
+    {
+      "name": "Renewal readiness execution",
+      "scenario": "Renewal is approaching and sentiment is flat to down.",
+      "customer_goal": "Renew based on validated outcomes and aligned stakeholders.",
+      "recommended_motion": "Run EBR prep timeline, close readiness checklist gaps, and tie success plan evidence to commercial conversation.",
+      "metrics": [
+        "Days to renewal and readiness completion",
+        "EBR completed in last 12 months",
+        "Success plan objective evidence and validations"
+      ],
+      "example": "An enterprise retail account reduced renewal risk by closing outcomes validation and executive alignment gaps before commercial review.",
+      "links": [
+        {
+          "label": "EBR guidance",
+          "link": "https://handbook.gitlab.com/handbook/customer-success/csm/ebr/"
+        }
+      ]
+    }
+  ],
+  "anti_patterns": [
+    {
+      "risk": "Cadence drifts beyond one month without contact",
+      "better_motion": "Trigger non-engaged triage and execute a recovery checklist with clear owners",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/engagement/non-engaged-customer-strategies/"
+    },
+    {
+      "risk": "Success plan not updated quarterly",
+      "better_motion": "Update objective evidence, review blockers, and capture customer + manager validations",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/continuous-planning/"
+    },
+    {
+      "risk": "EBR scheduled too late to influence renewal",
+      "better_motion": "Use 60/30/14/7 prep timeline and lock attendee/outcome commitments early",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/ebr/"
+    }
+  ]
+}

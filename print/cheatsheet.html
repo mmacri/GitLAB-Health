@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GitLab Customer + CSM Cheatsheet</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        color: #1b1b1f;
+        --ink: #1b1b1f;
+        --muted: #4f4f5a;
+        --line: #dfdfe6;
+        --card: #ffffff;
+        --accent: #fc6d26;
+        --good: #1c8a4c;
+        --watch: #9b6a00;
+      }
+
+      body {
+        margin: 0;
+        padding: 28px;
+        background: #fff;
+        color: var(--ink);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 30px;
+      }
+
+      h2 {
+        margin: 26px 0 10px;
+        font-size: 16px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #4b4b55;
+      }
+
+      p {
+        margin: 6px 0;
+      }
+
+      a {
+        color: #8f3d13;
+        text-decoration: none;
+      }
+
+      .meta {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .chips {
+        margin-top: 14px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        border: 1px solid #e0c5b4;
+        background: #fff4ed;
+        color: #8f3d13;
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+      }
+
+      .flow-step {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--card);
+        padding: 10px;
+      }
+
+      .flow-step .stage {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .flow-step .goal {
+        margin-top: 6px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .flow-step .exit {
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        padding: 8px 6px;
+        text-align: left;
+        vertical-align: top;
+        font-size: 12px;
+      }
+
+      th {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--muted);
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--card);
+        padding: 10px;
+      }
+
+      .card h3 {
+        margin: 0 0 6px;
+        font-size: 14px;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .mini {
+        margin: 6px 0 0;
+        padding-left: 16px;
+        font-size: 12px;
+      }
+
+      .risk {
+        border-left: 4px solid #d64545;
+        padding-left: 8px;
+      }
+
+      .better {
+        border-left: 4px solid var(--good);
+        padding-left: 8px;
+      }
+
+      @media print {
+        body {
+          padding: 0;
+        }
+
+        a {
+          color: inherit;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1 data-field="title">GitLab Customer + CSM Operational Cheatsheet</h1>
+      <p class="muted" data-field="subtitle">
+        A fast, handbook-aligned review of what enterprise customers should manage and how CSMs guide the motion.
+      </p>
+      <p class="meta">Updated <span data-field="updated_on">2026-02-17</span></p>
+      <div class="chips" data-list="links"></div>
+    </header>
+
+    <section>
+      <h2>Lifecycle Diagram</h2>
+      <div class="flow" data-list="flow"></div>
+    </section>
+
+    <section>
+      <h2>Customer vs CSM Quick Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Motion</th>
+            <th>Customer cares about</th>
+            <th>CSM guidance</th>
+            <th>Signals</th>
+          </tr>
+        </thead>
+        <tbody data-list="matrix"></tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Operating Rhythm</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Cadence</th>
+            <th>Target</th>
+            <th>Customer need</th>
+            <th>CSM motion</th>
+            <th>If missed</th>
+          </tr>
+        </thead>
+        <tbody data-list="rhythm"></tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Use-case Examples</h2>
+      <div class="cards" data-list="use-cases"></div>
+    </section>
+
+    <section>
+      <h2>Anti-patterns to avoid</h2>
+      <div class="grid" data-list="anti-patterns"></div>
+    </section>
+
+    <script>
+      'use strict';
+
+      const DATA_URL = '../data/cheatsheet.json';
+      const FALLBACK = {
+        updated_on: '2026-02-17',
+        title: 'GitLab Customer + CSM Operational Cheatsheet',
+        subtitle:
+          'A fast, handbook-aligned review of what enterprise customers should manage and how CSMs guide the motion.',
+        handbook_links: [],
+        lifecycle_flow: [],
+        priority_matrix: [],
+        operating_rhythm: [],
+        use_cases: [],
+        anti_patterns: []
+      };
+
+      const loadData = async () => {
+        try {
+          const response = await fetch(DATA_URL, { cache: 'no-store' });
+          if (!response.ok) throw new Error('Failed to load cheatsheet data');
+          return await response.json();
+        } catch (error) {
+          return FALLBACK;
+        }
+      };
+
+      const setText = (selector, value) => {
+        const el = document.querySelector(`[data-field="${selector}"]`);
+        if (el && value !== undefined && value !== null) {
+          el.textContent = value;
+        }
+      };
+
+      const render = async () => {
+        const data = await loadData();
+
+        setText('title', data.title);
+        setText('subtitle', data.subtitle);
+        setText('updated_on', data.updated_on);
+
+        const links = document.querySelector('[data-list="links"]');
+        (data.handbook_links || []).slice(0, 4).forEach((item) => {
+          const anchor = document.createElement('a');
+          anchor.className = 'chip';
+          anchor.href = item.link;
+          anchor.target = '_blank';
+          anchor.rel = 'noopener';
+          anchor.textContent = item.label;
+          links.appendChild(anchor);
+        });
+
+        const flow = document.querySelector('[data-list="flow"]');
+        (data.lifecycle_flow || []).forEach((item) => {
+          const step = document.createElement('article');
+          step.className = 'flow-step';
+          step.innerHTML = `
+            <div class="stage">${item.stage}</div>
+            <div class="goal">${item.goal}</div>
+            <div class="exit"><strong>Done when:</strong> ${item.exit_criteria}</div>
+          `;
+          flow.appendChild(step);
+        });
+
+        const matrix = document.querySelector('[data-list="matrix"]');
+        (data.priority_matrix || []).forEach((item) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><strong>${item.motion}</strong></td>
+            <td>${item.customer_cares}</td>
+            <td>${(item.csm_guidance || []).join('<br />')}</td>
+            <td>${(item.success_signals || []).join('<br />')}</td>
+          `;
+          matrix.appendChild(row);
+        });
+
+        const rhythm = document.querySelector('[data-list="rhythm"]');
+        (data.operating_rhythm || []).forEach((item) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><a href="${item.link}" target="_blank" rel="noopener">${item.name}</a></td>
+            <td>${item.target}</td>
+            <td>${item.customer_need}</td>
+            <td>${item.csm_motion}</td>
+            <td>${item.if_missed}</td>
+          `;
+          rhythm.appendChild(row);
+        });
+
+        const useCases = document.querySelector('[data-list="use-cases"]');
+        (data.use_cases || []).forEach((item) => {
+          const card = document.createElement('article');
+          card.className = 'card';
+          const links = (item.links || [])
+            .map((link) => `<a href="${link.link}" target="_blank" rel="noopener">${link.label}</a>`)
+            .join(' | ');
+          card.innerHTML = `
+            <h3>${item.name}</h3>
+            <p class="muted"><strong>Scenario:</strong> ${item.scenario}</p>
+            <p class="muted"><strong>Customer goal:</strong> ${item.customer_goal}</p>
+            <p class="muted"><strong>CSM motion:</strong> ${item.recommended_motion}</p>
+            <ul class="mini">${(item.metrics || []).map((m) => `<li>${m}</li>`).join('')}</ul>
+            <p class="muted"><strong>Example:</strong> ${item.example}</p>
+            <p class="muted">${links}</p>
+          `;
+          useCases.appendChild(card);
+        });
+
+        const antiPatterns = document.querySelector('[data-list="anti-patterns"]');
+        (data.anti_patterns || []).forEach((item) => {
+          const card = document.createElement('article');
+          card.className = 'card';
+          card.innerHTML = `
+            <p class="risk"><strong>Risk:</strong> ${item.risk}</p>
+            <p class="better"><strong>Better motion:</strong> ${item.better_motion}</p>
+            <a href="${item.link}" target="_blank" rel="noopener">Reference</a>
+          `;
+          antiPatterns.appendChild(card);
+        });
+      };
+
+      render();
+    </script>
+  </body>
+</html>

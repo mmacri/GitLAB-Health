@@ -15,6 +15,7 @@ Edit these canonical data files:
 
 When the site is served via a static server, the dashboard loads both files directly. If data cannot be loaded, the dashboard falls back to the embedded sample object in `assets/js/app.js`.
 The executive PDF export uses `print/ebr.html`.
+The customer/CSM quick-reference export uses `print/cheatsheet.html` and `data/cheatsheet.json`.
 
 ### Validate resource links
 Run the built-in verifier before publishing:
