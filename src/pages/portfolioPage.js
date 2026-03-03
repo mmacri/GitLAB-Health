@@ -57,9 +57,9 @@ export const renderPortfolioHomePage = (ctx) => {
   wrapper.innerHTML = `
     <header class="page-head">
       <div>
-        <p class="eyebrow">Portfolio Home</p>
-        <h1>Pooled Coverage Command Center</h1>
-        <p class="hero-lede">Default pooled view across work queue, outliers, and 1:many enablement programs.</p>
+        <p class="eyebrow">Work Queue</p>
+        <h1>Pooled Work Queue Command Center</h1>
+        <p class="hero-lede">Triage first: due work, outliers, and 1:many enablement motions.</p>
       </div>
       <div class="page-actions">
         <button class="qa" type="button" data-go-portfolio>Open Full Portfolio View</button>
@@ -119,6 +119,10 @@ export const renderPortfolioHomePage = (ctx) => {
         <label class="safe-toggle">
           <input type="checkbox" data-filter-check="hasOpenRequest" ${filters.hasOpenRequest ? 'checked' : ''} />
           <span>Has open request</span>
+        </label>
+        <label class="safe-toggle">
+          <input type="checkbox" data-filter-check="belowThreeGreen" ${filters.belowThreeGreen ? 'checked' : ''} />
+          <span>Below 3 green use cases</span>
         </label>
       </div>
     </section>
@@ -315,6 +319,10 @@ export const renderPortfolioPage = (ctx) => {
       <input type="checkbox" data-filter-check="hasOpenRequest" ${filters.hasOpenRequest ? 'checked' : ''} />
       <span>Has open request</span>
     </label>
+    <label class="safe-toggle">
+      <input type="checkbox" data-filter-check="belowThreeGreen" ${filters.belowThreeGreen ? 'checked' : ''} />
+      <span>Below 3 green use cases</span>
+    </label>
   `;
 
   const filtered = applyPortfolioFilters(portfolio.signals, filters);
@@ -416,7 +424,7 @@ export const portfolioCommandEntries = (data) => {
   }));
 
   return [
-    { id: 'go-home', label: 'Open Portfolio Home', meta: 'Portfolio', action: { route: 'home' } },
+    { id: 'go-home', label: 'Open Work Queue', meta: 'Queue', action: { route: 'home' } },
     { id: 'go-portfolio', label: 'Open Portfolio Table', meta: 'Portfolio', action: { route: 'portfolio' } },
     ...accountEntries
   ];

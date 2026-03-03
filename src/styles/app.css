@@ -1,20 +1,20 @@
 :root {
-  --bg: #f6f7fb;
+  --bg: #f6f7f9;
   --surface: #ffffff;
-  --surface-muted: #f1f4fb;
-  --border: #d8deeb;
+  --surface-muted: #f9fafb;
+  --border: #e5e7eb;
   --ink: #111827;
-  --ink-muted: #4b5563;
+  --ink-muted: #6b7280;
   --ink-soft: #6b7280;
-  --primary: #3f3ca8;
-  --primary-strong: #2a2786;
-  --secondary: #0f8ea8;
-  --success: #15803d;
-  --warning: #b45309;
-  --danger: #b91c1c;
+  --primary: #6e49cb;
+  --primary-strong: #5b3db2;
+  --secondary: #0284c7;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
   --neutral: #475569;
   --missing: #9ca3af;
-  --shadow-sm: 0 2px 8px rgba(31, 41, 55, 0.08);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 18px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 8px 24px rgba(31, 41, 55, 0.11);
   --radius-lg: 18px;
   --radius-md: 12px;
@@ -48,7 +48,7 @@ h4 {
 }
 
 .page {
-  max-width: var(--max-w);
+  max-width: 1320px;
   margin: 0 auto;
   padding: 0 var(--space-4) var(--space-6);
 }
@@ -228,7 +228,82 @@ button:hover {
 }
 
 .main-content {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.app-grid {
+  grid-template-columns: 260px minmax(0, 1fr);
+  align-items: start;
   min-height: 72vh;
+}
+
+.route-stage {
+  min-width: 0;
+}
+
+.left-rail {
+  position: sticky;
+  top: 142px;
+  display: grid;
+  gap: 14px;
+  max-height: calc(100vh - 160px);
+  overflow: auto;
+}
+
+.rail-group {
+  display: grid;
+  gap: 8px;
+}
+
+.rail-label {
+  margin: 0;
+  font-size: 11px;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.rail-link {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-align: left;
+  background: var(--surface);
+  color: var(--ink-muted);
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.rail-link:hover,
+.rail-link.is-active {
+  color: var(--primary);
+  border-color: rgba(110, 73, 203, 0.35);
+  background: rgba(110, 73, 203, 0.08);
+}
+
+.rail-list {
+  display: grid;
+  gap: 6px;
+}
+
+.rail-shortcuts {
+  margin: 0;
+  padding-left: 16px;
+  display: grid;
+  gap: 6px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+kbd {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 6px;
+  background: var(--surface-muted);
+  font-family: inherit;
+  font-size: 11px;
 }
 
 .muted {
@@ -847,6 +922,15 @@ textarea.artifact,
 }
 
 @media (max-width: 1260px) {
+  .app-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .left-rail {
+    position: static;
+    max-height: none;
+  }
+
   .dashboard-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }

@@ -65,6 +65,7 @@ export const applyPortfolioFilters = (signals, filters) => {
     if (set.lowestUseCase && set.lowestUseCase !== 'all' && lowUseCase !== normalize(set.lowestUseCase)) return false;
 
     if (set.hasOpenRequest && !signal.requestList.length) return false;
+    if (set.belowThreeGreen && Number(signal.greenUseCaseCount || 0) >= 3) return false;
 
     return true;
   });
@@ -83,6 +84,7 @@ export const computeAccountSignals = (account, requests, playbooks, programs, no
   });
 
   const [lowestUseCaseName, lowestUseCaseScore] = lowestUseCase(account) || ['SCM', 0];
+  const greenUseCaseCount = useCaseGreenCount(account);
   const suggestedTopic = mapUseCaseToTopic(lowestUseCaseName);
   const playbook = matchPlaybook(playbooks, stage, suggestedTopic);
   const recommendedProgram = (programs || []).find((program) => program.program_id === playbook?.recommended_program) || null;
@@ -103,6 +105,7 @@ export const computeAccountSignals = (account, requests, playbooks, programs, no
   if (account?.adoption?.trend_30d < 0) reasons.push(`Adoption trend ${account.adoption.trend_30d}% over 30d`);
   if ((healthStaleDays ?? 0) > 10) reasons.push(`Stale health data (${healthStaleDays} days)`);
   if ((touchStaleDays ?? 0) > 14) reasons.push(`Cadence stale (${touchStaleDays} days)`);
+  if (greenUseCaseCount < 3) reasons.push(`${greenUseCaseCount} of 4 use cases green (target 3+)`);
   if (lowestUseCaseScore < 60) reasons.push(`${lowestUseCaseName} score low (${lowestUseCaseScore})`);
   if (overdueRequests.length) reasons.push(`${overdueRequests.length} request(s) overdue`);
 
@@ -116,6 +119,7 @@ export const computeAccountSignals = (account, requests, playbooks, programs, no
     overdueRequests,
     lowestUseCaseName,
     lowestUseCaseScore: Number(lowestUseCaseScore),
+    greenUseCaseCount,
     suggestedTopic,
     playbook,
     recommendedProgram,

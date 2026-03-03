@@ -70,7 +70,7 @@ export const parseRoute = (pathname, basePath = '') => {
     };
   }
 
-  return { name: 'portfolio', params: {}, path: '/' };
+  return { name: 'home', params: {}, path: '/' };
 };
 
 export const routePath = (routeName, params = {}) => {

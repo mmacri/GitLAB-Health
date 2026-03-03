@@ -24,10 +24,11 @@ import { renderResourcesPage, resourcesCommandEntries } from './pages/resourcesP
 
 const appRoot = document.querySelector('[data-app-root]');
 const routeRoot = document.querySelector('[data-route-root]');
+const leftRailRoot = document.querySelector('[data-left-rail]');
 const toastRoot = document.querySelector('[data-toast]');
 const settingsRoot = document.querySelector('[data-settings]');
 
-if (!appRoot || !routeRoot) {
+if (!appRoot || !routeRoot || !leftRailRoot) {
   throw new Error('App shell is missing required mount points.');
 }
 
@@ -43,7 +44,8 @@ const state = {
     health: 'all',
     staleOnly: false,
     lowestUseCase: 'all',
-    hasOpenRequest: false
+    hasOpenRequest: false,
+    belowThreeGreen: false
   },
   checklistState: {},
   selectedAccountId: storage.get(STORAGE_KEYS.selectedAccountId, '')
@@ -129,8 +131,76 @@ const navItems = () => appRoot.querySelectorAll('[data-nav-route]');
 const setActiveNav = () => {
   navItems().forEach((link) => {
     const route = link.getAttribute('data-nav-route');
-    const active = route === state.route.name || (route === 'home' && state.route.name === 'portfolio');
+    const active = route === state.route.name;
     link.classList.toggle('is-active', active);
+  });
+};
+
+const renderLeftRail = () => {
+  if (!leftRailRoot) return;
+  const accounts = state.data?.accounts || [];
+  const recentAccounts = [...accounts]
+    .sort((left, right) => {
+      if (left.id === state.selectedAccountId) return -1;
+      if (right.id === state.selectedAccountId) return 1;
+      return String(left.name || '').localeCompare(String(right.name || ''));
+    })
+    .slice(0, 8);
+
+  leftRailRoot.innerHTML = `
+    <div class="rail-group">
+      <p class="rail-label">Operate</p>
+      <button class="rail-link ${state.route.name === 'home' ? 'is-active' : ''}" type="button" data-rail-route="home">Work Queue</button>
+      <button class="rail-link ${state.route.name === 'portfolio' ? 'is-active' : ''}" type="button" data-rail-route="portfolio">Portfolio</button>
+      <button class="rail-link ${state.route.name === 'programs' ? 'is-active' : ''}" type="button" data-rail-route="programs">Programs</button>
+      <button class="rail-link ${state.route.name === 'resources' ? 'is-active' : ''}" type="button" data-rail-route="resources">Resources</button>
+    </div>
+
+    <div class="rail-group">
+      <p class="rail-label">Tools</p>
+      <button class="rail-link ${state.route.name === 'intake' ? 'is-active' : ''}" type="button" data-rail-route="intake">Intake</button>
+      <button class="rail-link ${state.route.name === 'exports' ? 'is-active' : ''}" type="button" data-rail-route="exports">Exports</button>
+      <button class="rail-link ${state.route.name === 'playbooks' ? 'is-active' : ''}" type="button" data-rail-route="playbooks">Playbooks</button>
+    </div>
+
+    <div class="rail-group">
+      <p class="rail-label">Recent Accounts</p>
+      <div class="rail-list">
+        ${
+          recentAccounts.length
+            ? recentAccounts
+                .map(
+                  (account) =>
+                    `<button class="rail-link ${account.id === state.selectedAccountId ? 'is-active' : ''}" type="button" data-rail-account="${account.id}">${account.name}</button>`
+                )
+                .join('')
+            : '<p class="empty-text">No accounts loaded.</p>'
+        }
+      </div>
+    </div>
+
+    <div class="rail-group">
+      <p class="rail-label">Shortcuts</p>
+      <ul class="rail-shortcuts">
+        <li><kbd>Ctrl</kbd> + <kbd>K</kbd> command palette</li>
+        <li>Toggle customer-safe before sharing exports</li>
+      </ul>
+    </div>
+  `;
+
+  leftRailRoot.querySelectorAll('[data-rail-route]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const routeName = button.getAttribute('data-rail-route');
+      router.navigate(routeName);
+    });
+  });
+
+  leftRailRoot.querySelectorAll('[data-rail-account]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const accountId = button.getAttribute('data-rail-account');
+      setSelectedAccount(accountId);
+      router.navigate('account', { id: accountId });
+    });
   });
 };
 
@@ -245,7 +315,7 @@ const commandEntries = (workspace) => {
   }));
 
   return [
-    { id: 'cmd-home', label: 'Open Portfolio Home', meta: 'Portfolio', action: { route: 'home' } },
+    { id: 'cmd-home', label: 'Open Work Queue', meta: 'Queue', action: { route: 'home' } },
     { id: 'cmd-portfolio', label: 'Open Portfolio Table', meta: 'Portfolio', action: { route: 'portfolio' } },
     { id: 'cmd-programs', label: 'Open Programs', meta: 'Programs', action: { route: 'programs' } },
     { id: 'cmd-playbooks', label: 'Open Playbooks', meta: 'Playbooks', action: { route: 'playbooks' } },
@@ -407,6 +477,7 @@ const renderCurrentRoute = () => {
 
 const render = () => {
   renderShellContext();
+  renderLeftRail();
   renderCurrentRoute();
 };
 

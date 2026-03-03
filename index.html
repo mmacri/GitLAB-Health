@@ -14,7 +14,23 @@
       href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="src/styles/app.css" />
+    <script>
+      (function () {
+        var known = ['portfolio', 'account', 'programs', 'playbooks', 'resources', 'exports', 'intake'];
+        var parts = window.location.pathname.split('/').filter(Boolean);
+        var base = '';
+        if (parts.length > 1 && known.indexOf(parts[1]) >= 0) {
+          base = '/' + parts[0];
+        } else if (parts.length && known.indexOf(parts[0]) < 0 && !parts[0].includes('.')) {
+          base = '/' + parts[0];
+        }
+        window.__APP_BASE_PATH__ = base;
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = base + '/src/styles/app.css';
+        document.head.appendChild(link);
+      })();
+    </script>
   </head>
   <body>
     <div class="page app-shell" data-app-root>
@@ -30,12 +46,10 @@
             </div>
 
             <div class="nav-links" aria-label="Main navigation">
-              <a href="#" data-nav-route="home" class="is-active">Portfolio</a>
-              <a href="#" data-nav-route="account">Account</a>
+              <a href="#" data-nav-route="home" class="is-active">Work Queue</a>
+              <a href="#" data-nav-route="portfolio">Portfolio</a>
               <a href="#" data-nav-route="programs">Programs</a>
-              <a href="#" data-nav-route="playbooks">Playbooks</a>
               <a href="#" data-nav-route="resources">Resources</a>
-              <a href="#" data-nav-route="exports">Exports</a>
             </div>
 
             <div class="nav-actions">
@@ -65,7 +79,10 @@
         </div>
       </header>
 
-      <main class="main-content" data-route-root aria-live="polite"></main>
+      <main class="main-content app-grid" aria-live="polite">
+        <aside class="left-rail card" data-left-rail aria-label="Work queue navigation"></aside>
+        <section class="route-stage" data-route-root></section>
+      </main>
     </div>
 
     <div class="command-palette" data-command-palette aria-hidden="true">
@@ -92,6 +109,14 @@
       </div>
     </div>
 
-    <script type="module" src="src/main.js"></script>
+    <script>
+      (function () {
+        var base = window.__APP_BASE_PATH__ || '';
+        var script = document.createElement('script');
+        script.type = 'module';
+        script.src = base + '/src/main.js';
+        document.body.appendChild(script);
+      })();
+    </script>
   </body>
 </html>
