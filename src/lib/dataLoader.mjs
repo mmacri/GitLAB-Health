@@ -1,4 +1,12 @@
 import { storage, STORAGE_KEYS } from './storage.mjs';
+import { detectBasePath } from './router.mjs';
+
+const resolveDataUrl = (filename) => {
+  if (typeof window === 'undefined') return `data/${filename}`;
+  const basePath = detectBasePath(window.location.pathname || '/');
+  const base = String(basePath || '').replace(/\/+$/, '');
+  return `${base}/data/${filename}`;
+};
 
 const fetchJson = async (url, fallback) => {
   try {
@@ -103,11 +111,11 @@ export const persistPlaybookChecklist = (checklistState) => storage.set(STORAGE_
 
 export const loadDashboardData = async () => {
   const [accountsDoc, requestsDoc, programsDoc, playbooksDoc, resourcesDoc] = await Promise.all([
-    fetchJson('data/accounts.json', { accounts: [] }),
-    fetchJson('data/requests.json', { requests: [] }),
-    fetchJson('data/programs.json', { programs: [] }),
-    fetchJson('data/playbooks.json', { playbooks: [] }),
-    fetchJson('data/resources.json', { categories: [], resources: [] })
+    fetchJson(resolveDataUrl('accounts.json'), { accounts: [] }),
+    fetchJson(resolveDataUrl('requests.json'), { requests: [] }),
+    fetchJson(resolveDataUrl('programs.json'), { programs: [] }),
+    fetchJson(resolveDataUrl('playbooks.json'), { playbooks: [] }),
+    fetchJson(resolveDataUrl('resources.json'), { categories: [], resources: [] })
   ]);
 
   const accounts = mergeAccounts(Array.isArray(accountsDoc.accounts) ? accountsDoc.accounts : []);
