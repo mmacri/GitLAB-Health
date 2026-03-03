@@ -1,107 +1,102 @@
+import { renderActionDrawer } from '../components/actionDrawer.mjs';
+import { metricTile } from '../components/metricTile.mjs';
+import { statusChip, statusToneFromHealth } from '../components/statusChip.mjs';
+import { wireTabs } from '../components/tabs.mjs';
 import { buildCustomerAgenda, buildFollowupEmail, buildIssueBody } from '../lib/artifacts.mjs';
-import { formatDate, toIsoDate } from '../lib/date.mjs';
+import { daysUntil, formatDate, isMissing } from '../lib/date.mjs';
 import { redactAccountForCustomer } from '../lib/redaction.mjs';
 import { useCaseEntries } from '../lib/scoring.mjs';
 
-const STATUS_TO_TONE = { green: 'good', yellow: 'watch', red: 'risk' };
-const TABS = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'adoption', label: 'Adoption' },
-  { id: 'health', label: 'Health & Risk' },
-  { id: 'outcomes', label: 'Outcomes' },
-  { id: 'engagement', label: 'Engagement' },
-  { id: 'resources', label: 'Resources' },
-  { id: 'exports', label: 'Exports' }
+const TAB_DEFS = [
+  { id: 'snapshot', label: 'Snapshot', anchor: 'overview' },
+  { id: 'adoption', label: 'Adoption', anchor: 'adoption' },
+  { id: 'health', label: 'Health & Risk', anchor: 'health-risk' },
+  { id: 'outcomes', label: 'Outcomes', anchor: 'outcomes' },
+  { id: 'engagement', label: 'Engagement', anchor: 'engagement' },
+  { id: 'journey', label: 'Journey', anchor: 'journey' },
+  { id: 'resources', label: 'Resources', anchor: 'resources' },
+  { id: 'cheatsheet', label: 'Cheatsheet', anchor: 'cheatsheet' }
 ];
 
-const toneFor = (value) => STATUS_TO_TONE[String(value || '').toLowerCase()] || 'watch';
-const stageLabel = (value) => {
-  const text = String(value || '').trim();
-  if (!text) return 'Unknown';
-  return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+const toPercent = (value) => `${Math.max(0, Math.min(100, Math.round(Number(value) || 0)))}%`;
+
+const scoreTone = (score) => {
+  if (Number(score) >= 75) return 'good';
+  if (Number(score) >= 60) return 'warn';
+  return 'risk';
 };
 
-const summarizeAdoption = (account) => {
-  const scores = useCaseEntries(account);
-  const green = scores.filter(([, score]) => Number(score) >= 75).length;
-  return `${green} of ${scores.length || 4} use cases >= 75`;
+const freshnessChip = (days) => {
+  if (days === null || days === undefined) return statusChip({ label: 'Missing', tone: 'missing' });
+  if (days > 10) return statusChip({ label: `${days}d stale`, tone: 'stale' });
+  return statusChip({ label: 'Fresh', tone: 'good' });
 };
 
-const adoptionRows = (account) =>
+const missingEditable = (label, path, value, type = 'text') => {
+  if (!isMissing(value)) return `<span>${value}</span>`;
+  return `
+    <span class="missing-field">
+      ${statusChip({ label: 'Missing data', tone: 'missing' })}
+      <button class="ghost-btn" type="button" data-edit-missing="${path}" data-edit-label="${label}" data-edit-type="${type}">Add/update</button>
+    </span>
+  `;
+};
+
+const buildArtifactSet = (request, account) => ({
+  issue: buildIssueBody(request, account),
+  agenda: buildCustomerAgenda(request, account),
+  email: buildFollowupEmail(request, account)
+});
+
+const useCaseRows = (account) =>
   useCaseEntries(account)
     .map(
       ([name, score]) => `
         <tr>
           <td>${name}</td>
           <td>${score}</td>
-          <td><span class="status-pill" data-status="${toneFor(score >= 75 ? 'green' : score >= 60 ? 'yellow' : 'red')}">${
-        score >= 75 ? 'green' : score >= 60 ? 'yellow' : 'red'
-      }</span></td>
+          <td>${statusChip({ label: Number(score) >= 75 ? 'green' : Number(score) >= 60 ? 'yellow' : 'red', tone: scoreTone(score) })}</td>
+          <td>${Number(score) < 70 ? 'Recommended workshop' : 'Maintain and expand'}</td>
         </tr>
       `
     )
     .join('');
 
-const objectiveRows = (account) =>
+const outcomeRows = (account) =>
   (account?.outcomes?.objectives || [])
     .map(
       (objective) => `
-      <tr>
-        <td>${objective.title}</td>
-        <td>${objective.owner}</td>
-        <td>${formatDate(objective.due_date)}</td>
-        <td><span class="status-pill" data-status="${toneFor(
-          objective.status === 'complete' ? 'green' : objective.status === 'at_risk' ? 'red' : 'yellow'
-        )}">${objective.status}</span></td>
-      </tr>
+        <tr>
+          <td>${objective.title}</td>
+          <td>${objective.owner}</td>
+          <td>${formatDate(objective.due_date)}</td>
+          <td>${statusChip({ label: objective.status, tone: objective.status === 'complete' ? 'good' : objective.status === 'at_risk' ? 'risk' : 'warn' })}</td>
+        </tr>
+      `
+    )
+    .join('');
+
+const timelineRows = (account) =>
+  (account?.journey?.milestones || [])
+    .map(
+      (item) => `
+      <div class="timeline-item">
+        <strong>${item.label}</strong>
+        <span>${item.actual_days} days (target ${item.target_days})</span>
+        ${statusChip({ label: item.status, tone: item.status === 'done' ? 'good' : item.status === 'watch' ? 'warn' : 'risk' })}
+      </div>
     `
     )
     .join('');
 
-const requestOptions = (requests) =>
-  (requests || [])
-    .map(
-      (request) =>
-        `<option value="${request.request_id}">${request.request_id} | ${request.topic} | due ${formatDate(request.due_date)}</option>`
-    )
+const requestOptions = (openRequests) =>
+  openRequests
+    .map((item) => `<option value="${item.request_id}">${item.request_id} | ${item.topic} | due ${formatDate(item.due_date)}</option>`)
     .join('');
 
-const artifactCard = (title, key, value) => `
-  <article class="card compact-card">
-    <div class="metric-head">
-      <h3>${title}</h3>
-      <button class="ghost-btn" type="button" data-copy-artifact="${key}">Copy</button>
-    </div>
-    <textarea class="artifact-textarea" readonly data-artifact="${key}">${value || ''}</textarea>
-  </article>
-`;
-
-const synthRequest = (account, signal) => ({
-  request_id: `AUTO-${toIsoDate(new Date())}`,
-  account_id: account.id,
-  requestor_role: 'Account Executive',
-  topic: signal?.suggestedTopic || 'platform foundations',
-  stage: account?.health?.lifecycle_stage || 'enable',
-  desired_outcome: signal?.playbook?.next_best_action || 'Improve adoption outcomes using pooled CSE program delivery.',
-  definition_of_done: 'Agreed use case score target reached and validated with customer sponsor.',
-  due_date: account?.engagement?.next_touch_date || toIsoDate(new Date()),
-  status: 'new',
-  assigned_to: 'CSE Pool',
-  notes: 'Auto-generated from account workspace for artifact drafting.'
-});
-
-const buildArtifactBundle = (request, account) => ({
-  issue: buildIssueBody(request, account),
-  agenda: buildCustomerAgenda(request, account),
-  email: buildFollowupEmail(request, account)
-});
-
-const resourceList = (resources) =>
-  (resources || [])
-    .map(
-      (resource) =>
-        `<li><a href="${resource.url}" target="_blank" rel="noopener noreferrer">${resource.title}</a> - ${resource.summary}</li>`
-    )
+const resourceRows = (resources) =>
+  resources
+    .map((resource) => `<li><a href="${resource.url}" target="_blank" rel="noopener noreferrer">${resource.title}</a> - ${resource.summary}</li>`)
     .join('');
 
 export const renderAccountPage = (ctx) => {
@@ -109,11 +104,13 @@ export const renderAccountPage = (ctx) => {
     workspace,
     resources,
     customerSafe,
+    mode,
     navigate,
     onToggleSafe,
     onCopyInvite,
     onExportAccountCsv,
     onExportAccountPdf,
+    onOpenMissingEditor,
     copyText,
     notify
   } = ctx;
@@ -124,315 +121,277 @@ export const renderAccountPage = (ctx) => {
     missing.innerHTML = `
       <section class="card">
         <h1>Account not found</h1>
-        <p class="muted">The requested account does not exist in current portfolio data.</p>
-        <button class="qa" type="button" data-back-portfolio>Back to portfolio</button>
+        <p class="muted">No account matches this route.</p>
+        <button class="qa" type="button" data-back-home>Back to portfolio</button>
       </section>
     `;
-    missing.querySelector('[data-back-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
+    missing.querySelector('[data-back-home]')?.addEventListener('click', () => navigate('home'));
     return missing;
   }
 
   const internalAccount = workspace.account;
   const account = customerSafe ? redactAccountForCustomer(internalAccount) : internalAccount;
-  const accountResources = (resources || []).filter((resource) => {
-    if (customerSafe && !resource.customer_safe) return false;
-    return true;
-  });
-
+  const allResources = (resources || []).filter((item) => (customerSafe ? item.customer_safe : true));
   const openRequests = workspace.openRequests || [];
+
+  const licenseUtilization = Math.min(96, Math.max(22, Math.round((Number(account.adoption?.platform_adoption_score || 0) * 0.72) + 18)));
+  const freshnessDays = workspace.signal?.healthStaleDays;
+  const renewalDays = workspace.signal?.renewalDays;
+  const artifactSource = openRequests[0] || {
+    request_id: 'AUTO-ACCOUNT',
+    account_id: account.id,
+    requestor_role: 'Account Executive',
+    topic: workspace.signal?.suggestedTopic || 'platform foundations',
+    stage: account.health?.lifecycle_stage,
+    desired_outcome: workspace.nextBestAction,
+    definition_of_done: 'Measurable adoption and outcome signal improved',
+    due_date: account.engagement?.next_touch_date || account.renewal_date,
+    status: 'new',
+    assigned_to: 'CSE Pool',
+    notes: 'Generated from account workspace'
+  };
+
   const state = {
-    selectedRequestId: openRequests[0]?.request_id || null,
-    artifacts: buildArtifactBundle(openRequests[0] || synthRequest(account, workspace.signal), account)
+    selectedRequestId: artifactSource.request_id,
+    artifacts: buildArtifactSet(artifactSource, account)
   };
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page';
   wrapper.innerHTML = `
-    <header class="page-head">
+    <header class="page-head" id="today-console">
       <div>
         <p class="eyebrow">Account Workspace</p>
         <h1>${account.name}</h1>
-        <p class="hero-lede">
-          Segment ${account.segment} | Renewal ${formatDate(account.renewal_date)} (${workspace.signal?.renewalDays ?? 'TBD'} days) | Health updated ${formatDate(
-    account.health?.last_updated
-  )}
-        </p>
+        <p class="hero-lede">Segment ${account.segment} | Renewal in ${renewalDays ?? 'Missing data'} days | Stage ${account.health?.lifecycle_stage}</p>
         <div class="chip-row">
-          <span class="status-pill" data-status="${toneFor(account.health?.overall)}">Health ${account.health?.overall}</span>
-          <span class="status-pill" data-status="${toneFor(account.health?.adoption_health)}">Adoption ${
-    account.health?.adoption_health
-  }</span>
-          <span class="status-pill" data-status="${toneFor(account.health?.engagement_health)}">Engagement ${
-    account.health?.engagement_health
-  }</span>
-          <span class="status-pill" data-status="watch">Stage ${stageLabel(account.health?.lifecycle_stage)}</span>
+          ${statusChip({ label: `Health ${account.health?.overall}`, tone: statusToneFromHealth(account.health?.overall) })}
+          ${statusChip({ label: `Adoption ${account.health?.adoption_health}`, tone: statusToneFromHealth(account.health?.adoption_health) })}
+          ${statusChip({ label: `Engagement ${account.health?.engagement_health}`, tone: statusToneFromHealth(account.health?.engagement_health) })}
+          ${freshnessChip(freshnessDays)}
         </div>
       </div>
       <div class="page-actions">
-        <button class="ghost-btn" type="button" data-go-portfolio>Back to portfolio</button>
+        <button class="ghost-btn" type="button" data-go-home>Back to Portfolio</button>
         <label class="safe-toggle">
           <input type="checkbox" data-safe-toggle ${customerSafe ? 'checked' : ''} />
-          <span>Customer-safe mode</span>
+          <span>Customer-safe</span>
         </label>
       </div>
     </header>
 
-    <div class="workspace-layout">
-      <div class="workspace-main">
-        <section class="card tabs">
-          <nav class="tab-row" aria-label="Account tabs">
-            ${TABS.map(
-              (tab, index) =>
-                `<button class="tab-btn${index === 0 ? ' is-active' : ''}" data-tab="${tab.id}" type="button">${tab.label}</button>`
-            ).join('')}
-          </nav>
+    <section class="snapshot-bar card">
+      ${metricTile({ label: 'Health score', value: account.adoption?.platform_adoption_score || 0, meta: account.health?.overall, tone: statusToneFromHealth(account.health?.overall), tooltip: 'Health score reflects adoption + engagement + lifecycle signals.' })}
+      ${metricTile({ label: 'Platform adoption', value: account.adoption?.platform_adoption_level || 'Missing data', meta: 'Target 3+ green use cases', tone: scoreTone(account.adoption?.platform_adoption_score), tooltip: '3+ green use cases indicates healthy platform depth.' })}
+      ${metricTile({ label: 'License utilization', value: toPercent(licenseUtilization), meta: 'Sample benchmark metric', tone: licenseUtilization >= 70 ? 'good' : licenseUtilization >= 50 ? 'warn' : 'risk' })}
+      ${metricTile({ label: 'Renewal countdown', value: renewalDays ?? 'Missing data', meta: 'days', tone: renewalDays <= 90 ? 'risk' : renewalDays <= 180 ? 'warn' : 'good' })}
+      ${metricTile({ label: 'Data freshness', value: freshnessDays === null ? 'Missing data' : `${freshnessDays}d`, meta: account.health?.last_updated || 'No update date', tone: freshnessDays > 10 ? 'warn' : 'good', tooltip: 'Stale means health update older than 10 days.' })}
+    </section>
 
-          <div class="tab-panels">
-            <section class="tab-panel is-active" data-panel="overview">
-              <h2>Overview</h2>
-              <p class="muted">
-                Health scoring intent combines adoption and engagement signals with lifecycle context. Track all three before deciding next action.
-              </p>
-              <div class="kpi-grid kpi-4">
-                <article class="card compact-card">
-                  <h3>Overall health</h3>
-                  <p class="stat">${account.health?.overall || 'unknown'}</p>
-                </article>
-                <article class="card compact-card">
-                  <h3>Platform adoption</h3>
-                  <p class="stat">${account.adoption?.platform_adoption_score ?? 0}</p>
-                  <p class="muted">${account.adoption?.platform_adoption_level || summarizeAdoption(account)}</p>
-                </article>
-                <article class="card compact-card">
-                  <h3>Open requests</h3>
-                  <p class="stat">${openRequests.length}</p>
-                </article>
-                <article class="card compact-card">
-                  <h3>Program attendance (90d)</h3>
-                  <p class="stat">${account.engagement?.program_attendance?.last_90d ?? 0}</p>
-                </article>
-              </div>
-            </section>
+    <section class="workspace-layout">
+      <nav class="secondary-nav card" aria-label="Account section navigation">
+        ${TAB_DEFS.map((tab) => `<a href="#${tab.anchor}" data-tab-link="${tab.id}">${tab.label}</a>`).join('')}
+      </nav>
 
-            <section class="tab-panel" data-panel="adoption">
-              <h2>Adoption</h2>
-              <p class="muted">Platform adoption scoring intent emphasizes depth across multiple use cases; 3+ green signals strong platform value realization.</p>
-              <div class="table-wrap">
-                <table class="data-table">
-                  <thead>
-                    <tr><th>Use case</th><th>Score</th><th>Status</th></tr>
-                  </thead>
-                  <tbody>
-                    ${adoptionRows(account)}
-                  </tbody>
-                </table>
-              </div>
-              <p class="hint-text">Platform adoption summary: ${summarizeAdoption(account)}.</p>
-            </section>
+      <div class="tabs card" data-tabs>
+        <div class="tab-row">
+          ${TAB_DEFS.map((tab, index) => `<button type="button" class="tab-btn${index === 0 ? ' is-active' : ''}" data-tab-target="${tab.id}" aria-selected="${index === 0 ? 'true' : 'false'}">${tab.label}</button>`).join('')}
+        </div>
 
-            <section class="tab-panel" data-panel="health">
-              <h2>Health & Risk</h2>
-              <p class="muted">
-                Risk combines lifecycle pressure, stale engagement, and adoption drift. Use pooled programs plus targeted follow-up for at-risk signals.
-              </p>
-              <ul class="simple-list">
-                ${(workspace.signal?.reasons || []).map((reason) => `<li>${reason}</li>`).join('') || '<li>No active risk reasons.</li>'}
-              </ul>
-              ${
-                customerSafe || !internalAccount.internal_only
-                  ? ''
-                  : `<div class="internal-note">
-                      <h3>Internal notes</h3>
-                      <p>${internalAccount.internal_only.sentiment_notes || 'No sentiment notes.'}</p>
-                      <h4>Expansion hypotheses</h4>
-                      <ul class="simple-list">${
-                        (internalAccount.internal_only.expansion_hypotheses || []).map((item) => `<li>${item}</li>`).join('') ||
-                        '<li>No hypotheses captured.</li>'
-                      }</ul>
-                    </div>`
-              }
-            </section>
-
-            <section class="tab-panel" data-panel="outcomes">
-              <h2>Outcomes</h2>
-              <div class="table-wrap">
-                <table class="data-table">
-                  <thead>
-                    <tr><th>Objective</th><th>Owner</th><th>Due</th><th>Status</th></tr>
-                  </thead>
-                  <tbody>
-                    ${objectiveRows(account) || '<tr><td colspan="4">No objectives defined.</td></tr>'}
-                  </tbody>
-                </table>
-              </div>
-              <div class="kpi-grid kpi-3">
-                <article class="card compact-card">
-                  <h3>Time saved (hours)</h3>
-                  <p class="stat">${account?.outcomes?.value_metrics?.time_saved_hours ?? 0}</p>
-                </article>
-                <article class="card compact-card">
-                  <h3>Pipeline speed</h3>
-                  <p class="muted">${account?.outcomes?.value_metrics?.pipeline_speed || 'Not reported'}</p>
-                </article>
-                <article class="card compact-card">
-                  <h3>Security coverage</h3>
-                  <p class="muted">${account?.outcomes?.value_metrics?.security_coverage || 'Not reported'}</p>
-                </article>
-              </div>
-            </section>
-
-            <section class="tab-panel" data-panel="engagement">
-              <h2>Engagement</h2>
-              <p class="muted">CSE role intent: technical SME execution that converts requests into measurable adoption and customer outcomes.</p>
-              <div class="kpi-grid kpi-3">
-                <article class="card compact-card">
-                  <h3>Last touch</h3>
-                  <p class="stat">${formatDate(account.engagement?.last_touch_date)}</p>
-                </article>
-                <article class="card compact-card">
-                  <h3>Next touch</h3>
-                  <p class="stat">${formatDate(account.engagement?.next_touch_date)}</p>
-                </article>
-                <article class="card compact-card">
-                  <h3>Programs (90d)</h3>
-                  <p class="stat">${account.engagement?.program_attendance?.last_90d ?? 0}</p>
-                </article>
-              </div>
-              <h3>Open requests</h3>
-              <ul class="simple-list">
-                ${openRequests
-                  .map(
-                    (request) =>
-                      `<li>${request.request_id}: ${request.topic} | ${request.status} | due ${formatDate(request.due_date)} | ${
-                        request.assigned_to
-                      }</li>`
-                  )
-                  .join('') || '<li>No open requests.</li>'}
-              </ul>
-            </section>
-
-            <section class="tab-panel" data-panel="resources">
-              <h2>Resources</h2>
-              <p class="muted">Handbook resources relevant to pooled delivery, health scoring, and platform adoption scoring.</p>
-              <ul class="simple-list">
-                ${resourceList(accountResources) || '<li>No resources available for current audience mode.</li>'}
-              </ul>
-            </section>
-
-            <section class="tab-panel" data-panel="exports">
-              <h2>Exports</h2>
-              <p class="muted">Customer-safe exports redact internal-only fields. Internal exports include internal notes and escalation context.</p>
-              <div class="inline-actions">
-                <button class="qa" type="button" data-export-account-csv-safe>Export Account CSV (Customer-safe)</button>
-                <button class="ghost-btn" type="button" data-export-account-csv-internal>Export Account CSV (Internal)</button>
-                <button class="ghost-btn" type="button" data-export-account-pdf-safe>Export Account Summary PDF (Customer-safe)</button>
-                <button class="ghost-btn" type="button" data-export-account-pdf-internal>Export Account Summary PDF (Internal)</button>
-              </div>
-            </section>
+        <section class="tab-panel is-active" data-tab-panel="snapshot" id="overview" aria-hidden="false">
+          <div class="metric-head"><h2>Snapshot</h2>${statusChip({ label: mode, tone: 'neutral' })}</div>
+          <div class="callout">Next best action: ${workspace.nextBestAction}</div>
+          <div class="card compact-card">
+            <h3>Missing data fields</h3>
+            <ul class="simple-list">
+              <li>Last updated: ${missingEditable('Last updated', 'health.last_updated', account.health?.last_updated, 'date')}</li>
+              <li>Next touch: ${missingEditable('Next touch', 'engagement.next_touch_date', account.engagement?.next_touch_date, 'date')}</li>
+              <li>Pipeline speed: ${missingEditable('Pipeline speed', 'outcomes.value_metrics.pipeline_speed', account.outcomes?.value_metrics?.pipeline_speed, 'text')}</li>
+            </ul>
+          </div>
+          <div class="card compact-card" id="today">
+            <h3>Today Focus</h3>
+            <ul class="simple-list">
+              ${workspace.actions.immediate.map((item) => `<li>${item}</li>`).join('')}
+            </ul>
           </div>
         </section>
 
-        <section class="card">
-          <div class="metric-head">
-            <h2>Generate Artifacts</h2>
-            <span class="status-pill" data-status="watch">Customer-safe outputs</span>
+        <section class="tab-panel" data-tab-panel="adoption" id="adoption" aria-hidden="true">
+          <div class="metric-head"><h2>Adoption</h2></div>
+          <p class="muted">Platform adoption scoring: 3+ green use cases indicates healthy depth and value realization.</p>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Use case</th><th>Score</th><th>Status</th><th>Recommendation</th></tr></thead>
+              <tbody>${useCaseRows(account)}</tbody>
+            </table>
           </div>
-          <p class="muted">Generate agenda, follow-up email, and collaboration issue body for the selected request.</p>
-          <div class="intake-form">
-            <label class="field-span-2">
-              <span>Source request</span>
-              <select data-request-select>
-                ${requestOptions(openRequests)}
-              </select>
+          <div class="callout">Recommended workshop: ${workspace.recommendedProgram?.title || 'Select based on lowest use-case score.'}</div>
+        </section>
+
+        <section class="tab-panel" data-tab-panel="health" id="health-risk" aria-hidden="true">
+          <div class="metric-head"><h2>Health & Risk</h2></div>
+          <p class="muted">Health rubric combines adoption, engagement, and lifecycle signals.</p>
+          <ul class="simple-list">
+            ${(workspace.signal?.reasons || []).map((reason) => `<li>${reason}</li>`).join('') || '<li>No active risk factors.</li>'}
+          </ul>
+          ${
+            customerSafe
+              ? ''
+              : `<div class="card compact-card">
+                  <h3>Internal risk register</h3>
+                  <p class="muted">${internalAccount.internal_only?.sentiment_notes || 'No internal notes.'}</p>
+                  <ul class="simple-list">
+                    ${(internalAccount.internal_only?.escalations || [])
+                      .map((item) => `<li>${item.severity}: ${item.issue} (next update ${formatDate(item.next_update_due)})</li>`)
+                      .join('') || '<li>No escalations.</li>'}
+                  </ul>
+                </div>`
+          }
+        </section>
+
+        <section class="tab-panel" data-tab-panel="outcomes" id="outcomes" aria-hidden="true">
+          <div class="metric-head"><h2>Outcomes</h2></div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Objective</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead>
+              <tbody>${outcomeRows(account)}</tbody>
+            </table>
+          </div>
+          <div class="kpi-grid kpi-3">
+            ${metricTile({ label: 'Time saved', value: account.outcomes?.value_metrics?.time_saved_hours || 'Missing data', meta: 'hours', tone: 'good' })}
+            ${metricTile({ label: 'Pipeline speed', value: account.outcomes?.value_metrics?.pipeline_speed || 'Missing data', tone: isMissing(account.outcomes?.value_metrics?.pipeline_speed) ? 'warn' : 'good' })}
+            ${metricTile({ label: 'Security coverage', value: account.outcomes?.value_metrics?.security_coverage || 'Missing data', tone: 'neutral' })}
+          </div>
+        </section>
+
+        <section class="tab-panel" data-tab-panel="engagement" id="engagement" aria-hidden="true">
+          <div class="metric-head"><h2>Engagement</h2></div>
+          <div class="kpi-grid kpi-3">
+            ${metricTile({ label: 'Cadence', value: account.engagement?.cadence || 'Missing data', tone: 'neutral' })}
+            ${metricTile({ label: 'Last touch', value: account.engagement?.last_touch_date || 'Missing data', tone: 'neutral' })}
+            ${metricTile({ label: 'Next touch', value: account.engagement?.next_touch_date || 'Missing data', tone: isMissing(account.engagement?.next_touch_date) ? 'warn' : 'good' })}
+          </div>
+          <h3>Open requests</h3>
+          <ul class="simple-list">
+            ${openRequests
+              .map((request) => `<li>${request.request_id} | ${request.topic} | ${request.status} | due ${formatDate(request.due_date)}</li>`)
+              .join('') || '<li>No open requests.</li>'}
+          </ul>
+        </section>
+
+        <section class="tab-panel" data-tab-panel="journey" id="journey" aria-hidden="true">
+          <div class="metric-head"><h2>Journey</h2></div>
+          <div class="timeline">${timelineRows(account)}</div>
+        </section>
+
+        <section class="tab-panel" data-tab-panel="resources" id="resources" aria-hidden="true">
+          <div class="metric-head"><h2>Resources</h2></div>
+          <ul class="simple-list">${resourceRows(allResources) || '<li>No resources available.</li>'}</ul>
+        </section>
+
+        <section class="tab-panel" data-tab-panel="cheatsheet" id="cheatsheet" aria-hidden="true">
+          <div class="metric-head"><h2>Cheatsheet</h2></div>
+          <div class="callout">Do this next: align objective + done criteria, route to pooled program, capture adoption delta, update renewal narrative.</div>
+          <section class="card compact-card">
+            <h3>Generate artifacts</h3>
+            <label>
+              Source request
+              <select data-request-select>${requestOptions(openRequests)}</select>
             </label>
-          </div>
-          <div class="artifact-grid" data-artifact-grid>
-            ${artifactCard('Issue body (GitLab markdown)', 'issue', state.artifacts.issue)}
-            ${artifactCard('Customer-safe meeting agenda', 'agenda', state.artifacts.agenda)}
-            ${artifactCard('Customer-safe follow-up email', 'email', state.artifacts.email)}
-          </div>
+            <div class="artifact-grid" data-artifact-grid>
+              <article class="card compact-card">
+                <div class="metric-head"><h3>Issue body</h3><button class="ghost-btn" type="button" data-copy-artifact="issue">Copy</button></div>
+                <textarea class="artifact" readonly data-artifact="issue">${state.artifacts.issue}</textarea>
+              </article>
+              <article class="card compact-card">
+                <div class="metric-head"><h3>Meeting agenda</h3><button class="ghost-btn" type="button" data-copy-artifact="agenda">Copy</button></div>
+                <textarea class="artifact" readonly data-artifact="agenda">${state.artifacts.agenda}</textarea>
+              </article>
+              <article class="card compact-card">
+                <div class="metric-head"><h3>Follow-up email</h3><button class="ghost-btn" type="button" data-copy-artifact="email">Copy</button></div>
+                <textarea class="artifact" readonly data-artifact="email">${state.artifacts.email}</textarea>
+              </article>
+            </div>
+          </section>
         </section>
       </div>
 
-      <aside class="workspace-drawer card">
-        <h2>Action Drawer</h2>
-        <p><strong>Lifecycle stage:</strong> ${stageLabel(workspace.lifecycleStage)}</p>
-        <p><strong>Next best action:</strong> ${workspace.nextBestAction}</p>
-        <p><strong>Why flagged:</strong> ${(workspace.signal?.reasons || []).slice(0, 2).join(' | ') || 'No active flags'}</p>
-        <h3>Open requests + owner</h3>
-        <ul class="simple-list">
-          ${openRequests
-            .map((request) => `<li>${request.request_id} - ${request.assigned_to || 'Unassigned'}</li>`)
-            .join('') || '<li>No open requests.</li>'}
-        </ul>
-        <h3>Recommended 1:many program</h3>
-        ${
-          workspace.recommendedProgram
-            ? `<p><strong>${workspace.recommendedProgram.title}</strong> (${workspace.recommendedProgram.type})</p>
-               <p class="muted">${formatDate(workspace.recommendedProgram.date)}</p>
-               <button class="ghost-btn" type="button" data-copy-invite="${workspace.recommendedProgram.program_id}">Copy invite blurb</button>`
-            : '<p class="muted">No program recommendation available.</p>'
-        }
-      </aside>
-    </div>
+      <div data-drawer-host></div>
+    </section>
   `;
 
-  wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
+  wireTabs(wrapper);
+
+  const drawer = renderActionDrawer({
+    title: 'Account Action Drawer',
+    mode,
+    nextActions: workspace.actions.immediate,
+    dueSoon: workspace.actions.dueSoon,
+    riskSignals: workspace.actions.strategic,
+    onGenerateAgenda: async () => {
+      await copyText(state.artifacts.agenda);
+      notify('Agenda copied.');
+    },
+    onGenerateEmail: async () => {
+      await copyText(state.artifacts.email);
+      notify('Follow-up email copied.');
+    },
+    onGenerateIssue: async () => {
+      await copyText(state.artifacts.issue);
+      notify('Issue body copied.');
+    },
+    onExportPortfolio: () => navigate('exports'),
+    onExportAccount: () => onExportAccountCsv(internalAccount, { customerSafe }),
+    onExportSummary: () => onExportAccountPdf(internalAccount, { customerSafe })
+  });
+  wrapper.querySelector('[data-drawer-host]').appendChild(drawer);
+
+  wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
   wrapper.querySelector('[data-safe-toggle]')?.addEventListener('change', (event) => onToggleSafe(Boolean(event.target.checked)));
 
-  wrapper.querySelectorAll('[data-tab]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const target = button.getAttribute('data-tab');
-      wrapper.querySelectorAll('[data-tab]').forEach((item) => item.classList.toggle('is-active', item === button));
-      wrapper
-        .querySelectorAll('[data-panel]')
-        .forEach((panel) => panel.classList.toggle('is-active', panel.getAttribute('data-panel') === target));
+  wrapper.querySelectorAll('[data-tab-link]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      const id = link.getAttribute('data-tab-link');
+      const tabBtn = wrapper.querySelector(`[data-tab-target="${id}"]`);
+      tabBtn?.click();
+      wrapper.querySelectorAll('[data-tab-link]').forEach((item) => item.classList.remove('is-active'));
+      link.classList.add('is-active');
+    });
+  });
+
+  wrapper.querySelectorAll('[data-copy-artifact]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const key = button.getAttribute('data-copy-artifact');
+      const text = state.artifacts[key];
+      if (!text) return;
+      await copyText(text);
+      notify(`${key} copied.`);
     });
   });
 
   wrapper.querySelector('[data-request-select]')?.addEventListener('change', (event) => {
-    state.selectedRequestId = event.target.value;
-    const request = openRequests.find((item) => item.request_id === state.selectedRequestId) || synthRequest(account, workspace.signal);
-    state.artifacts = buildArtifactBundle(request, account);
-    wrapper.querySelector('[data-artifact-grid]').innerHTML = `
-      ${artifactCard('Issue body (GitLab markdown)', 'issue', state.artifacts.issue)}
-      ${artifactCard('Customer-safe meeting agenda', 'agenda', state.artifacts.agenda)}
-      ${artifactCard('Customer-safe follow-up email', 'email', state.artifacts.email)}
-    `;
+    const requestId = event.target.value;
+    const selected = openRequests.find((item) => item.request_id === requestId) || artifactSource;
+    state.artifacts = buildArtifactSet(selected, account);
+    wrapper.querySelector('[data-artifact="issue"]').value = state.artifacts.issue;
+    wrapper.querySelector('[data-artifact="agenda"]').value = state.artifacts.agenda;
+    wrapper.querySelector('[data-artifact="email"]').value = state.artifacts.email;
   });
 
-  wrapper.addEventListener('click', (event) => {
-    const copyAction = event.target.closest('[data-copy-artifact]');
-    if (copyAction) {
-      const key = copyAction.getAttribute('data-copy-artifact');
-      const value = state.artifacts?.[key];
-      if (!value) return;
-      copyText(value).then(() => notify(`${key} copied.`));
-      return;
-    }
-
-    const invite = event.target.closest('[data-copy-invite]');
-    if (invite) {
-      onCopyInvite(invite.getAttribute('data-copy-invite'));
-      return;
-    }
-
-    if (event.target.closest('[data-export-account-csv-safe]')) {
-      onExportAccountCsv(internalAccount, { customerSafe: true });
-      return;
-    }
-    if (event.target.closest('[data-export-account-csv-internal]')) {
-      onExportAccountCsv(internalAccount, { customerSafe: false });
-      return;
-    }
-    if (event.target.closest('[data-export-account-pdf-safe]')) {
-      onExportAccountPdf(internalAccount, { customerSafe: true });
-      return;
-    }
-    if (event.target.closest('[data-export-account-pdf-internal]')) {
-      onExportAccountPdf(internalAccount, { customerSafe: false });
-    }
+  wrapper.querySelectorAll('[data-edit-missing]').forEach((button) => {
+    button.addEventListener('click', () => {
+      onOpenMissingEditor({
+        accountId: internalAccount.id,
+        path: button.getAttribute('data-edit-missing'),
+        label: button.getAttribute('data-edit-label'),
+        type: button.getAttribute('data-edit-type') || 'text'
+      });
+    });
   });
+
+  wrapper.querySelector('[data-copy-invite]')?.addEventListener('click', () => onCopyInvite(workspace.recommendedProgram?.program_id));
 
   return wrapper;
 };
@@ -440,17 +399,8 @@ export const renderAccountPage = (ctx) => {
 export const accountCommandEntries = (workspace) => {
   if (!workspace?.account) return [];
   return [
-    {
-      id: 'account-overview',
-      label: `Account overview: ${workspace.account.name}`,
-      meta: 'Account',
-      action: { route: 'account', params: { id: workspace.account.id } }
-    },
-    {
-      id: 'account-programs',
-      label: 'Open programs',
-      meta: 'Programs',
-      action: { route: 'programs' }
-    }
+    { id: `account-${workspace.account.id}`, label: `Open account: ${workspace.account.name}`, meta: 'Account', action: { route: 'account', params: { id: workspace.account.id } } },
+    { id: 'account-programs', label: 'Open programs', meta: 'Programs', action: { route: 'programs' } },
+    { id: 'account-exports', label: 'Open exports center', meta: 'Exports', action: { route: 'exports' } }
   ];
 };

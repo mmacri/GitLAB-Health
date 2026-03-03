@@ -215,3 +215,11 @@ export const exportAccountSummaryPdf = (account, options = {}) => {
   // Browser print dialog allows "Save as PDF" and works in static environments.
   win.print();
 };
+
+export const buildShareSnapshotUrl = ({ origin = window.location.origin, basePath = '', route = '/', customerSafe = true }) => {
+  const base = `${origin}${String(basePath || '').replace(/\/+$/, '')}/`;
+  const query = new URLSearchParams();
+  query.set('route', route);
+  query.set('audience', customerSafe ? 'customer' : 'internal');
+  return `${base}?${query.toString()}`;
+};

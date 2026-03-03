@@ -1,6 +1,7 @@
 import { buildCustomerAgenda, buildFollowupEmail, buildIssueBody } from '../lib/artifacts.mjs';
 import { formatDate, toIsoDate } from '../lib/date.mjs';
 import { storage, STORAGE_KEYS } from '../lib/storage.mjs';
+import { statusChip } from '../components/statusChip.mjs';
 
 const REQUESTOR_ROLES = ['Account Executive', 'Renewals Manager'];
 const STAGES = ['onboard', 'enable', 'expand', 'optimize', 'renew'];
@@ -52,7 +53,7 @@ const artifactCard = (title, key, value) => `
       <h3>${title}</h3>
       <button class="ghost-btn" type="button" data-copy-artifact="${key}">Copy</button>
     </div>
-    <textarea class="artifact-textarea" readonly data-artifact="${key}">${value || ''}</textarea>
+    <textarea class="artifact" readonly data-artifact="${key}">${value || ''}</textarea>
   </article>
 `;
 
@@ -95,7 +96,7 @@ export const renderIntakePage = (ctx) => {
     </header>
 
     <section class="card">
-      <form class="intake-form" data-intake-form>
+      <form class="form-grid" data-intake-form>
         <label>
           <span>Requestor role</span>
           <select name="requestor_role">
@@ -114,11 +115,11 @@ export const renderIntakePage = (ctx) => {
           <span>Topic</span>
           <select name="topic">${TOPICS.map((topic) => `<option value="${topic}">${topic}</option>`).join('')}</select>
         </label>
-        <label class="field-span-2">
+        <label class="form-span">
           <span>Desired outcome</span>
           <textarea name="desired_outcome" rows="3" required placeholder="Example: Lift CI adoption from 49 to 65 before renewal review."></textarea>
         </label>
-        <label class="field-span-2">
+        <label class="form-span">
           <span>Definition of done</span>
           <textarea name="definition_of_done" rows="3" required placeholder="Example: CI score >= 65 and executive-ready evidence package delivered."></textarea>
         </label>
@@ -126,11 +127,11 @@ export const renderIntakePage = (ctx) => {
           <span>Due date</span>
           <input type="date" name="due_date" required />
         </label>
-        <label class="field-span-2">
+        <label class="form-span">
           <span>Attach notes</span>
           <textarea name="notes" rows="3" placeholder="Context, dependencies, and constraints."></textarea>
         </label>
-        <div class="form-actions field-span-2">
+        <div class="form-actions form-span">
           <button class="qa" type="submit">Submit request</button>
           <button class="ghost-btn" type="button" data-clear-draft>Clear draft</button>
         </div>
@@ -140,7 +141,7 @@ export const renderIntakePage = (ctx) => {
     <section class="card">
       <div class="metric-head">
         <h2>Generated Artifacts</h2>
-        <span class="status-pill" data-status="watch">Generated on submit</span>
+        ${statusChip({ label: 'Generated on submit', tone: 'warn' })}
       </div>
       <p class="muted">After submit, copy these outputs directly into collaboration issue, customer agenda, and follow-up channels.</p>
       <div class="artifact-grid" data-artifacts-root>

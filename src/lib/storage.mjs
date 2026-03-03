@@ -40,7 +40,11 @@ export const storage = {
 
 export const STORAGE_KEYS = {
   safeMode: 'glh-safe-mode',
+  viewMode: 'glh-view-mode',
   requests: 'glh-requests',
   programs: 'glh-program-attendance',
-  intakeDraft: 'glh-intake-draft'
+  intakeDraft: 'glh-intake-draft',
+  accountOverrides: 'glh-account-overrides',
+  playbookChecklist: 'glh-playbook-checklist',
+  selectedAccountId: 'glh-selected-account-id'
 };

@@ -1,115 +1,136 @@
 # Data Schema
 
-This file documents the static data model used by the GitLAB-Health pooled CSE dashboard.
+This schema defines the static data backing the GitLAB-Health portfolio-first dashboard.
 
-## Customer-safe redaction policy
-- `customer_safe: true` fields can appear in customer-facing UI and customer-safe exports.
-- `internal_only` fields are never shown in customer-safe mode and are excluded from customer-safe exports.
+## Customer-safe policy
+- Customer-safe exports and UI hide any field under `internal_only`.
+- Resources with `customer_safe=false` are hidden in customer-safe mode.
+- Playbook checklist items with `internal_only=true` are hidden in customer-safe mode.
 
-## `data/accounts.json`
-- `version` (number): schema version.
-- `updated_on` (string, `YYYY-MM-DD`): last data refresh date.
-- `accounts` (array): list of account records.
+## accounts.json
+Top-level:
+- `version` number
+- `updated_on` date string
+- `accounts[]`
 
-### Account object
-- `id` (string): unique stable account id.
-- `name` (string): account display name.
-- `segment` (string): portfolio segment.
-- `renewal_date` (string, `YYYY-MM-DD`): renewal date.
-- `health` (object, customer-safe):
-  - `overall` (string enum: `green|yellow|red`)
-  - `adoption_health` (string enum)
-  - `engagement_health` (string enum)
-  - `lifecycle_stage` (string enum: `onboard|enable|expand|optimize|renew`)
-  - `last_updated` (string, `YYYY-MM-DD`)
-- `adoption` (object, customer-safe):
-  - `use_case_scores` (object): numeric scores for `SCM`, `CI`, `CD`, `Secure`.
-  - `platform_adoption_score` (number `0-100`)
-  - `platform_adoption_level` (string): summary level (for example `3 of 4 use cases green`).
-  - `trend_30d` (number): score delta over 30 days.
-- `engagement` (object, customer-safe):
-  - `last_touch_date` (string, `YYYY-MM-DD`)
-  - `next_touch_date` (string, `YYYY-MM-DD`)
-  - `program_attendance` (object)
-    - `last_90d` (number)
-    - `webinars` (number)
-    - `labs` (number)
-    - `office_hours` (number)
-- `outcomes` (object, customer-safe):
-  - `objectives` (array)
-    - `title` (string)
-    - `status` (string enum: `in_progress|at_risk|complete`)
-    - `owner` (string)
-    - `due_date` (string, `YYYY-MM-DD`)
-  - `value_metrics` (object)
-    - `time_saved_hours` (number)
-    - `pipeline_speed` (string)
-    - `security_coverage` (string)
-- `internal_only` (object, internal-only):
-  - `sentiment_notes` (string)
-  - `expansion_hypotheses` (array of string)
-  - `escalations` (array)
-    - `severity` (string enum: `P1|P2|P3`)
-    - `issue` (string)
-    - `next_update_due` (string, `YYYY-MM-DD`)
+Account fields:
+- `id` string
+- `name` string
+- `segment` string
+- `renewal_date` date
+- `health` (customer-safe)
+  - `overall` `green|yellow|red`
+  - `adoption_health` `green|yellow|red`
+  - `engagement_health` `green|yellow|red`
+  - `lifecycle_stage` `onboard|enable|expand|optimize|renew`
+  - `last_updated` date or null
+- `adoption` (customer-safe)
+  - `use_case_scores` object with `SCM|CI|CD|Secure` numeric scores
+  - `platform_adoption_score` number
+  - `platform_adoption_level` string
+  - `trend_30d` number
+- `engagement` (customer-safe)
+  - `cadence` string
+  - `last_touch_date` date
+  - `next_touch_date` date or null
+  - `program_attendance`
+    - `last_90d` number
+    - `webinars` number
+    - `labs` number
+    - `office_hours` number
+- `journey` (customer-safe)
+  - `time_to_engage_days` number
+  - `time_to_onboard_days` number
+  - `time_to_first_value_days` number
+  - `time_to_outcome_days` number
+  - `milestones[]`
+    - `key` string
+    - `label` string
+    - `target_days` number
+    - `actual_days` number
+    - `status` `done|watch|risk`
+- `outcomes` (customer-safe)
+  - `objectives[]`
+    - `title` string
+    - `status` `in_progress|at_risk|complete`
+    - `owner` string
+    - `due_date` date
+  - `value_metrics`
+    - `time_saved_hours` number
+    - `pipeline_speed` string or null
+    - `security_coverage` string
+    - `dora`
+      - `deployment_frequency` string
+      - `lead_time` string
+      - `change_failure_rate` string
+      - `mttr` string
+- `internal_only` (internal-only)
+  - `sentiment_notes` string
+  - `expansion_hypotheses[]` string
+  - `escalations[]`
+    - `severity` `P1|P2|P3`
+    - `issue` string
+    - `next_update_due` date
 
-## `data/requests.json`
-- `version` (number)
-- `updated_on` (string)
-- `requests` (array)
-  - `request_id` (string)
-  - `account_id` (string)
-  - `requestor_role` (string enum: `Account Executive|Renewals Manager`)
-  - `topic` (string enum: `SCM|CI|CD|Secure|platform foundations`)
-  - `stage` (string enum: `onboard|enable|expand|optimize|renew`)
-  - `desired_outcome` (string)
-  - `definition_of_done` (string)
-  - `due_date` (string)
-  - `status` (string enum: `new|triage|in_progress|blocked|completed`)
-  - `assigned_to` (string)
-  - `created_on` (string)
+## requests.json
+- `version`, `updated_on`
+- `requests[]`
+  - `request_id`
+  - `account_id`
+  - `requestor_role`
+  - `topic`
+  - `stage`
+  - `desired_outcome`
+  - `definition_of_done`
+  - `due_date`
+  - `status` `new|triage|in_progress|blocked|completed`
+  - `assigned_to`
+  - `notes`
+  - `created_on`
 
-## `data/programs.json`
-- `version` (number)
-- `updated_on` (string)
-- `programs` (array)
-  - `program_id` (string)
-  - `type` (string enum: `webinar|hands-on lab|office hours`)
-  - `title` (string)
-  - `date` (string ISO datetime)
-  - `target_use_cases` (array of string)
-  - `registration_count` (number)
-  - `attendance_count` (number)
-  - `owner` (string)
+## programs.json
+- `version`, `updated_on`
+- `programs[]`
+  - `program_id`
+  - `type` `webinar|hands-on lab|office hours`
+  - `title`
+  - `date` ISO datetime
+  - `target_use_cases[]`
+  - `registration_count`
+  - `attendance_count`
+  - `owner`
+  - `invite_blurb`
+  - `followup_steps[]`
 
-## `data/playbooks.json`
-- `version` (number)
-- `updated_on` (string)
-- `playbooks` (array)
-  - `id` (string)
-  - `stage` (string)
-  - `topic` (string)
-  - `title` (string)
-  - `recommended_program` (string, `program_id`)
-  - `next_best_action` (string)
-  - `resource_ids` (array of string)
+## playbooks.json
+- `version`, `updated_on`
+- `playbooks[]`
+  - `id`
+  - `stage`
+  - `topic`
+  - `title`
+  - `recommended_program` program id
+  - `next_best_action`
+  - `checklist[]`
+    - `key`
+    - `label`
+    - `internal_only` boolean
+  - `templates`
+    - `agenda`
+    - `followup`
+    - `issue`
+  - `resource_ids[]`
 
-## `data/resources.json`
-- `version` (number)
-- `updated_on` (string)
-- `categories` (array)
-  - `id` (string)
-  - `label` (string)
-- `resources` (array)
-  - `id` (string)
-  - `title` (string)
-  - `summary` (string)
-  - `url` (string)
-  - `categories` (array of category ids)
-  - `tooltip` (string)
-  - `customer_safe` (boolean)
+## resources.json
+- `version`, `updated_on`
+- `categories[]` (`id`, `label`)
+- `resources[]`
+  - `id`, `title`, `summary`, `url`
+  - `categories[]`
+  - `tooltip`
+  - `customer_safe` boolean
 
-## Denylist used by customer-safe exports
+## Customer-safe denylist
 - `internal_only`
 - `internal_only.sentiment_notes`
 - `internal_only.expansion_hypotheses`

@@ -33,6 +33,29 @@ const mergePrograms = (basePrograms) => {
   });
 };
 
+const mergeDeep = (target, source) => {
+  if (!source || typeof source !== 'object') return target;
+  const output = Array.isArray(target) ? [...target] : { ...(target || {}) };
+  Object.entries(source).forEach(([key, value]) => {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      output[key] = mergeDeep(output[key], value);
+      return;
+    }
+    output[key] = value;
+  });
+  return output;
+};
+
+const mergeAccounts = (baseAccounts) => {
+  const overrides = storage.get(STORAGE_KEYS.accountOverrides, {});
+  if (!overrides || typeof overrides !== 'object') return baseAccounts;
+  return (baseAccounts || []).map((account) => {
+    const override = overrides[account.id];
+    if (!override) return account;
+    return mergeDeep(account, override);
+  });
+};
+
 export const persistRequests = (requests) => storage.set(STORAGE_KEYS.requests, requests);
 
 export const persistProgram = (program) => {
@@ -44,6 +67,40 @@ export const persistProgram = (program) => {
   storage.set(STORAGE_KEYS.programs, current);
 };
 
+export const persistAccountField = (accountId, path, value) => {
+  const current = storage.get(STORAGE_KEYS.accountOverrides, {});
+  if (!current[accountId]) current[accountId] = {};
+
+  const keys = String(path || '')
+    .split('.')
+    .filter(Boolean);
+  if (!keys.length) return;
+
+  let cursor = current[accountId];
+  keys.forEach((key, index) => {
+    if (index === keys.length - 1) {
+      cursor[key] = value;
+      return;
+    }
+    if (!cursor[key] || typeof cursor[key] !== 'object') {
+      cursor[key] = {};
+    }
+    cursor = cursor[key];
+  });
+
+  storage.set(STORAGE_KEYS.accountOverrides, current);
+};
+
+export const resetLocalState = () => {
+  [STORAGE_KEYS.requests, STORAGE_KEYS.programs, STORAGE_KEYS.intakeDraft, STORAGE_KEYS.accountOverrides, STORAGE_KEYS.playbookChecklist].forEach(
+    (key) => storage.remove(key)
+  );
+};
+
+export const loadPlaybookChecklist = () => storage.get(STORAGE_KEYS.playbookChecklist, {});
+
+export const persistPlaybookChecklist = (checklistState) => storage.set(STORAGE_KEYS.playbookChecklist, checklistState);
+
 export const loadDashboardData = async () => {
   const [accountsDoc, requestsDoc, programsDoc, playbooksDoc, resourcesDoc] = await Promise.all([
     fetchJson('data/accounts.json', { accounts: [] }),
@@ -53,7 +110,7 @@ export const loadDashboardData = async () => {
     fetchJson('data/resources.json', { categories: [], resources: [] })
   ]);
 
-  const accounts = Array.isArray(accountsDoc.accounts) ? accountsDoc.accounts : [];
+  const accounts = mergeAccounts(Array.isArray(accountsDoc.accounts) ? accountsDoc.accounts : []);
   const requests = mergeRequests(Array.isArray(requestsDoc.requests) ? requestsDoc.requests : []);
   const programs = mergePrograms(Array.isArray(programsDoc.programs) ? programsDoc.programs : []);
   const playbooks = Array.isArray(playbooksDoc.playbooks) ? playbooksDoc.playbooks : [];

@@ -15,6 +15,13 @@ export const redactAccountForCustomer = (account) => {
 
 export const redactCollectionForCustomer = (accounts) => (accounts || []).map((account) => redactAccountForCustomer(account));
 
+export const redactPlaybookForCustomer = (playbook) => ({
+  ...playbook,
+  checklist: (playbook?.checklist || []).filter((item) => !item.internal_only)
+});
+
+export const redactPlaybooksForCustomer = (playbooks) => (playbooks || []).map((item) => redactPlaybookForCustomer(item));
+
 export const hasDeniedKey = (value, denylist = CUSTOMER_SAFE_DENYLIST) => {
   const deniedRoots = new Set(denylist.map((entry) => entry.split('.')[0]));
 

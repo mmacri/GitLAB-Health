@@ -12,7 +12,7 @@ export const toIsoDate = (value) => {
 
 export const formatDate = (value) => {
   const date = parseDate(value);
-  if (!date) return 'TBD';
+  if (!date) return 'Missing data';
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
@@ -22,7 +22,7 @@ export const formatDate = (value) => {
 
 export const formatDateTime = (value) => {
   const date = parseDate(value);
-  if (!date) return 'TBD';
+  if (!date) return 'Missing data';
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
@@ -52,3 +52,5 @@ export const isWithinDays = (value, maxDays, now = new Date()) => {
 };
 
 export const nowIso = () => toIsoDate(new Date());
+
+export const isMissing = (value) => value === null || value === undefined || String(value).trim() === '';

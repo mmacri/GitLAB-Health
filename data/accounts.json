@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "updated_on": "2026-03-03",
   "accounts": [
     {
@@ -9,64 +9,107 @@
       "renewal_date": "2026-06-30",
       "health": {
         "overall": "yellow",
-        "adoption_health": "yellow",
-        "engagement_health": "green",
+        "adoption_health": "green",
+        "engagement_health": "yellow",
         "lifecycle_stage": "enable",
-        "last_updated": "2026-03-01"
+        "last_updated": "2026-03-02"
       },
       "adoption": {
         "use_case_scores": {
-          "SCM": 82,
-          "CI": 76,
-          "CD": 63,
-          "Secure": 58
+          "SCM": 90,
+          "CI": 82,
+          "CD": 75,
+          "Secure": 68
         },
-        "platform_adoption_score": 70,
-        "platform_adoption_level": "2 of 4 use cases green",
-        "trend_30d": -4
+        "platform_adoption_score": 79.0,
+        "platform_adoption_level": "3 of 4 use cases green",
+        "trend_30d": -3
       },
       "engagement": {
-        "last_touch_date": "2026-02-27",
-        "next_touch_date": "2026-03-08",
+        "cadence": "weekly",
+        "last_touch_date": "2026-03-01",
+        "next_touch_date": "2026-03-07",
         "program_attendance": {
-          "last_90d": 3,
+          "last_90d": 1,
           "webinars": 1,
-          "labs": 1,
-          "office_hours": 1
+          "labs": 0,
+          "office_hours": 0
         }
+      },
+      "journey": {
+        "time_to_engage_days": 6,
+        "time_to_onboard_days": 28,
+        "time_to_first_value_days": 20,
+        "time_to_outcome_days": 65,
+        "milestones": [
+          {
+            "key": "engage",
+            "label": "Engagement",
+            "target_days": 14,
+            "actual_days": 6,
+            "status": "done"
+          },
+          {
+            "key": "onboard",
+            "label": "Onboarding",
+            "target_days": 45,
+            "actual_days": 28,
+            "status": "done"
+          },
+          {
+            "key": "first_value",
+            "label": "First Value",
+            "target_days": 30,
+            "actual_days": 20,
+            "status": "done"
+          },
+          {
+            "key": "outcome",
+            "label": "Outcome",
+            "target_days": 90,
+            "actual_days": 65,
+            "status": "done"
+          }
+        ]
       },
       "outcomes": {
         "objectives": [
           {
-            "title": "Scale CI template coverage to 70% of active projects",
+            "title": "Increase CI reliability and reduce failed pipelines",
             "status": "in_progress",
-            "owner": "Platform Engineering",
-            "due_date": "2026-03-28"
+            "owner": "Engineering Ops",
+            "due_date": "2026-03-13"
           },
           {
-            "title": "Deploy Secure baseline for regulated repositories",
-            "status": "at_risk",
-            "owner": "Security Engineering",
-            "due_date": "2026-03-22"
+            "title": "Expand Secure controls to critical repositories",
+            "status": "complete",
+            "owner": "Security Team",
+            "due_date": "2026-03-23"
           }
         ],
         "value_metrics": {
-          "time_saved_hours": 120,
-          "pipeline_speed": "Lead time reduced 31% in 90 days",
-          "security_coverage": "26% of repos with SAST + dependency scanning"
+          "time_saved_hours": 70,
+          "pipeline_speed": "Lead time improved 38%",
+          "security_coverage": "22% of repos with secure scans",
+          "dora": {
+            "deployment_frequency": "daily",
+            "lead_time": "1 day",
+            "change_failure_rate": "7%",
+            "mttr": "2 hours"
+          }
         }
       },
       "internal_only": {
-        "sentiment_notes": "Sponsor remains positive, but engineering managers are concerned about secure rollout speed.",
+        "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
         "expansion_hypotheses": [
-          "If Secure reaches 45% coverage, upgrade discussion likely moves into Q2.",
-          "Feature flag coaching may open Premium add-on for two business units."
+          "Expand Secure seat footprint after policy automation baseline.",
+          "Offer advanced CI workshop to unlock broader platform standardization."
         ],
         "escalations": [
           {
             "severity": "P2",
-            "issue": "Scanner policy approval blocked in governance board",
-            "next_update_due": "2026-03-07"
+            "issue": "Pipeline reliability gap on critical services",
+            "next_update_due": "2026-03-09"
           }
         ]
       }
@@ -78,63 +121,107 @@
       "renewal_date": "2026-04-20",
       "health": {
         "overall": "red",
-        "adoption_health": "red",
+        "adoption_health": "yellow",
         "engagement_health": "yellow",
         "lifecycle_stage": "renew",
-        "last_updated": "2026-02-20"
+        "last_updated": "2026-03-01"
       },
       "adoption": {
         "use_case_scores": {
-          "SCM": 68,
-          "CI": 49,
-          "CD": 41,
-          "Secure": 35
+          "SCM": 91,
+          "CI": 67,
+          "CD": 63,
+          "Secure": 54
         },
-        "platform_adoption_score": 48,
-        "platform_adoption_level": "0 of 4 use cases green",
+        "platform_adoption_score": 69.0,
+        "platform_adoption_level": "1 of 4 use cases green",
         "trend_30d": -12
       },
       "engagement": {
-        "last_touch_date": "2026-02-12",
-        "next_touch_date": "2026-03-06",
+        "cadence": "biweekly",
+        "last_touch_date": "2026-02-28",
+        "next_touch_date": "2026-03-08",
         "program_attendance": {
-          "last_90d": 1,
-          "webinars": 1,
-          "labs": 0,
-          "office_hours": 0
+          "last_90d": 2,
+          "webinars": 2,
+          "labs": 1,
+          "office_hours": 1
         }
+      },
+      "journey": {
+        "time_to_engage_days": 7,
+        "time_to_onboard_days": 29,
+        "time_to_first_value_days": 21,
+        "time_to_outcome_days": 66,
+        "milestones": [
+          {
+            "key": "engage",
+            "label": "Engagement",
+            "target_days": 14,
+            "actual_days": 7,
+            "status": "done"
+          },
+          {
+            "key": "onboard",
+            "label": "Onboarding",
+            "target_days": 45,
+            "actual_days": 29,
+            "status": "done"
+          },
+          {
+            "key": "first_value",
+            "label": "First Value",
+            "target_days": 30,
+            "actual_days": 21,
+            "status": "done"
+          },
+          {
+            "key": "outcome",
+            "label": "Outcome",
+            "target_days": 90,
+            "actual_days": 66,
+            "status": "done"
+          }
+        ]
       },
       "outcomes": {
         "objectives": [
           {
-            "title": "Recover cadence and re-establish monthly executive governance",
+            "title": "Increase CI reliability and reduce failed pipelines",
             "status": "at_risk",
-            "owner": "CSM + CSE Pool",
-            "due_date": "2026-03-15"
+            "owner": "Engineering Ops",
+            "due_date": "2026-03-14"
           },
           {
-            "title": "Move CI score above 60 before renewal committee review",
-            "status": "at_risk",
-            "owner": "DevOps Director",
-            "due_date": "2026-03-25"
+            "title": "Expand Secure controls to critical repositories",
+            "status": "in_progress",
+            "owner": "Security Team",
+            "due_date": "2026-03-24"
           }
         ],
         "value_metrics": {
-          "time_saved_hours": 42,
-          "pipeline_speed": "Lead time improvement stalled at 8%",
-          "security_coverage": "14% of repos with secure scans"
+          "time_saved_hours": 81,
+          "pipeline_speed": "Lead time improved 37%",
+          "security_coverage": "26% of repos with secure scans",
+          "dora": {
+            "deployment_frequency": "weekly",
+            "lead_time": "4 days",
+            "change_failure_rate": "18%",
+            "mttr": "9 hours"
+          }
         }
       },
       "internal_only": {
-        "sentiment_notes": "Renewal manager asked for proof of measurable outcome progress in next 21 days.",
+        "sentiment_notes": "Stakeholders requesting accelerated stabilization before renewal.",
         "expansion_hypotheses": [
-          "Expansion unlikely unless renewal risk is reduced by improving CI/CD reliability."
+          "Expand Secure seat footprint after policy automation baseline.",
+          "Offer advanced CI workshop to unlock broader platform standardization."
         ],
         "escalations": [
           {
             "severity": "P1",
-            "issue": "Renewal committee requesting executive escalation package",
-            "next_update_due": "2026-03-05"
+            "issue": "Pipeline reliability gap on critical services",
+            "next_update_due": "2026-03-10"
           }
         ]
       }
@@ -149,50 +236,106 @@
         "adoption_health": "green",
         "engagement_health": "green",
         "lifecycle_stage": "expand",
-        "last_updated": "2026-03-02"
+        "last_updated": "2026-02-28"
       },
       "adoption": {
         "use_case_scores": {
-          "SCM": 90,
-          "CI": 84,
-          "CD": 78,
-          "Secure": 77
+          "SCM": 92,
+          "CI": 87,
+          "CD": 83,
+          "Secure": 74
         },
-        "platform_adoption_score": 82,
-        "platform_adoption_level": "4 of 4 use cases green",
+        "platform_adoption_score": 84.0,
+        "platform_adoption_level": "3 of 4 use cases green",
         "trend_30d": 5
       },
       "engagement": {
-        "last_touch_date": "2026-03-01",
-        "next_touch_date": "2026-03-12",
+        "cadence": "monthly",
+        "last_touch_date": "2026-02-27",
+        "next_touch_date": "2026-03-09",
         "program_attendance": {
-          "last_90d": 5,
-          "webinars": 2,
+          "last_90d": 3,
+          "webinars": 3,
           "labs": 2,
-          "office_hours": 1
+          "office_hours": 0
         }
+      },
+      "journey": {
+        "time_to_engage_days": 8,
+        "time_to_onboard_days": 30,
+        "time_to_first_value_days": 22,
+        "time_to_outcome_days": 67,
+        "milestones": [
+          {
+            "key": "engage",
+            "label": "Engagement",
+            "target_days": 14,
+            "actual_days": 8,
+            "status": "done"
+          },
+          {
+            "key": "onboard",
+            "label": "Onboarding",
+            "target_days": 45,
+            "actual_days": 30,
+            "status": "done"
+          },
+          {
+            "key": "first_value",
+            "label": "First Value",
+            "target_days": 30,
+            "actual_days": 22,
+            "status": "done"
+          },
+          {
+            "key": "outcome",
+            "label": "Outcome",
+            "target_days": 90,
+            "actual_days": 67,
+            "status": "done"
+          }
+        ]
       },
       "outcomes": {
         "objectives": [
           {
-            "title": "Expand Secure and Release usage to two additional product lines",
+            "title": "Increase CI reliability and reduce failed pipelines",
             "status": "in_progress",
-            "owner": "Application Platform Team",
-            "due_date": "2026-04-18"
+            "owner": "Engineering Ops",
+            "due_date": "2026-03-15"
+          },
+          {
+            "title": "Expand Secure controls to critical repositories",
+            "status": "in_progress",
+            "owner": "Security Team",
+            "due_date": "2026-03-25"
           }
         ],
         "value_metrics": {
-          "time_saved_hours": 164,
-          "pipeline_speed": "Weekly release throughput up 2.8x",
-          "security_coverage": "59% of repos with secure scans"
+          "time_saved_hours": 92,
+          "pipeline_speed": "Lead time improved 36%",
+          "security_coverage": "30% of repos with secure scans",
+          "dora": {
+            "deployment_frequency": "daily",
+            "lead_time": "1 day",
+            "change_failure_rate": "7%",
+            "mttr": "2 hours"
+          }
         }
       },
       "internal_only": {
-        "sentiment_notes": "Strong candidate for customer story if secure adoption trend continues.",
+        "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
         "expansion_hypotheses": [
-          "Potential Ultimate seat expansion in Q3 tied to platform standardization."
+          "Expand Secure seat footprint after policy automation baseline.",
+          "Offer advanced CI workshop to unlock broader platform standardization."
         ],
-        "escalations": []
+        "escalations": [
+          {
+            "severity": "P3",
+            "issue": "Pipeline reliability gap on critical services",
+            "next_update_due": "2026-03-11"
+          }
+        ]
       }
     },
     {
@@ -202,59 +345,109 @@
       "renewal_date": "2026-07-14",
       "health": {
         "overall": "yellow",
-        "adoption_health": "yellow",
-        "engagement_health": "yellow",
+        "adoption_health": "green",
+        "engagement_health": "green",
         "lifecycle_stage": "optimize",
-        "last_updated": "2026-02-24"
+        "last_updated": "2026-02-27"
       },
       "adoption": {
         "use_case_scores": {
-          "SCM": 79,
-          "CI": 66,
-          "CD": 61,
-          "Secure": 54
+          "SCM": 84,
+          "CI": 79,
+          "CD": 75,
+          "Secure": 65
         },
-        "platform_adoption_score": 65,
-        "platform_adoption_level": "1 of 4 use cases green",
-        "trend_30d": -3
+        "platform_adoption_score": 76.0,
+        "platform_adoption_level": "3 of 4 use cases green",
+        "trend_30d": -2
       },
       "engagement": {
-        "last_touch_date": "2026-02-22",
+        "cadence": "weekly",
+        "last_touch_date": "2026-02-26",
         "next_touch_date": "2026-03-10",
         "program_attendance": {
-          "last_90d": 2,
+          "last_90d": 4,
           "webinars": 1,
-          "labs": 1,
-          "office_hours": 0
+          "labs": 0,
+          "office_hours": 1
         }
+      },
+      "journey": {
+        "time_to_engage_days": 9,
+        "time_to_onboard_days": 31,
+        "time_to_first_value_days": 23,
+        "time_to_outcome_days": 68,
+        "milestones": [
+          {
+            "key": "engage",
+            "label": "Engagement",
+            "target_days": 14,
+            "actual_days": 9,
+            "status": "done"
+          },
+          {
+            "key": "onboard",
+            "label": "Onboarding",
+            "target_days": 45,
+            "actual_days": 31,
+            "status": "done"
+          },
+          {
+            "key": "first_value",
+            "label": "First Value",
+            "target_days": 30,
+            "actual_days": 23,
+            "status": "done"
+          },
+          {
+            "key": "outcome",
+            "label": "Outcome",
+            "target_days": 90,
+            "actual_days": 68,
+            "status": "done"
+          }
+        ]
       },
       "outcomes": {
         "objectives": [
           {
-            "title": "Raise Secure score above 65 with policy automation",
+            "title": "Increase CI reliability and reduce failed pipelines",
             "status": "in_progress",
-            "owner": "Security Architecture",
-            "due_date": "2026-04-01"
+            "owner": "Engineering Ops",
+            "due_date": "2026-03-16"
           },
           {
-            "title": "Reduce deployment rollback rate below 8%",
+            "title": "Expand Secure controls to critical repositories",
             "status": "in_progress",
-            "owner": "Release Engineering",
-            "due_date": "2026-04-10"
+            "owner": "Security Team",
+            "due_date": "2026-03-26"
           }
         ],
         "value_metrics": {
-          "time_saved_hours": 98,
-          "pipeline_speed": "Deployment frequency up 41%",
-          "security_coverage": "33% of repos with secure scans"
+          "time_saved_hours": 103,
+          "pipeline_speed": "Lead time improved 35%",
+          "security_coverage": "34% of repos with secure scans",
+          "dora": {
+            "deployment_frequency": "daily",
+            "lead_time": "1 day",
+            "change_failure_rate": "7%",
+            "mttr": "2 hours"
+          }
         }
       },
       "internal_only": {
-        "sentiment_notes": "CIO supportive; security lead requests more CSE office-hour support.",
+        "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
         "expansion_hypotheses": [
-          "Office hours focused on policy-as-code could improve secure adoption by next quarter."
+          "Expand Secure seat footprint after policy automation baseline.",
+          "Offer advanced CI workshop to unlock broader platform standardization."
         ],
-        "escalations": []
+        "escalations": [
+          {
+            "severity": "P2",
+            "issue": "Pipeline reliability gap on critical services",
+            "next_update_due": "2026-03-12"
+          }
+        ]
       }
     },
     {
@@ -264,57 +457,891 @@
       "renewal_date": "2026-05-30",
       "health": {
         "overall": "yellow",
-        "adoption_health": "green",
+        "adoption_health": "yellow",
         "engagement_health": "yellow",
         "lifecycle_stage": "renew",
-        "last_updated": "2026-02-18"
+        "last_updated": "2026-02-26"
       },
       "adoption": {
         "use_case_scores": {
-          "SCM": 87,
-          "CI": 82,
-          "CD": 74,
-          "Secure": 68
+          "SCM": 85,
+          "CI": 70,
+          "CD": 75,
+          "Secure": 60
         },
-        "platform_adoption_score": 78,
-        "platform_adoption_level": "3 of 4 use cases green",
+        "platform_adoption_score": 72.0,
+        "platform_adoption_level": "2 of 4 use cases green",
         "trend_30d": 1
       },
       "engagement": {
-        "last_touch_date": "2026-02-19",
-        "next_touch_date": "2026-03-09",
+        "cadence": "biweekly",
+        "last_touch_date": "2026-02-25",
+        "next_touch_date": "2026-03-11",
+        "program_attendance": {
+          "last_90d": 5,
+          "webinars": 2,
+          "labs": 1,
+          "office_hours": 0
+        }
+      },
+      "journey": {
+        "time_to_engage_days": 10,
+        "time_to_onboard_days": 32,
+        "time_to_first_value_days": 24,
+        "time_to_outcome_days": 69,
+        "milestones": [
+          {
+            "key": "engage",
+            "label": "Engagement",
+            "target_days": 14,
+            "actual_days": 10,
+            "status": "done"
+          },
+          {
+            "key": "onboard",
+            "label": "Onboarding",
+            "target_days": 45,
+            "actual_days": 32,
+            "status": "done"
+          },
+          {
+            "key": "first_value",
+            "label": "First Value",
+            "target_days": 30,
+            "actual_days": 24,
+            "status": "done"
+          },
+          {
+            "key": "outcome",
+            "label": "Outcome",
+            "target_days": 90,
+            "actual_days": 69,
+            "status": "done"
+          }
+        ]
+      },
+      "outcomes": {
+        "objectives": [
+          {
+            "title": "Increase CI reliability and reduce failed pipelines",
+            "status": "in_progress",
+            "owner": "Engineering Ops",
+            "due_date": "2026-03-17"
+          },
+          {
+            "title": "Expand Secure controls to critical repositories",
+            "status": "in_progress",
+            "owner": "Security Team",
+            "due_date": "2026-03-27"
+          }
+        ],
+        "value_metrics": {
+          "time_saved_hours": 114,
+          "pipeline_speed": "Lead time improved 34%",
+          "security_coverage": "38% of repos with secure scans",
+          "dora": {
+            "deployment_frequency": "daily",
+            "lead_time": "1 day",
+            "change_failure_rate": "7%",
+            "mttr": "2 hours"
+          }
+        }
+      },
+      "internal_only": {
+        "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
+        "expansion_hypotheses": [
+          "Expand Secure seat footprint after policy automation baseline.",
+          "Offer advanced CI workshop to unlock broader platform standardization."
+        ],
+        "escalations": [
+          {
+            "severity": "P2",
+            "issue": "Pipeline reliability gap on critical services",
+            "next_update_due": "2026-03-13"
+          }
+        ]
+      }
+    },
+    {
+      "id": "litware-aerospace",
+      "name": "Litware Aerospace",
+      "segment": "Strategic",
+      "renewal_date": "2026-08-19",
+      "health": {
+        "overall": "green",
+        "adoption_health": "green",
+        "engagement_health": "green",
+        "lifecycle_stage": "expand",
+        "last_updated": "2026-02-25"
+      },
+      "adoption": {
+        "use_case_scores": {
+          "SCM": 86,
+          "CI": 76,
+          "CD": 73,
+          "Secure": 71
+        },
+        "platform_adoption_score": 76.0,
+        "platform_adoption_level": "2 of 4 use cases green",
+        "trend_30d": 4
+      },
+      "engagement": {
+        "cadence": "monthly",
+        "last_touch_date": "2026-02-24",
+        "next_touch_date": "2026-03-12",
+        "program_attendance": {
+          "last_90d": 6,
+          "webinars": 3,
+          "labs": 2,
+          "office_hours": 1
+        }
+      },
+      "journey": {
+        "time_to_engage_days": 11,
+        "time_to_onboard_days": 33,
+        "time_to_first_value_days": 25,
+        "time_to_outcome_days": 70,
+        "milestones": [
+          {
+            "key": "engage",
+            "label": "Engagement",
+            "target_days": 14,
+            "actual_days": 11,
+            "status": "done"
+          },
+          {
+            "key": "onboard",
+            "label": "Onboarding",
+            "target_days": 45,
+            "actual_days": 33,
+            "status": "done"
+          },
+          {
+            "key": "first_value",
+            "label": "First Value",
+            "target_days": 30,
+            "actual_days": 25,
+            "status": "done"
+          },
+          {
+            "key": "outcome",
+            "label": "Outcome",
+            "target_days": 90,
+            "actual_days": 70,
+            "status": "done"
+          }
+        ]
+      },
+      "outcomes": {
+        "objectives": [
+          {
+            "title": "Increase CI reliability and reduce failed pipelines",
+            "status": "in_progress",
+            "owner": "Engineering Ops",
+            "due_date": "2026-03-18"
+          },
+          {
+            "title": "Expand Secure controls to critical repositories",
+            "status": "complete",
+            "owner": "Security Team",
+            "due_date": "2026-03-28"
+          }
+        ],
+        "value_metrics": {
+          "time_saved_hours": 125,
+          "pipeline_speed": "Lead time improved 33%",
+          "security_coverage": "42% of repos with secure scans",
+          "dora": {
+            "deployment_frequency": "daily",
+            "lead_time": "1 day",
+            "change_failure_rate": "7%",
+            "mttr": "2 hours"
+          }
+        }
+      },
+      "internal_only": {
+        "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
+        "expansion_hypotheses": [
+          "Expand Secure seat footprint after policy automation baseline.",
+          "Offer advanced CI workshop to unlock broader platform standardization."
+        ],
+        "escalations": [
+          {
+            "severity": "P3",
+            "issue": "Pipeline reliability gap on critical services",
+            "next_update_due": "2026-03-14"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wingtip-manufacturing",
+      "name": "Wingtip Manufacturing",
+      "segment": "Enterprise",
+      "renewal_date": "2026-03-29",
+      "health": {
+        "overall": "red",
+        "adoption_health": "red",
+        "engagement_health": "yellow",
+        "lifecycle_stage": "renew",
+        "last_updated": "2026-02-24"
+      },
+      "adoption": {
+        "use_case_scores": {
+          "SCM": 78,
+          "CI": 54,
+          "CD": 53,
+          "Secure": 41
+        },
+        "platform_adoption_score": 56.0,
+        "platform_adoption_level": "1 of 4 use cases green",
+        "trend_30d": -9
+      },
+      "engagement": {
+        "cadence": "weekly",
+        "last_touch_date": "2026-02-23",
+        "next_touch_date": "2026-03-13",
+        "program_attendance": {
+          "last_90d": 1,
+          "webinars": 1,
+          "labs": 0,
+          "office_hours": 0
+        }
+      },
+      "journey": {
+        "time_to_engage_days": 12,
+        "time_to_onboard_days": 34,
+        "time_to_first_value_days": 26,
+        "time_to_outcome_days": 71,
+        "milestones": [
+          {
+            "key": "engage",
+            "label": "Engagement",
+            "target_days": 14,
+            "actual_days": 12,
+            "status": "done"
+          },
+          {
+            "key": "onboard",
+            "label": "Onboarding",
+            "target_days": 45,
+            "actual_days": 34,
+            "status": "done"
+          },
+          {
+            "key": "first_value",
+            "label": "First Value",
+            "target_days": 30,
+            "actual_days": 26,
+            "status": "done"
+          },
+          {
+            "key": "outcome",
+            "label": "Outcome",
+            "target_days": 90,
+            "actual_days": 71,
+            "status": "done"
+          }
+        ]
+      },
+      "outcomes": {
+        "objectives": [
+          {
+            "title": "Increase CI reliability and reduce failed pipelines",
+            "status": "at_risk",
+            "owner": "Engineering Ops",
+            "due_date": "2026-03-19"
+          },
+          {
+            "title": "Expand Secure controls to critical repositories",
+            "status": "in_progress",
+            "owner": "Security Team",
+            "due_date": "2026-03-29"
+          }
+        ],
+        "value_metrics": {
+          "time_saved_hours": 136,
+          "pipeline_speed": "Lead time improved 32%",
+          "security_coverage": "46% of repos with secure scans",
+          "dora": {
+            "deployment_frequency": "weekly",
+            "lead_time": "4 days",
+            "change_failure_rate": "18%",
+            "mttr": "9 hours"
+          }
+        }
+      },
+      "internal_only": {
+        "sentiment_notes": "Stakeholders requesting accelerated stabilization before renewal.",
+        "expansion_hypotheses": [
+          "Expand Secure seat footprint after policy automation baseline.",
+          "Offer advanced CI workshop to unlock broader platform standardization."
+        ],
+        "escalations": [
+          {
+            "severity": "P1",
+            "issue": "Pipeline reliability gap on critical services",
+            "next_update_due": "2026-03-15"
+          }
+        ]
+      }
+    },
+    {
+      "id": "woodgrove-bank",
+      "name": "Woodgrove Bank",
+      "segment": "Strategic",
+      "renewal_date": "2026-10-03",
+      "health": {
+        "overall": "green",
+        "adoption_health": "yellow",
+        "engagement_health": "green",
+        "lifecycle_stage": "enable",
+        "last_updated": null
+      },
+      "adoption": {
+        "use_case_scores": {
+          "SCM": 79,
+          "CI": 74,
+          "CD": 73,
+          "Secure": 67
+        },
+        "platform_adoption_score": 73.0,
+        "platform_adoption_level": "1 of 4 use cases green",
+        "trend_30d": 2
+      },
+      "engagement": {
+        "cadence": "biweekly",
+        "last_touch_date": "2026-02-22",
+        "next_touch_date": "2026-03-14",
         "program_attendance": {
           "last_90d": 2,
+          "webinars": 2,
+          "labs": 1,
+          "office_hours": 1
+        }
+      },
+      "journey": {
+        "time_to_engage_days": 13,
+        "time_to_onboard_days": 35,
+        "time_to_first_value_days": 27,
+        "time_to_outcome_days": 72,
+        "milestones": [
+          {
+            "key": "engage",
+            "label": "Engagement",
+            "target_days": 14,
+            "actual_days": 13,
+            "status": "done"
+          },
+          {
+            "key": "onboard",
+            "label": "Onboarding",
+            "target_days": 45,
+            "actual_days": 35,
+            "status": "done"
+          },
+          {
+            "key": "first_value",
+            "label": "First Value",
+            "target_days": 30,
+            "actual_days": 27,
+            "status": "done"
+          },
+          {
+            "key": "outcome",
+            "label": "Outcome",
+            "target_days": 90,
+            "actual_days": 72,
+            "status": "done"
+          }
+        ]
+      },
+      "outcomes": {
+        "objectives": [
+          {
+            "title": "Increase CI reliability and reduce failed pipelines",
+            "status": "in_progress",
+            "owner": "Engineering Ops",
+            "due_date": "2026-03-20"
+          },
+          {
+            "title": "Expand Secure controls to critical repositories",
+            "status": "in_progress",
+            "owner": "Security Team",
+            "due_date": "2026-03-30"
+          }
+        ],
+        "value_metrics": {
+          "time_saved_hours": 147,
+          "pipeline_speed": "Lead time improved 31%",
+          "security_coverage": "50% of repos with secure scans",
+          "dora": {
+            "deployment_frequency": "daily",
+            "lead_time": "1 day",
+            "change_failure_rate": "7%",
+            "mttr": "2 hours"
+          }
+        }
+      },
+      "internal_only": {
+        "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
+        "expansion_hypotheses": [
+          "Expand Secure seat footprint after policy automation baseline.",
+          "Offer advanced CI workshop to unlock broader platform standardization."
+        ],
+        "escalations": [
+          {
+            "severity": "P3",
+            "issue": "Pipeline reliability gap on critical services",
+            "next_update_due": "2026-03-16"
+          }
+        ]
+      }
+    },
+    {
+      "id": "blue-yonder-logistics",
+      "name": "Blue Yonder Logistics",
+      "segment": "Enterprise",
+      "renewal_date": "2026-11-22",
+      "health": {
+        "overall": "yellow",
+        "adoption_health": "yellow",
+        "engagement_health": "yellow",
+        "lifecycle_stage": "optimize",
+        "last_updated": "2026-02-22"
+      },
+      "adoption": {
+        "use_case_scores": {
+          "SCM": 80,
+          "CI": 58,
+          "CD": 65,
+          "Secure": 52
+        },
+        "platform_adoption_score": 64.0,
+        "platform_adoption_level": "1 of 4 use cases green",
+        "trend_30d": -1
+      },
+      "engagement": {
+        "cadence": "monthly",
+        "last_touch_date": "2026-02-21",
+        "next_touch_date": "2026-03-15",
+        "program_attendance": {
+          "last_90d": 3,
+          "webinars": 3,
+          "labs": 2,
+          "office_hours": 0
+        }
+      },
+      "journey": {
+        "time_to_engage_days": 14,
+        "time_to_onboard_days": 36,
+        "time_to_first_value_days": 28,
+        "time_to_outcome_days": 73,
+        "milestones": [
+          {
+            "key": "engage",
+            "label": "Engagement",
+            "target_days": 14,
+            "actual_days": 14,
+            "status": "done"
+          },
+          {
+            "key": "onboard",
+            "label": "Onboarding",
+            "target_days": 45,
+            "actual_days": 36,
+            "status": "done"
+          },
+          {
+            "key": "first_value",
+            "label": "First Value",
+            "target_days": 30,
+            "actual_days": 28,
+            "status": "done"
+          },
+          {
+            "key": "outcome",
+            "label": "Outcome",
+            "target_days": 90,
+            "actual_days": 73,
+            "status": "done"
+          }
+        ]
+      },
+      "outcomes": {
+        "objectives": [
+          {
+            "title": "Increase CI reliability and reduce failed pipelines",
+            "status": "in_progress",
+            "owner": "Engineering Ops",
+            "due_date": "2026-03-21"
+          },
+          {
+            "title": "Expand Secure controls to critical repositories",
+            "status": "in_progress",
+            "owner": "Security Team",
+            "due_date": "2026-03-31"
+          }
+        ],
+        "value_metrics": {
+          "time_saved_hours": 158,
+          "pipeline_speed": "Lead time improved 30%",
+          "security_coverage": "54% of repos with secure scans",
+          "dora": {
+            "deployment_frequency": "daily",
+            "lead_time": "1 day",
+            "change_failure_rate": "7%",
+            "mttr": "2 hours"
+          }
+        }
+      },
+      "internal_only": {
+        "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
+        "expansion_hypotheses": [
+          "Expand Secure seat footprint after policy automation baseline.",
+          "Offer advanced CI workshop to unlock broader platform standardization."
+        ],
+        "escalations": [
+          {
+            "severity": "P2",
+            "issue": "Pipeline reliability gap on critical services",
+            "next_update_due": "2026-03-09"
+          }
+        ]
+      }
+    },
+    {
+      "id": "proseware-telecom",
+      "name": "Proseware Telecom",
+      "segment": "Mid-Market Plus",
+      "renewal_date": "2026-12-11",
+      "health": {
+        "overall": "green",
+        "adoption_health": "yellow",
+        "engagement_health": "green",
+        "lifecycle_stage": "expand",
+        "last_updated": "2026-02-21"
+      },
+      "adoption": {
+        "use_case_scores": {
+          "SCM": 72,
+          "CI": 64,
+          "CD": 73,
+          "Secure": 63
+        },
+        "platform_adoption_score": 68.0,
+        "platform_adoption_level": "0 of 4 use cases green",
+        "trend_30d": 6
+      },
+      "engagement": {
+        "cadence": "weekly",
+        "last_touch_date": "2026-02-20",
+        "next_touch_date": "2026-03-16",
+        "program_attendance": {
+          "last_90d": 4,
           "webinars": 1,
           "labs": 0,
           "office_hours": 1
         }
       },
+      "journey": {
+        "time_to_engage_days": 15,
+        "time_to_onboard_days": 37,
+        "time_to_first_value_days": 29,
+        "time_to_outcome_days": 74,
+        "milestones": [
+          {
+            "key": "engage",
+            "label": "Engagement",
+            "target_days": 14,
+            "actual_days": 15,
+            "status": "watch"
+          },
+          {
+            "key": "onboard",
+            "label": "Onboarding",
+            "target_days": 45,
+            "actual_days": 37,
+            "status": "done"
+          },
+          {
+            "key": "first_value",
+            "label": "First Value",
+            "target_days": 30,
+            "actual_days": 29,
+            "status": "done"
+          },
+          {
+            "key": "outcome",
+            "label": "Outcome",
+            "target_days": 90,
+            "actual_days": 74,
+            "status": "done"
+          }
+        ]
+      },
       "outcomes": {
         "objectives": [
           {
-            "title": "Package renewal outcome narrative for executive review",
+            "title": "Increase CI reliability and reduce failed pipelines",
             "status": "in_progress",
-            "owner": "CSM",
-            "due_date": "2026-03-19"
+            "owner": "Engineering Ops",
+            "due_date": "2026-03-22"
+          },
+          {
+            "title": "Expand Secure controls to critical repositories",
+            "status": "in_progress",
+            "owner": "Security Team",
+            "due_date": "2026-04-01"
           }
         ],
         "value_metrics": {
-          "time_saved_hours": 134,
-          "pipeline_speed": "Lead time down 36%",
-          "security_coverage": "44% of repos with secure scans"
+          "time_saved_hours": 169,
+          "pipeline_speed": null,
+          "security_coverage": "58% of repos with secure scans",
+          "dora": {
+            "deployment_frequency": "daily",
+            "lead_time": "1 day",
+            "change_failure_rate": "7%",
+            "mttr": "2 hours"
+          }
         }
       },
       "internal_only": {
-        "sentiment_notes": "Technical outcomes are good; renewal confidence depends on procurement timing.",
+        "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
         "expansion_hypotheses": [
-          "Potential Secure expansion if procurement closes on time."
+          "Expand Secure seat footprint after policy automation baseline.",
+          "Offer advanced CI workshop to unlock broader platform standardization."
         ],
         "escalations": [
           {
             "severity": "P3",
-            "issue": "Legal review delay may impact commercial timeline",
+            "issue": "Pipeline reliability gap on critical services",
+            "next_update_due": "2026-03-10"
+          }
+        ]
+      }
+    },
+    {
+      "id": "a-datum-public-sector",
+      "name": "A Datum Public Sector",
+      "segment": "Public Sector",
+      "renewal_date": "2026-05-14",
+      "health": {
+        "overall": "yellow",
+        "adoption_health": "yellow",
+        "engagement_health": "green",
+        "lifecycle_stage": "enable",
+        "last_updated": "2026-02-20"
+      },
+      "adoption": {
+        "use_case_scores": {
+          "SCM": 73,
+          "CI": 56,
+          "CD": 55,
+          "Secure": 48
+        },
+        "platform_adoption_score": 58.0,
+        "platform_adoption_level": "0 of 4 use cases green",
+        "trend_30d": -6
+      },
+      "engagement": {
+        "cadence": "biweekly",
+        "last_touch_date": "2026-02-19",
+        "next_touch_date": null,
+        "program_attendance": {
+          "last_90d": 5,
+          "webinars": 2,
+          "labs": 1,
+          "office_hours": 0
+        }
+      },
+      "journey": {
+        "time_to_engage_days": 16,
+        "time_to_onboard_days": 38,
+        "time_to_first_value_days": 30,
+        "time_to_outcome_days": 75,
+        "milestones": [
+          {
+            "key": "engage",
+            "label": "Engagement",
+            "target_days": 14,
+            "actual_days": 16,
+            "status": "watch"
+          },
+          {
+            "key": "onboard",
+            "label": "Onboarding",
+            "target_days": 45,
+            "actual_days": 38,
+            "status": "done"
+          },
+          {
+            "key": "first_value",
+            "label": "First Value",
+            "target_days": 30,
+            "actual_days": 30,
+            "status": "done"
+          },
+          {
+            "key": "outcome",
+            "label": "Outcome",
+            "target_days": 90,
+            "actual_days": 75,
+            "status": "done"
+          }
+        ]
+      },
+      "outcomes": {
+        "objectives": [
+          {
+            "title": "Increase CI reliability and reduce failed pipelines",
+            "status": "in_progress",
+            "owner": "Engineering Ops",
+            "due_date": "2026-03-23"
+          },
+          {
+            "title": "Expand Secure controls to critical repositories",
+            "status": "complete",
+            "owner": "Security Team",
+            "due_date": "2026-04-02"
+          }
+        ],
+        "value_metrics": {
+          "time_saved_hours": 180,
+          "pipeline_speed": "Lead time improved 28%",
+          "security_coverage": "62% of repos with secure scans",
+          "dora": {
+            "deployment_frequency": "daily",
+            "lead_time": "1 day",
+            "change_failure_rate": "7%",
+            "mttr": "2 hours"
+          }
+        }
+      },
+      "internal_only": {
+        "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
+        "expansion_hypotheses": [
+          "Expand Secure seat footprint after policy automation baseline.",
+          "Offer advanced CI workshop to unlock broader platform standardization."
+        ],
+        "escalations": [
+          {
+            "severity": "P2",
+            "issue": "Pipeline reliability gap on critical services",
             "next_update_due": "2026-03-11"
+          }
+        ]
+      }
+    },
+    {
+      "id": "consolidated-healthcare",
+      "name": "Consolidated Healthcare",
+      "segment": "Enterprise",
+      "renewal_date": "2026-04-28",
+      "health": {
+        "overall": "red",
+        "adoption_health": "red",
+        "engagement_health": "yellow",
+        "lifecycle_stage": "renew",
+        "last_updated": "2026-02-19"
+      },
+      "adoption": {
+        "use_case_scores": {
+          "SCM": 74,
+          "CI": 41,
+          "CD": 43,
+          "Secure": 34
+        },
+        "platform_adoption_score": 48.0,
+        "platform_adoption_level": "0 of 4 use cases green",
+        "trend_30d": -8
+      },
+      "engagement": {
+        "cadence": "monthly",
+        "last_touch_date": "2026-02-18",
+        "next_touch_date": "2026-03-08",
+        "program_attendance": {
+          "last_90d": 6,
+          "webinars": 3,
+          "labs": 2,
+          "office_hours": 1
+        }
+      },
+      "journey": {
+        "time_to_engage_days": 17,
+        "time_to_onboard_days": 39,
+        "time_to_first_value_days": 31,
+        "time_to_outcome_days": 76,
+        "milestones": [
+          {
+            "key": "engage",
+            "label": "Engagement",
+            "target_days": 14,
+            "actual_days": 17,
+            "status": "watch"
+          },
+          {
+            "key": "onboard",
+            "label": "Onboarding",
+            "target_days": 45,
+            "actual_days": 39,
+            "status": "done"
+          },
+          {
+            "key": "first_value",
+            "label": "First Value",
+            "target_days": 30,
+            "actual_days": 31,
+            "status": "watch"
+          },
+          {
+            "key": "outcome",
+            "label": "Outcome",
+            "target_days": 90,
+            "actual_days": 76,
+            "status": "done"
+          }
+        ]
+      },
+      "outcomes": {
+        "objectives": [
+          {
+            "title": "Increase CI reliability and reduce failed pipelines",
+            "status": "at_risk",
+            "owner": "Engineering Ops",
+            "due_date": "2026-03-24"
+          },
+          {
+            "title": "Expand Secure controls to critical repositories",
+            "status": "in_progress",
+            "owner": "Security Team",
+            "due_date": "2026-04-03"
+          }
+        ],
+        "value_metrics": {
+          "time_saved_hours": 191,
+          "pipeline_speed": "Lead time improved 27%",
+          "security_coverage": "66% of repos with secure scans",
+          "dora": {
+            "deployment_frequency": "weekly",
+            "lead_time": "4 days",
+            "change_failure_rate": "18%",
+            "mttr": "9 hours"
+          }
+        }
+      },
+      "internal_only": {
+        "sentiment_notes": "Stakeholders requesting accelerated stabilization before renewal.",
+        "expansion_hypotheses": [
+          "Expand Secure seat footprint after policy automation baseline.",
+          "Offer advanced CI workshop to unlock broader platform standardization."
+        ],
+        "escalations": [
+          {
+            "severity": "P1",
+            "issue": "Pipeline reliability gap on critical services",
+            "next_update_due": "2026-03-12"
           }
         ]
       }

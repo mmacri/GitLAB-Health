@@ -1,19 +1,31 @@
 import { createCommandPalette } from './components/commandPalette.mjs';
-import { createRouter, detectBasePath } from './lib/router.mjs';
-import { loadDashboardData, persistProgram, persistRequests } from './lib/dataLoader.mjs';
-import { exportAccountCsv, exportAccountSummaryPdf, exportPortfolioCsv } from './lib/exports.mjs';
+import { createModal } from './components/modal.mjs';
+import { buildHref, createRouter, detectBasePath, routePath } from './lib/router.mjs';
+import {
+  loadDashboardData,
+  loadPlaybookChecklist,
+  persistAccountField,
+  persistPlaybookChecklist,
+  persistProgram,
+  persistRequests,
+  resetLocalState
+} from './lib/dataLoader.mjs';
+import { buildShareSnapshotUrl, exportAccountCsv, exportAccountSummaryPdf, exportPortfolioCsv } from './lib/exports.mjs';
+import { formatDateTime } from './lib/date.mjs';
 import { buildAccountWorkspace, buildPortfolioView } from './lib/scoring.mjs';
 import { storage, STORAGE_KEYS } from './lib/storage.mjs';
-import { formatDateTime } from './lib/date.mjs';
-import { renderPortfolioPage, portfolioCommandEntries } from './pages/portfolioPage.mjs';
+import { renderAccountPage, accountCommandEntries } from './pages/accountPage.mjs';
+import { renderExportsPage, exportsCommandEntries } from './pages/exportsPage.mjs';
 import { renderIntakePage, intakeCommandEntries } from './pages/intakePage.mjs';
+import { renderPlaybooksPage, playbooksCommandEntries } from './pages/playbooksPage.mjs';
+import { renderPortfolioHomePage, renderPortfolioPage, portfolioCommandEntries } from './pages/portfolioPage.mjs';
 import { renderProgramsPage, programsCommandEntries } from './pages/programsPage.mjs';
 import { renderResourcesPage, resourcesCommandEntries } from './pages/resourcesPage.mjs';
-import { accountCommandEntries, renderAccountPage } from './pages/accountPage.mjs';
 
 const appRoot = document.querySelector('[data-app-root]');
 const routeRoot = document.querySelector('[data-route-root]');
 const toastRoot = document.querySelector('[data-toast]');
+const settingsRoot = document.querySelector('[data-settings]');
 
 if (!appRoot || !routeRoot) {
   throw new Error('App shell is missing required mount points.');
@@ -21,18 +33,28 @@ if (!appRoot || !routeRoot) {
 
 const state = {
   data: null,
-  route: { name: 'portfolio', params: {}, path: '/' },
+  route: { name: 'home', params: {}, path: '/' },
   customerSafe: Boolean(storage.get(STORAGE_KEYS.safeMode, false)),
+  viewMode: storage.get(STORAGE_KEYS.viewMode, 'today') || 'today',
   basePath: '',
-  commandEntries: []
+  portfolioFilters: {
+    segment: 'all',
+    renewalWindow: 'all',
+    health: 'all',
+    staleOnly: false,
+    lowestUseCase: 'all',
+    hasOpenRequest: false
+  },
+  checklistState: {},
+  selectedAccountId: storage.get(STORAGE_KEYS.selectedAccountId, '')
 };
 
-const showToast = (message) => {
+const notify = (message) => {
   if (!toastRoot) return;
   toastRoot.textContent = message;
   toastRoot.classList.add('is-visible');
-  window.clearTimeout(showToast.timer);
-  showToast.timer = window.setTimeout(() => toastRoot.classList.remove('is-visible'), 1800);
+  window.clearTimeout(notify.timer);
+  notify.timer = window.setTimeout(() => toastRoot.classList.remove('is-visible'), 1800);
 };
 
 const copyText = async (text) => {
@@ -52,15 +74,50 @@ const copyText = async (text) => {
   }
 };
 
+const currentAccount = () => {
+  const accounts = state.data?.accounts || [];
+  if (!accounts.length) return null;
+  return (
+    accounts.find((account) => account.id === state.selectedAccountId) ||
+    accounts[0]
+  );
+};
+
+const setSelectedAccount = (accountId) => {
+  state.selectedAccountId = accountId;
+  storage.set(STORAGE_KEYS.selectedAccountId, accountId);
+};
+
 const setSafeMode = (value) => {
   state.customerSafe = Boolean(value);
   storage.set(STORAGE_KEYS.safeMode, state.customerSafe);
   render();
 };
 
-const applyRouteFromQuery = () => {
+const setViewMode = (value) => {
+  state.viewMode = value || 'today';
+  storage.set(STORAGE_KEYS.viewMode, state.viewMode);
+  render();
+};
+
+const setPortfolioFilters = (patch) => {
+  state.portfolioFilters = {
+    ...state.portfolioFilters,
+    ...patch
+  };
+  render();
+};
+
+const applyQueryOverrides = () => {
   const search = new URLSearchParams(window.location.search);
   const route = search.get('route');
+  const audience = search.get('audience');
+
+  if (audience === 'customer') {
+    state.customerSafe = true;
+    storage.set(STORAGE_KEYS.safeMode, true);
+  }
+
   if (!route) return;
   const normalized = route.startsWith('/') ? route : `/${route}`;
   const base = state.basePath.replace(/\/+$/, '');
@@ -72,36 +129,32 @@ const navItems = () => appRoot.querySelectorAll('[data-nav-route]');
 const setActiveNav = () => {
   navItems().forEach((link) => {
     const route = link.getAttribute('data-nav-route');
-    const active = route === state.route.name || (route === 'portfolio' && state.route.name === 'portfolio');
+    const active = route === state.route.name || (route === 'home' && state.route.name === 'portfolio');
     link.classList.toggle('is-active', active);
   });
 };
 
 const findProgram = (programId) => state.data.programs.find((program) => program.program_id === programId) || null;
 
-const inviteBlurb = (program) =>
-  [
-    `Join our GitLab ${program.type} session: ${program.title}`,
-    `When: ${formatDateTime(program.date)}`,
-    `Focus use cases: ${(program.target_use_cases || []).join(', ')}`,
-    'Hosted by the pooled CSE On-Demand team.'
-  ].join('\n');
-
-const updateProgram = (programId, updater) => {
-  const index = state.data.programs.findIndex((program) => program.program_id === programId);
-  if (index === -1) return;
-  const current = state.data.programs[index];
-  const updated = updater(current);
-  state.data.programs[index] = updated;
-  persistProgram(updated);
-  render();
-};
-
 const onCopyInvite = async (programId) => {
   const program = findProgram(programId);
   if (!program) return;
-  await copyText(inviteBlurb(program));
-  showToast(`Invite copied for ${program.title}.`);
+  const blurb = program.invite_blurb || [
+    `Join ${program.title}`,
+    `When: ${formatDateTime(program.date)}`,
+    `Use cases: ${(program.target_use_cases || []).join(', ')}`
+  ].join('\n');
+  await copyText(blurb);
+  notify(`Invite copied for ${program.title}.`);
+};
+
+const updateProgram = (programId, updater) => {
+  const index = state.data.programs.findIndex((program) => program.program_id === programId);
+  if (index < 0) return;
+  const updated = updater(state.data.programs[index]);
+  state.data.programs[index] = updated;
+  persistProgram(updated);
+  render();
 };
 
 const onLogAttendance = (programId, amount = 1) => {
@@ -124,69 +177,184 @@ const onCreateRequest = (request) => {
   render();
 };
 
+const modal = createModal();
+document.body.appendChild(modal.element);
+
+const openMissingEditor = ({ accountId, path, label, type = 'text' }) => {
+  const form = document.createElement('form');
+  form.className = 'form-grid';
+  form.innerHTML = `
+    <label class="form-span">
+      ${label}
+      <input name="value" type="${type}" required />
+    </label>
+    <div class="page-actions form-span">
+      <button class="qa" type="submit">Save</button>
+      <button class="ghost-btn" type="button" data-cancel>Cancel</button>
+    </div>
+  `;
+
+  form.querySelector('[data-cancel]')?.addEventListener('click', () => modal.close());
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const value = form.elements.namedItem('value').value;
+    persistAccountField(accountId, path, value);
+    state.data = await loadDashboardData();
+    modal.close();
+    render();
+    notify(`${label} updated.`);
+  });
+
+  modal.open({ title: `Update ${label}`, content: form });
+};
+
 const renderShellContext = () => {
   const safeToggle = appRoot.querySelector('[data-global-safe-toggle]');
   if (safeToggle) safeToggle.checked = state.customerSafe;
-  const modeLabel = appRoot.querySelector('[data-safe-label]');
-  if (modeLabel) modeLabel.textContent = state.customerSafe ? 'Customer-safe mode is ON' : 'Internal mode is ON';
+
+  const modeSelect = appRoot.querySelector('[data-global-mode]');
+  if (modeSelect) modeSelect.value = state.viewMode;
+
+  const safeLabel = appRoot.querySelector('[data-safe-label]');
+  if (safeLabel) {
+    safeLabel.textContent = state.customerSafe ? `Customer-safe mode • ${state.viewMode}` : `Internal mode • ${state.viewMode}`;
+  }
+
   setActiveNav();
+};
+
+const copyShareSnapshot = async () => {
+  const route = routePath(state.route.name, state.route.params);
+  const url = buildShareSnapshotUrl({
+    basePath: state.basePath,
+    route,
+    customerSafe: state.customerSafe
+  });
+  await copyText(url);
+  notify('Share snapshot URL copied.');
 };
 
 let palette = null;
 
-const setCommandEntries = (entries) => {
-  state.commandEntries = entries;
-  palette?.setEntries(entries);
+const commandEntries = (workspace) => {
+  const accountEntries = (state.data.accounts || []).map((account) => ({
+    id: `account-${account.id}`,
+    label: `Open account: ${account.name}`,
+    meta: `${account.segment}`,
+    action: { route: 'account', params: { id: account.id } }
+  }));
+
+  return [
+    { id: 'cmd-home', label: 'Open Portfolio Home', meta: 'Portfolio', action: { route: 'home' } },
+    { id: 'cmd-portfolio', label: 'Open Portfolio Table', meta: 'Portfolio', action: { route: 'portfolio' } },
+    { id: 'cmd-programs', label: 'Open Programs', meta: 'Programs', action: { route: 'programs' } },
+    { id: 'cmd-playbooks', label: 'Open Playbooks', meta: 'Playbooks', action: { route: 'playbooks' } },
+    { id: 'cmd-resources', label: 'Open Resources', meta: 'Resources', action: { route: 'resources' } },
+    { id: 'cmd-exports', label: 'Open Exports', meta: 'Exports', action: { route: 'exports' } },
+    { id: 'cmd-intake', label: 'Create Intake Request', meta: 'Tools', action: { route: 'intake' } },
+    { id: 'cmd-share', label: 'Copy Share Snapshot', meta: 'Exports', action: { custom: copyShareSnapshot } },
+    ...portfolioCommandEntries(state.data),
+    ...programsCommandEntries(state.data.programs),
+    ...playbooksCommandEntries(state.data.playbooks),
+    ...resourcesCommandEntries(),
+    ...exportsCommandEntries(),
+    ...intakeCommandEntries(state.data.accounts),
+    ...accountCommandEntries(workspace),
+    ...accountEntries
+  ];
 };
 
-const buildGlobalCommands = () => [
-  { id: 'go-portfolio', label: 'Open portfolio', meta: 'Portfolio', action: { route: 'portfolio' } },
-  { id: 'go-intake', label: 'Create intake request', meta: 'Intake', action: { route: 'intake' } },
-  { id: 'go-programs', label: 'Open programs', meta: 'Programs', action: { route: 'programs' } },
-  { id: 'go-resources', label: 'Open resources', meta: 'Resources', action: { route: 'resources' } }
-];
-
-const handleRouteRender = () => {
+const renderCurrentRoute = () => {
   const route = state.route;
   const portfolio = buildPortfolioView(state.data);
-  let view = null;
-  let commands = [...buildGlobalCommands(), ...portfolioCommandEntries(state.data)];
 
-  if (route.name === 'portfolio') {
-    view = renderPortfolioPage({
-      data: state.data,
+  if (route.name === 'account') {
+    if (route.params.id) setSelectedAccount(route.params.id);
+    if (!route.params.id && currentAccount()) {
+      router.navigate('account', { id: currentAccount().id }, { replace: true });
+      return;
+    }
+  }
+
+  let view = null;
+  const workspace = buildAccountWorkspace(state.data, state.selectedAccountId || route.params.id);
+
+  const common = {
+    navigate: (name, params) => {
+      if (name === 'account' && params?.id) setSelectedAccount(params.id);
+      if (name === 'account' && !params?.id) params = { id: currentAccount()?.id || state.data.accounts?.[0]?.id || '' };
+      router.navigate(name, params);
+    }
+  };
+
+  if (route.name === 'home') {
+    view = renderPortfolioHomePage({
       portfolio,
-      customerSafe: state.customerSafe,
-      navigate: (name, params) => router.navigate(name, params),
-      onToggleSafe: setSafeMode,
-      onExportPortfolio: () => exportPortfolioCsv(state.data.accounts, state.data.requests),
+      filters: state.portfolioFilters,
+      onSetFilters: setPortfolioFilters,
+      mode: state.viewMode,
       onCopyInvite,
-      onLogAttendance
+      onLogAttendance,
+      onExportPortfolio: () => exportPortfolioCsv(state.data.accounts, state.data.requests),
+      onCopyShare: copyShareSnapshot,
+      ...common
     });
   }
 
-  if (route.name === 'intake') {
-    view = renderIntakePage({
-      data: state.data,
-      requests: state.data.requests,
-      navigate: (name, params) => router.navigate(name, params),
-      onCreateRequest,
-      copyText,
-      notify: showToast
+  if (route.name === 'portfolio') {
+    view = renderPortfolioPage({
+      portfolio,
+      filters: state.portfolioFilters,
+      onSetFilters: setPortfolioFilters,
+      mode: state.viewMode,
+      onExportPortfolio: () => exportPortfolioCsv(state.data.accounts, state.data.requests),
+      ...common
     });
-    commands = [...commands, ...intakeCommandEntries(state.data.accounts)];
+  }
+
+  if (route.name === 'account') {
+    view = renderAccountPage({
+      workspace,
+      resources: state.data.resources,
+      customerSafe: state.customerSafe,
+      mode: state.viewMode,
+      onToggleSafe: setSafeMode,
+      onCopyInvite,
+      onExportAccountCsv: (account, options) => exportAccountCsv(account, options),
+      onExportAccountPdf: (account, options) => exportAccountSummaryPdf(account, options),
+      onOpenMissingEditor: openMissingEditor,
+      copyText,
+      notify,
+      ...common
+    });
   }
 
   if (route.name === 'programs') {
     view = renderProgramsPage({
       programs: state.data.programs,
-      navigate: (name, params) => router.navigate(name, params),
+      mode: state.viewMode,
       onCopyInvite,
       onLogAttendance,
       onAddRegistration,
-      notify: showToast
+      notify,
+      ...common
     });
-    commands = [...commands, ...programsCommandEntries(state.data.programs)];
+  }
+
+  if (route.name === 'playbooks') {
+    view = renderPlaybooksPage({
+      playbooks: state.data.playbooks,
+      customerSafe: state.customerSafe,
+      checklistState: state.checklistState,
+      mode: state.viewMode,
+      onChecklistChange: (playbookId, checkKey, value) => {
+        if (!state.checklistState[playbookId]) state.checklistState[playbookId] = {};
+        state.checklistState[playbookId][checkKey] = value;
+        persistPlaybookChecklist(state.checklistState);
+      },
+      notify,
+      ...common
+    });
   }
 
   if (route.name === 'resources') {
@@ -194,63 +362,124 @@ const handleRouteRender = () => {
       resources: state.data.resources,
       categories: state.data.categories,
       customerSafe: state.customerSafe,
-      navigate: (name, params) => router.navigate(name, params)
+      mode: state.viewMode,
+      ...common
     });
-    commands = [...commands, ...resourcesCommandEntries()];
   }
 
-  if (route.name === 'account') {
-    const workspace = buildAccountWorkspace(state.data, route.params.id);
-    view = renderAccountPage({
-      workspace,
-      resources: state.data.resources,
+  if (route.name === 'exports') {
+    view = renderExportsPage({
+      account: currentAccount(),
       customerSafe: state.customerSafe,
-      navigate: (name, params) => router.navigate(name, params),
-      onToggleSafe: setSafeMode,
-      onCopyInvite,
+      mode: state.viewMode,
+      onExportPortfolio: () => exportPortfolioCsv(state.data.accounts, state.data.requests),
       onExportAccountCsv: (account, options) => exportAccountCsv(account, options),
       onExportAccountPdf: (account, options) => exportAccountSummaryPdf(account, options),
-      copyText,
-      notify: showToast
+      onCopyShare: copyShareSnapshot,
+      ...common
     });
-    commands = [...commands, ...accountCommandEntries(workspace)];
+  }
+
+  if (route.name === 'intake') {
+    view = renderIntakePage({
+      data: state.data,
+      requests: state.data.requests,
+      onCreateRequest,
+      copyText,
+      notify,
+      ...common
+    });
+  }
+
+  if (!view) {
+    view = document.createElement('section');
+    view.className = 'route-page';
+    view.innerHTML = `<section class="card"><h1>Route not found</h1><button class="qa" type="button" data-go-home>Back to Portfolio</button></section>`;
+    view.querySelector('[data-go-home]')?.addEventListener('click', () => router.navigate('home'));
   }
 
   routeRoot.innerHTML = '';
   routeRoot.appendChild(view);
-  setCommandEntries(commands);
+
+  const commands = commandEntries(workspace);
+  palette?.setEntries(commands);
 };
 
 const render = () => {
   renderShellContext();
-  handleRouteRender();
+  renderCurrentRoute();
 };
 
 state.basePath = detectBasePath(window.location.pathname);
-applyRouteFromQuery();
+applyQueryOverrides();
 const router = createRouter(state.basePath);
 
 const bindGlobalEvents = () => {
   navItems().forEach((link) => {
     link.addEventListener('click', (event) => {
       event.preventDefault();
-      const route = link.getAttribute('data-nav-route');
-      router.navigate(route);
+      const name = link.getAttribute('data-nav-route');
+      if (name === 'account') {
+        const targetId = currentAccount()?.id || state.data.accounts?.[0]?.id || '';
+        setSelectedAccount(targetId);
+        router.navigate('account', { id: targetId });
+        return;
+      }
+      router.navigate(name);
     });
   });
 
   appRoot.querySelector('[data-global-safe-toggle]')?.addEventListener('change', (event) => {
     setSafeMode(Boolean(event.target.checked));
   });
+
+  appRoot.querySelector('[data-global-mode]')?.addEventListener('change', (event) => {
+    setViewMode(event.target.value);
+  });
+
+  appRoot.querySelector('[data-open-settings]')?.addEventListener('click', () => {
+    settingsRoot?.classList.add('is-open');
+    settingsRoot?.setAttribute('aria-hidden', 'false');
+  });
+
+  settingsRoot?.querySelectorAll('[data-close-settings]').forEach((item) => {
+    item.addEventListener('click', () => {
+      settingsRoot.classList.remove('is-open');
+      settingsRoot.setAttribute('aria-hidden', 'true');
+    });
+  });
+
+  settingsRoot?.querySelector('[data-reset-local-state]')?.addEventListener('click', async () => {
+    resetLocalState();
+    state.checklistState = {};
+    state.data = await loadDashboardData();
+    settingsRoot.classList.remove('is-open');
+    settingsRoot.setAttribute('aria-hidden', 'true');
+    notify('Local state reset.');
+    render();
+  });
 };
 
 const init = async () => {
   state.data = await loadDashboardData();
+  state.checklistState = loadPlaybookChecklist();
+
+  if (!state.selectedAccountId && state.data.accounts?.length) {
+    setSelectedAccount(state.data.accounts[0].id);
+  }
+
   bindGlobalEvents();
 
   palette = createCommandPalette({
     onSelect(entry) {
       if (!entry?.action) return;
+      if (entry.action.custom) {
+        entry.action.custom();
+        return;
+      }
+      if (entry.action.route === 'account' && entry.action.params?.id) {
+        setSelectedAccount(entry.action.params.id);
+      }
       router.navigate(entry.action.route, entry.action.params || {});
     }
   });

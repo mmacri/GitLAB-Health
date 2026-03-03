@@ -32,5 +32,12 @@ test('portfolio csv exports expected columns and values', () => {
   assert.ok(contosoLine, 'Expected contoso account in export');
   const contoso = splitCsvLine(contosoLine);
   assert.equal(contoso[4], 'red');
-  assert.equal(contoso[8], '1');
+  const expectedOpenRequests = String(
+    requests.filter(
+      (request) =>
+        request.account_id === 'contoso-financial-services' &&
+        !['completed', 'closed'].includes(String(request.status).toLowerCase())
+    ).length
+  );
+  assert.equal(contoso[8], expectedOpenRequests);
 });

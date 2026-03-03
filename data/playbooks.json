@@ -1,42 +1,326 @@
 {
-  "version": 1,
+  "version": 2,
   "updated_on": "2026-03-03",
   "playbooks": [
     {
-      "id": "pb-ci-enable",
+      "id": "pb-yellow-recovery",
+      "stage": "enable",
+      "topic": "platform foundations",
+      "title": "Yellow Health Recovery",
+      "recommended_program": "PGM-2026-004",
+      "next_best_action": "Rebuild cadence, close stale blockers, and show measurable adoption trend recovery.",
+      "checklist": [
+        {
+          "key": "align",
+          "label": "Confirm objective + definition of done with customer",
+          "internal_only": false
+        },
+        {
+          "key": "program",
+          "label": "Enroll customer in recommended 1:many program",
+          "internal_only": false
+        },
+        {
+          "key": "evidence",
+          "label": "Capture measurable adoption delta and outcome evidence",
+          "internal_only": false
+        },
+        {
+          "key": "risk",
+          "label": "Update risk register and escalation status",
+          "internal_only": true
+        }
+      ],
+      "templates": {
+        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
+        "followup": "Summarize outcomes, owners, timelines, and support path.",
+        "issue": "Create collaboration issue with objective, done criteria, and checklists."
+      },
+      "resource_ids": [
+        "res-health-scoring",
+        "res-platform-value",
+        "res-success-plans"
+      ]
+    },
+    {
+      "id": "pb-renewal-red",
+      "stage": "renew",
+      "topic": "CI",
+      "title": "Renewal Red Stabilization",
+      "recommended_program": "PGM-2026-006",
+      "next_best_action": "Run weekly executive-ready risk update tied to CI reliability evidence.",
+      "checklist": [
+        {
+          "key": "align",
+          "label": "Confirm objective + definition of done with customer",
+          "internal_only": false
+        },
+        {
+          "key": "program",
+          "label": "Enroll customer in recommended 1:many program",
+          "internal_only": false
+        },
+        {
+          "key": "evidence",
+          "label": "Capture measurable adoption delta and outcome evidence",
+          "internal_only": false
+        },
+        {
+          "key": "risk",
+          "label": "Update risk register and escalation status",
+          "internal_only": true
+        }
+      ],
+      "templates": {
+        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
+        "followup": "Summarize outcomes, owners, timelines, and support path.",
+        "issue": "Create collaboration issue with objective, done criteria, and checklists."
+      },
+      "resource_ids": [
+        "res-health-scoring",
+        "res-platform-value",
+        "res-success-plans"
+      ]
+    },
+    {
+      "id": "pb-secure-accel",
+      "stage": "optimize",
+      "topic": "Secure",
+      "title": "Secure Adoption Acceleration",
+      "recommended_program": "PGM-2026-002",
+      "next_best_action": "Increase secure scan coverage and document policy baseline rollout.",
+      "checklist": [
+        {
+          "key": "align",
+          "label": "Confirm objective + definition of done with customer",
+          "internal_only": false
+        },
+        {
+          "key": "program",
+          "label": "Enroll customer in recommended 1:many program",
+          "internal_only": false
+        },
+        {
+          "key": "evidence",
+          "label": "Capture measurable adoption delta and outcome evidence",
+          "internal_only": false
+        },
+        {
+          "key": "risk",
+          "label": "Update risk register and escalation status",
+          "internal_only": true
+        }
+      ],
+      "templates": {
+        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
+        "followup": "Summarize outcomes, owners, timelines, and support path.",
+        "issue": "Create collaboration issue with objective, done criteria, and checklists."
+      },
+      "resource_ids": [
+        "res-health-scoring",
+        "res-platform-value",
+        "res-success-plans"
+      ]
+    },
+    {
+      "id": "pb-cd-drift",
+      "stage": "expand",
+      "topic": "CD",
+      "title": "CD Drift Correction",
+      "recommended_program": "PGM-2026-005",
+      "next_best_action": "Standardize deployment controls and improve rollback safety.",
+      "checklist": [
+        {
+          "key": "align",
+          "label": "Confirm objective + definition of done with customer",
+          "internal_only": false
+        },
+        {
+          "key": "program",
+          "label": "Enroll customer in recommended 1:many program",
+          "internal_only": false
+        },
+        {
+          "key": "evidence",
+          "label": "Capture measurable adoption delta and outcome evidence",
+          "internal_only": false
+        },
+        {
+          "key": "risk",
+          "label": "Update risk register and escalation status",
+          "internal_only": true
+        }
+      ],
+      "templates": {
+        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
+        "followup": "Summarize outcomes, owners, timelines, and support path.",
+        "issue": "Create collaboration issue with objective, done criteria, and checklists."
+      },
+      "resource_ids": [
+        "res-health-scoring",
+        "res-platform-value",
+        "res-success-plans"
+      ]
+    },
+    {
+      "id": "pb-scm-migration",
+      "stage": "onboard",
+      "topic": "SCM",
+      "title": "SCM Migration Execution",
+      "recommended_program": "PGM-2026-008",
+      "next_best_action": "Move teams to GitLab SCM and validate MR workflow readiness.",
+      "checklist": [
+        {
+          "key": "align",
+          "label": "Confirm objective + definition of done with customer",
+          "internal_only": false
+        },
+        {
+          "key": "program",
+          "label": "Enroll customer in recommended 1:many program",
+          "internal_only": false
+        },
+        {
+          "key": "evidence",
+          "label": "Capture measurable adoption delta and outcome evidence",
+          "internal_only": false
+        },
+        {
+          "key": "risk",
+          "label": "Update risk register and escalation status",
+          "internal_only": true
+        }
+      ],
+      "templates": {
+        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
+        "followup": "Summarize outcomes, owners, timelines, and support path.",
+        "issue": "Create collaboration issue with objective, done criteria, and checklists."
+      },
+      "resource_ids": [
+        "res-health-scoring",
+        "res-platform-value",
+        "res-success-plans"
+      ]
+    },
+    {
+      "id": "pb-ci-depth",
       "stage": "enable",
       "topic": "CI",
-      "title": "CI Adoption Recovery Motion",
-      "recommended_program": "PGM-001",
-      "next_best_action": "Enroll customer engineering leads into the CI reliability webinar and schedule a 30-minute debrief.",
-      "resource_ids": ["res-ci-playbook", "res-cadence-calls"]
+      "title": "CI Depth Expansion",
+      "recommended_program": "PGM-2026-001",
+      "next_best_action": "Expand shared templates and increase pipeline coverage depth.",
+      "checklist": [
+        {
+          "key": "align",
+          "label": "Confirm objective + definition of done with customer",
+          "internal_only": false
+        },
+        {
+          "key": "program",
+          "label": "Enroll customer in recommended 1:many program",
+          "internal_only": false
+        },
+        {
+          "key": "evidence",
+          "label": "Capture measurable adoption delta and outcome evidence",
+          "internal_only": false
+        },
+        {
+          "key": "risk",
+          "label": "Update risk register and escalation status",
+          "internal_only": true
+        }
+      ],
+      "templates": {
+        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
+        "followup": "Summarize outcomes, owners, timelines, and support path.",
+        "issue": "Create collaboration issue with objective, done criteria, and checklists."
+      },
+      "resource_ids": [
+        "res-health-scoring",
+        "res-platform-value",
+        "res-success-plans"
+      ]
     },
     {
-      "id": "pb-secure-enable",
-      "stage": "enable",
-      "topic": "Secure",
-      "title": "Secure Baseline Rollout Motion",
-      "recommended_program": "PGM-002",
-      "next_best_action": "Run secure lab invitation campaign and track conversion to active scan coverage.",
-      "resource_ids": ["res-secure-workshop", "res-health-scoring"]
-    },
-    {
-      "id": "pb-renew-risk",
+      "id": "pb-outcome-proof",
       "stage": "renew",
       "topic": "platform foundations",
-      "title": "Renewal Risk Stabilization Motion",
-      "recommended_program": "PGM-003",
-      "next_best_action": "Bundle account into office hours, close blockers, and update renewal outcome narrative weekly.",
-      "resource_ids": ["res-health-triage", "res-success-plans", "res-ebr-guide"]
+      "title": "Outcome Proof Package",
+      "recommended_program": "PGM-2026-004",
+      "next_best_action": "Map use-case deltas to business outcomes for renewal narrative.",
+      "checklist": [
+        {
+          "key": "align",
+          "label": "Confirm objective + definition of done with customer",
+          "internal_only": false
+        },
+        {
+          "key": "program",
+          "label": "Enroll customer in recommended 1:many program",
+          "internal_only": false
+        },
+        {
+          "key": "evidence",
+          "label": "Capture measurable adoption delta and outcome evidence",
+          "internal_only": false
+        },
+        {
+          "key": "risk",
+          "label": "Update risk register and escalation status",
+          "internal_only": true
+        }
+      ],
+      "templates": {
+        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
+        "followup": "Summarize outcomes, owners, timelines, and support path.",
+        "issue": "Create collaboration issue with objective, done criteria, and checklists."
+      },
+      "resource_ids": [
+        "res-health-scoring",
+        "res-platform-value",
+        "res-success-plans"
+      ]
     },
     {
-      "id": "pb-platform-optimize",
+      "id": "pb-office-hour-lift",
       "stage": "optimize",
       "topic": "platform foundations",
-      "title": "Platform Adoption Optimization Motion",
-      "recommended_program": "PGM-004",
-      "next_best_action": "Align on target use case score improvement and track monthly adoption deltas.",
-      "resource_ids": ["res-platform-value", "res-maturity-scoring"]
+      "title": "Office Hour Throughput Lift",
+      "recommended_program": "PGM-2026-003",
+      "next_best_action": "Use recurring office hours to close repeated implementation blockers.",
+      "checklist": [
+        {
+          "key": "align",
+          "label": "Confirm objective + definition of done with customer",
+          "internal_only": false
+        },
+        {
+          "key": "program",
+          "label": "Enroll customer in recommended 1:many program",
+          "internal_only": false
+        },
+        {
+          "key": "evidence",
+          "label": "Capture measurable adoption delta and outcome evidence",
+          "internal_only": false
+        },
+        {
+          "key": "risk",
+          "label": "Update risk register and escalation status",
+          "internal_only": true
+        }
+      ],
+      "templates": {
+        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
+        "followup": "Summarize outcomes, owners, timelines, and support path.",
+        "issue": "Create collaboration issue with objective, done criteria, and checklists."
+      },
+      "resource_ids": [
+        "res-health-scoring",
+        "res-platform-value",
+        "res-success-plans"
+      ]
     }
   ]
 }

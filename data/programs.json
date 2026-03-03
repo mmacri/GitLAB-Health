@@ -1,46 +1,158 @@
 {
-  "version": 1,
+  "version": 2,
   "updated_on": "2026-03-03",
   "programs": [
     {
-      "program_id": "PGM-001",
+      "program_id": "PGM-2026-001",
       "type": "webinar",
       "title": "CI Reliability Foundations for Enterprise Teams",
-      "date": "2026-03-07T17:00:00Z",
-      "target_use_cases": ["CI", "SCM"],
-      "registration_count": 94,
-      "attendance_count": 57,
-      "owner": "CSE Pool - Verify"
+      "date": "2026-03-06T08:00:00Z",
+      "target_use_cases": [
+        "CI",
+        "SCM"
+      ],
+      "registration_count": 36,
+      "attendance_count": 20,
+      "owner": "CSE On-Demand Pool",
+      "invite_blurb": "Join the GitLab webinar session: CI Reliability Foundations for Enterprise Teams. We will focus on CI, SCM.",
+      "followup_steps": [
+        "Share recording and key implementation checklist",
+        "Schedule office-hour follow-up for open blockers",
+        "Update account adoption deltas in next cadence update"
+      ]
     },
     {
-      "program_id": "PGM-002",
+      "program_id": "PGM-2026-002",
       "type": "hands-on lab",
       "title": "Secure Pipeline Lab: SAST + Dependency Scanning",
-      "date": "2026-03-13T18:00:00Z",
-      "target_use_cases": ["Secure", "CI"],
-      "registration_count": 61,
-      "attendance_count": 38,
-      "owner": "CSE Pool - Secure"
+      "date": "2026-03-09T08:00:00Z",
+      "target_use_cases": [
+        "Secure",
+        "CI"
+      ],
+      "registration_count": 47,
+      "attendance_count": 27,
+      "owner": "CSE On-Demand Pool",
+      "invite_blurb": "Join the GitLab hands-on lab session: Secure Pipeline Lab: SAST + Dependency Scanning. We will focus on Secure, CI.",
+      "followup_steps": [
+        "Share recording and key implementation checklist",
+        "Schedule office-hour follow-up for open blockers",
+        "Update account adoption deltas in next cadence update"
+      ]
     },
     {
-      "program_id": "PGM-003",
+      "program_id": "PGM-2026-003",
       "type": "office hours",
-      "title": "CSE Office Hours: Runner Capacity and Pipeline Performance",
-      "date": "2026-03-11T19:00:00Z",
-      "target_use_cases": ["CI", "CD"],
-      "registration_count": 43,
-      "attendance_count": 21,
-      "owner": "CSE Pool - Platform"
+      "title": "Runner Capacity and Pipeline Performance Office Hours",
+      "date": "2026-03-11T08:00:00Z",
+      "target_use_cases": [
+        "CI",
+        "CD"
+      ],
+      "registration_count": 58,
+      "attendance_count": 34,
+      "owner": "CSE On-Demand Pool",
+      "invite_blurb": "Join the GitLab office hours session: Runner Capacity and Pipeline Performance Office Hours. We will focus on CI, CD.",
+      "followup_steps": [
+        "Share recording and key implementation checklist",
+        "Schedule office-hour follow-up for open blockers",
+        "Update account adoption deltas in next cadence update"
+      ]
     },
     {
-      "program_id": "PGM-004",
+      "program_id": "PGM-2026-004",
       "type": "webinar",
       "title": "Platform Adoption Score Deep Dive",
-      "date": "2026-03-21T16:00:00Z",
-      "target_use_cases": ["SCM", "CI", "CD", "Secure"],
-      "registration_count": 88,
-      "attendance_count": 0,
-      "owner": "CSE Pool - Adoption"
+      "date": "2026-03-15T08:00:00Z",
+      "target_use_cases": [
+        "SCM",
+        "CI",
+        "CD",
+        "Secure"
+      ],
+      "registration_count": 69,
+      "attendance_count": 41,
+      "owner": "CSE On-Demand Pool",
+      "invite_blurb": "Join the GitLab webinar session: Platform Adoption Score Deep Dive. We will focus on SCM, CI, CD, Secure.",
+      "followup_steps": [
+        "Share recording and key implementation checklist",
+        "Schedule office-hour follow-up for open blockers",
+        "Update account adoption deltas in next cadence update"
+      ]
+    },
+    {
+      "program_id": "PGM-2026-005",
+      "type": "hands-on lab",
+      "title": "Release Governance and Progressive Delivery Lab",
+      "date": "2026-03-18T08:00:00Z",
+      "target_use_cases": [
+        "CD",
+        "SCM"
+      ],
+      "registration_count": 80,
+      "attendance_count": 48,
+      "owner": "CSE On-Demand Pool",
+      "invite_blurb": "Join the GitLab hands-on lab session: Release Governance and Progressive Delivery Lab. We will focus on CD, SCM.",
+      "followup_steps": [
+        "Share recording and key implementation checklist",
+        "Schedule office-hour follow-up for open blockers",
+        "Update account adoption deltas in next cadence update"
+      ]
+    },
+    {
+      "program_id": "PGM-2026-006",
+      "type": "office hours",
+      "title": "Renewal Readiness Technical Q&A",
+      "date": "2026-03-20T08:00:00Z",
+      "target_use_cases": [
+        "platform foundations",
+        "CI"
+      ],
+      "registration_count": 91,
+      "attendance_count": 55,
+      "owner": "CSE On-Demand Pool",
+      "invite_blurb": "Join the GitLab office hours session: Renewal Readiness Technical Q&A. We will focus on platform foundations, CI.",
+      "followup_steps": [
+        "Share recording and key implementation checklist",
+        "Schedule office-hour follow-up for open blockers",
+        "Update account adoption deltas in next cadence update"
+      ]
+    },
+    {
+      "program_id": "PGM-2026-007",
+      "type": "webinar",
+      "title": "Secure Maturity for Regulated Workloads",
+      "date": "2026-03-23T08:00:00Z",
+      "target_use_cases": [
+        "Secure"
+      ],
+      "registration_count": 102,
+      "attendance_count": 62,
+      "owner": "CSE On-Demand Pool",
+      "invite_blurb": "Join the GitLab webinar session: Secure Maturity for Regulated Workloads. We will focus on Secure.",
+      "followup_steps": [
+        "Share recording and key implementation checklist",
+        "Schedule office-hour follow-up for open blockers",
+        "Update account adoption deltas in next cadence update"
+      ]
+    },
+    {
+      "program_id": "PGM-2026-008",
+      "type": "hands-on lab",
+      "title": "SCM Migration Accelerator Lab",
+      "date": "2026-03-27T08:00:00Z",
+      "target_use_cases": [
+        "SCM"
+      ],
+      "registration_count": 113,
+      "attendance_count": 69,
+      "owner": "CSE On-Demand Pool",
+      "invite_blurb": "Join the GitLab hands-on lab session: SCM Migration Accelerator Lab. We will focus on SCM.",
+      "followup_steps": [
+        "Share recording and key implementation checklist",
+        "Schedule office-hour follow-up for open blockers",
+        "Update account adoption deltas in next cadence update"
+      ]
     }
   ]
 }

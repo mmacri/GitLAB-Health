@@ -1,62 +1,95 @@
+import { renderActionDrawer } from '../components/actionDrawer.mjs';
+import { statusChip } from '../components/statusChip.mjs';
 import { formatDateTime } from '../lib/date.mjs';
 
-const byDateAsc = (left, right) => new Date(left.date).getTime() - new Date(right.date).getTime();
+const grouped = (programs) => ({
+  webinar: (programs || []).filter((item) => item.type === 'webinar'),
+  'hands-on lab': (programs || []).filter((item) => item.type === 'hands-on lab'),
+  'office hours': (programs || []).filter((item) => item.type === 'office hours')
+});
 
-const programCard = (program) => `
-  <article class="card program-card" data-program-id="${program.program_id}">
+const programCard = (item) => `
+  <article class="card compact-card">
     <div class="metric-head">
-      <h3>${program.title}</h3>
-      <span class="status-pill" data-status="good">${program.type}</span>
+      <h3>${item.title}</h3>
+      ${statusChip({ label: item.type, tone: 'neutral' })}
     </div>
-    <p class="muted">${formatDateTime(program.date)}</p>
-    <p class="muted">Target use cases: ${(program.target_use_cases || []).join(', ')}</p>
-    <div class="program-metrics">
-      <div><span class="metric-label">Registrations</span><strong>${program.registration_count}</strong></div>
-      <div><span class="metric-label">Attendance</span><strong>${program.attendance_count}</strong></div>
+    <p class="muted">${formatDateTime(item.date)}</p>
+    <p class="muted">Use cases: ${(item.target_use_cases || []).join(', ')}</p>
+    <p class="muted">Registration ${item.registration_count} | Attendance ${item.attendance_count}</p>
+    <div class="page-actions">
+      <button class="ghost-btn" type="button" data-copy-invite="${item.program_id}">Copy invite blurb</button>
+      <button class="ghost-btn" type="button" data-log-attendance="${item.program_id}">Log attendance</button>
+      <button class="ghost-btn" type="button" data-add-registration="${item.program_id}">Add registration</button>
     </div>
-    <div class="inline-actions">
-      <button class="ghost-btn" type="button" data-copy-invite="${program.program_id}">Copy invite blurb</button>
-      <button class="ghost-btn" type="button" data-log-attendance="${program.program_id}">Log attendance</button>
-      <button class="ghost-btn" type="button" data-add-registration="${program.program_id}">Add registration</button>
-    </div>
+    <details>
+      <summary>Follow-up steps</summary>
+      <ul class="simple-list">${(item.followup_steps || []).map((step) => `<li>${step}</li>`).join('')}</ul>
+    </details>
   </article>
 `;
 
 export const renderProgramsPage = (ctx) => {
-  const { programs, navigate, onCopyInvite, onLogAttendance, onAddRegistration, notify } = ctx;
-  const sorted = [...(programs || [])].sort(byDateAsc);
+  const { programs, mode, navigate, onCopyInvite, onLogAttendance, onAddRegistration, notify } = ctx;
 
+  const sets = grouped([...(programs || [])].sort((a, b) => new Date(a.date) - new Date(b.date)));
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page';
   wrapper.innerHTML = `
     <header class="page-head">
       <div>
         <p class="eyebrow">Programs</p>
-        <h1>1:many CSE Delivery Programs</h1>
-        <p class="hero-lede">
-          Webinars, hands-on labs, and office hours are first-class pooled levers for faster technical adoption.
-        </p>
-        <p class="muted hint-text">
-          Handbook intent: drive repeatable adoption outcomes through pooled programming before one-off account motions.
-        </p>
+        <h1>Enablement Motions</h1>
+        <p class="hero-lede">Webinars, hands-on labs, and office hours are first-class pooled CSE delivery motions.</p>
       </div>
       <div class="page-actions">
-        <button class="ghost-btn" type="button" data-go-portfolio>Back to portfolio</button>
+        <button class="ghost-btn" type="button" data-go-home>Back to Portfolio</button>
       </div>
     </header>
 
-    <section class="card">
-      <div class="metric-head">
-        <h2>Upcoming programs</h2>
-        <span class="status-pill" data-status="watch">${sorted.length} scheduled</span>
+    <section class="dashboard-grid">
+      <div class="main-col">
+        <section class="card">
+          <div class="metric-head"><h2>Webinars</h2>${statusChip({ label: `${sets.webinar.length} items`, tone: 'neutral' })}</div>
+          <div class="main-col">${sets.webinar.map(programCard).join('') || '<p class="empty-text">No webinars scheduled.</p>'}</div>
+        </section>
+
+        <section class="card">
+          <div class="metric-head"><h2>Hands-on Labs</h2>${statusChip({ label: `${sets['hands-on lab'].length} items`, tone: 'neutral' })}</div>
+          <div class="main-col">${sets['hands-on lab'].map(programCard).join('') || '<p class="empty-text">No labs scheduled.</p>'}</div>
+        </section>
+
+        <section class="card">
+          <div class="metric-head"><h2>Office Hours</h2>${statusChip({ label: `${sets['office hours'].length} items`, tone: 'neutral' })}</div>
+          <div class="main-col">${sets['office hours'].map(programCard).join('') || '<p class="empty-text">No office hours scheduled.</p>'}</div>
+        </section>
       </div>
-      <div class="program-grid">
-        ${sorted.length ? sorted.map(programCard).join('') : '<p class="empty-text">No programs scheduled.</p>'}
-      </div>
+
+      <div></div>
+      <div data-drawer-host></div>
     </section>
   `;
 
-  wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
+  const drawer = renderActionDrawer({
+    title: 'Programs Action Drawer',
+    mode,
+    nextActions: [
+      'Copy invite blurb for upcoming program',
+      'Log attendance immediately after session',
+      'Route attendees to account follow-up workflow'
+    ],
+    dueSoon: (programs || []).slice(0, 4).map((item) => `${item.title} (${formatDateTime(item.date)})`),
+    riskSignals: ['Low attendance trend', 'Missing follow-up mapping', 'No program mapped to low use-case'],
+    onGenerateAgenda: () => navigate('intake'),
+    onGenerateEmail: () => navigate('intake'),
+    onGenerateIssue: () => navigate('intake'),
+    onExportPortfolio: () => navigate('exports'),
+    onExportAccount: () => navigate('exports'),
+    onExportSummary: () => navigate('exports')
+  });
+  wrapper.querySelector('[data-drawer-host]').appendChild(drawer);
+
+  wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
 
   wrapper.addEventListener('click', (event) => {
     const invite = event.target.closest('[data-copy-invite]');
@@ -67,27 +100,27 @@ export const renderProgramsPage = (ctx) => {
 
     const attendance = event.target.closest('[data-log-attendance]');
     if (attendance) {
-      const id = attendance.getAttribute('data-log-attendance');
-      onLogAttendance(id, 1);
-      notify('Attendance logged.');
+      onLogAttendance(attendance.getAttribute('data-log-attendance'), 1);
+      notify('Attendance updated.');
       return;
     }
 
     const registration = event.target.closest('[data-add-registration]');
     if (registration) {
-      const id = registration.getAttribute('data-add-registration');
-      onAddRegistration(id, 1);
-      notify('Registration count updated.');
+      onAddRegistration(registration.getAttribute('data-add-registration'), 1);
+      notify('Registration updated.');
     }
   });
 
   return wrapper;
 };
 
-export const programsCommandEntries = (programs = []) =>
-  (programs || []).map((program) => ({
+export const programsCommandEntries = (programs = []) => [
+  { id: 'programs-open', label: 'Open programs', meta: 'Programs', action: { route: 'programs' } },
+  ...(programs || []).map((program) => ({
     id: `program-${program.program_id}`,
     label: `Program: ${program.title}`,
-    meta: `${program.type} | ${formatDateTime(program.date)}`,
+    meta: `${program.type}`,
     action: { route: 'programs' }
-  }));
+  }))
+];

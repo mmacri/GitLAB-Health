@@ -31,18 +31,29 @@
             </div>
 
             <div class="nav-links" aria-label="Main navigation">
-              <a href="#" data-nav-route="portfolio" class="is-active">Portfolio</a>
-              <a href="#" data-nav-route="intake">Intake</a>
+              <a href="#" data-nav-route="home" class="is-active">Portfolio</a>
+              <a href="#" data-nav-route="account">Account</a>
               <a href="#" data-nav-route="programs">Programs</a>
+              <a href="#" data-nav-route="playbooks">Playbooks</a>
               <a href="#" data-nav-route="resources">Resources</a>
+              <a href="#" data-nav-route="exports">Exports</a>
             </div>
 
             <div class="nav-actions">
               <button class="nav-search" type="button" data-open-palette>Search (Ctrl+K)</button>
+              <div class="mode-picker">
+                <label class="mode-label" for="global-mode-select">Mode</label>
+                <select id="global-mode-select" data-global-mode>
+                  <option value="today">Today</option>
+                  <option value="review">Review</option>
+                  <option value="deep">Deep Dive</option>
+                </select>
+              </div>
               <label class="safe-toggle global-safe">
                 <input type="checkbox" data-global-safe-toggle />
                 <span>Customer-safe</span>
               </label>
+              <button class="ghost-btn" type="button" data-open-settings>Settings</button>
             </div>
           </nav>
 
@@ -69,6 +80,18 @@
     </div>
 
     <div class="toast" data-toast role="status" aria-live="polite"></div>
+
+    <div class="app-settings" data-settings aria-hidden="true">
+      <div class="app-settings__backdrop" data-close-settings></div>
+      <div class="app-settings__panel" role="dialog" aria-modal="true" aria-label="Settings">
+        <header class="app-settings__head">
+          <h2>Settings</h2>
+          <button class="ghost-btn" type="button" data-close-settings>Close</button>
+        </header>
+        <p class="muted">Reset local interactive data while keeping static dataset.</p>
+        <button class="qa" type="button" data-reset-local-state>Reset Local State</button>
+      </div>
+    </div>
 
     <script type="module" src="src/main.mjs"></script>
   </body>

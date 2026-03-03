@@ -3,25 +3,47 @@
 Static GitLab Pages-compatible operating dashboard for pooled Customer Success Engineering delivery.
 
 ## What this app provides
-- Pooled triage-first homepage (`/`) with:
-  - Today Queue
-  - Outliers + filters
-  - Requests Triage
-  - Upcoming 1:many programs
-- Intake workflow (`/intake`) that creates request records and generates copy-ready artifacts:
-  - Collaboration issue body (GitLab markdown)
-  - Customer-safe meeting agenda
-  - Customer-safe follow-up email
-- Account workspace (`/account/:id`) with action drawer, lifecycle context, adoption/health/outcomes tabs, and exports.
-- Programs page (`/programs`) with webinar/lab/office-hours cards and local attendance/registration logging.
-- Resources page (`/resources`) with handbook-aligned references and customer-safe filtering.
+- Portfolio-first information architecture with grouped primary navigation:
+  - Portfolio
+  - Account
+  - Programs
+  - Playbooks
+  - Resources
+  - Exports
+- Default pooled command view on `/` with:
+  - Work Queue
+  - Outliers with reasons
+  - Program cards with invite/attendance actions
+  - Pinned right-side Action Drawer
+- Detailed portfolio table on `/portfolio` with working filters:
+  - segment
+  - renewal window
+  - health color
+  - stale data
+  - lowest use-case
+  - has open request
+- Account workspace on `/account/:id` with:
+  - above-the-fold snapshot bar
+  - tabbed dashboard grids (Snapshot, Adoption, Health & Risk, Outcomes, Engagement, Journey, Resources, Cheatsheet)
+  - legacy section anchor IDs retained inside tabs
+  - missing-data chips with inline edit modal (localStorage-backed)
+  - pinned right-side Action Drawer
+- Programs page (`/programs`) for webinars/labs/office-hours with attendance + registration logging.
+- Playbooks page (`/playbooks`) with checklist persistence in localStorage.
+- Resources page (`/resources`) with customer-safe filtering.
+- Export center (`/exports`) for portfolio/account export actions and share snapshot URL.
+- Intake workflow (`/intake`) kept as a tools route for request capture + artifact generation.
 
 ## Routes
-- `/` -> Portfolio (pooled coverage)
+- `/` -> Portfolio Home (default)
+- `/portfolio` -> Portfolio operating table
+- `/account/:id` -> Account workspace
+- `/account` -> redirects to selected/default account
+- `/programs` -> 1:many enablement programs
+- `/playbooks` -> Response plans + checklist execution
+- `/resources` -> Curated handbook resources
+- `/exports` -> Export center
 - `/intake` -> Engagement request intake
-- `/programs` -> 1:many CSE programs
-- `/resources` -> Handbook resources
-- `/account/:id` -> Account drill-in workspace
 
 `404.html` includes SPA fallback redirect so deep links work on static Pages hosting.
 
@@ -33,6 +55,12 @@ Canonical app data lives under `data/`:
 - `data/playbooks.json`
 - `data/resources.json`
 - `data/schema.md` (field definitions + customer-safe policy)
+
+Current seeded sample size:
+- `accounts.json`: 12 realistic accounts (varied health/adoption/renewal states)
+- `programs.json`: 8 programs (webinars, hands-on labs, office hours)
+- `requests.json`: 18 requests
+- `playbooks.json`: 8 response playbooks with checklist templates
 
 ## Local run
 Run a static server from repo root:
@@ -54,11 +82,18 @@ Coverage includes:
 - customer-safe export redaction denylist enforcement
 - portfolio CSV shape and key values
 - intake artifact generation requirements
-- routing behavior for `/account/:id`
+- routing behavior for `/account/:id`, `/playbooks`, and `/exports`
+
+Note:
+- In restricted local Windows environments where node test subprocess spawning is blocked, run:
+
+```powershell
+node --test --test-isolation=none src/tests/*.test.mjs
+```
 
 ## GitLab Pages deployment
 `.gitlab-ci.yml` now has:
-- `test` stage: runs `node --test src/tests/*.test.mjs` on pushes/MRs
+- `test` stage: installs Node in Alpine and runs `node --test src/tests/*.test.mjs`
 - `pages` stage: publishes static app on default branch
 
 Published artifact includes:

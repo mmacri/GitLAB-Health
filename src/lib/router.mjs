@@ -1,4 +1,12 @@
-const KNOWN_TOP_LEVEL = new Set(['intake', 'programs', 'resources', 'account', 'portfolio']);
+const KNOWN_TOP_LEVEL = new Set([
+  'portfolio',
+  'account',
+  'programs',
+  'playbooks',
+  'resources',
+  'exports',
+  'intake'
+]);
 
 const trimSlash = (value) => value.replace(/\/+$/, '');
 
@@ -28,17 +36,29 @@ export const parseRoute = (pathname, basePath = '') => {
   const localPath = stripBase(pathname || '/', trimSlash(basePath));
   const normalized = localPath === '' ? '/' : localPath;
 
-  if (normalized === '/' || normalized === '/portfolio') {
-    return { name: 'portfolio', params: {}, path: normalized };
+  if (normalized === '/') {
+    return { name: 'home', params: {}, path: normalized };
   }
-  if (normalized === '/intake') {
-    return { name: 'intake', params: {}, path: normalized };
+  if (normalized === '/portfolio') {
+    return { name: 'portfolio', params: {}, path: normalized };
   }
   if (normalized === '/programs') {
     return { name: 'programs', params: {}, path: normalized };
   }
+  if (normalized === '/playbooks') {
+    return { name: 'playbooks', params: {}, path: normalized };
+  }
   if (normalized === '/resources') {
     return { name: 'resources', params: {}, path: normalized };
+  }
+  if (normalized === '/exports') {
+    return { name: 'exports', params: {}, path: normalized };
+  }
+  if (normalized === '/intake') {
+    return { name: 'intake', params: {}, path: normalized };
+  }
+  if (normalized === '/account') {
+    return { name: 'account', params: { id: '' }, path: normalized };
   }
 
   const accountMatch = normalized.match(/^\/account\/([^/]+)$/);
@@ -54,11 +74,16 @@ export const parseRoute = (pathname, basePath = '') => {
 };
 
 export const routePath = (routeName, params = {}) => {
-  if (routeName === 'portfolio') return '/';
-  if (routeName === 'intake') return '/intake';
+  if (routeName === 'home') return '/';
+  if (routeName === 'portfolio') return '/portfolio';
+  if (routeName === 'account') {
+    return params.id ? `/account/${encodeURIComponent(params.id || '')}` : '/account';
+  }
   if (routeName === 'programs') return '/programs';
+  if (routeName === 'playbooks') return '/playbooks';
   if (routeName === 'resources') return '/resources';
-  if (routeName === 'account') return `/account/${encodeURIComponent(params.id || '')}`;
+  if (routeName === 'exports') return '/exports';
+  if (routeName === 'intake') return '/intake';
   return '/';
 };
 
