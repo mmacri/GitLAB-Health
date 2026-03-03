@@ -57,7 +57,10 @@ Then open `http://localhost:8000/`.
 ## Troubleshooting blank sections
 - Symptom: many panels show little or no content, especially **Resources** and **Cheatsheet**.
 - Primary cause: opening `index.html` directly via `file://` blocks JSON `fetch()` calls in most browsers.
+- Secondary cause: sparse account payloads (missing arrays such as `success_plan.objectives`, `workshop_catalog`, `risk_playbooks`, or `adoption.use_case_scores`) result in empty-state cards.
+- Secondary cause: in `Customer Safe` and some persona views, cards with `data-hide-on-empty` are intentionally hidden when all trigger lists are empty.
 - Fix:
   1. Run a local server (`python -m http.server 8000`) and open `http://localhost:8000/`.
   2. Confirm these files exist and are valid JSON: `data/accounts.json`, `data/resources.json`, `data/cheatsheet.json`.
-  3. If files fail to load, the app falls back to embedded sample content in `assets/js/app.js`.
+  3. Populate account arrays for operational sections, or rely on handbook-backed fallback content in `assets/js/app.js`.
+  4. If files fail to load, the app falls back to embedded sample content in `assets/js/app.js`.

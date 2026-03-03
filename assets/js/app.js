@@ -559,6 +559,241 @@ const sanitizeCheatsheetDoc = (doc) => {
   };
 };
 
+const hasItems = (value) => Array.isArray(value) && value.length > 0;
+const hasObjectEntries = (value) =>
+  Boolean(value) && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length > 0;
+const slugify = (value = '') => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+const handbookFallbackByCategory = (resourceRegistry, categoryId, limit = 4) =>
+  ((resourceRegistry?.resources || []).filter((resource) => (resource.categories || []).includes(categoryId)) || [])
+    .slice(0, limit);
+
+const enrichAccountWithHandbookContent = (account, resourceRegistry, cheatsheetDoc) => {
+  const enriched = JSON.parse(JSON.stringify(account || {}));
+  const cheatsheet = cheatsheetDoc || DEFAULT_CHEATSHEET;
+
+  const useCaseFallbacks = hasItems(cheatsheet.use_cases)
+    ? cheatsheet.use_cases.slice(0, 5).map((useCase, index) => {
+        const primaryLink = useCase.links?.[0]?.link || 'https://handbook.gitlab.com/handbook/customer-success/playbooks/';
+        return {
+          key: slugify(useCase.name || `use-case-${index + 1}`),
+          name: useCase.name || `Use case ${index + 1}`,
+          score: 65,
+          trend_30d_pct: 0,
+          drivers: [useCase.scenario, useCase.customer_goal].filter(Boolean),
+          thresholds: ['Green >= 76', 'Yellow 51-75', 'Red <= 50'],
+          playbook: primaryLink,
+          threshold_source: 'https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/',
+          key_metrics: (useCase.metrics || []).slice(0, 3).map((metric) => ({
+            name: metric,
+            current: 'Not captured',
+            target: 'Set target',
+            explainer: 'Use this metric for adoption tracking.'
+          })),
+          gap_analysis: useCase.scenario ? [useCase.scenario] : [],
+          recommended_actions: useCase.recommended_motion
+            ? [
+                {
+                  action: useCase.recommended_motion,
+                  expected_impact: 'Improves use-case adoption and time-to-value trajectory.',
+                  link: primaryLink
+                }
+              ]
+            : []
+        };
+      })
+    : [];
+
+  const onboardingChecklistFallback = hasItems(cheatsheet.lifecycle_flow)
+    ? cheatsheet.lifecycle_flow.map((step) => ({
+        task: `${step.stage}: ${step.goal}`,
+        done: false,
+        date: null
+      }))
+    : [];
+
+  const onboardingRiskFallback = hasItems(cheatsheet.anti_patterns)
+    ? cheatsheet.anti_patterns.map((pattern) => pattern.risk).filter(Boolean)
+    : [];
+
+  const successObjectiveFallback = hasItems(cheatsheet.priority_matrix)
+    ? cheatsheet.priority_matrix.map((motion) => ({
+        title: `${motion.motion} objective`,
+        status: 'in_progress',
+        progress_pct: 0.1,
+        owner: 'CSM + Customer Champion',
+        target_date: null,
+        evidence: motion.link || 'https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/',
+        dependencies: [],
+        next_milestone: motion.success_signals?.[0] || 'Define first measurable milestone',
+        baseline: motion.customer_cares || 'Baseline to be captured in kickoff.',
+        success_criteria: (motion.success_signals || []).join('; ') || 'Define measurable success criteria.',
+        timeline: 'Quarterly',
+        verifiable_outcomes: motion.success_signals || [],
+        status_detail: motion.example || 'Track progress in collaboration project.',
+        blockers: [],
+        owner_customer: 'Customer champion',
+        owner_gitlab: 'CSM',
+        internal_notes: '',
+        value_statement: motion.customer_cares || '',
+        mitigations: []
+      }))
+    : [];
+
+  const healthDriverFallback = hasItems(cheatsheet.priority_matrix)
+    ? cheatsheet.priority_matrix.map((motion) => ({
+        pillar: motion.motion,
+        status: 'watch',
+        detail: motion.customer_cares || 'Adoption motion requires monitoring.',
+        action: motion.csm_guidance?.[0] || 'Apply the linked handbook operating guidance.'
+      }))
+    : [];
+
+  const warningFallback = hasItems(cheatsheet.anti_patterns)
+    ? cheatsheet.anti_patterns.map((pattern) => ({
+        severity: 'yellow',
+        title: pattern.risk,
+        pattern: '',
+        trigger: 'Detected adoption or operating anti-pattern.',
+        impact: pattern.better_motion,
+        recommended_action: pattern.better_motion,
+        due_date: null,
+        owner: 'CSM',
+        playbook: pattern.link || 'https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/'
+      }))
+    : [];
+
+  const riskRegisterFallback = hasItems(cheatsheet.anti_patterns)
+    ? cheatsheet.anti_patterns.map((pattern, index) => ({
+        id: `risk-${index + 1}`,
+        severity: 'yellow',
+        driver: pattern.risk,
+        detail: pattern.better_motion || 'Refer to handbook mitigation guidance.',
+        owner: 'CSM',
+        due_date: null,
+        playbook: pattern.link || 'https://handbook.gitlab.com/handbook/customer-success/csm/risk-mitigation/',
+        mitigation: []
+      }))
+    : [];
+
+  const workshopFallbackItems = [
+    ...handbookFallbackByCategory(resourceRegistry, 'enable', 3),
+    ...handbookFallbackByCategory(resourceRegistry, 'cse', 3)
+  ];
+  const workshopCatalogFallback = workshopFallbackItems.map((resource) => ({
+    title: resource.title,
+    detail: resource.description,
+    duration: '60-90 minutes',
+    prerequisites: 'Align objectives and participants in advance.',
+    link: resource.link
+  }));
+
+  const cadenceFallback = hasItems(cheatsheet.operating_rhythm)
+    ? cheatsheet.operating_rhythm.slice(0, 4).map((entry) => ({
+        cadence: entry.name || 'Cadence checkpoint',
+        focus: entry.customer_need || entry.target || 'Operating rhythm checkpoint',
+        owner: 'CSM',
+        next_date: null
+      }))
+    : [];
+
+  const growthObjectiveFallback = hasItems(cheatsheet.priority_matrix)
+    ? cheatsheet.priority_matrix.map((motion) => motion.customer_cares).filter(Boolean)
+    : [];
+  const growthHypothesisFallback = hasItems(cheatsheet.priority_matrix)
+    ? cheatsheet.priority_matrix.map((motion) => motion.example).filter(Boolean)
+    : [];
+  const growthPlayFallback = hasItems(cheatsheet.priority_matrix)
+    ? cheatsheet.priority_matrix.map((motion) => motion.motion).filter(Boolean)
+    : [];
+
+  const riskResources = handbookFallbackByCategory(resourceRegistry, 'risk', 3).map((resource) => ({
+    title: resource.title,
+    detail: resource.description,
+    link: resource.link
+  }));
+  const enableResources = handbookFallbackByCategory(resourceRegistry, 'enable', 3).map((resource) => ({
+    title: resource.title,
+    detail: resource.description,
+    link: resource.link
+  }));
+
+  enriched.onboarding = enriched.onboarding || {};
+  if (!hasItems(enriched.onboarding.checklist) && hasItems(onboardingChecklistFallback)) {
+    enriched.onboarding.checklist = onboardingChecklistFallback;
+  }
+  if (!hasItems(enriched.onboarding.risks) && hasItems(onboardingRiskFallback)) {
+    enriched.onboarding.risks = onboardingRiskFallback;
+  }
+
+  enriched.adoption = enriched.adoption || {};
+  if (!hasItems(enriched.adoption.use_case_scores) && hasItems(useCaseFallbacks)) {
+    enriched.adoption.use_case_scores = useCaseFallbacks;
+  }
+
+  enriched.health = enriched.health || {};
+  if (!hasItems(enriched.health.early_warning_flags) && hasItems(warningFallback)) {
+    enriched.health.early_warning_flags = warningFallback;
+  }
+  if (!hasItems(enriched.health.drivers) && hasItems(healthDriverFallback)) {
+    enriched.health.drivers = healthDriverFallback;
+  }
+
+  if (!hasItems(enriched.risks) && hasItems(riskRegisterFallback)) {
+    enriched.risks = riskRegisterFallback;
+  }
+
+  if (!hasObjectEntries(enriched.risk_playbooks)) {
+    enriched.risk_playbooks = {
+      red: riskResources,
+      yellow: enableResources
+    };
+  }
+
+  enriched.success_plan = enriched.success_plan || {};
+  if (!hasItems(enriched.success_plan.objectives) && hasItems(successObjectiveFallback)) {
+    enriched.success_plan.objectives = successObjectiveFallback;
+  }
+
+  if (!hasObjectEntries(enriched.response_playbooks) && hasObjectEntries(DEFAULT_DATA.response_playbooks)) {
+    enriched.response_playbooks = JSON.parse(JSON.stringify(DEFAULT_DATA.response_playbooks));
+  }
+
+  if (!hasItems(enriched.workshop_catalog) && hasItems(workshopCatalogFallback)) {
+    enriched.workshop_catalog = workshopCatalogFallback;
+  }
+
+  enriched.engagement = enriched.engagement || {};
+  if (!hasItems(enriched.engagement.cadence_calendar) && hasItems(cadenceFallback)) {
+    enriched.engagement.cadence_calendar = cadenceFallback;
+  }
+
+  enriched.growth_plan = enriched.growth_plan || {};
+  if (!hasItems(enriched.growth_plan.objectives) && hasItems(growthObjectiveFallback)) {
+    enriched.growth_plan.objectives = growthObjectiveFallback.slice(0, 4);
+  }
+  if (!hasItems(enriched.growth_plan.hypotheses) && hasItems(growthHypothesisFallback)) {
+    enriched.growth_plan.hypotheses = growthHypothesisFallback.slice(0, 3);
+  }
+  if (!hasItems(enriched.growth_plan.active_plays) && hasItems(growthPlayFallback)) {
+    enriched.growth_plan.active_plays = growthPlayFallback.slice(0, 3);
+  }
+  if (!hasItems(enriched.growth_plan.owners)) {
+    enriched.growth_plan.owners = [enriched.customer?.csm || 'CSM'];
+  }
+
+  if (!hasItems(enriched.renewal_readiness_checklist) && hasItems(cheatsheet.overview_points)) {
+    enriched.renewal_readiness_checklist = cheatsheet.overview_points.slice(0, 3);
+  }
+
+  enriched.outcomes = enriched.outcomes || {};
+  if (!hasItems(enriched.outcomes.value_points) && hasItems(cheatsheet.overview_points)) {
+    enriched.outcomes.value_points = cheatsheet.overview_points;
+  }
+
+  return enriched;
+};
+
 const normalizeAccountForView = (account) => {
   const normalized = JSON.parse(JSON.stringify(account || {}));
   normalized.account_id =
@@ -684,7 +919,9 @@ const loadDashboardData = async () => {
   const sanitizedResources = sanitizeResourceRegistry(resourceRegistry);
   const sanitizedCheatsheet = sanitizeCheatsheetDoc(cheatsheetDoc);
   return {
-    accounts: rawAccounts.map((account) => normalizeAccountForView(account)),
+    accounts: rawAccounts.map((account) =>
+      enrichAccountWithHandbookContent(normalizeAccountForView(account), sanitizedResources, sanitizedCheatsheet)
+    ),
     resources: sanitizedResources,
     cheatsheet: sanitizedCheatsheet
   }
@@ -1851,6 +2088,21 @@ const renderEmptyState = (list, message, link) => {
   list.appendChild(li);
 };
 
+const updateScopeEmptyState = (scope) => {
+  if (!scope) return;
+  const triggers = [...scope.querySelectorAll('[data-empty-trigger="true"]')];
+  if (!triggers.length) {
+    delete scope.dataset.empty;
+    return;
+  }
+  const allEmpty = triggers.every((el) => el.dataset.empty === 'true');
+  if (allEmpty) {
+    scope.dataset.empty = 'true';
+  } else {
+    delete scope.dataset.empty;
+  }
+};
+
 const setEmptyFlag = (el, isEmpty) => {
   if (!el) return;
   if (isEmpty) {
@@ -1861,11 +2113,7 @@ const setEmptyFlag = (el, isEmpty) => {
   if (el.dataset.emptyTrigger === 'true') {
     const scope = el.closest('[data-hide-on-empty]');
     if (scope) {
-      if (isEmpty) {
-        scope.dataset.empty = 'true';
-      } else {
-        delete scope.dataset.empty;
-      }
+      updateScopeEmptyState(scope);
     }
   }
 };
