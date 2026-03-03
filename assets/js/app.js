@@ -19,23 +19,304 @@ const STORAGE_KEYS = {
 };
 
 const DEFAULT_RESOURCE_REGISTRY = {
-  version: 1,
-  categories: [],
-  resources: []
+  version: 2,
+  updated_on: '2026-03-03',
+  categories: [
+    {
+      id: 'onboard',
+      label: 'Onboard',
+      description: 'Kickoff, onboarding, and first-value acceleration.'
+    },
+    {
+      id: 'enable',
+      label: 'Enable',
+      description: 'Cadence, workshops, use-case adoption, and enablement.'
+    },
+    {
+      id: 'expand-renew',
+      label: 'Expand & Renew',
+      description: 'EBR motions, outcome validation, and renewal readiness.'
+    },
+    {
+      id: 'risk',
+      label: 'Risk',
+      description: 'Health scoring, triage, escalation, and mitigation.'
+    },
+    {
+      id: 'templates',
+      label: 'Templates',
+      description: 'Reusable templates for success plans and collaboration.'
+    },
+    {
+      id: 'cse',
+      label: 'CSE',
+      description: 'Customer Success Engineer operating model and programs.'
+    }
+  ],
+  resources: [
+    {
+      id: 'amer-segment',
+      title: 'AMER CSM Segment Handbook',
+      description: 'Regional operating model for onboarding, enablement, and renewals.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/',
+      categories: ['onboard', 'enable', 'expand-renew']
+    },
+    {
+      id: 'csm-onboarding',
+      title: 'Customer Onboarding (CSM)',
+      description: 'Onboarding lifecycle and time-to-value milestones.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/',
+      categories: ['onboard']
+    },
+    {
+      id: 'success-plans',
+      title: 'Success Plans',
+      description: 'Framework for measurable outcomes, owners, and evidence.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/',
+      categories: ['onboard', 'expand-renew', 'templates']
+    },
+    {
+      id: 'cadence-calls',
+      title: 'Cadence Calls',
+      description: 'Call structure and rhythm for ongoing engagement.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/cadence-calls/',
+      categories: ['enable']
+    },
+    {
+      id: 'ebr-guide',
+      title: 'Executive Business Reviews',
+      description: 'EBR preparation and executive outcome storytelling.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/ebr/',
+      categories: ['expand-renew', 'templates']
+    },
+    {
+      id: 'health-scoring',
+      title: 'Customer Health Scoring',
+      description: 'PROVE scoring framework and interpretation guidance.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/',
+      categories: ['risk']
+    },
+    {
+      id: 'health-triage',
+      title: 'Customer Health Assessment and Management',
+      description: 'Yellow/red triage workflow and risk management guidance.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/',
+      categories: ['risk']
+    },
+    {
+      id: 'cse-overview',
+      title: 'CSE Segment Overview',
+      description: 'Success On-Demand model, pooled CSE coverage, and lifecycle roles.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/',
+      categories: ['cse']
+    },
+    {
+      id: 'cse-operating-rhythm',
+      title: 'CSE Operating Rhythm',
+      description: 'CSE responsibilities across pre-sales, onboard, enable, expand, and renew.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/cse-operating-rhythm/',
+      categories: ['cse', 'enable']
+    },
+    {
+      id: 'cse-onboarding-best-practices',
+      title: 'Customer Onboarding Best Practices (CSE)',
+      description: 'Technical onboarding guidance used by Customer Success Engineers.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/customer-onboarding-best-practices/',
+      categories: ['cse', 'onboard']
+    },
+    {
+      id: 'cse-playbooks',
+      title: 'CSE Playbooks',
+      description: 'Catalog of CSE-led enablement motions and technical guidance.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/playbooks/',
+      categories: ['cse', 'enable']
+    },
+    {
+      id: 'cse-content',
+      title: 'CSE Content Handbook',
+      description: '1:many enablement content strategy and governance.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/content/',
+      categories: ['cse', 'enable']
+    },
+    {
+      id: 'csm-to-cse-handover',
+      title: 'CSM to CSE+ Account Transition',
+      description: 'Standardized transition process for CSM-owned to CSE+ support.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/csm-to-cse-handover/',
+      categories: ['cse', 'templates']
+    }
+  ]
 };
 
 const DEFAULT_CHEATSHEET = {
-  version: 1,
+  version: 2,
+  updated_on: '2026-03-03',
   title: 'GitLab Customer + CSM Operational Cheatsheet',
   subtitle:
-    'A fast, handbook-aligned review of what enterprise customers should manage and how CSMs guide the motion.',
-  overview_points: [],
-  handbook_links: [],
-  priority_matrix: [],
-  operating_rhythm: [],
-  lifecycle_flow: [],
-  use_cases: [],
-  anti_patterns: []
+    'A fast handbook-aligned view of CSM and CSE motions for onboarding, adoption, and renewal outcomes.',
+  overview_points: [
+    'Use this before cadence calls, workshops, EBRs, and renewal checkpoints to align on next actions.',
+    'Customer priorities center on measurable outcomes; CSM and CSE motions focus on repeatable execution.',
+    'Content aligns to AMER CSM expectations and the CSE Success On-Demand operating model.'
+  ],
+  handbook_links: [
+    {
+      label: 'AMER CSM Segment',
+      description: 'Regional operating expectations across onboarding, enablement, and renewals.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/'
+    },
+    {
+      label: 'CSE Segment',
+      description: 'Success On-Demand model, pooled engagement, and lifecycle responsibilities.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/'
+    },
+    {
+      label: 'Success Plans',
+      description: 'Objective and evidence framework for customer outcomes.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/'
+    },
+    {
+      label: 'Health Scoring',
+      description: 'PROVE health model and triage practices.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/'
+    }
+  ],
+  priority_matrix: [
+    {
+      motion: 'Align & Onboard',
+      customer_cares: 'Fast setup, clear ownership, and early value realization.',
+      customer_focus: ['Success criteria and owners', 'Platform readiness and access', 'First value milestone'],
+      csm_guidance: [
+        'Track first engage, first value, and onboarding completion against handbook targets',
+        'Document onboarding dependencies and escalate blockers early'
+      ],
+      success_signals: ['First engage met', 'Onboarding complete', 'First value achieved'],
+      example:
+        'Run kickoff + onboarding plan, then execute a CI/Verify enablement session to accelerate first value.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/'
+    },
+    {
+      motion: 'Enable (CSM + CSE)',
+      customer_cares: 'Stronger day-to-day adoption and faster technical unblock.',
+      customer_focus: ['Steady cadence', 'Use-case adoption growth', 'Hands-on technical enablement'],
+      csm_guidance: [
+        'Maintain weekly/biweekly engagement rhythm and tie workshops to lowest-scoring use case',
+        'Leverage CSE webinars, labs, and office hours for technical depth'
+      ],
+      success_signals: ['Cadence in policy', 'Quarterly workshop delivered', 'Use-case trend improving'],
+      example:
+        'When CI coverage stalls, combine CSM playbook execution with CSE-led labs to increase pipeline adoption.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/cse-operating-rhythm/'
+    },
+    {
+      motion: 'Expand & Renew',
+      customer_cares: 'Outcome proof, executive alignment, and predictable renewal motion.',
+      customer_focus: ['EBR readiness', 'Outcome evidence', 'Readiness checklist completion'],
+      csm_guidance: [
+        'Run EBR cadence and maintain quarterly success plan validation',
+        'Escalate renewal risk when readiness gaps remain inside 90 days'
+      ],
+      success_signals: ['EBR complete', 'Success plan current', 'Renewal readiness mostly complete'],
+      example: 'Use success-plan evidence to support renewal posture and expansion hypotheses.',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#expand--renew'
+    }
+  ],
+  operating_rhythm: [
+    {
+      name: 'Cadence calls',
+      target: 'Weekly or biweekly; avoid going beyond 30 days',
+      customer_need: 'Predictable progress and blocker resolution',
+      csm_motion: 'Capture decisions and owners every call',
+      if_missed: 'Trigger non-engaged recovery and triage plan',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#cadence-frequency'
+    },
+    {
+      name: 'Workshops and labs',
+      target: 'At least one workshop per quarter; use CSE programs for depth',
+      customer_need: 'Practical enablement for use-case adoption',
+      csm_motion: 'Prioritize lowest scoring use case and schedule CSE support when needed',
+      if_missed: 'Flag enablement gap and schedule workshop before quarter close',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/'
+    },
+    {
+      name: 'EBR governance',
+      target: 'At least one EBR every 12 months',
+      customer_need: 'Executive alignment on outcomes and roadmap',
+      csm_motion: 'Use 60/30/14/7 preparation checkpoints',
+      if_missed: 'Set new EBR target and recover governance immediately',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/ebr/'
+    }
+  ],
+  lifecycle_flow: [
+    {
+      stage: 'Kickoff',
+      goal: 'Align business outcomes, owners, and measurement approach',
+      exit_criteria: 'Success criteria approved'
+    },
+    {
+      stage: 'Onboard',
+      goal: 'Establish platform readiness and first user workflows',
+      exit_criteria: 'First engage + onboarding milestones complete'
+    },
+    {
+      stage: 'Enable',
+      goal: 'Scale use-case adoption with CSM playbooks and CSE technical programs',
+      exit_criteria: 'Use-case trends improving with recurring enablement'
+    },
+    {
+      stage: 'Renew + Expand',
+      goal: 'Validate outcomes, reduce risk, and open growth opportunities',
+      exit_criteria: 'Readiness criteria met and executive alignment complete'
+    }
+  ],
+  use_cases: [
+    {
+      name: 'CI Adoption Recovery',
+      scenario: 'Pipeline coverage is inconsistent across priority projects.',
+      customer_goal: 'Increase CI usage and stabilize delivery throughput.',
+      recommended_motion: 'Execute CI playbook and pair with CSE-led enablement labs.',
+      metrics: ['Projects with pipelines', 'Pipeline success rate', 'Builds per billable user'],
+      example: 'Combine workshop rollout with reusable templates to increase CI adoption.',
+      links: [
+        {
+          label: 'CI/Verify playbook',
+          link: 'https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/'
+        }
+      ]
+    },
+    {
+      name: 'Technical Onboarding Lift',
+      scenario: 'Customer needs architecture and setup guidance during onboarding.',
+      customer_goal: 'Reach first value with fewer setup blockers.',
+      recommended_motion:
+        'Use CSE onboarding best practices and targeted technical sessions for setup decisions.',
+      metrics: ['Time to first value', 'Onboarding completion', 'Initial active users'],
+      example: 'Pair CSM kickoff with CSE setup support to reduce onboarding friction.',
+      links: [
+        {
+          label: 'CSE onboarding best practices',
+          link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/customer-onboarding-best-practices/'
+        }
+      ]
+    }
+  ],
+  anti_patterns: [
+    {
+      risk: 'Operating with no cadence for more than one month',
+      better_motion: 'Trigger non-engaged triage and run a documented recovery checklist',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/engagement/non-engaged-customer-strategies/'
+    },
+    {
+      risk: 'Treating pooled CSE coverage as a dedicated named resource',
+      better_motion: 'Set clear expectations for Success On-Demand and use the proper transition model',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/'
+    },
+    {
+      risk: 'Stale success plan without quarterly validations',
+      better_motion: 'Update objectives and evidence each quarter with customer and manager validation',
+      link: 'https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/continuous-planning/'
+    }
+  ]
 };
 
 const DEFAULT_DATA = {"meta":{"last_updated":"2026-01-29","updated_by":"Jordan Lee","notes":"Monthly health review and renewal readiness update","data_freshness_note":"Updated Jan 29, 2026"},"customer":{"name":"Northwind Industries","segment":"Enterprise","plan":"Ultimate","renewal_date":"2026-06-30","deployment_type":"Self-managed","instance_type":"Dedicated instance","start_date":"2025-08-27","csm":"Jordan Lee","tam":"Avery Chen"},"seats":{"purchased":500,"active":210,"utilization_30d_series":[{"date":"2025-11-15","value":0.34},{"date":"2025-12-01","value":0.36},{"date":"2025-12-15","value":0.38},{"date":"2025-12-30","value":0.4},{"date":"2026-01-15","value":0.42}]},"onboarding":{"phase":"First value","completion_pct":0.92,"milestones":{"engagement":{"date":"2025-09-01"},"infra_ready":{"date":"2025-09-15"},"onboarding_complete":{"date":"2025-10-20"},"first_value":{"date":"2025-10-25"},"outcome":{"date":""}},"checklist":[{"task":"Executive kickoff and success criteria aligned","done":true,"date":"2025-08-29"},{"task":"GitLab instance deployed and validated","done":true,"date":"2025-09-10"},{"task":"SSO configured and tested","done":true,"date":"2025-09-12"},{"task":"Pilot teams onboarded","done":true,"date":"2025-09-20"},{"task":"Repository migration complete","done":true,"date":"2025-09-25"},{"task":"CI runners configured","done":true,"date":"2025-09-28"},{"task":"First pipelines running","done":true,"date":"2025-10-02"},{"task":"Security baseline defined","done":true,"date":"2025-10-05"},{"task":"Enablement training delivered","done":true,"date":"2025-10-18"},{"task":"Success plan validated","done":true,"date":"2025-10-20"}],"risks":["License activation below 50% after first value","Limited DevSecOps scanning coverage","Workshop participation below target"],"definitions_source":"https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/"},"adoption":{"platform_adoption_target":3,"use_case_scores":[{"key":"create","name":"Create (SCM)","score":82,"trend_30d_pct":7,"drivers":["Merge request usage growing","Code review coverage at 78%"],"thresholds":["Green >= 76","Yellow 51-75","Red <= 50"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/","threshold_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/","key_metrics":[{"name":"Merge request adoption","current":"78%","target":"75%+","explainer":"Code review coverage"},{"name":"Active projects in GitLab","current":"85%","target":"80%+","explainer":"SCM consolidation"}],"gap_analysis":["Two legacy teams still using external SCM"],"recommended_actions":[{"action":"Migrate remaining repositories to GitLab","expected_impact":"Sustain Create in green","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/"}]},{"key":"verify","name":"Verify (CI)","score":79,"trend_30d_pct":9,"drivers":["CI builds per billable user at 46","Pipeline success rate 86%"],"thresholds":["Green > 40 builds per user","Yellow 3-40","Red <= 2"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/","threshold_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/","key_metrics":[{"name":"Projects with pipelines","current":"45%","target":"60%","explainer":"Coverage of CI-enabled projects"},{"name":"Pipeline success rate","current":"86%","target":"75%+","explainer":"Healthy pipeline stability"},{"name":"Builds per billable user","current":"46","target":">40","explainer":"Adoption threshold for green"}],"gap_analysis":["15% of priority projects still missing CI pipelines","Runner capacity near 80% utilization during peak"],"recommended_actions":[{"action":"Roll out CI templates to remaining Tier-1 projects","expected_impact":"Move Verify to green within 30 days","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"}]},{"key":"secure","name":"Secure (DevSecOps)","score":76,"trend_30d_pct":6,"drivers":["Scanner utilization 24%","SAST + dependency scanning active"],"thresholds":["Green >= 20% utilization","Yellow 5-19%","Red < 5%"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/","threshold_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/","key_metrics":[{"name":"Projects with security scans","current":"24%","target":"50%","explainer":"Scanner utilization coverage"},{"name":"SAST enabled","current":"12%","target":"50%","explainer":"Regulated app coverage"},{"name":"Dependency scanning","current":"18%","target":"50%","explainer":"Supply chain protection"}],"gap_analysis":["Regulated apps waiting on security policy approval","Dependency scanning not enabled on critical repos"],"recommended_actions":[{"action":"Schedule Secure workshop and approve policies","expected_impact":"Increase scan coverage to 40% in 6 weeks","link":"https://handbook.gitlab.com/handbook/customer-success/workshops/secure/"}]},{"key":"release","name":"Release (CD)","score":62,"trend_30d_pct":3,"drivers":["Deployments per user 2.6","6 teams deploying via GitLab"],"thresholds":["Green > 7 deployments per user","Yellow 2-7","Red < 2"],"playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/","threshold_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/","key_metrics":[{"name":"Teams deploying via GitLab","current":"6 teams","target":"12 teams","explainer":"Deployment adoption"},{"name":"Deployments per user","current":"2.6","target":"7+","explainer":"Release automation depth"}],"gap_analysis":["CD pipelines not standardized across teams","Feature flag usage limited to two products"],"recommended_actions":[{"action":"Run CD/Release playbook kickoff","expected_impact":"Expand deployment automation to 10 teams","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/"}]}],"landing_zone":{"phases":[{"key":"pre_engagement","label":"Pre-engagement","goals":["Align executive sponsor","Confirm success criteria"],"tasks":["Document business outcomes","Identify technical champions"],"risks":["Unclear ownership","Undefined success metrics"],"workshops":["Discovery and planning session"],"success_criteria":["Success plan draft approved","Executive sponsor confirmed"]},{"key":"engagement","label":"Engagement","goals":["Kickoff and stakeholder alignment","Success plan baseline"],"tasks":["Hold kickoff","Create collaboration project"],"risks":["Missed stakeholder attendance"],"workshops":["Onboarding kickoff"],"success_criteria":["Kickoff completed","Success plan objectives logged"]},{"key":"infra_ready","label":"Infra ready","goals":["Platform available","SSO and access configured"],"tasks":["Deploy GitLab","Configure SSO","Validate runners"],"risks":["Infrastructure delays","Access issues"],"workshops":["Admin enablement"],"success_criteria":["GitLab production ready","Runners online"]},{"key":"onboarding_complete","label":"Onboarding complete","goals":["Teams onboarded","Training complete"],"tasks":["Migrate repositories","Deliver training sessions"],"risks":["Low training attendance"],"workshops":["CI/Verify workshop"],"success_criteria":["Training completed","Pilot teams live"]},{"key":"first_value","label":"First value","goals":["Reach 10% license activation","First production pipeline"],"tasks":["Enable CI in priority projects","Drive adoption campaigns"],"risks":["Low license utilization","Pipeline instability"],"workshops":["CI/Verify workshop"],"success_criteria":["10% licenses active","First deployment via GitLab"]},{"key":"outcome","label":"Outcome achieved","goals":["Primary use case delivered","Business outcomes verified"],"tasks":["Scale CI/CD coverage","Enable security scans"],"risks":["Outcome lag","Security gaps"],"workshops":["Secure workshop","CD/Release playbook"],"success_criteria":["Use case green","ROI validated"]}]},"platform_source":"https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/"},"health":{"engagement_score":74,"outcomes_score":65,"overall_score":72,"early_warning_flags":[{"severity":"yellow","title":"Engagement declining","pattern":"Cadence attendance 89% \u2192 81% \u2192 76%","trigger":"Attendance below 80% for two consecutive meetings","impact":"Risk of stalled adoption and executive disengagement","recommended_action":"Schedule sponsor alignment call and confirm next agenda","due_date":"2026-02-05","owner":"CSM","playbook":"https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"},{"severity":"yellow","title":"License utilization below target","pattern":"42% utilization vs 80% target","trigger":"Utilization below 60% after first value milestone","impact":"Adoption stagnation and renewal value risk","recommended_action":"Run user activation audit and launch adoption campaign","due_date":"2026-02-12","owner":"CSM","playbook":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"},{"severity":"red","title":"Success plan objective at risk","pattern":"Security scanning objective 30% complete","trigger":"Objective behind schedule with blockers unresolved","impact":"Regulated apps remain unscanned; compliance risk","recommended_action":"Escalate security policy approval and schedule Secure workshop","due_date":"2026-02-01","owner":"Security lead","playbook":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"}],"product_score":78,"risk_score":62,"voice_score":70,"weights":{"product":0.5,"risk":0.25,"outcomes":0.1,"voice":0.05,"engagement":0.1},"drivers":[{"pillar":"Product usage","status":"good","detail":"Use case adoption at 3 green, but license utilization is 42% (target 80%).","action":"Launch activation campaign and onboard the next 50 users."},{"pillar":"Risk","status":"watch","detail":"Engagement declining and renewal window opened at 151 days.","action":"Schedule executive alignment call and confirm renewal success criteria."},{"pillar":"Outcomes","status":"watch","detail":"2 of 3 success plan objectives on track; security objective behind.","action":"Run Secure workshop and unblock regulated app scanning."},{"pillar":"Voice of customer","status":"good","detail":"NPS 34 and exec feedback positive in last EBR.","action":"Capture a reference story for Q2."},{"pillar":"Engagement","status":"good","detail":"Cadence attendance at 76% with strong workshop participation.","action":"Confirm next cadence agenda and maintain attendance above 80%."}]},"engagement":{"cadence_attendance_rate":0.76,"last_exec_meeting":"2025-12-18","next_exec_meeting":"2026-03-18","last_ebr_date":"2025-12-18","next_ebr_date":"2026-03-20","last_qbr_date":"2025-10-15","next_qbr_date":"2026-04-15","workshop_participation":0.62,"response_time_days":2.4,"nps":34,"sentiment":"Mixed","cadence_calendar":[{"cadence":"Monthly","focus":"Adoption review","owner":"CSM","next_date":"2026-02-10"},{"cadence":"Quarterly","focus":"Executive business review","owner":"CSM + Exec sponsor","next_date":"2026-03-20"},{"cadence":"Biweekly","focus":"Delivery workshop checkpoint","owner":"DevOps lead","next_date":"2026-02-03"}],"ebr_templates":{"agenda":"EBR Agenda\n1. Executive summary and outcomes\n2. Adoption and health score\n3. Success plan progress\n4. Risks and mitigations\n5. Roadmap alignment\n6. Next quarter priorities","slides":"EBR Slide Outline\n1. Executive summary\n2. Health score and adoption\n3. Success plan objectives\n4. DORA and value streams\n5. Risks and mitigation plan\n6. Roadmap alignment\n7. Next quarter priorities","checklist":"EBR Checklist\n- Confirm KPIs and success plan status\n- Update renewal risk and mitigation\n- Validate DORA and VSA metrics\n- Capture executive feedback"},"cadence_call_frequency":"Biweekly","ebr_attendance_rate":0.82,"cadence_notes":"Cadence calls focus on operational adoption; EBRs focus on executive outcomes."},"touchpoints":{"email_metrics":{"open_rate":0.42,"ctr":0.08,"response_rate":0.18},"self_service_metrics":{"doc_views":860,"training_completion":0.62,"ticket_deflection":0.24,"self_service_adoption":0.54},"in_app_metrics":{"views":320,"clicks":70,"survey_completion":0.56},"digital_health_score":66,"breakdown":{"email":68,"self_service":74,"in_app":70,"community":55},"community_metrics":{"active_members":38,"posts":12,"responses":22,"participation_rate":0.55}},"risks":[{"id":"risk-license","severity":"red","driver":"License utilization below 50%","detail":"Only 210 of 500 seats active","owner":"CSM","due_date":"2026-02-15","playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/","mitigation":[{"task":"Launch adoption campaign with team leads","owner":"CSM","due_date":"2026-02-05"},{"task":"Schedule onboarding refresher session","owner":"TAM","due_date":"2026-02-12"}]},{"id":"risk-security","severity":"yellow","driver":"Security scans enabled in only 12% of projects","detail":"SAST not running on regulated apps","owner":"Security lead","due_date":"2026-03-01","playbook":"https://handbook.gitlab.com/handbook/customer-success/playbooks/","mitigation":[{"task":"Enable SAST and dependency scanning","owner":"Security","due_date":"2026-02-20"},{"task":"Run Secure workshop","owner":"CSM","due_date":"2026-02-28"}]}],"risk_playbooks":{"red":[{"title":"Health score triage","link":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"},{"title":"Customer health scoring","link":"https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"}],"yellow":[{"title":"Playbooks index","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/"},{"title":"Success plans","link":"https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/"}]},"success_plan":{"next_review":"2026-02-05","objectives":[{"title":"Automate Tier-1 release workflows","status":"in_progress","progress_pct":0.45,"owner":"DevOps lead","target_date":"2026-03-30","evidence":"https://gitlab.com/northwind/collaboration/-/issues/34","dependencies":["Runner scaling","Release pipeline approval"],"next_milestone":"First Tier-1 app release","baseline":"Release cadence at 1x per week across Tier-1 apps","success_criteria":"Deploy Tier-1 apps daily with automated approvals","timeline":"Jan\u2013Mar 2026","verifiable_outcomes":["Daily release pipeline for Tier-1 services","Change failure rate below 10%"],"status_detail":"On track; pipeline approvals configured for 6 of 12 apps.","blockers":["Finalize release approval workflow for remaining apps"],"owner_customer":"DevOps lead","owner_gitlab":"CSM","internal_notes":"CSM notes: track blockers and stakeholder updates.","value_statement":"Accelerates release frequency and reduces lead time for Tier-1 apps.","mitigations":["Review blockers weekly","Update owners on progress"]},{"title":"Expand CI adoption to 60% of projects","status":"in_progress","progress_pct":0.55,"owner":"Platform engineering","target_date":"2026-03-15","evidence":"https://gitlab.com/northwind/collaboration/-/issues/28","dependencies":["CI templates rollout"],"next_milestone":"50% projects with CI","baseline":"CI enabled on 35% of projects","success_criteria":"CI enabled on 60% of projects with >75% success rate","timeline":"Feb\u2013Mar 2026","verifiable_outcomes":["CI templates rolled out to top 20 projects","Runner capacity scaled to 80% utilization"],"status_detail":"On track; CI templates rolling out to top projects.","blockers":["Complete runner scale-out for high-traffic repos"],"owner_customer":"Platform engineering","owner_gitlab":"CSM","internal_notes":"CSM notes: track blockers and stakeholder updates.","value_statement":"Expands CI coverage to improve deployment reliability.","mitigations":["Review blockers weekly","Update owners on progress"]},{"title":"Enable security scanning for regulated apps","status":"at_risk","progress_pct":0.3,"owner":"Security","target_date":"2026-02-28","evidence":"https://gitlab.com/northwind/collaboration/-/issues/41","dependencies":["SAST pipeline updates"],"next_milestone":"SAST baseline enabled","baseline":"Security scans on 12% of regulated apps","success_criteria":"SAST + dependency scans on all regulated apps","timeline":"Jan\u2013Feb 2026","verifiable_outcomes":["SAST baseline on regulated pipelines","Dependency scanning policy enforced"],"status_detail":"At risk; regulated app teams awaiting security policy approval.","blockers":["Security policy approval pending","DAST rollout not scheduled"],"owner_customer":"Security","owner_gitlab":"CSM","internal_notes":"CSM notes: track blockers and stakeholder updates.","value_statement":"Ensures regulated apps meet security and compliance requirements.","mitigations":["Review blockers weekly","Update owners on progress"]}]},"outcomes":{"value_summary":"Release frequency up 2.5x","value_detail":"Lead time down from 14 to 7 days","narrative":"Delivery velocity improved across Tier-1 services with GitLab CI/CD adoption. The next focus is scaling Secure tooling to regulated apps.","value_points":["Lead time reduced from 14 days to 7 days (50% faster).","Deployment frequency increased from 0.2/day to 0.6/day.","Change failure rate decreased from 18% to 11%.","MTTR improved from 10 hours to 6 hours."],"impact":{"time_saved_hours_per_month":120,"cost_avoidance_monthly":18000,"cost_avoidance_annual":216000,"tool_consolidation_annual":45000,"quality_improvement":"Production defects down 22% since onboarding.","customer_quote":"Customer quote: \"GitLab cut our delivery cycles in half and gave us clear visibility across teams.\""}},"dora":{"metrics":{"deployment_frequency":{"label":"Deployment frequency","unit":"deploys/day","baseline":0.2,"current":0.6,"target":1.0,"series":[{"date":"2025-11-01","value":0.2},{"date":"2025-12-01","value":0.3},{"date":"2026-01-01","value":0.5},{"date":"2026-01-20","value":0.6}]},"lead_time":{"label":"Lead time for changes","unit":"days","baseline":14,"current":7,"target":3,"series":[{"date":"2025-11-01","value":14},{"date":"2025-12-01","value":10},{"date":"2026-01-01","value":8},{"date":"2026-01-20","value":7}]},"change_failure":{"label":"Change failure rate","unit":"%","baseline":18,"current":11,"target":5,"series":[{"date":"2025-11-01","value":18},{"date":"2025-12-01","value":14},{"date":"2026-01-01","value":12},{"date":"2026-01-20","value":11}]},"mttr":{"label":"Time to restore service","unit":"hours","baseline":10,"current":6,"target":2,"series":[{"date":"2025-11-01","value":10},{"date":"2025-12-01","value":8},{"date":"2026-01-01","value":7},{"date":"2026-01-20","value":6}]}},"levels":{"deployment_frequency":{"elite":1.0,"high":0.2,"medium":0.03},"lead_time":{"elite":1.0,"high":7.0,"medium":30.0},"change_failure":{"elite":5.0,"high":10.0,"medium":20.0},"mttr":{"elite":1.0,"high":24.0,"medium":72.0}}},"vsa":{"lead_time_days":7.2,"cycle_time_days":5.1,"throughput_per_week":18,"bottleneck_stage":"Code review","recommendations":["Introduce merge request templates for faster reviews","Add reviewers to critical paths","Automate approval rules for low-risk changes"]},"collaboration_project":{"url":"https://gitlab.com/northwind/collaboration","open_issues":24,"overdue":5,"comment_velocity":"34 comments/week","templates":{"agenda":"Agenda\n- Progress review\n- Risks and blockers\n- Upcoming workshops\n- Action items","action_items":"Action Items\n- Task\n- Owner\n- Due date\n- Status","escalation":"Escalation\n- Issue description\n- Severity\n- Impact\n- Requested support","success_report":"Success Report\n- Objective\n- Outcome\n- Evidence\n- Next steps"}},"activity":[{"date":"2026-01-18","title":"CI usage review","detail":"Pipeline success rate improved to 72%"},{"date":"2026-01-10","title":"Security workshop scheduled","detail":"Secure enablement set for Feb 20"},{"date":"2026-01-05","title":"Executive summary shared","detail":"Renewal readiness checkpoint sent to sponsor"}],"renewal_readiness":["Success plan objectives mapped to renewal goals","Health score above 60","Executive sponsor aligned on Q2 priorities","Expansion opportunity identified"],"workshops":[{"title":"CI / Verify Workshop","detail":"Half-day enablement for pipeline onboarding","duration":"4 hours","prerequisites":"Runner access and sample project","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"},{"title":"CD / Release Playbook","detail":"Deployment automation planning","duration":"3 hours","prerequisites":"CI pipeline baseline","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/"},{"title":"Secure Workshop","detail":"SAST and dependency scanning rollout","duration":"3 hours","prerequisites":"Security team alignment","link":"https://handbook.gitlab.com/handbook/customer-success/workshops/secure/"}],"resources":{"health":[{"title":"Customer health scoring","detail":"Health score framework and definitions","link":"https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"},{"title":"Health score triage","detail":"Guidance for red and yellow accounts","link":"https://handbook.gitlab.com/handbook/customer-success/csm/health-score-triage/"}],"success":[{"title":"Success plans","detail":"Success plan framework and objectives","link":"https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/"}],"onboarding":[{"title":"Customer onboarding","detail":"Onboarding process and milestones","link":"https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/"},{"title":"Cadence calls","detail":"Cadence call structure and expectations","link":"https://handbook.gitlab.com/handbook/customer-success/csm/cadence-calls/"}],"playbooks":[{"title":"CS playbooks index","detail":"Customer Success playbooks catalog","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/"},{"title":"CI / Verify playbook","detail":"CI adoption enablement","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"},{"title":"CD / Release playbook","detail":"Release adoption enablement","link":"https://handbook.gitlab.com/handbook/customer-success/playbooks/cd-release/"}],"ebr":[{"title":"Executive business reviews","detail":"EBR guidance and preparation","link":"https://handbook.gitlab.com/handbook/customer-success/csm/ebr/"}],"collaboration":[{"title":"Customer collaboration project","detail":"Shared project guide","link":"https://handbook.gitlab.com/handbook/customer-success/csm/customer-collaboration-project/"}],"analytics":[{"title":"Value Streams dashboard","detail":"Value Streams dashboard docs","link":"https://docs.gitlab.com/user/analytics/value_streams_dashboard/"},{"title":"DORA metrics","detail":"DORA metrics documentation","link":"https://docs.gitlab.com/user/analytics/dora_metrics/"},{"title":"DORA charts","detail":"DORA charts documentation","link":"https://docs.gitlab.com/user/analytics/dora_metrics_charts/"}]},"freshness":{"overall_last_sync":"2026-01-29T08:00:00-08:00","next_sync":"2026-01-30T08:00:00-08:00","metrics":[{"key":"license","label":"License data","last_sync":"2026-01-29T06:00:00-08:00","status":"fresh","note":"Synced 2 hours ago"},{"key":"health","label":"Health score","last_sync":"2026-01-22T09:00:00-08:00","status":"stale","note":"Last calculated 7 days ago"},{"key":"usage","label":"Usage metrics","last_sync":"2026-01-29T06:00:00-08:00","status":"fresh","note":"Synced 2 hours ago"},{"key":"success_plan","label":"Success plan","last_sync":"2026-01-18T09:00:00-08:00","status":"manual","note":"Manual update required"},{"key":"dora","label":"DORA metrics","last_sync":"2026-01-28T20:00:00-08:00","status":"fresh","note":"Synced 12 hours ago"},{"key":"touchpoints","label":"Digital touchpoints","last_sync":"2026-01-27T18:00:00-08:00","status":"stale","note":"Sync overdue by 2 days"}]},"account":{"account_name":"Northwind Industries","segment":"Enterprise","renewal_date":"2026-06-30","renewal_days_remaining":151,"deployment_type":"Self-managed","data_freshness_note":"Updated Jan 29, 2026"},"audience_safe_fields":{"internal_only":["success_plan.objectives[].owner_gitlab","success_plan.objectives[].internal_notes","risks[].mitigation","response_playbooks.red","response_playbooks.yellow"],"customer_safe":["success_plan.objectives[].owner_customer","success_plan.objectives[].status","early_warning_flags"]},"response_playbooks":{"yellow":{"week1":["Review health score drivers with customer sponsor","Confirm success plan objectives and reset timelines","Schedule adoption workshop for lowest scoring use case"],"week2":["Publish mitigation plan in collaboration project","Track adoption metrics weekly and share progress","Confirm next executive checkpoint date"],"ongoing":["Monitor license utilization and engagement trends","Log risks and mitigations after each cadence call"],"escalation_triggers":["Health score below 60 for two consecutive reviews","Executive sponsor unresponsive for 30+ days"],"success_criteria":["Health score above 75","3+ use cases green","Success plan objectives back on track"]},"red":{"week1":["Initiate health score triage with CS leadership","Document top 3 risks and owners in collaboration project","Align on short-term recovery plan with executive sponsor"],"week2":["Run focused enablement workshops (CI/Verify + Secure)","Escalate blockers to customer leadership","Provide weekly executive status updates"],"ongoing":["Review progress weekly with CS leadership","Track risk mitigation tasks to closure"],"escalation_triggers":["Renewal window < 90 days with no plan","Multiple critical objectives blocked"],"success_criteria":["Health score above 60 for 2 reviews","At-risk objectives cleared","Executive sponsor re-engaged"]}}};
@@ -142,6 +423,142 @@ const fetchJson = async (url, fallback) => {
   }
 };
 
+const sanitizeResourceRegistry = (registry) => {
+  const fallback = DEFAULT_RESOURCE_REGISTRY;
+  const source = registry && typeof registry === 'object' ? registry : {};
+  const normalizeCategory = (category) => {
+    if (!category || !category.id || !category.label) return null;
+    return {
+      id: String(category.id),
+      label: String(category.label),
+      description: category.description ? String(category.description) : ''
+    };
+  };
+  const normalizeResource = (resource) => {
+    if (!resource || !resource.id || !resource.title || !resource.link) return null;
+    return {
+      id: String(resource.id),
+      title: String(resource.title),
+      description: resource.description ? String(resource.description) : '',
+      link: String(resource.link),
+      categories: Array.isArray(resource.categories) ? resource.categories.map((id) => String(id)) : []
+    };
+  };
+
+  const sourceCategories = (Array.isArray(source.categories) ? source.categories : [])
+    .map(normalizeCategory)
+    .filter(Boolean);
+  const sourceResources = (Array.isArray(source.resources) ? source.resources : [])
+    .map(normalizeResource)
+    .filter(Boolean);
+
+  const categoryMap = new Map();
+  [...fallback.categories, ...sourceCategories].forEach((category) => categoryMap.set(category.id, category));
+  const categoryIds = new Set([...categoryMap.keys()]);
+
+  const resourceMap = new Map();
+  [...fallback.resources, ...sourceResources].forEach((resource) => {
+    const categories = (resource.categories || []).filter((id) => categoryIds.has(id));
+    resourceMap.set(resource.id, {
+      ...resource,
+      categories: categories.length ? categories : ['enable']
+    });
+  });
+
+  return {
+    version: source.version || fallback.version,
+    updated_on: source.updated_on || fallback.updated_on,
+    categories: [...categoryMap.values()],
+    resources: [...resourceMap.values()]
+  };
+};
+
+const sanitizeCheatsheetDoc = (doc) => {
+  const fallback = DEFAULT_CHEATSHEET;
+  const source = doc && typeof doc === 'object' ? doc : {};
+  const pickArray = (key, normalize) => {
+    const items = Array.isArray(source[key]) ? source[key].map(normalize).filter(Boolean) : [];
+    return items.length ? items : fallback[key];
+  };
+  return {
+    version: source.version || fallback.version,
+    updated_on: source.updated_on || fallback.updated_on,
+    title: source.title || fallback.title,
+    subtitle: source.subtitle || fallback.subtitle,
+    overview_points: pickArray('overview_points', (point) =>
+      typeof point === 'string' && point.trim() ? point.trim() : null
+    ),
+    handbook_links: pickArray('handbook_links', (item) => {
+      if (!item || !item.link) return null;
+      return {
+        label: item.label || 'Reference',
+        description: item.description || '',
+        link: item.link
+      };
+    }),
+    priority_matrix: pickArray('priority_matrix', (item) =>
+      item && item.motion
+        ? {
+            motion: item.motion,
+            customer_cares: item.customer_cares || '',
+            customer_focus: Array.isArray(item.customer_focus) ? item.customer_focus : [],
+            csm_guidance: Array.isArray(item.csm_guidance) ? item.csm_guidance : [],
+            success_signals: Array.isArray(item.success_signals) ? item.success_signals : [],
+            example: item.example || '',
+            link: item.link || '#'
+          }
+        : null
+    ),
+    operating_rhythm: pickArray('operating_rhythm', (item) =>
+      item && item.name
+        ? {
+            name: item.name,
+            target: item.target || '',
+            customer_need: item.customer_need || '',
+            csm_motion: item.csm_motion || '',
+            if_missed: item.if_missed || '',
+            link: item.link || '#'
+          }
+        : null
+    ),
+    lifecycle_flow: pickArray('lifecycle_flow', (item) =>
+      item && item.stage
+        ? {
+            stage: item.stage,
+            goal: item.goal || '',
+            exit_criteria: item.exit_criteria || ''
+          }
+        : null
+    ),
+    use_cases: pickArray('use_cases', (item) =>
+      item && item.name
+        ? {
+            name: item.name,
+            scenario: item.scenario || '',
+            customer_goal: item.customer_goal || '',
+            recommended_motion: item.recommended_motion || '',
+            metrics: Array.isArray(item.metrics) ? item.metrics : [],
+            example: item.example || '',
+            links: Array.isArray(item.links)
+              ? item.links
+                  .filter((link) => link && link.link)
+                  .map((link) => ({ label: link.label || 'Reference', link: link.link }))
+              : []
+          }
+        : null
+    ),
+    anti_patterns: pickArray('anti_patterns', (item) =>
+      item && item.risk
+        ? {
+            risk: item.risk,
+            better_motion: item.better_motion || '',
+            link: item.link || '#'
+          }
+        : null
+    )
+  };
+};
+
 const normalizeAccountForView = (account) => {
   const normalized = JSON.parse(JSON.stringify(account || {}));
   normalized.account_id =
@@ -200,12 +617,38 @@ const normalizeAccountForView = (account) => {
     ? normalized.workshop_catalog
     : Array.isArray(normalized.workshops)
     ? normalized.workshops.map((item) => ({
-        title: item.theme,
-        detail: item.notes || 'Workshop delivered',
-        duration: 'Session',
-        prerequisites: 'Stakeholder alignment',
-        link: 'https://handbook.gitlab.com/handbook/customer-success/csm/workshops/'
+        title: item.title || item.theme || 'Enablement workshop',
+        detail: item.detail || item.notes || 'Workshop delivered',
+        duration: item.duration || 'Session',
+        prerequisites: item.prerequisites || 'Stakeholder alignment',
+        link: item.link || 'https://handbook.gitlab.com/handbook/customer-success/csm/workshops/'
       }))
+    : [];
+
+  normalized.growth_plan = normalized.growth_plan || {
+    objectives: (normalized.success_plan?.objectives || [])
+      .map((objective) => objective.title || objective.objective)
+      .filter(Boolean)
+      .slice(0, 3),
+    hypotheses: [
+      'If cadence and workshops stay in policy, adoption velocity and renewal confidence improve.',
+      'If outcomes are validated quarterly, expansion planning becomes more predictable.'
+    ],
+    active_plays: ['Outcome validation', 'Adoption acceleration'],
+    owners: [normalized.customer?.csm || 'CSM']
+  };
+
+  normalized.growth_plan.objectives = Array.isArray(normalized.growth_plan.objectives)
+    ? normalized.growth_plan.objectives
+    : [];
+  normalized.growth_plan.hypotheses = Array.isArray(normalized.growth_plan.hypotheses)
+    ? normalized.growth_plan.hypotheses
+    : [];
+  normalized.growth_plan.active_plays = Array.isArray(normalized.growth_plan.active_plays)
+    ? normalized.growth_plan.active_plays
+    : [];
+  normalized.growth_plan.owners = Array.isArray(normalized.growth_plan.owners)
+    ? normalized.growth_plan.owners
     : [];
 
   normalized.renewal_readiness_checklist = Array.isArray(normalized.renewal_readiness_checklist)
@@ -238,10 +681,12 @@ const loadDashboardData = async () => {
   ]);
 
   const rawAccounts = Array.isArray(accountsDoc?.accounts) && accountsDoc.accounts.length ? accountsDoc.accounts : [legacyAccount];
+  const sanitizedResources = sanitizeResourceRegistry(resourceRegistry);
+  const sanitizedCheatsheet = sanitizeCheatsheetDoc(cheatsheetDoc);
   return {
     accounts: rawAccounts.map((account) => normalizeAccountForView(account)),
-    resources: resourceRegistry || DEFAULT_RESOURCE_REGISTRY,
-    cheatsheet: cheatsheetDoc || DEFAULT_CHEATSHEET
+    resources: sanitizedResources,
+    cheatsheet: sanitizedCheatsheet
   }
 };
 

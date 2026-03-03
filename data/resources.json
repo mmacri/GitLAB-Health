@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "updated_on": "2026-02-05",
+  "version": 2,
+  "updated_on": "2026-03-03",
   "categories": [
     {
       "id": "onboard",
@@ -26,6 +26,11 @@
       "id": "templates",
       "label": "Templates",
       "description": "Reusable agendas, discovery prompts, and collaboration templates."
+    },
+    {
+      "id": "cse",
+      "label": "CSE",
+      "description": "Customer Success Engineer operating model, technical onboarding, and enablement programs."
     }
   ],
   "resources": [
@@ -268,6 +273,65 @@
       "link": "https://handbook.gitlab.com/handbook/customer-success/csm/customer-collaboration-project/",
       "categories": [
         "templates",
+        "enable"
+      ]
+    },
+    {
+      "id": "cse-segment-overview",
+      "title": "CSE Segment Overview",
+      "description": "Success On-Demand model and lifecycle responsibilities for Customer Success Engineers.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/",
+      "categories": [
+        "cse"
+      ]
+    },
+    {
+      "id": "cse-operating-rhythm",
+      "title": "CSE Operating Rhythm",
+      "description": "CSE process expectations from onboarding through renewal and expansion.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/cse-operating-rhythm/",
+      "categories": [
+        "cse",
+        "enable"
+      ]
+    },
+    {
+      "id": "cse-onboarding-best-practices",
+      "title": "Customer Onboarding Best Practices (CSE)",
+      "description": "Technical onboarding guidance and readiness patterns used by CSEs.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/customer-onboarding-best-practices/",
+      "categories": [
+        "cse",
+        "onboard"
+      ]
+    },
+    {
+      "id": "cse-playbooks",
+      "title": "CSE Playbooks",
+      "description": "Catalog of CSE technical enablement playbooks and engagement motions.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/playbooks/",
+      "categories": [
+        "cse",
+        "enable"
+      ]
+    },
+    {
+      "id": "csm-to-cse-handover",
+      "title": "CSM to CSE+ Account Transition",
+      "description": "Handover process when an account transitions from CSM to CSE+ support.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/csm-to-cse-handover/",
+      "categories": [
+        "cse",
+        "templates"
+      ]
+    },
+    {
+      "id": "cse-content",
+      "title": "CSE Content",
+      "description": "1:many enablement content strategy and governance for CSE motions.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/content/",
+      "categories": [
+        "cse",
         "enable"
       ]
     }

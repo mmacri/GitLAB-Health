@@ -47,3 +47,11 @@ python -m http.server 8000
 ```
 
 Then open `http://localhost:8000/`.
+
+## Troubleshooting blank sections
+- Symptom: many panels show little or no content, especially **Resources** and **Cheatsheet**.
+- Primary cause: opening `index.html` directly via `file://` blocks JSON `fetch()` calls in most browsers.
+- Fix:
+  1. Run a local server (`python -m http.server 8000`) and open `http://localhost:8000/`.
+  2. Confirm these files exist and are valid JSON: `data/accounts.json`, `data/resources.json`, `data/cheatsheet.json`.
+  3. If files fail to load, the app falls back to embedded sample content in `assets/js/app.js`.

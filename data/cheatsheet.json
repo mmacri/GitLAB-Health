@@ -1,12 +1,12 @@
 {
-  "version": 1,
-  "updated_on": "2026-02-17",
+  "version": 2,
+  "updated_on": "2026-03-03",
   "title": "GitLab Customer + CSM Operational Cheatsheet",
-  "subtitle": "A fast, handbook-aligned review of what enterprise customers should manage and how CSMs guide the motion.",
+  "subtitle": "A fast handbook-aligned review of what enterprise customers should manage and how CSM and CSE motions guide execution.",
   "overview_points": [
     "Use this as a one-screen operating reference before cadence calls, workshops, EBRs, and renewal checkpoints.",
-    "Customer priorities focus on outcomes and adoption velocity; CSM guidance focuses on repeatable execution and risk prevention.",
-    "Targets align to AMER CSM handbook expectations: onboarding speed, engagement rhythm, value delivery, and renewal readiness."
+    "Customer priorities focus on outcomes and adoption velocity; CSM and CSE guidance focuses on repeatable execution and risk prevention.",
+    "Targets align to AMER CSM handbook expectations plus the CSE Success On-Demand operating model."
   ],
   "handbook_links": [
     {
@@ -18,6 +18,16 @@
       "label": "Success Plans",
       "description": "How to structure measurable objectives and keep plans updated quarterly.",
       "link": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/"
+    },
+    {
+      "label": "CSE Segment",
+      "description": "Success On-Demand model, pooled technical support, and lifecycle responsibilities.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/"
+    },
+    {
+      "label": "CSE Onboarding Best Practices",
+      "description": "Technical onboarding guidance used by Customer Success Engineers.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/customer-onboarding-best-practices/"
     },
     {
       "label": "Customer Health Scoring",
@@ -74,6 +84,27 @@
       "link": "https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/"
     },
     {
+      "motion": "Enable (CSM + CSE technical depth)",
+      "customer_cares": "Accelerate technical unblock for implementation and adoption at scale.",
+      "customer_focus": [
+        "Architecture and integration readiness",
+        "Hands-on technical guidance for onboarding and migration",
+        "Reliable enablement via webinars, labs, and office hours"
+      ],
+      "csm_guidance": [
+        "Route technical depth requests through the CSE pooled Success On-Demand model",
+        "Combine CSM playbooks with CSE-led technical programs for stalled use-case adoption",
+        "Set clear expectations that CSE coverage is pooled, not a dedicated named engineer"
+      ],
+      "success_signals": [
+        "Technical blockers reduced",
+        "Enablement attendance and follow-through improving",
+        "Adoption metrics trend up after workshops/labs"
+      ],
+      "example": "Use case: Self-managed onboarding has runner and policy blockers. CSM coordinates CSE onboarding best practices and targeted enablement sessions to recover timeline.",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/cse-operating-rhythm/"
+    },
+    {
       "motion": "Expand & Renew",
       "customer_cares": "Demonstrate business outcomes and de-risk renewal while identifying growth paths.",
       "customer_focus": [
@@ -111,6 +142,14 @@
       "csm_motion": "Tie workshop theme to lowest-scoring use case and target metric lift",
       "if_missed": "Mark enablement gap and schedule before quarter end",
       "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#workshops"
+    },
+    {
+      "name": "CSE Success On-Demand programming",
+      "target": "Use CSE webinars, hands-on labs, and office hours for technical depth",
+      "customer_need": "Scalable technical guidance without waiting for dedicated staffing",
+      "csm_motion": "Route enablement asks through the CSE operating model and align sessions to account goals",
+      "if_missed": "Escalate unresolved technical blockers and schedule CSE program support",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/"
     },
     {
       "name": "EBR cadence",
@@ -236,6 +275,24 @@
           "link": "https://handbook.gitlab.com/handbook/customer-success/csm/ebr/"
         }
       ]
+    },
+    {
+      "name": "Self-managed technical onboarding",
+      "scenario": "Enterprise teams need architecture-level guidance to reach production readiness.",
+      "customer_goal": "Reduce setup risk and accelerate path to first value.",
+      "recommended_motion": "Use CSE onboarding best practices and technical enablement sessions, then track adoption metrics with CSM cadence.",
+      "metrics": [
+        "Time to first value",
+        "Onboarding completion",
+        "Cadence and workshop completion"
+      ],
+      "example": "A regulated enterprise used CSE onboarding guidance to unblock architecture decisions and complete onboarding on schedule.",
+      "links": [
+        {
+          "label": "CSE onboarding best practices",
+          "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/customer-onboarding-best-practices/"
+        }
+      ]
     }
   ],
   "anti_patterns": [
@@ -253,6 +310,11 @@
       "risk": "EBR scheduled too late to influence renewal",
       "better_motion": "Use 60/30/14/7 prep timeline and lock attendee/outcome commitments early",
       "link": "https://handbook.gitlab.com/handbook/customer-success/csm/ebr/"
+    },
+    {
+      "risk": "Treating pooled CSE coverage like a dedicated named engineer",
+      "better_motion": "Set Success On-Demand expectations and use the CSM-to-CSE+ handover process when applicable",
+      "link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/"
     }
   ]
 }

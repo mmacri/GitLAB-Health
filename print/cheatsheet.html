@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>GitLab Customer + CSM Cheatsheet</title>
+    <title>GitLab Customer Success Cheatsheet</title>
     <style>
       :root {
         color-scheme: light;
@@ -184,9 +184,9 @@
     <header>
       <h1 data-field="title">GitLab Customer + CSM Operational Cheatsheet</h1>
       <p class="muted" data-field="subtitle">
-        A fast, handbook-aligned review of what enterprise customers should manage and how CSMs guide the motion.
+        A fast handbook-aligned review of what enterprise customers should manage and how CSM and CSE motions guide execution.
       </p>
-      <p class="meta">Updated <span data-field="updated_on">2026-02-17</span></p>
+      <p class="meta">Updated <span data-field="updated_on">2026-03-03</span></p>
       <div class="chips" data-list="links"></div>
     </header>
 
@@ -241,16 +241,153 @@
 
       const DATA_URL = '../data/cheatsheet.json';
       const FALLBACK = {
-        updated_on: '2026-02-17',
+        updated_on: '2026-03-03',
         title: 'GitLab Customer + CSM Operational Cheatsheet',
         subtitle:
-          'A fast, handbook-aligned review of what enterprise customers should manage and how CSMs guide the motion.',
-        handbook_links: [],
-        lifecycle_flow: [],
-        priority_matrix: [],
-        operating_rhythm: [],
-        use_cases: [],
-        anti_patterns: []
+          'A fast handbook-aligned review of what enterprise customers should manage and how CSM and CSE motions guide execution.',
+        handbook_links: [
+          {
+            label: 'AMER CSM Segment',
+            link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/'
+          },
+          {
+            label: 'CSE Segment',
+            link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/'
+          },
+          {
+            label: 'Success Plans',
+            link: 'https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/'
+          },
+          {
+            label: 'Health Scoring',
+            link: 'https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/'
+          }
+        ],
+        lifecycle_flow: [
+          {
+            stage: 'Kickoff',
+            goal: 'Align business outcomes, owners, and measurement approach',
+            exit_criteria: 'Success criteria approved'
+          },
+          {
+            stage: 'Onboard',
+            goal: 'Establish platform readiness and first user workflows',
+            exit_criteria: 'First engage + onboarding milestones complete'
+          },
+          {
+            stage: 'Enable',
+            goal: 'Scale use-case adoption with CSM playbooks and CSE technical programs',
+            exit_criteria: 'Use-case trends improving with recurring enablement'
+          },
+          {
+            stage: 'Renew + Expand',
+            goal: 'Validate outcomes, reduce risk, and open growth opportunities',
+            exit_criteria: 'Readiness criteria met and executive alignment complete'
+          }
+        ],
+        priority_matrix: [
+          {
+            motion: 'Align & Onboard',
+            customer_cares: 'Fast setup, clear ownership, and early value realization.',
+            csm_guidance: [
+              'Track first engage, first value, and onboarding completion against handbook targets',
+              'Document onboarding dependencies and escalate blockers early'
+            ],
+            success_signals: ['First engage met', 'Onboarding complete', 'First value achieved']
+          },
+          {
+            motion: 'Enable (CSM + CSE)',
+            customer_cares: 'Drive adoption and remove technical blockers.',
+            csm_guidance: [
+              'Maintain engagement cadence and tie workshops to adoption gaps',
+              'Leverage CSE programs for technical depth'
+            ],
+            success_signals: ['Cadence in policy', 'Quarterly workshop delivered', 'Use-case trend improving']
+          },
+          {
+            motion: 'Expand & Renew',
+            customer_cares: 'Outcome proof, executive alignment, and renewal readiness.',
+            csm_guidance: [
+              'Run EBR governance and maintain success plan validation',
+              'Escalate risk when readiness gaps remain'
+            ],
+            success_signals: ['EBR complete', 'Success plan current', 'Readiness checklist advancing']
+          }
+        ],
+        operating_rhythm: [
+          {
+            name: 'Cadence calls',
+            target: 'Weekly or biweekly; avoid going beyond 30 days',
+            customer_need: 'Predictable progress and blocker resolution',
+            csm_motion: 'Capture decisions and owners each call',
+            if_missed: 'Trigger non-engaged recovery and triage plan',
+            link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/amer/#cadence-frequency'
+          },
+          {
+            name: 'Workshops and labs',
+            target: 'At least one workshop per quarter; use CSE programs for depth',
+            customer_need: 'Practical technical enablement',
+            csm_motion: 'Prioritize lowest scoring use case and schedule support',
+            if_missed: 'Flag enablement gap and schedule workshop before quarter close',
+            link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/'
+          },
+          {
+            name: 'EBR governance',
+            target: 'At least one EBR every 12 months',
+            customer_need: 'Executive alignment on outcomes and roadmap',
+            csm_motion: 'Use 60/30/14/7 preparation checkpoints',
+            if_missed: 'Set new target and recover governance immediately',
+            link: 'https://handbook.gitlab.com/handbook/customer-success/csm/ebr/'
+          }
+        ],
+        use_cases: [
+          {
+            name: 'CI Adoption Recovery',
+            scenario: 'Pipeline coverage is inconsistent across priority projects.',
+            customer_goal: 'Increase CI usage and stabilize delivery throughput.',
+            recommended_motion: 'Execute CI playbook and pair with CSE-led enablement labs.',
+            metrics: ['Projects with pipelines', 'Pipeline success rate', 'Builds per billable user'],
+            example: 'Combine workshop rollout with reusable templates to increase CI adoption.',
+            links: [
+              {
+                label: 'CI/Verify playbook',
+                link: 'https://handbook.gitlab.com/handbook/customer-success/playbooks/ci-verify/'
+              }
+            ]
+          },
+          {
+            name: 'Technical Onboarding Lift',
+            scenario: 'Enterprise teams need architecture guidance to reach production readiness.',
+            customer_goal: 'Reduce setup risk and accelerate path to first value.',
+            recommended_motion:
+              'Use CSE onboarding best practices and technical sessions, then track progress in cadence.',
+            metrics: ['Time to first value', 'Onboarding completion', 'Cadence and workshop completion'],
+            example: 'Pair CSM kickoff with CSE setup support to reduce onboarding friction.',
+            links: [
+              {
+                label: 'CSE onboarding best practices',
+                link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/customer-onboarding-best-practices/'
+              }
+            ]
+          }
+        ],
+        anti_patterns: [
+          {
+            risk: 'Operating with no cadence for more than one month',
+            better_motion: 'Trigger non-engaged triage and execute a documented recovery checklist',
+            link: 'https://handbook.gitlab.com/handbook/customer-success/csm/engagement/non-engaged-customer-strategies/'
+          },
+          {
+            risk: 'Treating pooled CSE coverage as dedicated staffing',
+            better_motion: 'Set Success On-Demand expectations and route through proper CSE operating model',
+            link: 'https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/'
+          },
+          {
+            risk: 'Stale success plan without quarterly validation',
+            better_motion: 'Update outcomes and evidence each quarter with customer and manager validation',
+            link: 'https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/continuous-planning/'
+          }
+        ]
       };
 
       const loadData = async () => {
@@ -263,6 +400,72 @@
         }
       };
 
+      const sanitizeData = (data) => {
+        const source = data && typeof data === 'object' ? data : {};
+        const listOrFallback = (key, normalize) => {
+          const raw = Array.isArray(source[key]) ? source[key].map(normalize).filter(Boolean) : [];
+          return raw.length ? raw : FALLBACK[key];
+        };
+        return {
+          updated_on: source.updated_on || FALLBACK.updated_on,
+          title: source.title || FALLBACK.title,
+          subtitle: source.subtitle || FALLBACK.subtitle,
+          handbook_links: listOrFallback('handbook_links', (item) =>
+            item && item.link ? { label: item.label || 'Reference', link: item.link } : null
+          ),
+          lifecycle_flow: listOrFallback('lifecycle_flow', (item) =>
+            item && item.stage
+              ? { stage: item.stage, goal: item.goal || '', exit_criteria: item.exit_criteria || '' }
+              : null
+          ),
+          priority_matrix: listOrFallback('priority_matrix', (item) =>
+            item && item.motion
+              ? {
+                  motion: item.motion,
+                  customer_cares: item.customer_cares || '',
+                  csm_guidance: Array.isArray(item.csm_guidance) ? item.csm_guidance : [],
+                  success_signals: Array.isArray(item.success_signals) ? item.success_signals : []
+                }
+              : null
+          ),
+          operating_rhythm: listOrFallback('operating_rhythm', (item) =>
+            item && item.name
+              ? {
+                  name: item.name,
+                  target: item.target || '',
+                  customer_need: item.customer_need || '',
+                  csm_motion: item.csm_motion || '',
+                  if_missed: item.if_missed || '',
+                  link: item.link || '#'
+                }
+              : null
+          ),
+          use_cases: listOrFallback('use_cases', (item) =>
+            item && item.name
+              ? {
+                  name: item.name,
+                  scenario: item.scenario || '',
+                  customer_goal: item.customer_goal || '',
+                  recommended_motion: item.recommended_motion || '',
+                  metrics: Array.isArray(item.metrics) ? item.metrics : [],
+                  example: item.example || '',
+                  links: Array.isArray(item.links)
+                    ? item.links.filter((link) => link && link.link).map((link) => ({
+                        label: link.label || 'Reference',
+                        link: link.link
+                      }))
+                    : []
+                }
+              : null
+          ),
+          anti_patterns: listOrFallback('anti_patterns', (item) =>
+            item && item.risk
+              ? { risk: item.risk, better_motion: item.better_motion || '', link: item.link || '#' }
+              : null
+          )
+        };
+      };
+
       const setText = (selector, value) => {
         const el = document.querySelector(`[data-field="${selector}"]`);
         if (el && value !== undefined && value !== null) {
@@ -271,7 +474,7 @@
       };
 
       const render = async () => {
-        const data = await loadData();
+        const data = sanitizeData(await loadData());
 
         setText('title', data.title);
         setText('subtitle', data.subtitle);
@@ -287,6 +490,9 @@
           anchor.textContent = item.label;
           links.appendChild(anchor);
         });
+        if (!links.children.length) {
+          links.innerHTML = '<span class="chip">No handbook links configured</span>';
+        }
 
         const flow = document.querySelector('[data-list="flow"]');
         (data.lifecycle_flow || []).forEach((item) => {
@@ -299,6 +505,9 @@
           `;
           flow.appendChild(step);
         });
+        if (!flow.children.length) {
+          flow.innerHTML = '<article class="flow-step"><div class="goal">No lifecycle flow configured.</div></article>';
+        }
 
         const matrix = document.querySelector('[data-list="matrix"]');
         (data.priority_matrix || []).forEach((item) => {
@@ -311,6 +520,10 @@
           `;
           matrix.appendChild(row);
         });
+        if (!matrix.children.length) {
+          matrix.innerHTML =
+            '<tr><td colspan="4">No customer/CSM matrix configured.</td></tr>';
+        }
 
         const rhythm = document.querySelector('[data-list="rhythm"]');
         (data.operating_rhythm || []).forEach((item) => {
@@ -324,6 +537,9 @@
           `;
           rhythm.appendChild(row);
         });
+        if (!rhythm.children.length) {
+          rhythm.innerHTML = '<tr><td colspan="5">No operating rhythm configured.</td></tr>';
+        }
 
         const useCases = document.querySelector('[data-list="use-cases"]');
         (data.use_cases || []).forEach((item) => {
@@ -343,6 +559,9 @@
           `;
           useCases.appendChild(card);
         });
+        if (!useCases.children.length) {
+          useCases.innerHTML = '<article class="card"><h3>No use-case examples configured.</h3></article>';
+        }
 
         const antiPatterns = document.querySelector('[data-list="anti-patterns"]');
         (data.anti_patterns || []).forEach((item) => {
@@ -355,6 +574,10 @@
           `;
           antiPatterns.appendChild(card);
         });
+        if (!antiPatterns.children.length) {
+          antiPatterns.innerHTML =
+            '<article class="card"><p class="muted">No anti-pattern guidance configured.</p></article>';
+        }
       };
 
       render();
