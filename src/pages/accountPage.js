@@ -3,7 +3,7 @@ import { metricTile } from '../components/metricTile.js';
 import { statusChip, statusToneFromHealth } from '../components/statusChip.js';
 import { wireTabs } from '../components/tabs.js';
 import { buildCustomerAgenda, buildFollowupEmail, buildIssueBody } from '../lib/artifacts.js';
-import { formatDate, isMissing } from '../lib/date.js';
+import { formatDate, isMissing, toIsoDate } from '../lib/date.js';
 import { redactAccountForCustomer } from '../lib/redaction.js';
 import { useCaseEntries } from '../lib/scoring.js';
 
@@ -26,7 +26,7 @@ const scoreTone = (score) => {
 
 const freshnessChip = (days) => {
   if (days === null || days === undefined) return statusChip({ label: 'Missing', tone: 'missing' });
-  if (days > 10) return statusChip({ label: `${days}d stale`, tone: 'stale' });
+  if (days > 30) return statusChip({ label: `${days}d stale`, tone: 'stale' });
   return statusChip({ label: 'Fresh', tone: 'good' });
 };
 
@@ -140,11 +140,70 @@ const changeLogRows = (items) =>
 const yellowResponseSummary = (workspace, account) =>
   [
     `Account: ${account.name}`,
-    `Lifecycle stage: ${account.health?.lifecycle_stage}`,
+    `Lifecycle stage: ${account.lifecycle_stage || account.health?.lifecycle_stage}`,
     `Top drivers: ${(workspace.signal?.reasons || []).slice(0, 3).join('; ') || 'No active drivers'}`,
     `Next best action: ${workspace.nextBestAction}`,
     `Program recommendation: ${workspace.recommendedProgram?.title || 'Select based on lowest use case score'}`
   ].join('\n');
+
+const healthComponents = (account, workspace) => {
+  const objectives = account?.outcomes?.objectives || [];
+  const completeObjectives = objectives.filter((item) => item.status === 'complete').length;
+  const objectiveRatio = objectives.length ? completeObjectives / objectives.length : 0;
+  const touchDays = Number(workspace?.signal?.touchStaleDays ?? 30);
+  const attendance = Number(account?.engagement?.program_attendance?.last_90d || 0);
+  const trend = Number(account?.adoption?.trend_30d || 0);
+  const overall = String(account?.health?.overall || '').toLowerCase();
+  const riskScore = overall === 'red' ? 44 : overall === 'yellow' ? 63 : 82;
+  const voiceScore = overall === 'red' ? 48 : overall === 'yellow' ? 67 : 80;
+  const engagementScore = Math.max(35, Math.min(95, 85 - touchDays + attendance * 2));
+
+  return [
+    {
+      key: 'Product',
+      weight: 35,
+      score: Number(account?.adoption?.platform_adoption_score || 0),
+      trend,
+      tooltip: 'Adoption depth and platform use-case coverage.'
+    },
+    {
+      key: 'Risk',
+      weight: 20,
+      score: riskScore,
+      trend: trend < 0 ? trend : 0,
+      tooltip: 'Lifecycle and renewal risk posture.'
+    },
+    {
+      key: 'Outcomes',
+      weight: 20,
+      score: Math.round(objectiveRatio * 100),
+      trend: completeObjectives ? 3 : -2,
+      tooltip: 'Progress against agreed customer outcomes.'
+    },
+    {
+      key: 'Voice',
+      weight: 10,
+      score: voiceScore,
+      trend: overall === 'green' ? 2 : -1,
+      tooltip: 'Customer sentiment and confidence signals.'
+    },
+    {
+      key: 'Engagement',
+      weight: 15,
+      score: Math.round(engagementScore),
+      trend: touchDays <= 14 ? 2 : -2,
+      tooltip: 'Cadence recency and enablement participation.'
+    }
+  ];
+};
+
+const weightedHealthScore = (components) => {
+  const totalWeight = components.reduce((sum, item) => sum + Number(item.weight || 0), 0);
+  if (!totalWeight) return 0;
+  return Math.round(
+    components.reduce((sum, item) => sum + (Number(item.score || 0) * Number(item.weight || 0)) / totalWeight, 0)
+  );
+};
 
 export const renderAccountPage = (ctx) => {
   const {
@@ -157,6 +216,7 @@ export const renderAccountPage = (ctx) => {
     onExportAccountCsv,
     onExportAccountPdf,
     onOpenMissingEditor,
+    onLogEngagement,
     copyText,
     notify
   } = ctx;
@@ -183,6 +243,17 @@ export const renderAccountPage = (ctx) => {
   const drivers = (workspace.signal?.reasons || []).slice(0, 3);
   const lowestUseCase = workspace.signal?.lowestUseCaseName || 'SCM';
   const lowestScore = workspace.signal?.lowestUseCaseScore ?? 0;
+  const lifecycleStage = account.lifecycle_stage || account.health?.lifecycle_stage || 'enable';
+  const healthRubric = healthComponents(account, workspace);
+  const healthScore = weightedHealthScore(healthRubric);
+  const completeObjectives = (account.outcomes?.objectives || []).filter((item) => item.status === 'complete').length;
+  const renewalReadiness = Math.max(0, Math.min(100, Math.round((healthScore * 0.5) + (completeObjectives * 15) + (workspace.signal?.renewalDays <= 90 ? -10 : 10))));
+  const executiveSummary =
+    account.outcomes?.executive_summary ||
+    `Platform adoption is ${account.adoption?.platform_adoption_level || 'not yet established'}. Focus remains on ${lowestUseCase} uplift and evidence capture before renewal.`;
+  const validationStatus =
+    account.outcomes?.validation_status || (completeObjectives > 0 ? 'customer confirmed' : 'internal estimate');
+  const engagementNotes = changeLog.filter((item) => item.category === 'Engagement').slice(0, 3);
 
   const licenseUtilization = Math.min(96, Math.max(22, Math.round((Number(account.adoption?.platform_adoption_score || 0) * 0.72) + 18)));
   const freshnessDays = workspace.signal?.healthStaleDays;
@@ -192,7 +263,7 @@ export const renderAccountPage = (ctx) => {
     account_id: account.id,
     requestor_role: 'Account Executive',
     topic: workspace.signal?.suggestedTopic || 'platform foundations',
-    stage: account.health?.lifecycle_stage,
+    stage: lifecycleStage,
     desired_outcome: workspace.nextBestAction,
     definition_of_done: 'Measurable adoption and outcome signal improved',
     due_date: account.engagement?.next_touch_date || account.renewal_date,
@@ -209,20 +280,23 @@ export const renderAccountPage = (ctx) => {
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page';
   wrapper.innerHTML = `
-    <header class="page-head" id="today-console">
+    <header class="page-head account-header" id="today-console">
       <div>
         <p class="eyebrow">Account Workspace</p>
         <h1>${account.name}</h1>
-        <p class="hero-lede">Segment ${account.segment} | Renewal in ${renewalDays ?? 'Missing data'} days | Stage ${account.health?.lifecycle_stage}</p>
+        <p class="hero-lede">Segment ${account.segment} | Renewal in ${renewalDays ?? 'Missing data'} days | Stage ${lifecycleStage}</p>
         <div class="chip-row">
           ${statusChip({ label: `Health ${account.health?.overall}`, tone: statusToneFromHealth(account.health?.overall) })}
           ${statusChip({ label: `Adoption ${account.health?.adoption_health}`, tone: statusToneFromHealth(account.health?.adoption_health) })}
           ${statusChip({ label: `Engagement ${account.health?.engagement_health}`, tone: statusToneFromHealth(account.health?.engagement_health) })}
+          ${statusChip({ label: `Platform ${workspace.signal?.greenUseCaseCount || 0}/4 green`, tone: (workspace.signal?.greenUseCaseCount || 0) >= 3 ? 'good' : 'warn' })}
           ${freshnessChip(freshnessDays)}
         </div>
       </div>
       <div class="page-actions">
         <button class="ghost-btn" type="button" data-go-home>Back to Work Queue</button>
+        <button class="ghost-btn" type="button" data-header-export-customer-csv>Customer-safe CSV</button>
+        <button class="ghost-btn" type="button" data-header-export-customer-pdf>Customer-safe PDF</button>
         <label class="safe-toggle">
           <input type="checkbox" data-safe-toggle ${customerSafe ? 'checked' : ''} />
           <span>Customer-safe</span>
@@ -235,7 +309,7 @@ export const renderAccountPage = (ctx) => {
       ${metricTile({ label: 'Platform adoption', value: account.adoption?.platform_adoption_level || 'Missing data', meta: 'Target 3+ green use cases', tone: scoreTone(account.adoption?.platform_adoption_score), tooltip: '3+ green use cases indicates healthy platform depth.' })}
       ${metricTile({ label: 'License utilization', value: toPercent(licenseUtilization), meta: 'Sample benchmark metric', tone: licenseUtilization >= 70 ? 'good' : licenseUtilization >= 50 ? 'warn' : 'risk' })}
       ${metricTile({ label: 'Renewal countdown', value: renewalDays ?? 'Missing data', meta: 'days', tone: renewalDays <= 90 ? 'risk' : renewalDays <= 180 ? 'warn' : 'good' })}
-      ${metricTile({ label: 'Data freshness', value: freshnessDays === null ? 'Missing data' : `${freshnessDays}d`, meta: account.health?.last_updated || 'No update date', tone: freshnessDays > 10 ? 'warn' : 'good', tooltip: 'Stale means health update older than 10 days.' })}
+      ${metricTile({ label: 'Data freshness', value: freshnessDays === null ? 'Missing data' : `${freshnessDays}d`, meta: account.health?.last_updated || 'No update date', tone: freshnessDays > 30 ? 'warn' : 'good', tooltip: 'Stale means health update older than 30 days.' })}
     </section>
 
     <section class="workspace-layout">
@@ -252,9 +326,22 @@ export const renderAccountPage = (ctx) => {
           <div class="metric-head"><h2>Summary</h2>${statusChip({ label: mode, tone: 'neutral' })}</div>
           <div class="callout">Next best action: ${workspace.nextBestAction}</div>
 
+          <div class="kpi-grid kpi-3">
+            ${metricTile({ label: 'Renewal readiness', value: `${renewalReadiness}%`, tone: renewalReadiness >= 75 ? 'good' : renewalReadiness >= 60 ? 'warn' : 'risk' })}
+            ${metricTile({ label: 'Top health drivers', value: drivers.length || 0, meta: 'active signals', tone: drivers.length ? 'warn' : 'good' })}
+            ${metricTile({ label: 'Staleness', value: freshnessDays === null ? 'Missing' : `${freshnessDays} days`, meta: freshnessDays > 30 ? 'Needs update' : 'Current', tone: freshnessDays > 30 ? 'warn' : 'good' })}
+          </div>
+
           <div class="card compact-card">
             <h3>What Changed</h3>
             <div class="timeline">${changeLogRows(changeLog)}</div>
+          </div>
+
+          <div class="card compact-card">
+            <h3>Top 3 Health Drivers</h3>
+            <ul class="simple-list">
+              ${drivers.map((item) => `<li>${item}</li>`).join('') || '<li>No active risk drivers.</li>'}
+            </ul>
           </div>
 
           <div class="card compact-card">
@@ -299,11 +386,36 @@ export const renderAccountPage = (ctx) => {
 
         <section class="tab-panel" data-tab-panel="health" id="health-risk" aria-hidden="true">
           <div class="metric-head"><h2>Health & Risk</h2></div>
-          <p class="muted">Health scoring combines adoption + engagement + lifecycle signals.</p>
+          <p class="muted">Weighted health scoring combines Product, Risk, Outcomes, Voice, and Engagement signals.</p>
+          <div class="kpi-grid kpi-3">
+            ${healthRubric
+              .map(
+                (item) =>
+                  metricTile({
+                    label: `${item.key} (${item.weight}%)`,
+                    value: `${item.score}`,
+                    meta: item.trend >= 0 ? `Trend +${item.trend}` : `Trend ${item.trend}`,
+                    tone: scoreTone(item.score),
+                    tooltip: item.tooltip
+                  })
+              )
+              .join('')}
+          </div>
+          <div class="callout">
+            Weighted score: <strong>${healthScore}</strong>. Health semantics: green = stable, yellow = attention, red = risk.
+          </div>
           <div class="card compact-card">
             <h3>Top Drivers</h3>
             <ul class="simple-list">
               ${drivers.map((item) => `<li>${item}</li>`).join('') || '<li>No active risk drivers.</li>'}
+            </ul>
+          </div>
+          <div class="card compact-card">
+            <h3>Mitigation Steps</h3>
+            <ul class="simple-list">
+              ${drivers
+                .map((item, index) => `<li>Step ${index + 1}: Assign owner, define done criteria, and update by next touchpoint for "${item}".</li>`)
+                .join('') || '<li>No mitigation actions needed.</li>'}
             </ul>
           </div>
           <div class="card compact-card">
@@ -317,17 +429,27 @@ export const renderAccountPage = (ctx) => {
               : `<div class="card compact-card">
                   <h3>Internal Risk Register</h3>
                   <p class="muted">${internalAccount.internal_only?.sentiment_notes || 'No internal notes.'}</p>
-                  <ul class="simple-list">
-                    ${(internalAccount.internal_only?.escalations || [])
-                      .map((item) => `<li>${item.severity}: ${item.issue} (next update ${formatDate(item.next_update_due)})</li>`)
-                      .join('') || '<li>No escalations.</li>'}
-                  </ul>
+                  <div class="table-wrap">
+                    <table class="data-table">
+                      <thead><tr><th>Severity</th><th>Issue</th><th>Next Update</th></tr></thead>
+                      <tbody>
+                        ${
+                          (internalAccount.internal_only?.escalations || [])
+                            .map((item) => `<tr><td>${item.severity}</td><td>${item.issue}</td><td>${formatDate(item.next_update_due)}</td></tr>`)
+                            .join('') || '<tr><td colspan="3">No escalations.</td></tr>'
+                        }
+                      </tbody>
+                    </table>
+                  </div>
                 </div>`
           }
         </section>
 
         <section class="tab-panel" data-tab-panel="engagement" id="engagement" aria-hidden="true">
-          <div class="metric-head"><h2>Engagement</h2></div>
+          <div class="metric-head">
+            <h2>Engagement</h2>
+            <button class="ghost-btn" type="button" data-log-engagement>Log engagement touchpoint</button>
+          </div>
           <div class="kpi-grid kpi-3">
             ${metricTile({ label: 'Cadence', value: account.engagement?.cadence || 'Missing data', tone: 'neutral' })}
             ${metricTile({ label: 'Last touch', value: account.engagement?.last_touch_date || 'Missing data', tone: 'neutral' })}
@@ -353,15 +475,48 @@ export const renderAccountPage = (ctx) => {
               }
             </ul>
           </div>
+          <div class="card compact-card">
+            <h3>Meeting Notes Summary</h3>
+            <ul class="simple-list">
+              ${
+                engagementNotes
+                  .map((item) => `<li>${formatDate(item.date)} - ${item.summary}</li>`)
+                  .join('') || '<li>No recent engagement notes.</li>'
+              }
+            </ul>
+          </div>
         </section>
 
         <section class="tab-panel" data-tab-panel="outcomes" id="outcomes" aria-hidden="true">
           <div class="metric-head"><h2>Outcomes</h2></div>
+          <div class="card compact-card">
+            <h3>Narrative Executive Summary</h3>
+            <p class="muted">${executiveSummary}</p>
+            <p class="muted">Validation status: ${statusChip({ label: validationStatus, tone: validationStatus === 'customer confirmed' ? 'good' : 'warn' })}</p>
+          </div>
           <div class="table-wrap">
             <table class="data-table">
               <thead><tr><th>Objective</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead>
               <tbody>${outcomeRows(account)}</tbody>
             </table>
+          </div>
+          <div class="card compact-card">
+            <h3>Success Plan Milestones</h3>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Milestone</th><th>Target</th><th>Actual</th><th>Status</th></tr></thead>
+                <tbody>
+                  ${
+                    (account.journey?.milestones || [])
+                      .map(
+                        (milestone) =>
+                          `<tr><td>${milestone.label}</td><td>${milestone.target_days}d</td><td>${milestone.actual_days}d</td><td>${statusChip({ label: milestone.status, tone: milestone.status === 'done' ? 'good' : milestone.status === 'watch' ? 'warn' : 'risk' })}</td></tr>`
+                      )
+                      .join('') || '<tr><td colspan="4">No milestones captured.</td></tr>'
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
           <div class="kpi-grid kpi-3">
             ${metricTile({ label: 'Time saved', value: account.outcomes?.value_metrics?.time_saved_hours || 'Missing data', meta: 'hours', tone: 'good' })}
@@ -434,6 +589,8 @@ export const renderAccountPage = (ctx) => {
 
   wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
   wrapper.querySelector('[data-safe-toggle]')?.addEventListener('change', (event) => onToggleSafe(Boolean(event.target.checked)));
+  wrapper.querySelector('[data-header-export-customer-csv]')?.addEventListener('click', () => onExportAccountCsv(internalAccount, { customerSafe: true }));
+  wrapper.querySelector('[data-header-export-customer-pdf]')?.addEventListener('click', () => onExportAccountPdf(internalAccount, { customerSafe: true }));
 
   wrapper.querySelectorAll('[data-tab-link]').forEach((link) => {
     link.addEventListener('click', (event) => {
@@ -484,6 +641,11 @@ export const renderAccountPage = (ctx) => {
   wrapper.querySelector('[data-copy-yellow-summary]')?.addEventListener('click', async () => {
     await copyText(yellowResponseSummary(workspace, account));
     notify('Health response summary copied.');
+  });
+
+  wrapper.querySelector('[data-log-engagement]')?.addEventListener('click', () => {
+    onLogEngagement?.(internalAccount.id, `Manual engagement touchpoint logged on ${toIsoDate(new Date())}.`);
+    notify('Engagement touchpoint logged.');
   });
 
   wrapper.querySelector('[data-export-customer-csv]')?.addEventListener('click', () => onExportAccountCsv(internalAccount, { customerSafe: true }));

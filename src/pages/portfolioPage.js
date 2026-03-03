@@ -10,6 +10,14 @@ const uniqueSegments = (signals) => ['all', ...new Set((signals || []).map((sign
 const uniqueUseCases = (signals) =>
   ['all', ...new Set((signals || []).map((signal) => String(signal.lowestUseCaseName || '').toLowerCase()))].filter(Boolean);
 
+const shortActionList = (items, empty, count = 5) =>
+  items.length
+    ? `<ul class="simple-list">${items
+        .slice(0, count)
+        .map((item) => `<li><a href="#" data-open-account="${item.account.id}">${item.account.name}</a> - ${item.reasons[0] || 'Review'}</li>`)
+        .join('')}</ul>`
+    : `<p class="empty-text">${empty}</p>`;
+
 const renderProgramCard = (program) => `
   <article class="compact-card card">
     <div class="metric-head">
@@ -40,8 +48,9 @@ const queueRow = (item) => `
 const outlierRow = (signal) => `
   <td><a href="#" data-open-account="${signal.account.id}">${signal.account.name}</a></td>
   <td>${statusChip({ label: signal.account.health?.overall, tone: statusToneFromHealth(signal.account.health?.overall) })}</td>
+  <td>${signal.greenUseCaseCount || 0}/4 green</td>
   <td>${signal.renewalDays ?? 'Missing data'}d</td>
-  <td>${signal.account.adoption?.platform_adoption_level || 'Missing data'}</td>
+  <td>${formatDate(signal.account.engagement?.last_touch_date)}</td>
   <td>${signal.isStale ? statusChip({ label: 'Stale', tone: 'stale' }) : statusChip({ label: 'Fresh', tone: 'good' })}</td>
   <td>${signal.reasons.slice(0, 2).join(' | ') || 'Watchlist'}</td>
 `;
@@ -51,6 +60,15 @@ export const renderPortfolioHomePage = (ctx) => {
 
   const segments = uniqueSegments(portfolio.signals);
   const lowUseCases = uniqueUseCases(portfolio.signals);
+  const staleThreshold = Number(filters.staleDays || 30);
+  const staleSignals = portfolio.signals.filter((signal) => Number(signal.healthStaleDays || 0) > staleThreshold);
+  const renewalSignals = portfolio.signals
+    .filter((signal) => Number(signal.renewalDays ?? 999) <= 90)
+    .sort((left, right) => (left.renewalDays ?? 999) - (right.renewalDays ?? 999));
+  const trendWatch = portfolio.signals.filter(
+    (signal) => ['yellow', 'red'].includes(String(signal.account.health?.overall || '').toLowerCase()) || Number(signal.account.adoption?.trend_30d || 0) < 0
+  );
+  const overdue = portfolio.todayQueue.filter((item) => Number(item.due_in_days ?? 0) < 0);
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page';
@@ -62,6 +80,7 @@ export const renderPortfolioHomePage = (ctx) => {
         <p class="hero-lede">Triage first: due work, outliers, and 1:many enablement motions.</p>
       </div>
       <div class="page-actions">
+        <button class="qa" type="button" data-go-intake>Create Engagement Request</button>
         <button class="qa" type="button" data-go-portfolio>Open Full Portfolio View</button>
         <button class="ghost-btn" type="button" data-export-portfolio>Export Portfolio CSV</button>
         <button class="ghost-btn" type="button" data-share-snapshot>Share snapshot</button>
@@ -72,7 +91,7 @@ export const renderPortfolioHomePage = (ctx) => {
       <div class="metric-grid kpi-4">
         ${metricTile({ label: 'Accounts', value: portfolio.stats.totalAccounts, tone: 'neutral' })}
         ${metricTile({ label: 'Red Health', value: portfolio.stats.redAccounts, tone: portfolio.stats.redAccounts ? 'risk' : 'good' })}
-        ${metricTile({ label: 'Stale Data', value: portfolio.stats.staleAccounts, tone: portfolio.stats.staleAccounts ? 'warn' : 'good', tooltip: 'Stale means health update older than 10 days.' })}
+        ${metricTile({ label: 'Stale Data', value: staleSignals.length, tone: staleSignals.length ? 'warn' : 'good', tooltip: `Stale means health update older than ${staleThreshold} days.` })}
         ${metricTile({ label: 'Requests Waiting', value: portfolio.stats.requestsWaiting, tone: portfolio.stats.requestsWaiting ? 'warn' : 'good' })}
       </div>
     </section>
@@ -104,6 +123,23 @@ export const renderPortfolioHomePage = (ctx) => {
             <option value="green" ${filters.health === 'green' ? 'selected' : ''}>Green</option>
             <option value="yellow" ${filters.health === 'yellow' ? 'selected' : ''}>Yellow</option>
             <option value="red" ${filters.health === 'red' ? 'selected' : ''}>Red</option>
+          </select>
+        </label>
+        <label>
+          Engagement Recency
+          <select data-filter="engagementRecency">
+            <option value="all" ${filters.engagementRecency === 'all' ? 'selected' : ''}>All</option>
+            <option value="0-14" ${filters.engagementRecency === '0-14' ? 'selected' : ''}>0-14 days</option>
+            <option value="15-30" ${filters.engagementRecency === '15-30' ? 'selected' : ''}>15-30 days</option>
+            <option value="31+" ${filters.engagementRecency === '31+' ? 'selected' : ''}>31+ days</option>
+          </select>
+        </label>
+        <label>
+          Stale Threshold
+          <select data-filter="staleDays">
+            <option value="30" ${Number(filters.staleDays) === 30 ? 'selected' : ''}>30 days</option>
+            <option value="45" ${Number(filters.staleDays) === 45 ? 'selected' : ''}>45 days</option>
+            <option value="60" ${Number(filters.staleDays) === 60 ? 'selected' : ''}>60 days</option>
           </select>
         </label>
         <label>
@@ -146,6 +182,37 @@ export const renderPortfolioHomePage = (ctx) => {
 
         <section class="card">
           <div class="metric-head">
+            <h2>Overdue Actions</h2>
+            ${statusChip({ label: `${overdue.length} overdue`, tone: overdue.length ? 'risk' : 'good' })}
+          </div>
+          <ul class="simple-list">
+            ${
+              overdue
+                .slice(0, 6)
+                .map((item) => `<li><a href="#" data-open-account="${item.account_id}">${item.account_name}</a> - ${item.topic} (${item.stage}) overdue by ${Math.abs(item.due_in_days)}d</li>`)
+                .join('') || '<li>No overdue items.</li>'
+            }
+          </ul>
+        </section>
+
+        <section class="card">
+          <div class="metric-head">
+            <h2>Renewal Window &lt; 90 Days</h2>
+            ${statusChip({ label: `${renewalSignals.length} accounts`, tone: renewalSignals.length ? 'warn' : 'good' })}
+          </div>
+          ${shortActionList(renewalSignals, 'No accounts in 90-day renewal window.')}
+        </section>
+
+        <section class="card">
+          <div class="metric-head">
+            <h2>Yellow/Red Trend Watch</h2>
+            ${statusChip({ label: `${trendWatch.length} accounts`, tone: trendWatch.length ? 'warn' : 'good' })}
+          </div>
+          ${shortActionList(trendWatch, 'No yellow/red trend accounts.')}
+        </section>
+
+        <section class="card">
+          <div class="metric-head">
             <h2>Requests Awaiting Triage</h2>
             ${statusChip({ label: `${portfolio.triageQueue.length} waiting`, tone: portfolio.triageQueue.length ? 'warn' : 'good' })}
           </div>
@@ -169,6 +236,14 @@ export const renderPortfolioHomePage = (ctx) => {
 
         <section class="card">
           <div class="metric-head">
+            <h2>Stale Data &gt; ${staleThreshold} Days</h2>
+            ${statusChip({ label: `${staleSignals.length} stale`, tone: staleSignals.length ? 'warn' : 'good' })}
+          </div>
+          ${shortActionList(staleSignals, `No stale accounts above ${staleThreshold} days.`)}
+        </section>
+
+        <section class="card">
+          <div class="metric-head">
             <h2>Programs (Enablement)</h2>
             <button class="ghost-btn" type="button" data-go-programs>Open Programs</button>
           </div>
@@ -188,8 +263,9 @@ export const renderPortfolioHomePage = (ctx) => {
     columns: [
       { key: 'name', label: 'Account' },
       { key: 'health', label: 'Health' },
+      { key: 'adoptionCount', label: 'Adoption' },
       { key: 'renewalDays', label: 'Renewal' },
-      { key: 'platform', label: 'Platform' },
+      { key: 'lastTouch', label: 'Last Touch' },
       { key: 'stale', label: 'Stale' },
       { key: 'reason', label: 'Why Flagged', sortable: false }
     ],
@@ -197,7 +273,8 @@ export const renderPortfolioHomePage = (ctx) => {
       ...signal,
       name: signal.account.name,
       health: signal.account.health?.overall,
-      platform: signal.account.adoption?.platform_adoption_level,
+      adoptionCount: `${signal.greenUseCaseCount || 0}/4`,
+      lastTouch: signal.account.engagement?.last_touch_date || '',
       stale: signal.isStale ? 'stale' : 'fresh',
       reason: signal.reasons[0] || 'Watchlist'
     })),
@@ -223,6 +300,7 @@ export const renderPortfolioHomePage = (ctx) => {
   wrapper.querySelector('[data-drawer]').appendChild(drawer);
 
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
+  wrapper.querySelector('[data-go-intake]')?.addEventListener('click', () => navigate('intake'));
   wrapper.querySelector('[data-go-programs]')?.addEventListener('click', () => navigate('programs'));
   wrapper.querySelector('[data-export-portfolio]')?.addEventListener('click', onExportPortfolio);
   wrapper.querySelector('[data-share-snapshot]')?.addEventListener('click', onCopyShare);
@@ -248,7 +326,11 @@ export const renderPortfolioHomePage = (ctx) => {
   });
 
   wrapper.querySelectorAll('[data-filter]').forEach((input) => {
-    input.addEventListener('change', () => onSetFilters({ [input.getAttribute('data-filter')]: input.value }));
+    input.addEventListener('change', () => {
+      const key = input.getAttribute('data-filter');
+      const value = key === 'staleDays' ? Number(input.value) : input.value;
+      onSetFilters({ [key]: value });
+    });
   });
 
   wrapper.querySelectorAll('[data-filter-check]').forEach((input) => {
@@ -308,6 +390,23 @@ export const renderPortfolioPage = (ctx) => {
       </select>
     </label>
     <label>
+      Engagement Recency
+      <select data-filter="engagementRecency">
+        <option value="all" ${filters.engagementRecency === 'all' ? 'selected' : ''}>All</option>
+        <option value="0-14" ${filters.engagementRecency === '0-14' ? 'selected' : ''}>0-14 days</option>
+        <option value="15-30" ${filters.engagementRecency === '15-30' ? 'selected' : ''}>15-30 days</option>
+        <option value="31+" ${filters.engagementRecency === '31+' ? 'selected' : ''}>31+ days</option>
+      </select>
+    </label>
+    <label>
+      Stale Threshold
+      <select data-filter="staleDays">
+        <option value="30" ${Number(filters.staleDays) === 30 ? 'selected' : ''}>30 days</option>
+        <option value="45" ${Number(filters.staleDays) === 45 ? 'selected' : ''}>45 days</option>
+        <option value="60" ${Number(filters.staleDays) === 60 ? 'selected' : ''}>60 days</option>
+      </select>
+    </label>
+    <label>
       Lowest use-case
       <select data-filter="lowestUseCase">${lowUseCases.map((name) => `<option value="${name}" ${filters.lowestUseCase === name ? 'selected' : ''}>${name}</option>`).join('')}</select>
     </label>
@@ -331,10 +430,9 @@ export const renderPortfolioPage = (ctx) => {
       { key: 'name', label: 'Account' },
       { key: 'segment', label: 'Segment' },
       { key: 'health', label: 'Health' },
+      { key: 'adoptionCount', label: 'Adoption' },
       { key: 'renewalDays', label: 'Renewal Days' },
-      { key: 'platform', label: 'Platform' },
-      { key: 'lowest', label: 'Lowest Use Case' },
-      { key: 'open', label: 'Open Requests' },
+      { key: 'lastTouch', label: 'Last Touch' },
       { key: 'stale', label: 'Stale' },
       { key: 'reason', label: 'Why Flagged', sortable: false }
     ],
@@ -343,10 +441,9 @@ export const renderPortfolioPage = (ctx) => {
       name: signal.account.name,
       segment: signal.account.segment,
       health: signal.account.health?.overall,
+      adoptionCount: `${signal.greenUseCaseCount || 0}/4`,
       renewalDays: signal.renewalDays ?? 999,
-      platform: signal.account.adoption?.platform_adoption_level,
-      lowest: `${signal.lowestUseCaseName} (${signal.lowestUseCaseScore})`,
-      open: signal.requestList.length,
+      lastTouch: signal.account.engagement?.last_touch_date || '',
       stale: signal.isStale ? 'stale' : 'fresh',
       reason: signal.reasons[0] || 'Watchlist'
     })),
@@ -355,10 +452,9 @@ export const renderPortfolioPage = (ctx) => {
       <td><a href="#" data-open-account="${row.account.id}">${row.account.name}</a></td>
       <td>${row.account.segment}</td>
       <td>${statusChip({ label: row.account.health?.overall, tone: statusToneFromHealth(row.account.health?.overall) })}</td>
+      <td>${row.greenUseCaseCount || 0}/4 green</td>
       <td>${row.renewalDays === 999 ? 'Missing data' : row.renewalDays}</td>
-      <td>${row.account.adoption?.platform_adoption_level}</td>
-      <td>${row.lowestUseCaseName} (${row.lowestUseCaseScore})</td>
-      <td>${row.requestList.length}</td>
+      <td>${formatDate(row.account.engagement?.last_touch_date)}</td>
       <td>${row.isStale ? statusChip({ label: 'Stale', tone: 'stale' }) : statusChip({ label: 'Fresh', tone: 'good' })}</td>
       <td>${row.reasons.slice(0, 2).join(' | ') || 'Watchlist'}</td>
     `
@@ -399,7 +495,11 @@ export const renderPortfolioPage = (ctx) => {
   wrapper.querySelector('[data-export-portfolio]')?.addEventListener('click', onExportPortfolio);
 
   wrapper.querySelectorAll('[data-filter]').forEach((input) => {
-    input.addEventListener('change', () => onSetFilters({ [input.getAttribute('data-filter')]: input.value }));
+    input.addEventListener('change', () => {
+      const key = input.getAttribute('data-filter');
+      const value = key === 'staleDays' ? Number(input.value) : input.value;
+      onSetFilters({ [key]: value });
+    });
   });
   wrapper.querySelectorAll('[data-filter-check]').forEach((input) => {
     input.addEventListener('change', () => onSetFilters({ [input.getAttribute('data-filter-check')]: Boolean(input.checked) }));

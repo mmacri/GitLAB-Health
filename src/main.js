@@ -11,7 +11,7 @@ import {
   resetLocalState
 } from './lib/dataLoader.js';
 import { buildShareSnapshotUrl, exportAccountCsv, exportAccountSummaryPdf, exportPortfolioCsv } from './lib/exports.js';
-import { formatDateTime } from './lib/date.js';
+import { formatDateTime, toIsoDate } from './lib/date.js';
 import { buildAccountWorkspace, buildPortfolioView } from './lib/scoring.js';
 import { storage, STORAGE_KEYS } from './lib/storage.js';
 import { renderAccountPage, accountCommandEntries } from './pages/accountPage.js';
@@ -43,6 +43,8 @@ const state = {
     renewalWindow: 'all',
     health: 'all',
     staleOnly: false,
+    staleDays: 30,
+    engagementRecency: 'all',
     lowestUseCase: 'all',
     hasOpenRequest: false,
     belowThreeGreen: false
@@ -83,6 +85,17 @@ const currentAccount = () => {
     accounts.find((account) => account.id === state.selectedAccountId) ||
     accounts[0]
   );
+};
+
+const getAccountById = (accountId) => (state.data?.accounts || []).find((account) => account.id === accountId) || null;
+
+const appendChangeLog = (accountId, category, summary, date = toIsoDate(new Date())) => {
+  const account = getAccountById(accountId);
+  if (!account) return;
+  const existing = Array.isArray(account.change_log) ? account.change_log : [];
+  const next = [{ date, category, summary }, ...existing].slice(0, 30);
+  persistAccountField(accountId, 'change_log', next);
+  account.change_log = next;
 };
 
 const setSelectedAccount = (accountId) => {
@@ -227,11 +240,44 @@ const updateProgram = (programId, updater) => {
   render();
 };
 
-const onLogAttendance = (programId, amount = 1) => {
+const onLogAttendance = (programId, amount = 1, accountId = '') => {
+  const normalizedAmount = Number(amount || 0);
   updateProgram(programId, (program) => ({
     ...program,
-    attendance_count: Math.max(0, Number(program.attendance_count || 0) + Number(amount || 0))
+    attendance_count: Math.max(0, Number(program.attendance_count || 0) + normalizedAmount)
   }));
+
+  if (!accountId) return;
+
+  const account = getAccountById(accountId);
+  const program = findProgram(programId);
+  if (!account || !program) return;
+
+  const today = toIsoDate(new Date());
+  const existingAttendance = account.engagement?.program_attendance || {};
+  const attendanceKey = program.type === 'webinar' ? 'webinars' : program.type === 'hands-on lab' ? 'labs' : 'office_hours';
+  const updatedAttendance = {
+    ...existingAttendance,
+    last_90d: Math.max(0, Number(existingAttendance.last_90d || 0) + normalizedAmount),
+    [attendanceKey]: Math.max(0, Number(existingAttendance[attendanceKey] || 0) + normalizedAmount)
+  };
+  const nextTouchDate = account.engagement?.next_touch_date || toIsoDate(new Date(Date.now() + 1000 * 60 * 60 * 24 * 14));
+
+  account.engagement = {
+    ...account.engagement,
+    last_touch_date: today,
+    next_touch_date: nextTouchDate,
+    program_attendance: updatedAttendance
+  };
+  persistAccountField(accountId, 'engagement.last_touch_date', today);
+  persistAccountField(accountId, 'engagement.next_touch_date', nextTouchDate);
+  persistAccountField(accountId, 'engagement.program_attendance', updatedAttendance);
+  appendChangeLog(
+    accountId,
+    'Engagement',
+    `Program attendance logged for ${program.title}.`
+  );
+  render();
 };
 
 const onAddRegistration = (programId, amount = 1) => {
@@ -244,6 +290,56 @@ const onAddRegistration = (programId, amount = 1) => {
 const onCreateRequest = (request) => {
   state.data.requests = [request, ...state.data.requests];
   persistRequests(state.data.requests);
+  appendChangeLog(
+    request.account_id,
+    'Risk',
+    `New engagement request created for ${request.topic} with due date ${request.due_date}.`,
+    request.created_on || toIsoDate(new Date())
+  );
+  render();
+};
+
+const onLogEngagement = (accountId, summary = 'Engagement touchpoint logged.') => {
+  const account = getAccountById(accountId);
+  if (!account) return;
+  const today = toIsoDate(new Date());
+  const cadence = String(account.engagement?.cadence || '').toLowerCase();
+  const cadenceDays = cadence === 'weekly' ? 7 : cadence === 'biweekly' ? 14 : cadence === 'monthly' ? 30 : 14;
+  const nextTouch = toIsoDate(new Date(Date.now() + cadenceDays * 24 * 60 * 60 * 1000));
+
+  account.engagement = {
+    ...account.engagement,
+    last_touch_date: today,
+    next_touch_date: nextTouch
+  };
+  persistAccountField(accountId, 'engagement.last_touch_date', today);
+  persistAccountField(accountId, 'engagement.next_touch_date', nextTouch);
+  appendChangeLog(accountId, 'Engagement', summary, today);
+  render();
+};
+
+const onInviteAccountToProgram = async (programId, accountId) => {
+  const program = findProgram(programId);
+  const account = getAccountById(accountId);
+  if (!program || !account) return;
+  const invite = [
+    `Hello ${account.name} team,`,
+    ``,
+    `You are invited to ${program.title}.`,
+    `Date/Time: ${formatDateTime(program.date)}`,
+    `Target use cases: ${(program.target_use_cases || []).join(', ')}`,
+    ``,
+    `${program.invite_blurb || 'Please register and bring implementation questions.'}`
+  ].join('\n');
+  await copyText(invite);
+  const nextTouchDate = toIsoDate(program.date);
+  account.engagement = {
+    ...account.engagement,
+    next_touch_date: nextTouchDate
+  };
+  persistAccountField(accountId, 'engagement.next_touch_date', nextTouchDate);
+  appendChangeLog(accountId, 'Engagement', `Invited to program ${program.title}.`, nextTouchDate);
+  notify(`Invite copied for ${account.name}.`);
   render();
 };
 
@@ -251,6 +347,12 @@ const modal = createModal();
 document.body.appendChild(modal.element);
 
 const openMissingEditor = ({ accountId, path, label, type = 'text' }) => {
+  const account = getAccountById(accountId);
+  const currentValue = String(path || '')
+    .split('.')
+    .filter(Boolean)
+    .reduce((cursor, key) => (cursor && typeof cursor === 'object' ? cursor[key] : undefined), account);
+
   const form = document.createElement('form');
   form.className = 'form-grid';
   form.innerHTML = `
@@ -263,12 +365,24 @@ const openMissingEditor = ({ accountId, path, label, type = 'text' }) => {
       <button class="ghost-btn" type="button" data-cancel>Cancel</button>
     </div>
   `;
+  const input = form.elements.namedItem('value');
+  if (input && currentValue !== null && currentValue !== undefined) {
+    input.value = String(currentValue);
+  }
 
   form.querySelector('[data-cancel]')?.addEventListener('click', () => modal.close());
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const value = form.elements.namedItem('value').value;
     persistAccountField(accountId, path, value);
+    const category = String(path || '').startsWith('health')
+      ? 'Risk'
+      : String(path || '').startsWith('engagement')
+        ? 'Engagement'
+        : String(path || '').startsWith('outcomes')
+          ? 'Outcomes'
+          : 'Usage';
+    appendChangeLog(accountId, category, `${label} updated.`);
     state.data = await loadDashboardData();
     modal.close();
     render();
@@ -393,6 +507,7 @@ const renderCurrentRoute = () => {
       onExportAccountCsv: (account, options) => exportAccountCsv(account, options),
       onExportAccountPdf: (account, options) => exportAccountSummaryPdf(account, options),
       onOpenMissingEditor: openMissingEditor,
+      onLogEngagement,
       copyText,
       notify,
       ...common
@@ -402,10 +517,12 @@ const renderCurrentRoute = () => {
   if (route.name === 'programs') {
     view = renderProgramsPage({
       programs: state.data.programs,
+      accounts: state.data.accounts,
       mode: state.viewMode,
       onCopyInvite,
       onLogAttendance,
       onAddRegistration,
+      onInviteAccount: onInviteAccountToProgram,
       notify,
       ...common
     });

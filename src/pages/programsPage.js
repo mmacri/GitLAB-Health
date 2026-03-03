@@ -8,7 +8,10 @@ const grouped = (programs) => ({
   'office hours': (programs || []).filter((item) => item.type === 'office hours')
 });
 
-const programCard = (item) => `
+const accountOptions = (accounts = []) =>
+  (accounts || []).map((account) => `<option value="${account.id}">${account.name}</option>`).join('');
+
+const programCard = (item, accounts) => `
   <article class="card compact-card">
     <div class="metric-head">
       <h3>${item.title}</h3>
@@ -17,7 +20,14 @@ const programCard = (item) => `
     <p class="muted">${formatDateTime(item.date)}</p>
     <p class="muted">Use cases: ${(item.target_use_cases || []).join(', ')}</p>
     <p class="muted">Registration ${item.registration_count} | Attendance ${item.attendance_count}</p>
+    <label>
+      Account
+      <select data-program-account="${item.program_id}">
+        ${accountOptions(accounts)}
+      </select>
+    </label>
     <div class="page-actions">
+      <button class="ghost-btn" type="button" data-invite-account="${item.program_id}">Invite Account</button>
       <button class="ghost-btn" type="button" data-copy-invite="${item.program_id}">Copy invite blurb</button>
       <button class="ghost-btn" type="button" data-log-attendance="${item.program_id}">Log attendance</button>
       <button class="ghost-btn" type="button" data-add-registration="${item.program_id}">Add registration</button>
@@ -30,7 +40,7 @@ const programCard = (item) => `
 `;
 
 export const renderProgramsPage = (ctx) => {
-  const { programs, mode, navigate, onCopyInvite, onLogAttendance, onAddRegistration, notify } = ctx;
+  const { programs, accounts, mode, navigate, onCopyInvite, onLogAttendance, onAddRegistration, onInviteAccount, notify } = ctx;
 
   const sets = grouped([...(programs || [])].sort((a, b) => new Date(a.date) - new Date(b.date)));
   const wrapper = document.createElement('section');
@@ -51,17 +61,17 @@ export const renderProgramsPage = (ctx) => {
       <div class="main-col">
         <section class="card">
           <div class="metric-head"><h2>Webinars</h2>${statusChip({ label: `${sets.webinar.length} items`, tone: 'neutral' })}</div>
-          <div class="main-col">${sets.webinar.map(programCard).join('') || '<p class="empty-text">No webinars scheduled.</p>'}</div>
+          <div class="main-col">${sets.webinar.map((item) => programCard(item, accounts)).join('') || '<p class="empty-text">No webinars scheduled.</p>'}</div>
         </section>
 
         <section class="card">
           <div class="metric-head"><h2>Hands-on Labs</h2>${statusChip({ label: `${sets['hands-on lab'].length} items`, tone: 'neutral' })}</div>
-          <div class="main-col">${sets['hands-on lab'].map(programCard).join('') || '<p class="empty-text">No labs scheduled.</p>'}</div>
+          <div class="main-col">${sets['hands-on lab'].map((item) => programCard(item, accounts)).join('') || '<p class="empty-text">No labs scheduled.</p>'}</div>
         </section>
 
         <section class="card">
           <div class="metric-head"><h2>Office Hours</h2>${statusChip({ label: `${sets['office hours'].length} items`, tone: 'neutral' })}</div>
-          <div class="main-col">${sets['office hours'].map(programCard).join('') || '<p class="empty-text">No office hours scheduled.</p>'}</div>
+          <div class="main-col">${sets['office hours'].map((item) => programCard(item, accounts)).join('') || '<p class="empty-text">No office hours scheduled.</p>'}</div>
         </section>
       </div>
 
@@ -91,7 +101,21 @@ export const renderProgramsPage = (ctx) => {
 
   wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
 
+  const selectedProgramAccount = (programId) => {
+    const selector = wrapper.querySelector(`[data-program-account="${programId}"]`);
+    return selector?.value || '';
+  };
+
   wrapper.addEventListener('click', (event) => {
+    const inviteAccount = event.target.closest('[data-invite-account]');
+    if (inviteAccount) {
+      const programId = inviteAccount.getAttribute('data-invite-account');
+      const accountId = selectedProgramAccount(programId);
+      if (!accountId) return;
+      onInviteAccount(programId, accountId);
+      return;
+    }
+
     const invite = event.target.closest('[data-copy-invite]');
     if (invite) {
       onCopyInvite(invite.getAttribute('data-copy-invite'));
@@ -100,7 +124,8 @@ export const renderProgramsPage = (ctx) => {
 
     const attendance = event.target.closest('[data-log-attendance]');
     if (attendance) {
-      onLogAttendance(attendance.getAttribute('data-log-attendance'), 1);
+      const programId = attendance.getAttribute('data-log-attendance');
+      onLogAttendance(programId, 1, selectedProgramAccount(programId));
       notify('Attendance updated.');
       return;
     }

@@ -29,7 +29,7 @@ export const buildPortfolioRows = (accounts, requests) =>
       segment: account.segment,
       renewal_date: account.renewal_date,
       health_overall: account.health?.overall || 'unknown',
-      lifecycle_stage: account.health?.lifecycle_stage || 'unknown',
+      lifecycle_stage: account.lifecycle_stage || account.health?.lifecycle_stage || 'unknown',
       platform_adoption_score: Number(account.adoption?.platform_adoption_score || 0),
       platform_adoption_level: account.adoption?.platform_adoption_level || '',
       open_requests: openRequests,
@@ -62,6 +62,7 @@ export const buildAccountExportModel = (account, options = {}) => {
     name: source.name,
     segment: source.segment,
     renewal_date: source.renewal_date,
+    lifecycle_stage: source.lifecycle_stage || source.health?.lifecycle_stage,
     health: source.health,
     adoption: source.adoption,
     engagement: source.engagement,
@@ -87,7 +88,7 @@ export const buildAccountCsv = (account, options = {}) => {
       health_overall: model.health?.overall || '',
       adoption_health: model.health?.adoption_health || '',
       engagement_health: model.health?.engagement_health || '',
-      lifecycle_stage: model.health?.lifecycle_stage || '',
+      lifecycle_stage: model.lifecycle_stage || model.health?.lifecycle_stage || '',
       platform_adoption_score: model.adoption?.platform_adoption_score || '',
       platform_adoption_level: model.adoption?.platform_adoption_level || '',
       scm_score: scores.SCM ?? '',
@@ -135,7 +136,7 @@ export const buildAccountSummaryHtml = (account, options = {}) => {
     <h2>Health</h2>
     <div class="grid">
       <div>Overall: <strong>${model.health?.overall || 'unknown'}</strong></div>
-      <div>Lifecycle Stage: <strong>${model.health?.lifecycle_stage || 'unknown'}</strong></div>
+      <div>Lifecycle Stage: <strong>${model.lifecycle_stage || model.health?.lifecycle_stage || 'unknown'}</strong></div>
       <div>Adoption Health: <strong>${model.health?.adoption_health || 'unknown'}</strong></div>
       <div>Engagement Health: <strong>${model.health?.engagement_health || 'unknown'}</strong></div>
     </div>

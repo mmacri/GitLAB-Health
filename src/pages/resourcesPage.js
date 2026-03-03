@@ -16,6 +16,7 @@ const resourceCard = (resource) => `
 export const renderResourcesPage = (ctx) => {
   const { resources, categories, customerSafe, mode, navigate } = ctx;
   const visible = customerSafe ? (resources || []).filter((item) => item.customer_safe) : resources || [];
+  const categoryOptions = ['all', ...(categories || []).map((category) => category.id)];
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page';
@@ -38,7 +39,23 @@ export const renderResourcesPage = (ctx) => {
             <h2>Library</h2>
             ${statusChip({ label: `${visible.length} visible`, tone: 'neutral' })}
           </div>
-          <input class="resource-filter" type="search" data-filter placeholder="Filter resources..." />
+          <div class="filter-row">
+            <label>
+              Category
+              <select data-category-filter>
+                ${categoryOptions
+                  .map((id) => {
+                    const label = id === 'all' ? 'All categories' : (categories || []).find((item) => item.id === id)?.label || id;
+                    return `<option value="${id}">${label}</option>`;
+                  })
+                  .join('')}
+              </select>
+            </label>
+            <label class="form-span">
+              Search
+              <input class="resource-filter" type="search" data-filter placeholder="Filter resources..." />
+            </label>
+          </div>
           <div class="main-col" data-library>
             ${visible.map(resourceCard).join('')}
           </div>
@@ -84,12 +101,22 @@ export const renderResourcesPage = (ctx) => {
   wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
 
   const search = wrapper.querySelector('[data-filter]');
+  const categoryFilter = wrapper.querySelector('[data-category-filter]');
   const library = wrapper.querySelector('[data-library]');
-  search?.addEventListener('input', () => {
-    const query = String(search.value || '').trim().toLowerCase();
-    const filtered = visible.filter((item) => `${item.title} ${item.summary} ${item.tooltip}`.toLowerCase().includes(query));
+
+  const renderFiltered = () => {
+    const query = String(search?.value || '').trim().toLowerCase();
+    const category = categoryFilter?.value || 'all';
+    const filtered = visible.filter((item) => {
+      const matchText = `${item.title} ${item.summary} ${item.tooltip}`.toLowerCase().includes(query);
+      const matchCategory = category === 'all' || (item.categories || []).includes(category);
+      return matchText && matchCategory;
+    });
     library.innerHTML = filtered.length ? filtered.map(resourceCard).join('') : '<p class="empty-text">No resources found.</p>';
-  });
+  };
+
+  search?.addEventListener('input', renderFiltered);
+  categoryFilter?.addEventListener('change', renderFiltered);
 
   return wrapper;
 };

@@ -18,6 +18,7 @@ Account fields:
 - `name` string
 - `segment` string
 - `renewal_date` date
+- `lifecycle_stage` `onboard|enable|expand|optimize|renew`
 - `health` (customer-safe)
   - `overall` `green|yellow|red`
   - `adoption_health` `green|yellow|red`
@@ -64,6 +65,12 @@ Account fields:
       - `lead_time` string
       - `change_failure_rate` string
       - `mttr` string
+  - `executive_summary` string
+  - `validation_status` `customer confirmed|internal estimate`
+- `change_log[]` (customer-safe)
+  - `date` date
+  - `category` `Usage|Engagement|Risk|Outcomes`
+  - `summary` string
 - `internal_only` (internal-only)
   - `sentiment_notes` string
   - `expansion_hypotheses[]` string

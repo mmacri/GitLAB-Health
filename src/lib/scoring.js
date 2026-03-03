@@ -2,6 +2,7 @@ import { daysUntil, diffInDays, parseDate } from './date.js';
 
 const HEALTH_RANK = { green: 1, yellow: 2, red: 3 };
 const STAGE_PRIORITY = { onboard: 2, enable: 3, expand: 2, optimize: 2, renew: 4 };
+export const DEFAULT_STALE_DAYS = 30;
 
 const normalize = (value) => String(value || '').trim().toLowerCase();
 
@@ -50,16 +51,28 @@ const filterByRenewalWindow = (signal, windowKey) => {
   return true;
 };
 
+const filterByEngagementRecency = (signal, windowKey) => {
+  const days = signal.touchStaleDays ?? 999;
+  if (windowKey === '0-14') return days <= 14;
+  if (windowKey === '15-30') return days > 14 && days <= 30;
+  if (windowKey === '31+') return days > 30;
+  return true;
+};
+
 export const applyPortfolioFilters = (signals, filters) => {
   const set = filters || {};
+  const staleDays = Number(set.staleDays || DEFAULT_STALE_DAYS);
+
   return (signals || []).filter((signal) => {
     if (set.segment && set.segment !== 'all' && signal.account.segment !== set.segment) return false;
     if (!filterByRenewalWindow(signal, set.renewalWindow || 'all')) return false;
+    if (!filterByEngagementRecency(signal, set.engagementRecency || 'all')) return false;
 
     const health = normalize(signal.account.health?.overall);
     if (set.health && set.health !== 'all' && health !== normalize(set.health)) return false;
 
-    if (set.staleOnly && !signal.isStale) return false;
+    const staleByFilter = Number(signal.healthStaleDays ?? 0) > staleDays;
+    if (set.staleOnly && !staleByFilter) return false;
 
     const lowUseCase = normalize(signal.lowestUseCaseName);
     if (set.lowestUseCase && set.lowestUseCase !== 'all' && lowUseCase !== normalize(set.lowestUseCase)) return false;
@@ -73,10 +86,11 @@ export const applyPortfolioFilters = (signals, filters) => {
 
 export const computeAccountSignals = (account, requests, playbooks, programs, now = new Date()) => {
   const healthOverall = normalize(account?.health?.overall) || 'yellow';
-  const stage = normalize(account?.health?.lifecycle_stage) || 'enable';
+  const stage = normalize(account?.lifecycle_stage || account?.health?.lifecycle_stage) || 'enable';
   const renewalDays = daysUntil(account?.renewal_date, now);
   const healthStaleDays = diffInDays(account?.health?.last_updated, now);
   const touchStaleDays = diffInDays(account?.engagement?.last_touch_date, now);
+  const staleThreshold = DEFAULT_STALE_DAYS;
   const requestList = activeRequests(requests, account.id);
   const overdueRequests = requestList.filter((request) => {
     const dueDays = daysUntil(request.due_date, now);
@@ -93,7 +107,7 @@ export const computeAccountSignals = (account, requests, playbooks, programs, no
     (HEALTH_RANK[healthOverall] || 2) * 20 +
     ((renewalDays ?? 999) <= 90 ? 15 : 0) +
     (account?.adoption?.trend_30d < 0 ? Math.abs(account.adoption.trend_30d) : 0) +
-    ((healthStaleDays ?? 0) > 10 ? 10 : 0) +
+    ((healthStaleDays ?? 0) > staleThreshold ? 10 : 0) +
     ((touchStaleDays ?? 0) > 14 ? 8 : 0) +
     overdueRequests.length * 6 +
     requestList.length * 2 +
@@ -103,7 +117,7 @@ export const computeAccountSignals = (account, requests, playbooks, programs, no
   if (healthOverall === 'red') reasons.push('Overall health is red');
   if ((renewalDays ?? 999) <= 90) reasons.push(`Renewal in ${renewalDays} days`);
   if (account?.adoption?.trend_30d < 0) reasons.push(`Adoption trend ${account.adoption.trend_30d}% over 30d`);
-  if ((healthStaleDays ?? 0) > 10) reasons.push(`Stale health data (${healthStaleDays} days)`);
+  if ((healthStaleDays ?? 0) > staleThreshold) reasons.push(`Stale health data (${healthStaleDays} days)`);
   if ((touchStaleDays ?? 0) > 14) reasons.push(`Cadence stale (${touchStaleDays} days)`);
   if (greenUseCaseCount < 3) reasons.push(`${greenUseCaseCount} of 4 use cases green (target 3+)`);
   if (lowestUseCaseScore < 60) reasons.push(`${lowestUseCaseName} score low (${lowestUseCaseScore})`);
@@ -125,7 +139,7 @@ export const computeAccountSignals = (account, requests, playbooks, programs, no
     recommendedProgram,
     outlierScore,
     reasons,
-    isStale: (healthStaleDays ?? 0) > 10,
+    isStale: (healthStaleDays ?? 0) > staleThreshold,
     health: healthOverall
   };
 };
@@ -273,7 +287,7 @@ export const buildAccountWorkspace = (data, accountId, now = new Date()) => {
     nextBestAction:
       signal.playbook?.next_best_action ||
       'Use pooled CSE programming (webinar/lab/office hours) and track measurable adoption deltas.',
-    lifecycleStage: account.health?.lifecycle_stage || 'enable',
+    lifecycleStage: account.lifecycle_stage || account.health?.lifecycle_stage || 'enable',
     actions: {
       immediate,
       dueSoon,

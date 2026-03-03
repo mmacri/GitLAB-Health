@@ -1,8 +1,11 @@
 :root {
   --bg: #f6f7f9;
+  --card-bg: #ffffff;
   --surface: #ffffff;
   --surface-muted: #f9fafb;
   --border: #e5e7eb;
+  --text: #111827;
+  --muted: #6b7280;
   --ink: #111827;
   --ink-muted: #6b7280;
   --ink-soft: #6b7280;
@@ -25,13 +28,14 @@
   --space-4: 18px;
   --space-5: 24px;
   --space-6: 30px;
-  --max-w: 1500px;
+  --max-w: 1280px;
 }
 
 body {
   background: radial-gradient(circle at top right, #eef2ff 0, #f8fafc 34%, var(--bg) 100%);
   color: var(--ink);
   margin: 0;
+  font-size: 16px;
   font-family: "Space Grotesk", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -48,7 +52,7 @@ h4 {
 }
 
 .page {
-  max-width: 1320px;
+  max-width: var(--max-w);
   margin: 0 auto;
   padding: 0 var(--space-4) var(--space-6);
 }
@@ -309,7 +313,7 @@ kbd {
 .muted {
   color: var(--ink-muted);
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .eyebrow {
@@ -340,7 +344,17 @@ kbd {
 }
 
 .page-head h1 {
-  font-size: clamp(24px, 3vw, 30px);
+  font-size: clamp(26px, 3vw, 28px);
+}
+
+.account-header {
+  position: sticky;
+  top: 136px;
+  z-index: 25;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
 }
 
 .page-actions {
@@ -374,7 +388,7 @@ kbd {
 }
 
 .metric-head h2 {
-  font-size: 18px;
+  font-size: 22px;
 }
 
 .metric-head h3 {
@@ -597,14 +611,14 @@ kbd {
 .filter-row {
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
 .filter-row label,
 .form-grid label {
   display: grid;
   gap: 6px;
-  font-size: 12px;
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--ink-soft);
@@ -622,7 +636,7 @@ textarea.artifact,
   border-radius: 10px;
   padding: 9px 10px;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--ink);
   background: var(--surface);
 }

@@ -21,7 +21,7 @@
           "CD": 75,
           "Secure": 68
         },
-        "platform_adoption_score": 79.0,
+        "platform_adoption_score": 79,
         "platform_adoption_level": "3 of 4 use cases green",
         "trend_30d": -3
       },
@@ -97,7 +97,9 @@
             "change_failure_rate": "7%",
             "mttr": "2 hours"
           }
-        }
+        },
+        "executive_summary": "This account is in enable stage with 3 of 4 use cases green; focus is measurable improvement in Increase CI reliability and reduce failed pipelines.",
+        "validation_status": "customer confirmed"
       },
       "internal_only": {
         "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
@@ -112,7 +114,30 @@
             "next_update_due": "2026-03-09"
           }
         ]
-      }
+      },
+      "lifecycle_stage": "enable",
+      "change_log": [
+        {
+          "date": "2026-03-02",
+          "category": "Usage",
+          "summary": "Usage trend moved -3% over last 30 days."
+        },
+        {
+          "date": "2026-03-01",
+          "category": "Engagement",
+          "summary": "Cadence touch completed; next touch is 2026-03-07."
+        },
+        {
+          "date": "2026-03-02",
+          "category": "Risk",
+          "summary": "No new critical risk escalations opened this cycle."
+        },
+        {
+          "date": "2026-03-02",
+          "category": "Outcomes",
+          "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
+        }
+      ]
     },
     {
       "id": "contoso-financial-services",
@@ -133,7 +158,7 @@
           "CD": 63,
           "Secure": 54
         },
-        "platform_adoption_score": 69.0,
+        "platform_adoption_score": 69,
         "platform_adoption_level": "1 of 4 use cases green",
         "trend_30d": -12
       },
@@ -209,7 +234,9 @@
             "change_failure_rate": "18%",
             "mttr": "9 hours"
           }
-        }
+        },
+        "executive_summary": "This account is in renew stage with 1 of 4 use cases green; focus is measurable improvement in Increase CI reliability and reduce failed pipelines.",
+        "validation_status": "internal estimate"
       },
       "internal_only": {
         "sentiment_notes": "Stakeholders requesting accelerated stabilization before renewal.",
@@ -224,7 +251,30 @@
             "next_update_due": "2026-03-10"
           }
         ]
-      }
+      },
+      "lifecycle_stage": "renew",
+      "change_log": [
+        {
+          "date": "2026-03-01",
+          "category": "Usage",
+          "summary": "Usage trend moved -12% over last 30 days."
+        },
+        {
+          "date": "2026-02-28",
+          "category": "Engagement",
+          "summary": "Cadence touch completed; next touch is 2026-03-08."
+        },
+        {
+          "date": "2026-03-01",
+          "category": "Risk",
+          "summary": "Risk register updated with active mitigation owners."
+        },
+        {
+          "date": "2026-03-01",
+          "category": "Outcomes",
+          "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
+        }
+      ]
     },
     {
       "id": "fabrikam-retail-group",
@@ -245,7 +295,7 @@
           "CD": 83,
           "Secure": 74
         },
-        "platform_adoption_score": 84.0,
+        "platform_adoption_score": 84,
         "platform_adoption_level": "3 of 4 use cases green",
         "trend_30d": 5
       },
@@ -321,7 +371,9 @@
             "change_failure_rate": "7%",
             "mttr": "2 hours"
           }
-        }
+        },
+        "executive_summary": "This account is in expand stage with 3 of 4 use cases green; focus is measurable improvement in Increase CI reliability and reduce failed pipelines.",
+        "validation_status": "internal estimate"
       },
       "internal_only": {
         "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
@@ -336,7 +388,30 @@
             "next_update_due": "2026-03-11"
           }
         ]
-      }
+      },
+      "lifecycle_stage": "expand",
+      "change_log": [
+        {
+          "date": "2026-02-28",
+          "category": "Usage",
+          "summary": "Usage trend moved +5% over last 30 days."
+        },
+        {
+          "date": "2026-02-27",
+          "category": "Engagement",
+          "summary": "Cadence touch completed; next touch is 2026-03-09."
+        },
+        {
+          "date": "2026-02-28",
+          "category": "Risk",
+          "summary": "No new critical risk escalations opened this cycle."
+        },
+        {
+          "date": "2026-02-28",
+          "category": "Outcomes",
+          "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
+        }
+      ]
     },
     {
       "id": "adatum-energy",
@@ -357,7 +432,7 @@
           "CD": 75,
           "Secure": 65
         },
-        "platform_adoption_score": 76.0,
+        "platform_adoption_score": 76,
         "platform_adoption_level": "3 of 4 use cases green",
         "trend_30d": -2
       },
@@ -433,7 +508,9 @@
             "change_failure_rate": "7%",
             "mttr": "2 hours"
           }
-        }
+        },
+        "executive_summary": "This account is in optimize stage with 3 of 4 use cases green; focus is measurable improvement in Increase CI reliability and reduce failed pipelines.",
+        "validation_status": "internal estimate"
       },
       "internal_only": {
         "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
@@ -448,7 +525,30 @@
             "next_update_due": "2026-03-12"
           }
         ]
-      }
+      },
+      "lifecycle_stage": "optimize",
+      "change_log": [
+        {
+          "date": "2026-02-27",
+          "category": "Usage",
+          "summary": "Usage trend moved -2% over last 30 days."
+        },
+        {
+          "date": "2026-02-26",
+          "category": "Engagement",
+          "summary": "Cadence touch completed; next touch is 2026-03-10."
+        },
+        {
+          "date": "2026-02-27",
+          "category": "Risk",
+          "summary": "No new critical risk escalations opened this cycle."
+        },
+        {
+          "date": "2026-02-27",
+          "category": "Outcomes",
+          "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
+        }
+      ]
     },
     {
       "id": "tailspin-health",
@@ -469,7 +569,7 @@
           "CD": 75,
           "Secure": 60
         },
-        "platform_adoption_score": 72.0,
+        "platform_adoption_score": 72,
         "platform_adoption_level": "2 of 4 use cases green",
         "trend_30d": 1
       },
@@ -545,7 +645,9 @@
             "change_failure_rate": "7%",
             "mttr": "2 hours"
           }
-        }
+        },
+        "executive_summary": "This account is in renew stage with 2 of 4 use cases green; focus is measurable improvement in Increase CI reliability and reduce failed pipelines.",
+        "validation_status": "internal estimate"
       },
       "internal_only": {
         "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
@@ -560,7 +662,30 @@
             "next_update_due": "2026-03-13"
           }
         ]
-      }
+      },
+      "lifecycle_stage": "renew",
+      "change_log": [
+        {
+          "date": "2026-02-26",
+          "category": "Usage",
+          "summary": "Usage trend moved +1% over last 30 days."
+        },
+        {
+          "date": "2026-02-25",
+          "category": "Engagement",
+          "summary": "Cadence touch completed; next touch is 2026-03-11."
+        },
+        {
+          "date": "2026-02-26",
+          "category": "Risk",
+          "summary": "No new critical risk escalations opened this cycle."
+        },
+        {
+          "date": "2026-02-26",
+          "category": "Outcomes",
+          "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
+        }
+      ]
     },
     {
       "id": "litware-aerospace",
@@ -581,7 +706,7 @@
           "CD": 73,
           "Secure": 71
         },
-        "platform_adoption_score": 76.0,
+        "platform_adoption_score": 76,
         "platform_adoption_level": "2 of 4 use cases green",
         "trend_30d": 4
       },
@@ -657,7 +782,9 @@
             "change_failure_rate": "7%",
             "mttr": "2 hours"
           }
-        }
+        },
+        "executive_summary": "This account is in expand stage with 2 of 4 use cases green; focus is measurable improvement in Increase CI reliability and reduce failed pipelines.",
+        "validation_status": "customer confirmed"
       },
       "internal_only": {
         "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
@@ -672,7 +799,30 @@
             "next_update_due": "2026-03-14"
           }
         ]
-      }
+      },
+      "lifecycle_stage": "expand",
+      "change_log": [
+        {
+          "date": "2026-02-25",
+          "category": "Usage",
+          "summary": "Usage trend moved +4% over last 30 days."
+        },
+        {
+          "date": "2026-02-24",
+          "category": "Engagement",
+          "summary": "Cadence touch completed; next touch is 2026-03-12."
+        },
+        {
+          "date": "2026-02-25",
+          "category": "Risk",
+          "summary": "No new critical risk escalations opened this cycle."
+        },
+        {
+          "date": "2026-02-25",
+          "category": "Outcomes",
+          "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
+        }
+      ]
     },
     {
       "id": "wingtip-manufacturing",
@@ -693,7 +843,7 @@
           "CD": 53,
           "Secure": 41
         },
-        "platform_adoption_score": 56.0,
+        "platform_adoption_score": 56,
         "platform_adoption_level": "1 of 4 use cases green",
         "trend_30d": -9
       },
@@ -769,7 +919,9 @@
             "change_failure_rate": "18%",
             "mttr": "9 hours"
           }
-        }
+        },
+        "executive_summary": "This account is in renew stage with 1 of 4 use cases green; focus is measurable improvement in Increase CI reliability and reduce failed pipelines.",
+        "validation_status": "internal estimate"
       },
       "internal_only": {
         "sentiment_notes": "Stakeholders requesting accelerated stabilization before renewal.",
@@ -784,7 +936,30 @@
             "next_update_due": "2026-03-15"
           }
         ]
-      }
+      },
+      "lifecycle_stage": "renew",
+      "change_log": [
+        {
+          "date": "2026-02-24",
+          "category": "Usage",
+          "summary": "Usage trend moved -9% over last 30 days."
+        },
+        {
+          "date": "2026-02-23",
+          "category": "Engagement",
+          "summary": "Cadence touch completed; next touch is 2026-03-13."
+        },
+        {
+          "date": "2026-02-24",
+          "category": "Risk",
+          "summary": "Risk register updated with active mitigation owners."
+        },
+        {
+          "date": "2026-02-24",
+          "category": "Outcomes",
+          "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
+        }
+      ]
     },
     {
       "id": "woodgrove-bank",
@@ -805,7 +980,7 @@
           "CD": 73,
           "Secure": 67
         },
-        "platform_adoption_score": 73.0,
+        "platform_adoption_score": 73,
         "platform_adoption_level": "1 of 4 use cases green",
         "trend_30d": 2
       },
@@ -881,7 +1056,9 @@
             "change_failure_rate": "7%",
             "mttr": "2 hours"
           }
-        }
+        },
+        "executive_summary": "This account is in enable stage with 1 of 4 use cases green; focus is measurable improvement in Increase CI reliability and reduce failed pipelines.",
+        "validation_status": "internal estimate"
       },
       "internal_only": {
         "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
@@ -896,7 +1073,30 @@
             "next_update_due": "2026-03-16"
           }
         ]
-      }
+      },
+      "lifecycle_stage": "enable",
+      "change_log": [
+        {
+          "date": "2026-02-22",
+          "category": "Usage",
+          "summary": "Usage trend moved +2% over last 30 days."
+        },
+        {
+          "date": "2026-02-22",
+          "category": "Engagement",
+          "summary": "Cadence touch completed; next touch is 2026-03-14."
+        },
+        {
+          "date": "2026-02-22",
+          "category": "Risk",
+          "summary": "No new critical risk escalations opened this cycle."
+        },
+        {
+          "date": "2026-02-22",
+          "category": "Outcomes",
+          "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
+        }
+      ]
     },
     {
       "id": "blue-yonder-logistics",
@@ -917,7 +1117,7 @@
           "CD": 65,
           "Secure": 52
         },
-        "platform_adoption_score": 64.0,
+        "platform_adoption_score": 64,
         "platform_adoption_level": "1 of 4 use cases green",
         "trend_30d": -1
       },
@@ -993,7 +1193,9 @@
             "change_failure_rate": "7%",
             "mttr": "2 hours"
           }
-        }
+        },
+        "executive_summary": "This account is in optimize stage with 1 of 4 use cases green; focus is measurable improvement in Increase CI reliability and reduce failed pipelines.",
+        "validation_status": "internal estimate"
       },
       "internal_only": {
         "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
@@ -1008,7 +1210,30 @@
             "next_update_due": "2026-03-09"
           }
         ]
-      }
+      },
+      "lifecycle_stage": "optimize",
+      "change_log": [
+        {
+          "date": "2026-02-22",
+          "category": "Usage",
+          "summary": "Usage trend moved -1% over last 30 days."
+        },
+        {
+          "date": "2026-02-21",
+          "category": "Engagement",
+          "summary": "Cadence touch completed; next touch is 2026-03-15."
+        },
+        {
+          "date": "2026-02-22",
+          "category": "Risk",
+          "summary": "No new critical risk escalations opened this cycle."
+        },
+        {
+          "date": "2026-02-22",
+          "category": "Outcomes",
+          "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
+        }
+      ]
     },
     {
       "id": "proseware-telecom",
@@ -1029,7 +1254,7 @@
           "CD": 73,
           "Secure": 63
         },
-        "platform_adoption_score": 68.0,
+        "platform_adoption_score": 68,
         "platform_adoption_level": "0 of 4 use cases green",
         "trend_30d": 6
       },
@@ -1105,7 +1330,9 @@
             "change_failure_rate": "7%",
             "mttr": "2 hours"
           }
-        }
+        },
+        "executive_summary": "This account is in expand stage with 0 of 4 use cases green; focus is measurable improvement in Increase CI reliability and reduce failed pipelines.",
+        "validation_status": "internal estimate"
       },
       "internal_only": {
         "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
@@ -1120,7 +1347,30 @@
             "next_update_due": "2026-03-10"
           }
         ]
-      }
+      },
+      "lifecycle_stage": "expand",
+      "change_log": [
+        {
+          "date": "2026-02-21",
+          "category": "Usage",
+          "summary": "Usage trend moved +6% over last 30 days."
+        },
+        {
+          "date": "2026-02-20",
+          "category": "Engagement",
+          "summary": "Cadence touch completed; next touch is 2026-03-16."
+        },
+        {
+          "date": "2026-02-21",
+          "category": "Risk",
+          "summary": "No new critical risk escalations opened this cycle."
+        },
+        {
+          "date": "2026-02-21",
+          "category": "Outcomes",
+          "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
+        }
+      ]
     },
     {
       "id": "a-datum-public-sector",
@@ -1141,7 +1391,7 @@
           "CD": 55,
           "Secure": 48
         },
-        "platform_adoption_score": 58.0,
+        "platform_adoption_score": 58,
         "platform_adoption_level": "0 of 4 use cases green",
         "trend_30d": -6
       },
@@ -1217,7 +1467,9 @@
             "change_failure_rate": "7%",
             "mttr": "2 hours"
           }
-        }
+        },
+        "executive_summary": "This account is in enable stage with 0 of 4 use cases green; focus is measurable improvement in Increase CI reliability and reduce failed pipelines.",
+        "validation_status": "customer confirmed"
       },
       "internal_only": {
         "sentiment_notes": "Delivery sentiment stable; continue value narrative updates.",
@@ -1232,7 +1484,30 @@
             "next_update_due": "2026-03-11"
           }
         ]
-      }
+      },
+      "lifecycle_stage": "enable",
+      "change_log": [
+        {
+          "date": "2026-02-20",
+          "category": "Usage",
+          "summary": "Usage trend moved -6% over last 30 days."
+        },
+        {
+          "date": "2026-02-19",
+          "category": "Engagement",
+          "summary": "Cadence touch completed; next touch is pending scheduling."
+        },
+        {
+          "date": "2026-02-20",
+          "category": "Risk",
+          "summary": "No new critical risk escalations opened this cycle."
+        },
+        {
+          "date": "2026-02-20",
+          "category": "Outcomes",
+          "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
+        }
+      ]
     },
     {
       "id": "consolidated-healthcare",
@@ -1253,7 +1528,7 @@
           "CD": 43,
           "Secure": 34
         },
-        "platform_adoption_score": 48.0,
+        "platform_adoption_score": 48,
         "platform_adoption_level": "0 of 4 use cases green",
         "trend_30d": -8
       },
@@ -1329,7 +1604,9 @@
             "change_failure_rate": "18%",
             "mttr": "9 hours"
           }
-        }
+        },
+        "executive_summary": "This account is in renew stage with 0 of 4 use cases green; focus is measurable improvement in Increase CI reliability and reduce failed pipelines.",
+        "validation_status": "internal estimate"
       },
       "internal_only": {
         "sentiment_notes": "Stakeholders requesting accelerated stabilization before renewal.",
@@ -1344,7 +1621,30 @@
             "next_update_due": "2026-03-12"
           }
         ]
-      }
+      },
+      "lifecycle_stage": "renew",
+      "change_log": [
+        {
+          "date": "2026-02-19",
+          "category": "Usage",
+          "summary": "Usage trend moved -8% over last 30 days."
+        },
+        {
+          "date": "2026-02-18",
+          "category": "Engagement",
+          "summary": "Cadence touch completed; next touch is 2026-03-08."
+        },
+        {
+          "date": "2026-02-19",
+          "category": "Risk",
+          "summary": "Risk register updated with active mitigation owners."
+        },
+        {
+          "date": "2026-02-19",
+          "category": "Outcomes",
+          "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
+        }
+      ]
     }
   ]
 }
