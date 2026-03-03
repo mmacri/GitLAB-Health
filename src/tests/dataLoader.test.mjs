@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { loadDashboardData } from '../lib/dataLoader.mjs';
+import { loadDashboardData } from '../lib/dataLoader.js';
 
 const buildResponse = (body) => ({
   ok: true,

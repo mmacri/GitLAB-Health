@@ -1,0 +1,5 @@
+{
+  "name": "gitlab-health",
+  "private": true,
+  "type": "module"
+}

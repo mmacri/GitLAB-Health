@@ -1,4 +1,4 @@
-import { formatDate } from './date.mjs';
+import { formatDate } from './date.js';
 
 const safe = (value) => (value ? String(value).trim() : 'Not provided');
 

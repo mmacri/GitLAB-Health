@@ -1,4 +1,4 @@
-import { daysUntil, diffInDays, parseDate } from './date.mjs';
+import { daysUntil, diffInDays, parseDate } from './date.js';
 
 const HEALTH_RANK = { green: 1, yellow: 2, red: 3 };
 const STAGE_PRIORITY = { onboard: 2, enable: 3, expand: 2, optimize: 2, renew: 4 };

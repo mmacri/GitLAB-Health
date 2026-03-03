@@ -1,11 +1,11 @@
-import { renderActionDrawer } from '../components/actionDrawer.mjs';
-import { metricTile } from '../components/metricTile.mjs';
-import { statusChip, statusToneFromHealth } from '../components/statusChip.mjs';
-import { wireTabs } from '../components/tabs.mjs';
-import { buildCustomerAgenda, buildFollowupEmail, buildIssueBody } from '../lib/artifacts.mjs';
-import { daysUntil, formatDate, isMissing } from '../lib/date.mjs';
-import { redactAccountForCustomer } from '../lib/redaction.mjs';
-import { useCaseEntries } from '../lib/scoring.mjs';
+import { renderActionDrawer } from '../components/actionDrawer.js';
+import { metricTile } from '../components/metricTile.js';
+import { statusChip, statusToneFromHealth } from '../components/statusChip.js';
+import { wireTabs } from '../components/tabs.js';
+import { buildCustomerAgenda, buildFollowupEmail, buildIssueBody } from '../lib/artifacts.js';
+import { daysUntil, formatDate, isMissing } from '../lib/date.js';
+import { redactAccountForCustomer } from '../lib/redaction.js';
+import { useCaseEntries } from '../lib/scoring.js';
 
 const TAB_DEFS = [
   { id: 'snapshot', label: 'Snapshot', anchor: 'overview' },

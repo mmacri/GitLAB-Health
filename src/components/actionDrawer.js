@@ -1,4 +1,4 @@
-import { statusChip } from './statusChip.mjs';
+import { statusChip } from './statusChip.js';
 
 const renderList = (items, emptyLabel) =>
   items?.length

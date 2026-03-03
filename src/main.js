@@ -1,6 +1,6 @@
-import { createCommandPalette } from './components/commandPalette.mjs';
-import { createModal } from './components/modal.mjs';
-import { buildHref, createRouter, detectBasePath, routePath } from './lib/router.mjs';
+import { createCommandPalette } from './components/commandPalette.js';
+import { createModal } from './components/modal.js';
+import { buildHref, createRouter, detectBasePath, routePath } from './lib/router.js';
 import {
   loadDashboardData,
   loadPlaybookChecklist,
@@ -9,18 +9,18 @@ import {
   persistProgram,
   persistRequests,
   resetLocalState
-} from './lib/dataLoader.mjs';
-import { buildShareSnapshotUrl, exportAccountCsv, exportAccountSummaryPdf, exportPortfolioCsv } from './lib/exports.mjs';
-import { formatDateTime } from './lib/date.mjs';
-import { buildAccountWorkspace, buildPortfolioView } from './lib/scoring.mjs';
-import { storage, STORAGE_KEYS } from './lib/storage.mjs';
-import { renderAccountPage, accountCommandEntries } from './pages/accountPage.mjs';
-import { renderExportsPage, exportsCommandEntries } from './pages/exportsPage.mjs';
-import { renderIntakePage, intakeCommandEntries } from './pages/intakePage.mjs';
-import { renderPlaybooksPage, playbooksCommandEntries } from './pages/playbooksPage.mjs';
-import { renderPortfolioHomePage, renderPortfolioPage, portfolioCommandEntries } from './pages/portfolioPage.mjs';
-import { renderProgramsPage, programsCommandEntries } from './pages/programsPage.mjs';
-import { renderResourcesPage, resourcesCommandEntries } from './pages/resourcesPage.mjs';
+} from './lib/dataLoader.js';
+import { buildShareSnapshotUrl, exportAccountCsv, exportAccountSummaryPdf, exportPortfolioCsv } from './lib/exports.js';
+import { formatDateTime } from './lib/date.js';
+import { buildAccountWorkspace, buildPortfolioView } from './lib/scoring.js';
+import { storage, STORAGE_KEYS } from './lib/storage.js';
+import { renderAccountPage, accountCommandEntries } from './pages/accountPage.js';
+import { renderExportsPage, exportsCommandEntries } from './pages/exportsPage.js';
+import { renderIntakePage, intakeCommandEntries } from './pages/intakePage.js';
+import { renderPlaybooksPage, playbooksCommandEntries } from './pages/playbooksPage.js';
+import { renderPortfolioHomePage, renderPortfolioPage, portfolioCommandEntries } from './pages/portfolioPage.js';
+import { renderProgramsPage, programsCommandEntries } from './pages/programsPage.js';
+import { renderResourcesPage, resourcesCommandEntries } from './pages/resourcesPage.js';
 
 const appRoot = document.querySelector('[data-app-root]');
 const routeRoot = document.querySelector('[data-route-root]');

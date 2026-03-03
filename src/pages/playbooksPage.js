@@ -1,6 +1,6 @@
-import { renderActionDrawer } from '../components/actionDrawer.mjs';
-import { statusChip } from '../components/statusChip.mjs';
-import { redactPlaybooksForCustomer } from '../lib/redaction.mjs';
+import { renderActionDrawer } from '../components/actionDrawer.js';
+import { statusChip } from '../components/statusChip.js';
+import { redactPlaybooksForCustomer } from '../lib/redaction.js';
 
 const playbookCard = (playbook, checklistState) => `
   <article class="card compact-card">

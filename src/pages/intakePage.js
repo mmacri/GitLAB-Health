@@ -1,7 +1,7 @@
-import { buildCustomerAgenda, buildFollowupEmail, buildIssueBody } from '../lib/artifacts.mjs';
-import { formatDate, toIsoDate } from '../lib/date.mjs';
-import { storage, STORAGE_KEYS } from '../lib/storage.mjs';
-import { statusChip } from '../components/statusChip.mjs';
+import { buildCustomerAgenda, buildFollowupEmail, buildIssueBody } from '../lib/artifacts.js';
+import { formatDate, toIsoDate } from '../lib/date.js';
+import { storage, STORAGE_KEYS } from '../lib/storage.js';
+import { statusChip } from '../components/statusChip.js';
 
 const REQUESTOR_ROLES = ['Account Executive', 'Renewals Manager'];
 const STAGES = ['onboard', 'enable', 'expand', 'optimize', 'renew'];

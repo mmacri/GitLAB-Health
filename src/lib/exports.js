@@ -1,5 +1,5 @@
-import { formatDate, toIsoDate } from './date.mjs';
-import { redactAccountForCustomer } from './redaction.mjs';
+import { formatDate, toIsoDate } from './date.js';
+import { redactAccountForCustomer } from './redaction.js';
 
 const csvEscape = (value) => {
   const text = value === null || value === undefined ? '' : String(value);

@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildCustomerAgenda, buildFollowupEmail, buildIssueBody } from '../lib/artifacts.mjs';
-import { readJson } from './helpers.mjs';
+import { buildCustomerAgenda, buildFollowupEmail, buildIssueBody } from '../lib/artifacts.js';
+import { readJson } from './helpers.js';
 
 test('intake artifact generation includes required fields and non-empty output', () => {
   const account = readJson('data/accounts.json').accounts[0];

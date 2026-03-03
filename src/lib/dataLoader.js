@@ -1,5 +1,5 @@
-import { storage, STORAGE_KEYS } from './storage.mjs';
-import { detectBasePath } from './router.mjs';
+import { storage, STORAGE_KEYS } from './storage.js';
+import { detectBasePath } from './router.js';
 
 const resolveDataUrl = (filename) => {
   if (typeof window === 'undefined') return `data/${filename}`;

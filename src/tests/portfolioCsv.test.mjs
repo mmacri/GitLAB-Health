@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildPortfolioCsv } from '../lib/exports.mjs';
-import { readJson } from './helpers.mjs';
+import { buildPortfolioCsv } from '../lib/exports.js';
+import { readJson } from './helpers.js';
 
 const splitCsvLine = (line) => line.split(',');
 

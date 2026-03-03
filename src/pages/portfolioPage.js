@@ -1,9 +1,9 @@
-import { createDataTable } from '../components/dataTable.mjs';
-import { renderActionDrawer } from '../components/actionDrawer.mjs';
-import { metricTile } from '../components/metricTile.mjs';
-import { statusChip, statusToneFromHealth } from '../components/statusChip.mjs';
-import { formatDate, formatDateTime } from '../lib/date.mjs';
-import { applyPortfolioFilters } from '../lib/scoring.mjs';
+import { createDataTable } from '../components/dataTable.js';
+import { renderActionDrawer } from '../components/actionDrawer.js';
+import { metricTile } from '../components/metricTile.js';
+import { statusChip, statusToneFromHealth } from '../components/statusChip.js';
+import { formatDate, formatDateTime } from '../lib/date.js';
+import { applyPortfolioFilters } from '../lib/scoring.js';
 
 const uniqueSegments = (signals) => ['all', ...new Set((signals || []).map((signal) => signal.account.segment))];
 

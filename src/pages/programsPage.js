@@ -1,6 +1,6 @@
-import { renderActionDrawer } from '../components/actionDrawer.mjs';
-import { statusChip } from '../components/statusChip.mjs';
-import { formatDateTime } from '../lib/date.mjs';
+import { renderActionDrawer } from '../components/actionDrawer.js';
+import { statusChip } from '../components/statusChip.js';
+import { formatDateTime } from '../lib/date.js';
 
 const grouped = (programs) => ({
   webinar: (programs || []).filter((item) => item.type === 'webinar'),

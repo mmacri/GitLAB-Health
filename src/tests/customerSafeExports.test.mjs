@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildAccountCsv, buildAccountExportModel, buildAccountSummaryHtml } from '../lib/exports.mjs';
-import { CUSTOMER_SAFE_DENYLIST, hasDeniedKey } from '../lib/redaction.mjs';
-import { readJson } from './helpers.mjs';
+import { buildAccountCsv, buildAccountExportModel, buildAccountSummaryHtml } from '../lib/exports.js';
+import { CUSTOMER_SAFE_DENYLIST, hasDeniedKey } from '../lib/redaction.js';
+import { readJson } from './helpers.js';
 
 test('customer-safe export model redacts denylisted keys', () => {
   const accounts = readJson('data/accounts.json').accounts;

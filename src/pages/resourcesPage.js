@@ -1,5 +1,5 @@
-import { renderActionDrawer } from '../components/actionDrawer.mjs';
-import { statusChip } from '../components/statusChip.mjs';
+import { renderActionDrawer } from '../components/actionDrawer.js';
+import { statusChip } from '../components/statusChip.js';
 
 const resourceCard = (resource) => `
   <article class="card compact-card">

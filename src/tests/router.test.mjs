@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildHref, detectBasePath, parseRoute, routePath } from '../lib/router.mjs';
+import { buildHref, detectBasePath, parseRoute, routePath } from '../lib/router.js';
 
 test('routing resolves /account/:id', () => {
   const route = parseRoute('/account/northwind-industries');

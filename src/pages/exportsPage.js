@@ -1,5 +1,5 @@
-import { renderActionDrawer } from '../components/actionDrawer.mjs';
-import { statusChip } from '../components/statusChip.mjs';
+import { renderActionDrawer } from '../components/actionDrawer.js';
+import { statusChip } from '../components/statusChip.js';
 
 export const renderExportsPage = (ctx) => {
   const { account, customerSafe, mode, navigate, onExportPortfolio, onExportAccountCsv, onExportAccountPdf, onCopyShare } = ctx;
