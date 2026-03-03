@@ -281,6 +281,8 @@ button:hover {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: var(--space-4);
+  opacity: 1;
+  transform: none;
 }
 
 .compact-card {
