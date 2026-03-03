@@ -13,7 +13,7 @@
   --risk: #d64545;
   --card: #ffffff;
   --stroke: rgba(20, 20, 26, 0.12);
-  --shadow: 0 24px 60px rgba(20, 20, 26, 0.12);
+  --shadow: 0 12px 28px rgba(20, 20, 26, 0.09);
   --radius: 20px;
   --radius-sm: 12px;
   --space-xs: 8px;
@@ -55,11 +55,25 @@ img {
 
 a {
   color: inherit;
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
 }
 
 a:hover {
   color: var(--accent-strong);
+}
+
+.nav-links a,
+.ghost-btn,
+.qa,
+.mode-btn,
+.nav-search,
+.fab-item,
+.fab-trigger,
+.quick-btn,
+.back-to-top {
+  text-decoration: none;
 }
 
 .page {
@@ -72,8 +86,8 @@ a:hover {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(248, 240, 230, 0.95);
-  backdrop-filter: blur(8px);
+  background: rgba(248, 240, 230, 0.9);
+  backdrop-filter: blur(6px);
   padding-bottom: var(--space-sm);
 }
 
@@ -133,8 +147,7 @@ a:hover {
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.4px;
 }
 
 .crumb-sub {
@@ -424,9 +437,8 @@ a:hover {
 }
 
 .console-header {
-  position: sticky;
-  top: 8px;
-  z-index: 45;
+  position: static;
+  z-index: 5;
 }
 
 .modebar-left,
@@ -591,9 +603,8 @@ html[data-audience="customer"] .audience-banner {
 }
 
 .modebar-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  font-size: 12px;
+  letter-spacing: 0.4px;
   color: var(--muted);
 }
 
@@ -608,8 +619,7 @@ html[data-audience="customer"] .audience-banner {
   padding: 8px 12px;
   border-radius: 10px;
   font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.2px;
   cursor: pointer;
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
@@ -628,8 +638,7 @@ html[data-audience="customer"] .audience-banner {
   border-radius: 10px;
   background: rgba(20, 20, 26, 0.05);
   font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.2px;
 }
 
 .qa:hover {
@@ -1032,8 +1041,8 @@ html[data-audience="customer"] .audience-banner {
   padding: var(--space-md);
   position: relative;
   overflow: hidden;
-  opacity: 1;
-  transform: translateY(0);
+  opacity: 0;
+  transform: translateY(8px);
   transition: opacity 0.5s ease, transform 0.5s ease;
   transition-delay: calc(var(--order, 0) * 90ms);
 }
@@ -1263,8 +1272,7 @@ html[data-audience="internal"] [data-audience~="customer"]:not([data-audience~="
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.3px;
   cursor: pointer;
 }
 
@@ -1312,8 +1320,8 @@ html[data-audience="internal"] [data-audience~="customer"]:not([data-audience~="
 .section-question {
   margin: var(--space-xs) 0 0;
   font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  line-height: 1.4;
+  letter-spacing: 0.2px;
   color: var(--accent-strong);
 }
 
@@ -2311,8 +2319,7 @@ html[data-audience="customer"] [data-hide-on-empty][data-empty="true"] {
   padding: 12px 16px;
   border-radius: 999px;
   font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.2px;
   cursor: pointer;
   box-shadow: 0 16px 30px rgba(252, 109, 38, 0.35);
 }
@@ -2338,8 +2345,7 @@ html[data-audience="customer"] [data-hide-on-empty][data-empty="true"] {
   padding: 8px 12px;
   border-radius: 999px;
   font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.2px;
   cursor: pointer;
 }
 
@@ -2352,8 +2358,7 @@ html[data-audience="customer"] [data-hide-on-empty][data-empty="true"] {
   padding: 8px 12px;
   border-radius: 999px;
   font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.2px;
   cursor: pointer;
   box-shadow: 0 10px 24px rgba(20, 20, 26, 0.12);
   opacity: 0;
@@ -2628,14 +2633,14 @@ mark {
     width: 100%;
   }
 
-  .fab,
-  .back-to-top {
-    right: 12px;
-    bottom: 12px;
+  .fab {
+    display: none;
   }
 
   .back-to-top {
     left: auto;
+    right: 12px;
+    bottom: 12px;
   }
 
   .breadcrumb-bar {

@@ -1,11 +1,17 @@
 # GitLab Enterprise Customer Success Dashboard
 
-Static dashboard site ready for GitHub Pages deployment.
+Static dashboard site ready for GitHub Pages or GitLab Pages deployment.
 
 ## Quick deploy (GitHub Pages)
 1. Push this repo to GitHub.
 2. In **Settings -> Pages**, set **Source** to your default branch (e.g. `main`) and **/ (root)**.
 3. Save. GitHub Pages will publish the site and provide a URL.
+
+## Quick deploy (GitLab Pages)
+1. Push this repo to GitLab.
+2. Ensure the default branch is set (for example, `main`).
+3. The included `.gitlab-ci.yml` runs a `pages` job on the default branch and publishes the static site.
+4. In GitLab, open **Deploy -> Pages** to see the live URL once the pipeline succeeds.
 
 ## Update data
 Edit these canonical data files:
