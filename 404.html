@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      (function () {
+        var known = ['portfolio', 'intake', 'programs', 'resources', 'account'];
+        var parts = window.location.pathname.split('/').filter(Boolean);
+        var hasBase = parts.length > 1 && known.indexOf(parts[0]) === -1;
+        var base = hasBase ? '/' + parts[0] : '';
+        var routePath = hasBase ? '/' + parts.slice(1).join('/') : '/' + parts.join('/');
+        if (routePath === '/') routePath = '/';
+        var target = base + '/?route=' + encodeURIComponent(routePath + window.location.search + window.location.hash);
+        window.location.replace(target);
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>

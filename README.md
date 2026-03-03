@@ -1,66 +1,68 @@
-# GitLab Enterprise Customer Success Dashboard
+# GitLab CSE On-Demand Dashboard
 
-Static dashboard site ready for GitHub Pages or GitLab Pages deployment.
+Static GitLab Pages-compatible operating dashboard for pooled Customer Success Engineering delivery.
 
-## Quick deploy (GitHub Pages)
-1. Push this repo to GitHub.
-2. In **Settings -> Pages**, set **Source** to your default branch (e.g. `main`) and **/ (root)**.
-3. Save. GitHub Pages will publish the site and provide a URL.
+## What this app provides
+- Pooled triage-first homepage (`/`) with:
+  - Today Queue
+  - Outliers + filters
+  - Requests Triage
+  - Upcoming 1:many programs
+- Intake workflow (`/intake`) that creates request records and generates copy-ready artifacts:
+  - Collaboration issue body (GitLab markdown)
+  - Customer-safe meeting agenda
+  - Customer-safe follow-up email
+- Account workspace (`/account/:id`) with action drawer, lifecycle context, adoption/health/outcomes tabs, and exports.
+- Programs page (`/programs`) with webinar/lab/office-hours cards and local attendance/registration logging.
+- Resources page (`/resources`) with handbook-aligned references and customer-safe filtering.
 
-## Quick deploy (GitLab Pages)
-1. Push this repo to GitLab.
-2. Ensure the default branch is set (for example, `main`).
-3. The included `.gitlab-ci.yml` runs a `pages` job on the default branch and publishes the static site.
-4. In GitLab, open **Deploy -> Pages** to see the live URL once the pipeline succeeds.
+## Routes
+- `/` -> Portfolio (pooled coverage)
+- `/intake` -> Engagement request intake
+- `/programs` -> 1:many CSE programs
+- `/resources` -> Handbook resources
+- `/account/:id` -> Account drill-in workspace
 
-## Update data
-Edit these canonical data files:
-- `data/accounts.json`: multi-account operational data (milestones, cadence, success plan, expansion, risk).
-  - Includes non-engaged triage fields (`triage_state`, `triage_recovery_plan.*`) used by cadence automation cues.
-- `data/resources.json`: searchable handbook and docs registry.
-- `data/cheatsheet.json`: in-app and printable cheatsheet visuals/content.
+`404.html` includes SPA fallback redirect so deep links work on static Pages hosting.
 
-Legacy snapshots:
-- `data/dashboard.json` and `data/metrics.json` are retained for backward compatibility with older exports/scripts.
-- The main dashboard (`index.html`) reads from `data/accounts.json`, `data/resources.json`, and `data/cheatsheet.json`.
+## Data model
+Canonical app data lives under `data/`:
+- `data/accounts.json`
+- `data/requests.json`
+- `data/programs.json`
+- `data/playbooks.json`
+- `data/resources.json`
+- `data/schema.md` (field definitions + customer-safe policy)
 
-When the site is served via a static server, the dashboard loads both files directly. If data cannot be loaded, the dashboard falls back to the embedded sample object in `assets/js/app.js`.
-The executive PDF export uses `print/ebr.html`.
-The customer/CSM quick-reference export uses `print/cheatsheet.html` and `data/cheatsheet.json`.
-
-### Validate resource links
-Run the built-in verifier before publishing:
-
-```powershell
-node scripts/verify-links.js
-```
-
-## Persona guide
-- Executive: review Overview, Success Plan, Top Risks, and DORA snapshot.
-- DevOps leader: focus on Adoption, Landing Zone, and Enablement workshops.
-- CSM: use Health & Risk, Engagement cadence, and Collaboration templates.
-
-## Guided workflow modes
-- `Today`: compliance checks, triage signals, and immediate due actions.
-- `Review`: outcomes narrative + EBR/QBR preparation.
-- `Deep Dive`: full section-by-section diagnostic view.
-
-## Local preview
-Use a local web server to load the live JSON data:
+## Local run
+Run a static server from repo root:
 
 ```powershell
 python -m http.server 8000
 ```
 
-Then open `http://localhost:8000/`.
+Open `http://localhost:8000/`.
 
-## Troubleshooting blank sections
-- Symptom: many panels show little or no content, especially **Resources** and **Cheatsheet**.
-- Primary cause: opening `index.html` directly via `file://` blocks JSON `fetch()` calls in most browsers.
-- Secondary cause: sparse account payloads (missing arrays such as `success_plan.objectives`, `workshop_catalog`, `risk_playbooks`, or `adoption.use_case_scores`) result in empty-state cards.
-- Secondary cause: in `Customer Safe` and some persona views, cards with `data-hide-on-empty` are intentionally hidden when all trigger lists are empty.
-- Fix:
-  1. Run a local server (`python -m http.server 8000`) and open `http://localhost:8000/`.
-  2. Confirm these files exist and are valid JSON: `data/accounts.json`, `data/resources.json`, `data/cheatsheet.json`.
-  3. Populate account arrays for operational sections, or rely on handbook-backed fallback content in `assets/js/app.js`.
-  4. If files fail to load, the app falls back to embedded sample content in `assets/js/app.js`.
+## Tests
+Run test suite (Node built-in test runner):
+
+```powershell
+node --test src/tests/*.test.mjs
+```
+
+Coverage includes:
+- customer-safe export redaction denylist enforcement
+- portfolio CSV shape and key values
+- intake artifact generation requirements
+- routing behavior for `/account/:id`
+
+## GitLab Pages deployment
+`.gitlab-ci.yml` now has:
+- `test` stage: runs `node --test src/tests/*.test.mjs` on pushes/MRs
+- `pages` stage: publishes static app on default branch
+
+Published artifact includes:
+- `index.html`, `404.html`, `.nojekyll`
+- `assets/`, `src/`, `data/`, `print/`
+
+In GitLab, open **Deploy -> Pages** after pipeline success to access the live site URL.

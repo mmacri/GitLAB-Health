@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "updated_on": "2026-03-03",
+  "programs": [
+    {
+      "program_id": "PGM-001",
+      "type": "webinar",
+      "title": "CI Reliability Foundations for Enterprise Teams",
+      "date": "2026-03-07T17:00:00Z",
+      "target_use_cases": ["CI", "SCM"],
+      "registration_count": 94,
+      "attendance_count": 57,
+      "owner": "CSE Pool - Verify"
+    },
+    {
+      "program_id": "PGM-002",
+      "type": "hands-on lab",
+      "title": "Secure Pipeline Lab: SAST + Dependency Scanning",
+      "date": "2026-03-13T18:00:00Z",
+      "target_use_cases": ["Secure", "CI"],
+      "registration_count": 61,
+      "attendance_count": 38,
+      "owner": "CSE Pool - Secure"
+    },
+    {
+      "program_id": "PGM-003",
+      "type": "office hours",
+      "title": "CSE Office Hours: Runner Capacity and Pipeline Performance",
+      "date": "2026-03-11T19:00:00Z",
+      "target_use_cases": ["CI", "CD"],
+      "registration_count": 43,
+      "attendance_count": 21,
+      "owner": "CSE Pool - Platform"
+    },
+    {
+      "program_id": "PGM-004",
+      "type": "webinar",
+      "title": "Platform Adoption Score Deep Dive",
+      "date": "2026-03-21T16:00:00Z",
+      "target_use_cases": ["SCM", "CI", "CD", "Secure"],
+      "registration_count": 88,
+      "attendance_count": 0,
+      "owner": "CSE Pool - Adoption"
+    }
+  ]
+}

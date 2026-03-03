@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "updated_on": "2026-03-03",
+  "playbooks": [
+    {
+      "id": "pb-ci-enable",
+      "stage": "enable",
+      "topic": "CI",
+      "title": "CI Adoption Recovery Motion",
+      "recommended_program": "PGM-001",
+      "next_best_action": "Enroll customer engineering leads into the CI reliability webinar and schedule a 30-minute debrief.",
+      "resource_ids": ["res-ci-playbook", "res-cadence-calls"]
+    },
+    {
+      "id": "pb-secure-enable",
+      "stage": "enable",
+      "topic": "Secure",
+      "title": "Secure Baseline Rollout Motion",
+      "recommended_program": "PGM-002",
+      "next_best_action": "Run secure lab invitation campaign and track conversion to active scan coverage.",
+      "resource_ids": ["res-secure-workshop", "res-health-scoring"]
+    },
+    {
+      "id": "pb-renew-risk",
+      "stage": "renew",
+      "topic": "platform foundations",
+      "title": "Renewal Risk Stabilization Motion",
+      "recommended_program": "PGM-003",
+      "next_best_action": "Bundle account into office hours, close blockers, and update renewal outcome narrative weekly.",
+      "resource_ids": ["res-health-triage", "res-success-plans", "res-ebr-guide"]
+    },
+    {
+      "id": "pb-platform-optimize",
+      "stage": "optimize",
+      "topic": "platform foundations",
+      "title": "Platform Adoption Optimization Motion",
+      "recommended_program": "PGM-004",
+      "next_best_action": "Align on target use case score improvement and track monthly adoption deltas.",
+      "resource_ids": ["res-platform-value", "res-maturity-scoring"]
+    }
+  ]
+}

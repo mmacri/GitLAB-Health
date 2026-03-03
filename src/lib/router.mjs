@@ -1,0 +1,102 @@
+const KNOWN_TOP_LEVEL = new Set(['intake', 'programs', 'resources', 'account', 'portfolio']);
+
+const trimSlash = (value) => value.replace(/\/+$/, '');
+
+export const detectBasePath = (pathname) => {
+  const parts = String(pathname || '/')
+    .split('/')
+    .filter(Boolean);
+
+  if (!parts.length) return '';
+  if (KNOWN_TOP_LEVEL.has(parts[0])) return '';
+  if (parts.length > 1 && KNOWN_TOP_LEVEL.has(parts[1])) return `/${parts[0]}`;
+
+  // For GitLab project pages (for example /GitLAB-Health/)
+  return `/${parts[0]}`;
+};
+
+const stripBase = (pathname, basePath) => {
+  if (!basePath) return pathname || '/';
+  if (pathname === basePath) return '/';
+  if (pathname.startsWith(`${basePath}/`)) {
+    return pathname.slice(basePath.length) || '/';
+  }
+  return pathname || '/';
+};
+
+export const parseRoute = (pathname, basePath = '') => {
+  const localPath = stripBase(pathname || '/', trimSlash(basePath));
+  const normalized = localPath === '' ? '/' : localPath;
+
+  if (normalized === '/' || normalized === '/portfolio') {
+    return { name: 'portfolio', params: {}, path: normalized };
+  }
+  if (normalized === '/intake') {
+    return { name: 'intake', params: {}, path: normalized };
+  }
+  if (normalized === '/programs') {
+    return { name: 'programs', params: {}, path: normalized };
+  }
+  if (normalized === '/resources') {
+    return { name: 'resources', params: {}, path: normalized };
+  }
+
+  const accountMatch = normalized.match(/^\/account\/([^/]+)$/);
+  if (accountMatch) {
+    return {
+      name: 'account',
+      params: { id: decodeURIComponent(accountMatch[1]) },
+      path: normalized
+    };
+  }
+
+  return { name: 'portfolio', params: {}, path: '/' };
+};
+
+export const routePath = (routeName, params = {}) => {
+  if (routeName === 'portfolio') return '/';
+  if (routeName === 'intake') return '/intake';
+  if (routeName === 'programs') return '/programs';
+  if (routeName === 'resources') return '/resources';
+  if (routeName === 'account') return `/account/${encodeURIComponent(params.id || '')}`;
+  return '/';
+};
+
+export const buildHref = (routeName, params = {}, basePath = '') => {
+  const base = trimSlash(basePath || '');
+  const path = routePath(routeName, params);
+  return `${base}${path}` || '/';
+};
+
+export const createRouter = (basePath = '') => {
+  const listeners = new Set();
+
+  const emit = () => {
+    const route = parseRoute(window.location.pathname, basePath);
+    listeners.forEach((listener) => listener(route));
+  };
+
+  const navigate = (routeName, params = {}, options = {}) => {
+    const href = buildHref(routeName, params, basePath);
+    if (options.replace) {
+      window.history.replaceState({}, '', href);
+    } else {
+      window.history.pushState({}, '', href);
+    }
+    emit();
+  };
+
+  window.addEventListener('popstate', emit);
+
+  return {
+    getCurrentRoute: () => parseRoute(window.location.pathname, basePath),
+    navigate,
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    start() {
+      emit();
+    }
+  };
+};
