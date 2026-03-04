@@ -17,7 +17,7 @@
   --card-gap: 16px;
   --section-gap: 40px;
   --radius: 12px;
-  --header-offset: 16px;
+  --header-offset: 120px;
 
   /* core surfaces and color */
   --page-bg: #f8f9fb;
@@ -131,13 +131,14 @@ p {
 }
 
 .app-header {
-  position: relative;
-  top: auto;
-  z-index: 10;
+  position: sticky;
+  top: 0;
+  z-index: 100;
   margin-bottom: var(--s-5);
-  background: var(--bg);
+  background: rgba(248, 249, 251, 0.92);
+  backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
-  box-shadow: none;
+  box-shadow: 0 1px 0 rgba(17, 24, 39, 0.04);
 }
 
 .header__row {
@@ -346,7 +347,7 @@ button:hover {
 
 .sidebar {
   position: sticky;
-  top: var(--header-offset);
+  top: calc(var(--header-offset) + var(--s-2));
   align-self: start;
   width: 100%;
   max-width: 280px;
@@ -367,7 +368,7 @@ button:hover {
 }
 
 .route-stage [id] {
-  scroll-margin-top: calc(var(--header-offset) + var(--s-2));
+  scroll-margin-top: calc(var(--header-offset) + var(--s-4));
 }
 
 .left-rail {
@@ -548,7 +549,7 @@ hr {
 
 .account-header {
   position: sticky;
-  top: var(--header-offset);
+  top: calc(var(--header-offset) + var(--s-2));
   z-index: 25;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -846,7 +847,7 @@ hr {
 
 .drawer {
   position: sticky;
-  top: var(--header-offset);
+  top: calc(var(--header-offset) + var(--s-5));
   display: grid;
   gap: 10px;
 }
