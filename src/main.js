@@ -604,14 +604,6 @@ const renderShellContext = () => {
   }
 };
 
-const syncHeaderOffset = () => {
-  const header = appRoot.querySelector('.app-header');
-  if (!header) return;
-  const height = Math.ceil(header.getBoundingClientRect().height);
-  const offset = Number.isFinite(height) ? Math.max(96, height) : 120;
-  document.documentElement.style.setProperty('--header-offset', `${offset}px`);
-};
-
 const copyShareSnapshot = async () => {
   const route = routePath(state.route.name, state.route.params);
   const url = buildShareSnapshotUrl({
@@ -961,7 +953,6 @@ const render = () => {
   renderLeftRail();
   renderCurrentRoute();
   setActiveNav();
-  window.requestAnimationFrame(syncHeaderOffset);
 };
 
 state.basePath = detectBasePath(window.location.pathname);
@@ -1050,7 +1041,6 @@ const bindGlobalEvents = () => {
     const expanded = moreButton.getAttribute('aria-expanded') === 'true';
     moreMenu.hidden = expanded;
     moreButton.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-    window.requestAnimationFrame(syncHeaderOffset);
   });
 
   document.addEventListener('click', (event) => {
@@ -1058,7 +1048,6 @@ const bindGlobalEvents = () => {
     if (event.target.closest('[data-more-menu]') || event.target.closest('[data-open-more]')) return;
     moreMenu.hidden = true;
     moreButton?.setAttribute('aria-expanded', 'false');
-    window.requestAnimationFrame(syncHeaderOffset);
   });
 
   appRoot.querySelector('[data-copy-snapshot]')?.addEventListener('click', async () => {
@@ -1085,11 +1074,6 @@ const bindGlobalEvents = () => {
       filtersPanel.setAttribute('hidden', 'hidden');
       filtersButton.setAttribute('aria-expanded', 'false');
     }
-    window.requestAnimationFrame(syncHeaderOffset);
-  });
-
-  window.addEventListener('resize', () => {
-    window.requestAnimationFrame(syncHeaderOffset);
   });
 
   appRoot.querySelector('[data-go-portfolio]')?.addEventListener('click', () => {
@@ -1125,7 +1109,6 @@ const init = async () => {
   }
 
   bindGlobalEvents();
-  syncHeaderOffset();
 
   palette = createCommandPalette({
     onSelect(entry) {
