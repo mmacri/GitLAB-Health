@@ -13,13 +13,40 @@ const resourceCard = (resource) => `
   </article>
 `;
 
+const guidanceMap = () => `
+  <section class="card">
+    <div class="metric-head">
+      <h2>CSE Guidance Map</h2>
+      ${statusChip({ label: 'When to use', tone: 'neutral' })}
+    </div>
+    <div class="matrix-grid">
+      <article class="matrix-cell matrix-info">
+        <h3>Onboard / Enable</h3>
+        <p>Start with onboarding playbooks and adoption accelerators.</p>
+      </article>
+      <article class="matrix-cell matrix-good">
+        <h3>Expand</h3>
+        <p>Use executive communication templates and value realization assets.</p>
+      </article>
+      <article class="matrix-cell matrix-warn">
+        <h3>Renewal Window</h3>
+        <p>Prioritize renewal readiness templates and outcome evidence packs.</p>
+      </article>
+      <article class="matrix-cell matrix-risk">
+        <h3>Risk Response</h3>
+        <p>Apply risk mitigation playbooks and structured follow-up messaging.</p>
+      </article>
+    </div>
+  </section>
+`;
+
 export const renderResourcesPage = (ctx) => {
   const { resources, categories, customerSafe, mode, navigate } = ctx;
   const visible = customerSafe ? (resources || []).filter((item) => item.customer_safe) : resources || [];
   const categoryOptions = ['all', ...(categories || []).map((category) => category.id)];
 
   const wrapper = document.createElement('section');
-  wrapper.className = 'route-page';
+  wrapper.className = 'route-page page-shell section-stack';
   wrapper.innerHTML = `
     <header class="page-head">
       <div>
@@ -60,6 +87,8 @@ export const renderResourcesPage = (ctx) => {
             ${visible.map(resourceCard).join('')}
           </div>
         </section>
+
+        ${guidanceMap()}
 
         <section class="card">
           <div class="metric-head"><h2>Categories</h2></div>

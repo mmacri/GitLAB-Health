@@ -65,6 +65,83 @@ const recentHealthChanges = (signals) =>
     )
     .sort((left, right) => toTime(right.entry.date) - toTime(left.entry.date));
 
+const operatingLoopVisual = () => `
+  <section class="card">
+    <div class="metric-head">
+      <h2>CSE Operating Loop</h2>
+      ${statusChip({ label: 'Workflow', tone: 'neutral' })}
+    </div>
+    <div class="flow-steps">
+      <article class="flow-step">
+        <strong>1. Triage</strong>
+        <p>Prioritize yellow/red, stale, and renewal-window accounts.</p>
+      </article>
+      <article class="flow-step">
+        <strong>2. Enable</strong>
+        <p>Route to webinar, lab, office hours, or focused account engagement.</p>
+      </article>
+      <article class="flow-step">
+        <strong>3. Validate</strong>
+        <p>Capture adoption movement, outcomes, and risk closure evidence.</p>
+      </article>
+      <article class="flow-step">
+        <strong>4. Communicate</strong>
+        <p>Share customer-safe summary and next best action.</p>
+      </article>
+    </div>
+  </section>
+`;
+
+const healthMatrix = (signals = []) => {
+  const bins = {
+    scale_and_expand: 0,
+    engage_and_lift: 0,
+    stabilize_value: 0,
+    critical_recovery: 0
+  };
+  (signals || []).forEach((signal) => {
+    const health = String(signal.account?.health?.overall || '').toLowerCase();
+    const adoptionGreen = Number(signal.greenUseCaseCount || 0) >= 3;
+    const healthy = health === 'green';
+    if (healthy && adoptionGreen) bins.scale_and_expand += 1;
+    if (healthy && !adoptionGreen) bins.engage_and_lift += 1;
+    if (!healthy && adoptionGreen) bins.stabilize_value += 1;
+    if (!healthy && !adoptionGreen) bins.critical_recovery += 1;
+  });
+  return bins;
+};
+
+const matrixVisual = (matrix) => `
+  <section class="card">
+    <div class="metric-head">
+      <h2>Health x Adoption Matrix</h2>
+      ${statusChip({ label: 'Prioritization', tone: 'neutral' })}
+    </div>
+    <div class="matrix-grid">
+      <article class="matrix-cell matrix-good">
+        <h3>Scale & Expand</h3>
+        <p>${matrix.scale_and_expand} accounts</p>
+        <span>Green health + 3+ green use cases</span>
+      </article>
+      <article class="matrix-cell matrix-info">
+        <h3>Engage & Lift</h3>
+        <p>${matrix.engage_and_lift} accounts</p>
+        <span>Green health + below 3 green use cases</span>
+      </article>
+      <article class="matrix-cell matrix-warn">
+        <h3>Stabilize Value</h3>
+        <p>${matrix.stabilize_value} accounts</p>
+        <span>Yellow/Red health + 3+ green use cases</span>
+      </article>
+      <article class="matrix-cell matrix-risk">
+        <h3>Critical Recovery</h3>
+        <p>${matrix.critical_recovery} accounts</p>
+        <span>Yellow/Red health + below 3 green use cases</span>
+      </article>
+    </div>
+  </section>
+`;
+
 export const renderPortfolioHomePage = (ctx) => {
   const { portfolio, filters, navigate, onLogAttendance, onExportPortfolio, onCopyShare, updatedOn } = ctx;
 
@@ -86,6 +163,7 @@ export const renderPortfolioHomePage = (ctx) => {
   const healthChanges = recentHealthChanges(allSignals);
   const programInviteNeeds = allSignals.filter((signal) => signal.recommendedProgram && Number(signal.greenUseCaseCount || 0) < 3);
   const engagementLog = loadEngagementLog();
+  const matrix = healthMatrix(allSignals);
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
@@ -114,6 +192,9 @@ export const renderPortfolioHomePage = (ctx) => {
         ${metricTile({ label: 'Renewal < 90d', value: renewalSignals.length, tone: renewalSignals.length ? 'warn' : 'good' })}
       </div>
     </section>
+
+    ${operatingLoopVisual()}
+    ${matrixVisual(matrix)}
 
     <section class="today-grid">
       <div class="section-stack">
@@ -319,6 +400,7 @@ export const renderPortfolioPage = (ctx) => {
   const staleThreshold = Number(filters.staleDays || 30);
   const filtered = applyPortfolioFilters(portfolio.signals, filters);
   const outlierSignals = applyPortfolioFilters(portfolio.outliers, filters);
+  const matrix = healthMatrix(filtered);
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
@@ -410,6 +492,8 @@ export const renderPortfolioPage = (ctx) => {
         </label>
       </div>
     </section>
+
+    ${matrixVisual(matrix)}
 
     <section>
       <div class="metric-head">
@@ -506,10 +590,5 @@ export const portfolioCommandEntries = (data) => {
     action: { route: 'account', params: { id: account.id } }
   }));
 
-  return [
-    { id: 'go-home', label: 'Open Today Console', meta: 'Today', action: { route: 'home' } },
-    { id: 'go-journey', label: 'Open Journey Workspace', meta: 'Journey', action: { route: 'journey' } },
-    { id: 'go-portfolio', label: 'Open Portfolio Table', meta: 'Portfolio', action: { route: 'portfolio' } },
-    ...accountEntries
-  ];
+  return accountEntries;
 };

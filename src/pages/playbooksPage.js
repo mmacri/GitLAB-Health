@@ -40,7 +40,7 @@ export const renderPlaybooksPage = (ctx) => {
   const visiblePlaybooks = customerSafe ? redactPlaybooksForCustomer(playbooks) : playbooks || [];
 
   const wrapper = document.createElement('section');
-  wrapper.className = 'route-page';
+  wrapper.className = 'route-page page-shell section-stack';
   wrapper.innerHTML = `
     <header class="page-head">
       <div>

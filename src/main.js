@@ -154,6 +154,7 @@ const setActiveNav = () => {
 const renderLeftRail = () => {
   if (!leftRailRoot) return;
   const accounts = state.data?.accounts || [];
+  const current = currentAccount();
   const recentAccounts = [...accounts]
     .sort((left, right) => {
       if (left.id === state.selectedAccountId) return -1;
@@ -164,20 +165,11 @@ const renderLeftRail = () => {
 
   leftRailRoot.innerHTML = `
     <div class="rail-group">
-      <p class="rail-label">Operate</p>
-      <button class="rail-link ${state.route.name === 'home' ? 'is-active' : ''}" type="button" data-rail-route="home">Today</button>
-      <button class="rail-link ${state.route.name === 'portfolio' ? 'is-active' : ''}" type="button" data-rail-route="portfolio">Portfolio</button>
-      <button class="rail-link ${state.route.name === 'toolkit' ? 'is-active' : ''}" type="button" data-rail-route="toolkit">Toolkit</button>
-      <button class="rail-link ${state.route.name === 'journey' ? 'is-active' : ''}" type="button" data-rail-route="journey">Journey</button>
-      <button class="rail-link ${state.route.name === 'programs' ? 'is-active' : ''}" type="button" data-rail-route="programs">Programs</button>
-      <button class="rail-link ${state.route.name === 'resources' ? 'is-active' : ''}" type="button" data-rail-route="resources">Resources</button>
-    </div>
-
-    <div class="rail-group">
-      <p class="rail-label">Tools</p>
-      <button class="rail-link ${state.route.name === 'intake' ? 'is-active' : ''}" type="button" data-rail-route="intake">Intake</button>
-      <button class="rail-link ${state.route.name === 'exports' ? 'is-active' : ''}" type="button" data-rail-route="exports">Exports</button>
+      <p class="rail-label">Workflow</p>
+      <button class="rail-link ${state.route.name === 'intake' ? 'is-active' : ''}" type="button" data-rail-route="intake">Create Request</button>
       <button class="rail-link ${state.route.name === 'playbooks' ? 'is-active' : ''}" type="button" data-rail-route="playbooks">Playbooks</button>
+      <button class="rail-link ${state.route.name === 'exports' ? 'is-active' : ''}" type="button" data-rail-route="exports">Exports</button>
+      <button class="rail-link" type="button" data-rail-open-current ${current ? '' : 'disabled'}>Open Current Account</button>
     </div>
 
     <div class="rail-group">
@@ -194,6 +186,16 @@ const renderLeftRail = () => {
             : '<p class="empty-text">No accounts loaded.</p>'
         }
       </div>
+    </div>
+
+    <div class="rail-group">
+      <p class="rail-label">CSE Loop</p>
+      <ul class="rail-shortcuts">
+        <li>1. Triage queue in Today</li>
+        <li>2. Execute program or workshop motion</li>
+        <li>3. Log engagement and update outcomes</li>
+        <li>4. Export customer-safe summary</li>
+      </ul>
     </div>
 
     <div class="rail-group">
@@ -214,6 +216,13 @@ const renderLeftRail = () => {
       }
       router.navigate(routeName);
     });
+  });
+
+  leftRailRoot.querySelector('[data-rail-open-current]')?.addEventListener('click', () => {
+    const targetId = currentAccount()?.id || state.data.accounts?.[0]?.id || '';
+    if (!targetId) return;
+    setSelectedAccount(targetId);
+    router.navigate('account', { id: targetId });
   });
 
   leftRailRoot.querySelectorAll('[data-rail-account]').forEach((button) => {
@@ -457,13 +466,6 @@ const openToolkitTool = (toolId) => {
 };
 
 const commandEntries = (workspace) => {
-  const accountEntries = (state.data.accounts || []).map((account) => ({
-    id: `account-${account.id}`,
-    label: `Open account: ${account.name}`,
-    meta: `${account.segment}`,
-    action: { route: 'account', params: { id: account.id } }
-  }));
-
   return [
     { id: 'cmd-home', label: 'Open Today Console', meta: 'Today', action: { route: 'home' } },
     { id: 'cmd-portfolio', label: 'Open Portfolio Table', meta: 'Portfolio', action: { route: 'portfolio' } },
@@ -488,8 +490,7 @@ const commandEntries = (workspace) => {
     ...toolkitCommandEntries(),
     ...exportsCommandEntries(),
     ...intakeCommandEntries(state.data.accounts),
-    ...accountCommandEntries(workspace),
-    ...accountEntries
+    ...accountCommandEntries(workspace)
   ];
 };
 

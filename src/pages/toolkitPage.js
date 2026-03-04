@@ -640,6 +640,33 @@ const TOOL_DEFS = [
   }
 ];
 
+const toolkitFlowVisual = () => `
+  <section class="card">
+    <div class="metric-head">
+      <h2>How To Use The Toolkit</h2>
+      ${statusChip({ label: 'Guidance', tone: 'neutral' })}
+    </div>
+    <div class="flow-steps">
+      <article class="flow-step">
+        <strong>Request Intake</strong>
+        <p>Start from Today queue or create a new engagement request.</p>
+      </article>
+      <article class="flow-step">
+        <strong>Generate Plan</strong>
+        <p>Create success plan and workshop prep artifacts with account context.</p>
+      </article>
+      <article class="flow-step">
+        <strong>Execute + Log</strong>
+        <p>Run enablement motion and log attendance/engagement events.</p>
+      </article>
+      <article class="flow-step">
+        <strong>Export + Share</strong>
+        <p>Publish customer-safe summary and GitLab collaboration issue draft.</p>
+      </article>
+    </div>
+  </section>
+`;
+
 const openTool = (toolId, ctx) => {
   if (toolId === 'success-plan') return openSuccessPlanModal(ctx);
   if (toolId === 'exec-snapshot') return openExecutiveSnapshotModal(ctx);
@@ -682,6 +709,8 @@ export const renderToolkitPage = (ctx) => {
         ${metricTile({ label: 'Mode', value: customerSafe ? 'Customer-safe' : 'Internal', tone: customerSafe ? 'good' : 'warn' })}
       </div>
     </section>
+
+    ${toolkitFlowVisual()}
 
     <section class="toolkit-grid">
       ${TOOL_DEFS.map(
@@ -731,7 +760,6 @@ export const renderToolkitPage = (ctx) => {
 
 export const toolkitCommandEntries = () =>
   [
-    { id: 'toolkit-open', label: 'Open Toolkit', meta: 'Toolkit', action: { route: 'toolkit' } },
     { id: 'toolkit-success-plan', label: 'Toolkit: Success Plan Generator', meta: 'Toolkit', action: { route: 'toolkit' } },
     { id: 'toolkit-exec-snapshot', label: 'Toolkit: Executive Snapshot', meta: 'Toolkit', action: { route: 'toolkit' } },
     { id: 'toolkit-workshop', label: 'Toolkit: Workshop Planner', meta: 'Toolkit', action: { route: 'toolkit' } },

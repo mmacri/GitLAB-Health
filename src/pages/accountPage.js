@@ -320,7 +320,7 @@ export const renderAccountPage = (ctx) => {
   };
 
   const wrapper = document.createElement('section');
-  wrapper.className = 'route-page';
+  wrapper.className = 'route-page page-shell section-stack';
   wrapper.innerHTML = `
     <header class="page-head account-header" id="today-console">
       <div>
@@ -363,10 +363,6 @@ export const renderAccountPage = (ctx) => {
     </section>
 
     <section class="workspace-layout">
-      <nav class="secondary-nav card" aria-label="Account section navigation">
-        ${TAB_DEFS.map((tab) => `<a href="#${tab.anchor}" data-tab-link="${tab.id}">${tab.label}</a>`).join('')}
-      </nav>
-
       <div class="tabs card" data-tabs>
         <div class="tab-row">
           ${TAB_DEFS.map((tab) => `<button type="button" class="tab-btn${tab.id === startTab ? ' is-active' : ''}" data-tab-target="${tab.id}" aria-selected="${tab.id === startTab ? 'true' : 'false'}">${tab.label}</button>`).join('')}
@@ -650,16 +646,6 @@ export const renderAccountPage = (ctx) => {
   `;
 
   wireTabs(wrapper);
-  wrapper.querySelectorAll('[data-tab-link]').forEach((item) => item.classList.remove('is-active'));
-  wrapper.querySelector(`[data-tab-link="${startTab}"]`)?.classList.add('is-active');
-
-  wrapper.querySelectorAll('[data-tab-target]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const id = button.getAttribute('data-tab-target');
-      wrapper.querySelectorAll('[data-tab-link]').forEach((item) => item.classList.remove('is-active'));
-      wrapper.querySelector(`[data-tab-link="${id}"]`)?.classList.add('is-active');
-    });
-  });
 
   const drawer = renderActionDrawer({
     title: journeyMode ? 'Journey Action Drawer' : 'Account Action Drawer',
@@ -689,17 +675,6 @@ export const renderAccountPage = (ctx) => {
   wrapper.querySelector('[data-safe-toggle]')?.addEventListener('change', (event) => onToggleSafe(Boolean(event.target.checked)));
   wrapper.querySelector('[data-header-export-customer-csv]')?.addEventListener('click', () => onExportAccountCsv(internalAccount, { customerSafe: true }));
   wrapper.querySelector('[data-header-export-customer-pdf]')?.addEventListener('click', () => onExportAccountPdf(internalAccount, { customerSafe: true }));
-
-  wrapper.querySelectorAll('[data-tab-link]').forEach((link) => {
-    link.addEventListener('click', (event) => {
-      event.preventDefault();
-      const id = link.getAttribute('data-tab-link');
-      const tabBtn = wrapper.querySelector(`[data-tab-target="${id}"]`);
-      tabBtn?.click();
-      wrapper.querySelectorAll('[data-tab-link]').forEach((item) => item.classList.remove('is-active'));
-      link.classList.add('is-active');
-    });
-  });
 
   wrapper.querySelectorAll('[data-copy-artifact]').forEach((button) => {
     button.addEventListener('click', async () => {

@@ -39,12 +39,35 @@ const programCard = (item, accounts) => `
   </article>
 `;
 
+const programMixVisual = (sets) => {
+  const webinar = sets.webinar.length;
+  const labs = sets['hands-on lab'].length;
+  const officeHours = sets['office hours'].length;
+  const total = Math.max(1, webinar + labs + officeHours);
+  const width = (value) => Math.max(8, Math.round((value / total) * 100));
+
+  return `
+    <section class="card">
+      <div class="metric-head">
+        <h2>Program Mix</h2>
+        ${statusChip({ label: `${total} total`, tone: 'neutral' })}
+      </div>
+      <div class="mix-chart">
+        <div class="mix-row"><span>Webinars</span><div class="mix-bar"><i style="width:${width(webinar)}%"></i></div><strong>${webinar}</strong></div>
+        <div class="mix-row"><span>Hands-on Labs</span><div class="mix-bar"><i style="width:${width(labs)}%"></i></div><strong>${labs}</strong></div>
+        <div class="mix-row"><span>Office Hours</span><div class="mix-bar"><i style="width:${width(officeHours)}%"></i></div><strong>${officeHours}</strong></div>
+      </div>
+      <p class="muted">Use this visual to balance 1:many motions across adoption gaps and renewal windows.</p>
+    </section>
+  `;
+};
+
 export const renderProgramsPage = (ctx) => {
   const { programs, accounts, mode, navigate, onCopyInvite, onLogAttendance, onAddRegistration, onInviteAccount, notify } = ctx;
 
   const sets = grouped([...(programs || [])].sort((a, b) => new Date(a.date) - new Date(b.date)));
   const wrapper = document.createElement('section');
-  wrapper.className = 'route-page';
+  wrapper.className = 'route-page page-shell section-stack';
   wrapper.innerHTML = `
     <header class="page-head">
       <div>
@@ -63,6 +86,8 @@ export const renderProgramsPage = (ctx) => {
           <div class="metric-head"><h2>Webinars</h2>${statusChip({ label: `${sets.webinar.length} items`, tone: 'neutral' })}</div>
           <div class="main-col">${sets.webinar.map((item) => programCard(item, accounts)).join('') || '<p class="empty-text">No webinars scheduled.</p>'}</div>
         </section>
+
+        ${programMixVisual(sets)}
 
         <section class="card">
           <div class="metric-head"><h2>Hands-on Labs</h2>${statusChip({ label: `${sets['hands-on lab'].length} items`, tone: 'neutral' })}</div>

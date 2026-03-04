@@ -64,6 +64,89 @@ const mergeAccounts = (baseAccounts) => {
   });
 };
 
+const OBJECTIVE_LIBRARY = [
+  ['Reduce pipeline failures in business-critical repos', 'Increase deployment frequency for release teams'],
+  ['Expand Secure scanning coverage to high-risk services', 'Improve vulnerability remediation cycle time'],
+  ['Standardize SCM and merge request workflows across teams', 'Increase code review throughput with policy controls'],
+  ['Improve CI runner stability and queue performance', 'Reduce lead time from merge to production deploy'],
+  ['Enable release orchestration with GitLab CD environments', 'Improve rollback readiness and release confidence'],
+  ['Increase platform adoption depth to 3+ use cases', 'Validate measurable business value with executive sponsor']
+];
+
+const SENTIMENT_LIBRARY = [
+  'Executive sponsor engaged; team requests clearer value milestones for next quarter.',
+  'Delivery leaders are aligned, but adoption pace is inconsistent across squads.',
+  'Customer sentiment positive after workshop; expecting stronger CI rollout evidence.',
+  'Renewal stakeholders need tighter risk mitigation tracking and weekly updates.',
+  'Technical team engaged; blockers are primarily process alignment and ownership clarity.',
+  'Customer confidence improving with office-hours cadence and faster issue resolution.'
+];
+
+const HYPOTHESIS_LIBRARY = [
+  ['Offer CI optimization lab for platform team leads.', 'Position executive snapshot for renewal committee alignment.'],
+  ['Drive Secure enablement with policy-as-code workshop.', 'Expand seat footprint after security coverage baseline is validated.'],
+  ['Use office hours to unblock CD environment strategy.', 'Promote release governance playbook adoption.'],
+  ['Attach success plan metrics to leadership review cadence.', 'Introduce advanced SCM governance motion for scale teams.'],
+  ['Target high-variance teams with hands-on pipeline coaching.', 'Package outcome evidence into customer-safe summary for sponsor.'],
+  ['Sequence adoption motions by lifecycle stage and renewal window.', 'Map program attendance to next-best-action evidence.']
+];
+
+export const normalizeDuplicateAccountContent = (accounts) => {
+  const list = Array.isArray(accounts) ? accounts : [];
+  if (!list.length) return list;
+
+  const objectiveTitles = list
+    .flatMap((account) => account?.outcomes?.objectives || [])
+    .map((objective) => String(objective?.title || '').trim())
+    .filter(Boolean);
+  const uniqueObjectiveTitles = new Set(objectiveTitles);
+  const objectiveDuplicationDetected = objectiveTitles.length > 0 && uniqueObjectiveTitles.size <= 2;
+
+  const sentimentNotes = list
+    .map((account) => String(account?.internal_only?.sentiment_notes || '').trim())
+    .filter(Boolean);
+  const uniqueSentimentNotes = new Set(sentimentNotes);
+  const sentimentDuplicationDetected = sentimentNotes.length > 0 && uniqueSentimentNotes.size <= 2;
+
+  if (!objectiveDuplicationDetected && !sentimentDuplicationDetected) return list;
+
+  return list.map((account, index) => {
+    const objectivePair = OBJECTIVE_LIBRARY[index % OBJECTIVE_LIBRARY.length];
+    const currentObjectives = Array.isArray(account?.outcomes?.objectives) ? account.outcomes.objectives : [];
+    const objectives = objectiveDuplicationDetected
+      ? currentObjectives.map((objective, objectiveIndex) => ({
+          ...objective,
+          title: objectivePair[objectiveIndex % objectivePair.length] || objective.title
+        }))
+      : currentObjectives;
+
+    const lifecycle = account.lifecycle_stage || account.health?.lifecycle_stage || 'enable';
+    const adoptionLevel = account.adoption?.platform_adoption_level || 'platform adoption developing';
+    const executiveSummary =
+      objectives.length && objectiveDuplicationDetected
+        ? `${account.name} is in ${lifecycle} stage with ${adoptionLevel}; current priority is "${objectives[0].title}" with measurable progress tracked weekly.`
+        : account.outcomes?.executive_summary;
+
+    return {
+      ...account,
+      outcomes: {
+        ...(account.outcomes || {}),
+        objectives,
+        executive_summary: executiveSummary
+      },
+      internal_only: {
+        ...(account.internal_only || {}),
+        sentiment_notes: sentimentDuplicationDetected
+          ? SENTIMENT_LIBRARY[index % SENTIMENT_LIBRARY.length]
+          : account.internal_only?.sentiment_notes,
+        expansion_hypotheses: sentimentDuplicationDetected
+          ? HYPOTHESIS_LIBRARY[index % HYPOTHESIS_LIBRARY.length]
+          : account.internal_only?.expansion_hypotheses
+      }
+    };
+  });
+};
+
 export const persistRequests = (requests) => storage.set(STORAGE_KEYS.requests, requests);
 
 export const persistProgram = (program) => {
@@ -126,7 +209,7 @@ export const loadDashboardData = async () => {
     fetchJson(resolveDataUrl('templates.json'), { templates: {} })
   ]);
 
-  const accounts = mergeAccounts(Array.isArray(accountsDoc.accounts) ? accountsDoc.accounts : []);
+  const accounts = normalizeDuplicateAccountContent(mergeAccounts(Array.isArray(accountsDoc.accounts) ? accountsDoc.accounts : []));
   const requests = mergeRequests(Array.isArray(requestsDoc.requests) ? requestsDoc.requests : []);
   const programs = mergePrograms(Array.isArray(programsDoc.programs) ? programsDoc.programs : []);
   const playbooks = Array.isArray(playbooksDoc.playbooks) ? playbooksDoc.playbooks : [];
