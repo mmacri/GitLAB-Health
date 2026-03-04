@@ -163,8 +163,9 @@ const renderLeftRail = () => {
   leftRailRoot.innerHTML = `
     <div class="rail-group">
       <p class="rail-label">Operate</p>
-      <button class="rail-link ${state.route.name === 'home' ? 'is-active' : ''}" type="button" data-rail-route="home">Work Queue</button>
+      <button class="rail-link ${state.route.name === 'home' ? 'is-active' : ''}" type="button" data-rail-route="home">Today</button>
       <button class="rail-link ${state.route.name === 'portfolio' ? 'is-active' : ''}" type="button" data-rail-route="portfolio">Portfolio</button>
+      <button class="rail-link ${state.route.name === 'journey' ? 'is-active' : ''}" type="button" data-rail-route="journey">Journey</button>
       <button class="rail-link ${state.route.name === 'programs' ? 'is-active' : ''}" type="button" data-rail-route="programs">Programs</button>
       <button class="rail-link ${state.route.name === 'resources' ? 'is-active' : ''}" type="button" data-rail-route="resources">Resources</button>
     </div>
@@ -204,6 +205,10 @@ const renderLeftRail = () => {
   leftRailRoot.querySelectorAll('[data-rail-route]').forEach((button) => {
     button.addEventListener('click', () => {
       const routeName = button.getAttribute('data-rail-route');
+      if (routeName === 'journey') {
+        const targetId = currentAccount()?.id || state.data.accounts?.[0]?.id || '';
+        if (targetId) setSelectedAccount(targetId);
+      }
       router.navigate(routeName);
     });
   });
@@ -429,8 +434,9 @@ const commandEntries = (workspace) => {
   }));
 
   return [
-    { id: 'cmd-home', label: 'Open Work Queue', meta: 'Queue', action: { route: 'home' } },
+    { id: 'cmd-home', label: 'Open Today Console', meta: 'Today', action: { route: 'home' } },
     { id: 'cmd-portfolio', label: 'Open Portfolio Table', meta: 'Portfolio', action: { route: 'portfolio' } },
+    { id: 'cmd-journey', label: 'Open Journey Workspace', meta: 'Journey', action: { route: 'journey' } },
     { id: 'cmd-programs', label: 'Open Programs', meta: 'Programs', action: { route: 'programs' } },
     { id: 'cmd-playbooks', label: 'Open Playbooks', meta: 'Playbooks', action: { route: 'playbooks' } },
     { id: 'cmd-resources', label: 'Open Resources', meta: 'Resources', action: { route: 'resources' } },
@@ -456,6 +462,14 @@ const renderCurrentRoute = () => {
     if (route.params.id) setSelectedAccount(route.params.id);
     if (!route.params.id && currentAccount()) {
       router.navigate('account', { id: currentAccount().id }, { replace: true });
+      return;
+    }
+  }
+  if (route.name === 'journey') {
+    const journeyId = route.params.id || state.selectedAccountId || state.data.accounts?.[0]?.id || '';
+    if (journeyId && journeyId !== state.selectedAccountId) setSelectedAccount(journeyId);
+    if (!route.params.id && journeyId) {
+      router.navigate('journey', { id: journeyId }, { replace: true });
       return;
     }
   }
@@ -510,6 +524,24 @@ const renderCurrentRoute = () => {
       onLogEngagement,
       copyText,
       notify,
+      ...common
+    });
+  }
+  if (route.name === 'journey') {
+    view = renderAccountPage({
+      workspace,
+      resources: state.data.resources,
+      customerSafe: state.customerSafe,
+      mode: state.viewMode,
+      onToggleSafe: setSafeMode,
+      onCopyInvite,
+      onExportAccountCsv: (account, options) => exportAccountCsv(account, options),
+      onExportAccountPdf: (account, options) => exportAccountSummaryPdf(account, options),
+      onOpenMissingEditor: openMissingEditor,
+      onLogEngagement,
+      copyText,
+      notify,
+      journeyMode: true,
       ...common
     });
   }
@@ -611,6 +643,12 @@ const bindGlobalEvents = () => {
         const targetId = currentAccount()?.id || state.data.accounts?.[0]?.id || '';
         setSelectedAccount(targetId);
         router.navigate('account', { id: targetId });
+        return;
+      }
+      if (name === 'journey') {
+        const targetId = currentAccount()?.id || state.data.accounts?.[0]?.id || '';
+        if (targetId) setSelectedAccount(targetId);
+        router.navigate('journey', { id: targetId });
         return;
       }
       router.navigate(name);

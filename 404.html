@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script>
       (function () {
-        var known = ['portfolio', 'intake', 'programs', 'playbooks', 'resources', 'exports', 'account'];
+        var known = ['portfolio', 'intake', 'programs', 'playbooks', 'resources', 'exports', 'account', 'journey'];
         var parts = window.location.pathname.split('/').filter(Boolean);
         var hasBase = parts.length > 1 && known.indexOf(parts[0]) === -1;
         var base = hasBase ? '/' + parts[0] : '';

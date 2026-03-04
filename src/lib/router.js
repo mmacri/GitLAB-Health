@@ -1,6 +1,7 @@
 const KNOWN_TOP_LEVEL = new Set([
   'portfolio',
   'account',
+  'journey',
   'programs',
   'playbooks',
   'resources',
@@ -42,6 +43,9 @@ export const parseRoute = (pathname, basePath = '') => {
   if (normalized === '/portfolio') {
     return { name: 'portfolio', params: {}, path: normalized };
   }
+  if (normalized === '/journey') {
+    return { name: 'journey', params: { id: '' }, path: normalized };
+  }
   if (normalized === '/programs') {
     return { name: 'programs', params: {}, path: normalized };
   }
@@ -70,6 +74,15 @@ export const parseRoute = (pathname, basePath = '') => {
     };
   }
 
+  const journeyMatch = normalized.match(/^\/journey\/([^/]+)$/);
+  if (journeyMatch) {
+    return {
+      name: 'journey',
+      params: { id: decodeURIComponent(journeyMatch[1]) },
+      path: normalized
+    };
+  }
+
   return { name: 'home', params: {}, path: '/' };
 };
 
@@ -78,6 +91,9 @@ export const routePath = (routeName, params = {}) => {
   if (routeName === 'portfolio') return '/portfolio';
   if (routeName === 'account') {
     return params.id ? `/account/${encodeURIComponent(params.id || '')}` : '/account';
+  }
+  if (routeName === 'journey') {
+    return params.id ? `/journey/${encodeURIComponent(params.id || '')}` : '/journey';
   }
   if (routeName === 'programs') return '/programs';
   if (routeName === 'playbooks') return '/playbooks';

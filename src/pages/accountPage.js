@@ -9,12 +9,22 @@ import { useCaseEntries } from '../lib/scoring.js';
 
 const TAB_DEFS = [
   { id: 'summary', label: 'Summary', anchor: 'summary' },
+  { id: 'journey', label: 'Journey', anchor: 'journey' },
   { id: 'adoption', label: 'Adoption', anchor: 'adoption' },
   { id: 'health', label: 'Health & Risk', anchor: 'health-risk' },
   { id: 'engagement', label: 'Engagement', anchor: 'engagement' },
   { id: 'outcomes', label: 'Outcomes', anchor: 'outcomes' },
   { id: 'exports', label: 'Exports', anchor: 'exports' }
 ];
+
+const STAGE_ORDER = ['align', 'onboard', 'enable', 'expand', 'renew'];
+const STAGE_LABELS = {
+  align: 'Align',
+  onboard: 'Onboard',
+  enable: 'Enable',
+  expand: 'Expand',
+  renew: 'Renew'
+};
 
 const toPercent = (value) => `${Math.max(0, Math.min(100, Math.round(Number(value) || 0)))}%`;
 
@@ -205,6 +215,22 @@ const weightedHealthScore = (components) => {
   );
 };
 
+const normalizedStage = (stage) => {
+  const value = String(stage || '').trim().toLowerCase();
+  if (value === 'optimize') return 'expand';
+  return value || 'enable';
+};
+
+const lifecycleStageProgress = (stage) => {
+  const current = normalizedStage(stage);
+  const currentIndex = Math.max(0, STAGE_ORDER.indexOf(current));
+  return {
+    current,
+    currentIndex,
+    percent: Math.round((currentIndex / (STAGE_ORDER.length - 1)) * 100)
+  };
+};
+
 export const renderAccountPage = (ctx) => {
   const {
     workspace,
@@ -218,7 +244,8 @@ export const renderAccountPage = (ctx) => {
     onOpenMissingEditor,
     onLogEngagement,
     copyText,
-    notify
+    notify,
+    journeyMode = false
   } = ctx;
 
   if (!workspace?.account) {
@@ -254,6 +281,9 @@ export const renderAccountPage = (ctx) => {
   const validationStatus =
     account.outcomes?.validation_status || (completeObjectives > 0 ? 'customer confirmed' : 'internal estimate');
   const engagementNotes = changeLog.filter((item) => item.category === 'Engagement').slice(0, 3);
+  const timelineEvents = changeLog.filter((item) => ['Engagement', 'Usage', 'Outcomes'].includes(item.category));
+  const lifecycle = lifecycleStageProgress(lifecycleStage);
+  const startTab = journeyMode ? 'journey' : 'summary';
 
   const licenseUtilization = Math.min(96, Math.max(22, Math.round((Number(account.adoption?.platform_adoption_score || 0) * 0.72) + 18)));
   const freshnessDays = workspace.signal?.healthStaleDays;
@@ -285,6 +315,14 @@ export const renderAccountPage = (ctx) => {
         <p class="eyebrow">Account Workspace</p>
         <h1>${account.name}</h1>
         <p class="hero-lede">Segment ${account.segment} | Renewal in ${renewalDays ?? 'Missing data'} days | Stage ${lifecycleStage}</p>
+        <div class="lifecycle-progress">
+          <div class="lifecycle-track" aria-hidden="true">
+            <span style="width:${lifecycle.percent}%"></span>
+          </div>
+          <div class="lifecycle-steps">
+            ${STAGE_ORDER.map((stage, index) => `<span class="lifecycle-step${index <= lifecycle.currentIndex ? ' is-done' : ''}${stage === lifecycle.current ? ' is-current' : ''}">${STAGE_LABELS[stage]}</span>`).join('')}
+          </div>
+        </div>
         <div class="chip-row">
           ${statusChip({ label: `Health ${account.health?.overall}`, tone: statusToneFromHealth(account.health?.overall) })}
           ${statusChip({ label: `Adoption ${account.health?.adoption_health}`, tone: statusToneFromHealth(account.health?.adoption_health) })}
@@ -294,7 +332,7 @@ export const renderAccountPage = (ctx) => {
         </div>
       </div>
       <div class="page-actions">
-        <button class="ghost-btn" type="button" data-go-home>Back to Work Queue</button>
+        <button class="ghost-btn" type="button" data-go-home>Back to Today</button>
         <button class="ghost-btn" type="button" data-header-export-customer-csv>Customer-safe CSV</button>
         <button class="ghost-btn" type="button" data-header-export-customer-pdf>Customer-safe PDF</button>
         <label class="safe-toggle">
@@ -319,10 +357,10 @@ export const renderAccountPage = (ctx) => {
 
       <div class="tabs card" data-tabs>
         <div class="tab-row">
-          ${TAB_DEFS.map((tab, index) => `<button type="button" class="tab-btn${index === 0 ? ' is-active' : ''}" data-tab-target="${tab.id}" aria-selected="${index === 0 ? 'true' : 'false'}">${tab.label}</button>`).join('')}
+          ${TAB_DEFS.map((tab) => `<button type="button" class="tab-btn${tab.id === startTab ? ' is-active' : ''}" data-tab-target="${tab.id}" aria-selected="${tab.id === startTab ? 'true' : 'false'}">${tab.label}</button>`).join('')}
         </div>
 
-        <section class="tab-panel is-active" data-tab-panel="summary" id="summary" aria-hidden="false">
+        <section class="tab-panel${startTab === 'summary' ? ' is-active' : ''}" data-tab-panel="summary" id="summary" aria-hidden="${startTab === 'summary' ? 'false' : 'true'}">
           <div class="metric-head"><h2>Summary</h2>${statusChip({ label: mode, tone: 'neutral' })}</div>
           <div class="callout">Next best action: ${workspace.nextBestAction}</div>
 
@@ -357,6 +395,38 @@ export const renderAccountPage = (ctx) => {
               <li>Last updated: ${missingEditable('Last updated', 'health.last_updated', account.health?.last_updated, 'date')}</li>
               <li>Next touch: ${missingEditable('Next touch', 'engagement.next_touch_date', account.engagement?.next_touch_date, 'date')}</li>
               <li>Pipeline speed: ${missingEditable('Pipeline speed', 'outcomes.value_metrics.pipeline_speed', account.outcomes?.value_metrics?.pipeline_speed, 'text')}</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="tab-panel${startTab === 'journey' ? ' is-active' : ''}" data-tab-panel="journey" id="journey" aria-hidden="${startTab === 'journey' ? 'false' : 'true'}">
+          <div class="metric-head"><h2>Journey</h2>${statusChip({ label: STAGE_LABELS[lifecycle.current] || 'Enable', tone: 'neutral' })}</div>
+          <div class="callout">
+            Lifecycle progression follows Align -> Onboard -> Enable -> Expand -> Renew. Current stage: <strong>${STAGE_LABELS[lifecycle.current] || 'Enable'}</strong>.
+          </div>
+          <div class="card compact-card">
+            <h3>Customer Success Journey Stages</h3>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Stage</th><th>Goal</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td>Align</td><td>Define success plan, outcomes, and executive sponsors.</td><td>${statusChip({ label: lifecycle.currentIndex >= 0 ? 'done' : 'pending', tone: lifecycle.currentIndex >= 0 ? 'good' : 'warn' })}</td></tr>
+                  <tr><td>Onboard</td><td>Complete onboarding milestones and first value readiness.</td><td>${statusChip({ label: lifecycle.currentIndex >= 1 ? 'done' : 'pending', tone: lifecycle.currentIndex >= 1 ? 'good' : 'warn' })}</td></tr>
+                  <tr><td>Enable</td><td>Drive workshops, labs, and technical enablement motions.</td><td>${statusChip({ label: lifecycle.currentIndex >= 2 ? 'active' : 'pending', tone: lifecycle.currentIndex >= 2 ? 'good' : 'warn' })}</td></tr>
+                  <tr><td>Expand</td><td>Increase platform adoption depth and validated outcomes.</td><td>${statusChip({ label: lifecycle.currentIndex >= 3 ? 'active' : 'pending', tone: lifecycle.currentIndex >= 3 ? 'good' : 'warn' })}</td></tr>
+                  <tr><td>Renew</td><td>Show value narrative and renewal readiness evidence.</td><td>${statusChip({ label: lifecycle.currentIndex >= 4 ? 'active' : 'upcoming', tone: lifecycle.currentIndex >= 4 ? 'good' : 'neutral' })}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card compact-card">
+            <h3>Success Plan Tracking</h3>
+            <ul class="simple-list">
+              ${(
+                account.outcomes?.objectives || []
+              )
+                .map((objective) => `<li>${objective.title} - ${statusChip({ label: objective.status, tone: objective.status === 'complete' ? 'good' : objective.status === 'at_risk' ? 'risk' : 'warn' })}</li>`)
+                .join('') || '<li>No success plan objectives defined.</li>'}
             </ul>
           </div>
         </section>
@@ -485,6 +555,12 @@ export const renderAccountPage = (ctx) => {
               }
             </ul>
           </div>
+          <div class="card compact-card">
+            <h3>Engagement Timeline</h3>
+            <div class="timeline">
+              ${changeLogRows(timelineEvents)}
+            </div>
+          </div>
         </section>
 
         <section class="tab-panel" data-tab-panel="outcomes" id="outcomes" aria-hidden="true">
@@ -562,9 +638,19 @@ export const renderAccountPage = (ctx) => {
   `;
 
   wireTabs(wrapper);
+  wrapper.querySelectorAll('[data-tab-link]').forEach((item) => item.classList.remove('is-active'));
+  wrapper.querySelector(`[data-tab-link="${startTab}"]`)?.classList.add('is-active');
+
+  wrapper.querySelectorAll('[data-tab-target]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const id = button.getAttribute('data-tab-target');
+      wrapper.querySelectorAll('[data-tab-link]').forEach((item) => item.classList.remove('is-active'));
+      wrapper.querySelector(`[data-tab-link="${id}"]`)?.classList.add('is-active');
+    });
+  });
 
   const drawer = renderActionDrawer({
-    title: 'Account Action Drawer',
+    title: journeyMode ? 'Journey Action Drawer' : 'Account Action Drawer',
     mode,
     nextActions: workspace.actions.immediate,
     dueSoon: workspace.actions.dueSoon,
@@ -660,6 +746,7 @@ export const accountCommandEntries = (workspace) => {
   if (!workspace?.account) return [];
   return [
     { id: `account-${workspace.account.id}`, label: `Open account: ${workspace.account.name}`, meta: 'Account', action: { route: 'account', params: { id: workspace.account.id } } },
+    { id: `journey-${workspace.account.id}`, label: `Open journey: ${workspace.account.name}`, meta: 'Journey', action: { route: 'journey', params: { id: workspace.account.id } } },
     { id: 'account-programs', label: 'Open programs', meta: 'Programs', action: { route: 'programs' } },
     { id: 'account-exports', label: 'Open exports center', meta: 'Exports', action: { route: 'exports' } }
   ];

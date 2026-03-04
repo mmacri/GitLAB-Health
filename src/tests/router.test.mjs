@@ -31,6 +31,10 @@ test('route path builder produces account href', () => {
 test('router supports playbooks and exports routes', () => {
   assert.equal(parseRoute('/playbooks').name, 'playbooks');
   assert.equal(parseRoute('/exports').name, 'exports');
+  assert.equal(parseRoute('/journey').name, 'journey');
+  assert.equal(parseRoute('/journey/northwind-industries').name, 'journey');
   assert.equal(routePath('playbooks'), '/playbooks');
   assert.equal(routePath('exports'), '/exports');
+  assert.equal(routePath('journey'), '/journey');
+  assert.equal(routePath('journey', { id: 'northwind-industries' }), '/journey/northwind-industries');
 });

@@ -75,9 +75,9 @@ export const renderPortfolioHomePage = (ctx) => {
   wrapper.innerHTML = `
     <header class="page-head">
       <div>
-        <p class="eyebrow">Work Queue</p>
-        <h1>Pooled Work Queue Command Center</h1>
-        <p class="hero-lede">Triage first: due work, outliers, and 1:many enablement motions.</p>
+        <p class="eyebrow">Today</p>
+        <h1>Today Operating Console</h1>
+        <p class="hero-lede">Start the day with priority triage, lifecycle risk, and next best actions.</p>
       </div>
       <div class="page-actions">
         <button class="qa" type="button" data-go-intake>Create Engagement Request</button>
@@ -167,7 +167,7 @@ export const renderPortfolioHomePage = (ctx) => {
       <div class="main-col">
         <section class="card">
           <div class="metric-head">
-            <h2>Work Queue</h2>
+            <h2>Priority Work Queue</h2>
             ${statusChip({ label: `${portfolio.todayQueue.length} due`, tone: portfolio.todayQueue.length ? 'warn' : 'good' })}
           </div>
           <div class="table-wrap">
@@ -209,6 +209,21 @@ export const renderPortfolioHomePage = (ctx) => {
             ${statusChip({ label: `${trendWatch.length} accounts`, tone: trendWatch.length ? 'warn' : 'good' })}
           </div>
           ${shortActionList(trendWatch, 'No yellow/red trend accounts.')}
+        </section>
+
+        <section class="card">
+          <div class="metric-head">
+            <h2>Upcoming Customer Engagements</h2>
+            ${statusChip({ label: `${portfolio.actions.dueSoon.length} scheduled`, tone: portfolio.actions.dueSoon.length ? 'good' : 'warn' })}
+          </div>
+          <ul class="simple-list">
+            ${
+              portfolio.actions.dueSoon
+                .slice(0, 6)
+                .map((item) => `<li>${item}</li>`)
+                .join('') || '<li>No upcoming engagements scheduled.</li>'
+            }
+          </ul>
         </section>
 
         <section class="card">
@@ -353,7 +368,7 @@ export const renderPortfolioPage = (ctx) => {
         <p class="hero-lede">Detailed pooled table with working filters for segment, renewal, health, stale data, lowest use-case, and open requests.</p>
       </div>
       <div class="page-actions">
-        <button class="ghost-btn" type="button" data-go-home>Back to Portfolio Home</button>
+        <button class="ghost-btn" type="button" data-go-home>Back to Today</button>
         <button class="qa" type="button" data-export-portfolio>Export Portfolio CSV</button>
       </div>
     </header>
@@ -429,6 +444,7 @@ export const renderPortfolioPage = (ctx) => {
     columns: [
       { key: 'name', label: 'Account' },
       { key: 'segment', label: 'Segment' },
+      { key: 'lifecycle', label: 'Lifecycle Stage' },
       { key: 'health', label: 'Health' },
       { key: 'adoptionCount', label: 'Adoption' },
       { key: 'renewalDays', label: 'Renewal Days' },
@@ -440,6 +456,7 @@ export const renderPortfolioPage = (ctx) => {
       ...signal,
       name: signal.account.name,
       segment: signal.account.segment,
+      lifecycle: signal.account.lifecycle_stage || signal.account.health?.lifecycle_stage || 'enable',
       health: signal.account.health?.overall,
       adoptionCount: `${signal.greenUseCaseCount || 0}/4`,
       renewalDays: signal.renewalDays ?? 999,
@@ -451,6 +468,7 @@ export const renderPortfolioPage = (ctx) => {
     rowRenderer: (row) => `
       <td><a href="#" data-open-account="${row.account.id}">${row.account.name}</a></td>
       <td>${row.account.segment}</td>
+      <td>${row.account.lifecycle_stage || row.account.health?.lifecycle_stage || 'enable'}</td>
       <td>${statusChip({ label: row.account.health?.overall, tone: statusToneFromHealth(row.account.health?.overall) })}</td>
       <td>${row.greenUseCaseCount || 0}/4 green</td>
       <td>${row.renewalDays === 999 ? 'Missing data' : row.renewalDays}</td>
@@ -524,7 +542,8 @@ export const portfolioCommandEntries = (data) => {
   }));
 
   return [
-    { id: 'go-home', label: 'Open Work Queue', meta: 'Queue', action: { route: 'home' } },
+    { id: 'go-home', label: 'Open Today Console', meta: 'Today', action: { route: 'home' } },
+    { id: 'go-journey', label: 'Open Journey Workspace', meta: 'Journey', action: { route: 'journey' } },
     { id: 'go-portfolio', label: 'Open Portfolio Table', meta: 'Portfolio', action: { route: 'portfolio' } },
     ...accountEntries
   ];
