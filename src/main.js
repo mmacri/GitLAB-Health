@@ -33,6 +33,26 @@ const leftRailRoot = document.querySelector('[data-left-rail]');
 const toastRoot = document.querySelector('[data-toast]');
 const settingsRoot = document.querySelector('[data-settings]');
 
+const syncHeaderOffset = () => {
+  const header = document.querySelector('.app-header');
+  if (!header) return;
+
+  const offset = Math.ceil(header.getBoundingClientRect().height + 16);
+  document.documentElement.style.setProperty('--header-offset', `${offset}px`);
+};
+
+const observeHeaderOffset = () => {
+  syncHeaderOffset();
+
+  window.addEventListener('resize', syncHeaderOffset);
+
+  const header = document.querySelector('.app-header');
+  if (header && 'ResizeObserver' in window) {
+    const ro = new ResizeObserver(() => syncHeaderOffset());
+    ro.observe(header);
+  }
+};
+
 if (!appRoot || !routeRoot || !leftRailRoot) {
   throw new Error('App shell is missing required mount points.');
 }
@@ -953,6 +973,7 @@ const render = () => {
   renderLeftRail();
   renderCurrentRoute();
   setActiveNav();
+  syncHeaderOffset();
 };
 
 state.basePath = detectBasePath(window.location.pathname);
@@ -1109,6 +1130,7 @@ const init = async () => {
   }
 
   bindGlobalEvents();
+  observeHeaderOffset();
 
   palette = createCommandPalette({
     onSelect(entry) {

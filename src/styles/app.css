@@ -17,7 +17,7 @@
   --card-gap: 16px;
   --section-gap: 40px;
   --radius: 12px;
-  --header-offset: 144px;
+  --header-offset: 160px;
 
   /* core surfaces and color */
   --page-bg: #f8f9fb;
@@ -335,6 +335,7 @@ button:hover {
 
 /* App shell */
 .app-shell {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
   gap: 24px;
@@ -350,9 +351,12 @@ button:hover {
   align-self: start;
   width: 100%;
   max-width: 280px;
+  z-index: 1;
 }
 
 .main {
+  position: relative;
+  z-index: 2;
   min-width: 0;
   overflow-x: clip;
 }
@@ -544,7 +548,7 @@ hr {
 
 .account-header {
   position: sticky;
-  top: 168px;
+  top: calc(var(--header-offset) + 8px);
   z-index: 25;
   background: var(--surface);
   border: 1px solid var(--border);
