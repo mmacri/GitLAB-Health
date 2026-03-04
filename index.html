@@ -30,41 +30,72 @@
     </script>
   </head>
   <body>
-    <div class="page app-shell" data-app-root>
-      <header class="hero app-header">
-        <div class="nav-shell">
-          <nav class="nav primary-nav" aria-label="Primary navigation">
-            <div class="brand">
-              <div class="brand-mark" aria-hidden="true"></div>
-              <div class="brand-text">
-                <span class="brand-title">GitLab CSE On-Demand</span>
-                <span class="brand-sub">Pooled Customer Success Engineering Operations</span>
+    <div class="app-shell" data-app-root>
+      <header class="header app-header">
+        <div class="header__row">
+          <div class="header__brand">
+            <div class="brand-mark" aria-hidden="true"></div>
+            <div class="brand-text">
+              <span class="brand-title">GitLab CSE On-Demand</span>
+              <span class="brand-sub">Pooled Customer Success Engineering Operations</span>
+            </div>
+          </div>
+
+          <div class="header__controls">
+            <label class="control-field">
+              <span class="kicker">Account</span>
+              <select data-global-account-select></select>
+            </label>
+            <button class="nav-search" type="button" data-open-palette>Search (Ctrl+K)</button>
+            <button class="ghost-btn" type="button" data-global-export>Export</button>
+            <label class="safe-toggle global-safe">
+              <input type="checkbox" data-global-safe-toggle />
+              <span>Customer-safe</span>
+            </label>
+            <div class="control-menu">
+              <button class="ghost-btn" type="button" data-open-more>More</button>
+              <div class="control-menu__panel" data-more-menu hidden>
+                <button class="ghost-btn" type="button" data-open-settings>Settings</button>
+                <button class="ghost-btn" type="button" data-copy-snapshot>Copy snapshot link</button>
+                <button class="ghost-btn" type="button" data-go-resources>Resources</button>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div class="nav-actions">
-              <button class="nav-search" type="button" data-open-palette>Search (Ctrl+K)</button>
-              <div class="mode-picker">
-                <label class="mode-label" for="global-mode-select">Mode</label>
-                <select id="global-mode-select" data-global-mode>
-                  <option value="today">Today</option>
-                  <option value="review">Review</option>
-                  <option value="deep">Deep Dive</option>
-                </select>
-              </div>
-              <label class="safe-toggle global-safe">
-                <input type="checkbox" data-global-safe-toggle />
-                <span>Customer-safe</span>
-              </label>
-              <button class="ghost-btn" type="button" data-open-settings>Settings</button>
+        <div class="header__row header__row--secondary">
+          <div class="header__controls">
+            <label class="control-field">
+              <span class="kicker">Persona</span>
+              <select data-global-persona>
+                <option value="cse">CSE On-Demand</option>
+                <option value="manager">CSE Manager</option>
+              </select>
+            </label>
+            <div class="mode-picker">
+              <label class="mode-label" for="global-mode-select">Mode</label>
+              <select id="global-mode-select" data-global-mode>
+                <option value="today">Today</option>
+                <option value="review">Review</option>
+                <option value="deep">Deep Dive</option>
+              </select>
             </div>
-          </nav>
+            <label class="control-field">
+              <span class="kicker">Jump</span>
+              <select data-global-jump></select>
+            </label>
+            <button class="ghost-btn" type="button" data-open-filters>Filters</button>
+          </div>
+          <p class="meta" data-safe-label>Internal mode • Today</p>
+        </div>
 
-          <div class="breadcrumb-bar app-subhead">
-            <p class="muted" data-safe-label>Internal mode is ON</p>
-            <p class="muted">
-              CSE model: pooled triage + 1:many execution (webinars, labs, office hours) + targeted account drill-in.
-            </p>
+        <div class="header-panel" data-filters-panel hidden>
+          <div class="header-panel__inner">
+            <p class="meta">Advanced filters stay route-specific. Use these quick shortcuts to move into filter-heavy views.</p>
+            <div class="header__controls">
+              <button class="ghost-btn" type="button" data-go-portfolio>Open Portfolio Filters</button>
+              <button class="ghost-btn" type="button" data-go-playbooks>Open Playbooks</button>
+            </div>
           </div>
         </div>
       </header>

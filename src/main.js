@@ -197,6 +197,21 @@ const PRIMARY_NAV_ITEMS = [
   { route: 'cheatsheet', label: 'Cheatsheet', icon: 'C' },
   { route: 'manager', label: 'Manager', icon: 'M' }
 ];
+const ROUTE_LABELS = {
+  home: 'Today',
+  portfolio: 'Portfolio',
+  account: 'Account',
+  journey: 'Journey',
+  toolkit: 'Success Plans',
+  simulator: 'Simulator',
+  programs: 'Programs',
+  playbooks: 'Playbooks',
+  resources: 'Resources',
+  cheatsheet: 'Cheatsheet',
+  exports: 'Exports',
+  intake: 'Intake',
+  manager: 'Manager'
+};
 
 const setActiveNav = () => {
   navItems().forEach((link) => {
@@ -525,15 +540,67 @@ const openMissingEditor = ({ accountId, path, label, type = 'text' }) => {
 };
 
 const renderShellContext = () => {
+  const accounts = state.data?.accounts || [];
+  const activeAccountId = state.selectedAccountId || accounts[0]?.id || '';
+  const activeAccount = accounts.find((account) => account.id === activeAccountId) || accounts[0] || null;
+
   const safeToggle = appRoot.querySelector('[data-global-safe-toggle]');
   if (safeToggle) safeToggle.checked = state.customerSafe;
 
   const modeSelect = appRoot.querySelector('[data-global-mode]');
   if (modeSelect) modeSelect.value = state.viewMode;
 
+  const accountSelect = appRoot.querySelector('[data-global-account-select]');
+  if (accountSelect) {
+    accountSelect.innerHTML = accounts.length
+      ? accounts
+          .map(
+            (account) =>
+              `<option value="${account.id}" ${account.id === activeAccountId ? 'selected' : ''}>${account.name}</option>`
+          )
+          .join('')
+      : '<option value="">No accounts loaded</option>';
+    accountSelect.value = activeAccountId;
+  }
+
+  const personaSelect = appRoot.querySelector('[data-global-persona]');
+  if (personaSelect) {
+    personaSelect.value = state.route.name === 'manager' ? 'manager' : 'cse';
+  }
+
+  const jumpSelect = appRoot.querySelector('[data-global-jump]');
+  if (jumpSelect) {
+    const options = [
+      { value: 'home', label: 'Today' },
+      { value: 'portfolio', label: 'Portfolio' },
+      { value: activeAccount ? `account:${activeAccount.id}` : 'account', label: activeAccount ? `Account: ${activeAccount.name}` : 'Account' },
+      { value: 'programs', label: 'Programs' },
+      { value: 'toolkit', label: 'Success Plans' },
+      { value: 'simulator', label: 'Simulator' },
+      { value: 'playbooks', label: 'Playbooks' },
+      { value: 'resources', label: 'Resources' },
+      { value: 'cheatsheet', label: 'Cheatsheet' },
+      { value: 'manager', label: 'Manager' },
+      { value: 'exports', label: 'Exports' },
+      { value: 'intake', label: 'Intake' }
+    ];
+    jumpSelect.innerHTML = options.map((item) => `<option value="${item.value}">${item.label}</option>`).join('');
+    const currentValue =
+      state.route.name === 'account' || state.route.name === 'journey'
+        ? activeAccount
+          ? `account:${activeAccount.id}`
+          : 'account'
+        : state.route.name;
+    jumpSelect.value = options.some((item) => item.value === currentValue) ? currentValue : 'home';
+  }
+
   const safeLabel = appRoot.querySelector('[data-safe-label]');
   if (safeLabel) {
-    safeLabel.textContent = state.customerSafe ? `Customer-safe mode • ${state.viewMode}` : `Internal mode • ${state.viewMode}`;
+    const routeLabel = ROUTE_LABELS[state.route.name] || 'Today';
+    const modeLabel = state.viewMode === 'deep' ? 'Deep Dive' : state.viewMode === 'review' ? 'Review' : 'Today';
+    safeLabel.textContent = state.customerSafe
+      ? `Customer-safe mode • ${routeLabel} • ${modeLabel}`
+      : `Internal mode • ${routeLabel} • ${modeLabel}`;
   }
 };
 
@@ -620,6 +687,39 @@ const reloadData = async () => {
     setSelectedAccount(state.data.accounts[0].id);
   }
   render();
+};
+
+const normalizeRouteLayout = (view) => {
+  if (!(view instanceof HTMLElement)) return;
+  view.classList.add('page');
+  if (!view.classList.contains('section-stack')) {
+    view.classList.add('section-stack');
+  }
+
+  [...view.children].forEach((child) => {
+    if (!(child instanceof HTMLElement)) return;
+    if (child.tagName === 'SECTION' || child.tagName === 'HEADER') {
+      child.classList.add('section');
+    }
+  });
+
+  view.querySelectorAll('.metric-head').forEach((header) => header.classList.add('section__header'));
+
+  view.querySelectorAll('details').forEach((details) => {
+    details.classList.add('accordion__item');
+    const summary = details.querySelector(':scope > summary');
+    if (summary) {
+      summary.classList.add('accordion__header');
+    }
+    let body = details.querySelector(':scope > .accordion__body');
+    if (!body) {
+      const bodyNodes = [...details.childNodes].filter((node) => node !== summary);
+      body = document.createElement('div');
+      body.className = 'accordion__body';
+      bodyNodes.forEach((node) => body.appendChild(node));
+      details.appendChild(body);
+    }
+  });
 };
 
 const renderCurrentRoute = () => {
@@ -841,6 +941,7 @@ const renderCurrentRoute = () => {
   }
 
   routeRoot.innerHTML = '';
+  normalizeRouteLayout(view);
   routeRoot.appendChild(view);
 
   const commands = commandEntries(workspace);
@@ -879,6 +980,46 @@ const bindGlobalEvents = () => {
     router.navigate(name);
   });
 
+  appRoot.querySelector('[data-global-account-select]')?.addEventListener('change', (event) => {
+    const accountId = event.target.value;
+    if (!accountId) return;
+    setSelectedAccount(accountId);
+    router.navigate('account', { id: accountId });
+  });
+
+  appRoot.querySelector('[data-global-export]')?.addEventListener('click', () => {
+    router.navigate('exports');
+  });
+
+  appRoot.querySelector('[data-global-persona]')?.addEventListener('change', (event) => {
+    const persona = event.target.value;
+    if (persona === 'manager') {
+      router.navigate('manager');
+      return;
+    }
+    router.navigate('home');
+  });
+
+  appRoot.querySelector('[data-global-jump]')?.addEventListener('change', (event) => {
+    const value = String(event.target.value || '').trim();
+    if (!value) return;
+    if (value.startsWith('account:')) {
+      const accountId = value.split(':')[1] || state.selectedAccountId || state.data.accounts?.[0]?.id || '';
+      if (!accountId) return;
+      setSelectedAccount(accountId);
+      router.navigate('account', { id: accountId });
+      return;
+    }
+    if (value === 'account') {
+      const accountId = state.selectedAccountId || state.data.accounts?.[0]?.id || '';
+      if (!accountId) return;
+      setSelectedAccount(accountId);
+      router.navigate('account', { id: accountId });
+      return;
+    }
+    router.navigate(value);
+  });
+
   appRoot.querySelector('[data-global-safe-toggle]')?.addEventListener('change', (event) => {
     setSafeMode(Boolean(event.target.checked));
   });
@@ -890,6 +1031,56 @@ const bindGlobalEvents = () => {
   appRoot.querySelector('[data-open-settings]')?.addEventListener('click', () => {
     settingsRoot?.classList.add('is-open');
     settingsRoot?.setAttribute('aria-hidden', 'false');
+  });
+
+  const moreButton = appRoot.querySelector('[data-open-more]');
+  const moreMenu = appRoot.querySelector('[data-more-menu]');
+  moreButton?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (!moreMenu) return;
+    const expanded = moreButton.getAttribute('aria-expanded') === 'true';
+    moreMenu.hidden = expanded;
+    moreButton.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!moreMenu || moreMenu.hidden) return;
+    if (event.target.closest('[data-more-menu]') || event.target.closest('[data-open-more]')) return;
+    moreMenu.hidden = true;
+    moreButton?.setAttribute('aria-expanded', 'false');
+  });
+
+  appRoot.querySelector('[data-copy-snapshot]')?.addEventListener('click', async () => {
+    await copyShareSnapshot();
+    if (moreMenu) moreMenu.hidden = true;
+    moreButton?.setAttribute('aria-expanded', 'false');
+  });
+
+  appRoot.querySelector('[data-go-resources]')?.addEventListener('click', () => {
+    router.navigate('resources');
+    if (moreMenu) moreMenu.hidden = true;
+    moreButton?.setAttribute('aria-expanded', 'false');
+  });
+
+  const filtersButton = appRoot.querySelector('[data-open-filters]');
+  const filtersPanel = appRoot.querySelector('[data-filters-panel]');
+  filtersButton?.addEventListener('click', () => {
+    if (!filtersPanel) return;
+    const hidden = filtersPanel.hasAttribute('hidden');
+    if (hidden) {
+      filtersPanel.removeAttribute('hidden');
+      filtersButton.setAttribute('aria-expanded', 'true');
+    } else {
+      filtersPanel.setAttribute('hidden', 'hidden');
+      filtersButton.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  appRoot.querySelector('[data-go-portfolio]')?.addEventListener('click', () => {
+    router.navigate('portfolio');
+  });
+  appRoot.querySelector('[data-go-playbooks]')?.addEventListener('click', () => {
+    router.navigate('playbooks');
   });
 
   settingsRoot?.querySelectorAll('[data-close-settings]').forEach((item) => {
