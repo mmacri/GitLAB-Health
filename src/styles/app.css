@@ -17,6 +17,7 @@
   --card-gap: 16px;
   --section-gap: 40px;
   --radius: 12px;
+  --header-offset: 144px;
 
   /* core surfaces and color */
   --page-bg: #f8f9fb;
@@ -335,7 +336,7 @@ button:hover {
 /* App shell */
 .app-shell {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
   gap: 24px;
   align-items: start;
   max-width: var(--page-max);
@@ -345,12 +346,15 @@ button:hover {
 
 .sidebar {
   position: sticky;
-  top: 16px;
+  top: var(--header-offset);
   align-self: start;
+  width: 100%;
+  max-width: 280px;
 }
 
 .main {
   min-width: 0;
+  overflow-x: clip;
 }
 
 .main * {
@@ -1687,6 +1691,9 @@ textarea.artifact,
 
   .sidebar {
     position: static;
+    justify-self: start;
+    width: min(320px, 100%);
+    max-width: min(320px, 100%);
   }
 
   .left-rail {
