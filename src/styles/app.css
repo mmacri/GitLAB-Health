@@ -1056,6 +1056,29 @@ textarea.artifact,
   font-size: 13px;
 }
 
+.numbered-list {
+  list-style: decimal;
+}
+
+.playbook-card {
+  display: grid;
+  gap: 12px;
+}
+
+.playbook-card h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ink-soft);
+}
+
+.playbook-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .resource-tools {
   display: flex;
   gap: 8px;
@@ -1269,7 +1292,8 @@ textarea.artifact,
   .flow-steps,
   .matrix-grid,
   .landing-grid,
-  .action-card-grid {
+  .action-card-grid,
+  .playbook-grid {
     grid-template-columns: 1fr;
   }
 

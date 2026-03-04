@@ -29,7 +29,7 @@ Static GitLab Pages-compatible operating dashboard for pooled Customer Success E
   - missing-data chips with inline edit modal (localStorage-backed)
   - pinned right-side Action Drawer
 - Programs page (`/programs`) for webinars/labs/office-hours with attendance + registration logging.
-- Playbooks page (`/playbooks`) with checklist persistence in localStorage.
+- Playbooks page (`/playbooks`) with execution-ready CSE library, checklist persistence, and markdown artifact actions.
 - Resources page (`/resources`) with customer-safe filtering.
 - Export center (`/exports`) for portfolio/account export actions and share snapshot URL.
 - Intake workflow (`/intake`) kept as a tools route for request capture + artifact generation.
@@ -60,7 +60,7 @@ Current seeded sample size:
 - `accounts.json`: 12 realistic accounts (varied health/adoption/renewal states)
 - `programs.json`: 8 programs (webinars, hands-on labs, office hours)
 - `requests.json`: 18 requests
-- `playbooks.json`: 8 response playbooks with checklist templates
+- `playbooks.json`: 7 category-aligned CSE playbooks with trigger signals, execution agendas, and generated artifacts
 
 ## Local run
 Run a static server from repo root:

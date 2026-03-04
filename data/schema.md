@@ -112,11 +112,22 @@ Account fields:
 
 ## playbooks.json
 - `version`, `updated_on`
+- `categories[]` (playbook category labels)
 - `playbooks[]`
   - `id`
+  - `category` (playbook grouping for workflow library)
   - `stage`
   - `topic`
   - `title`
+  - `when_to_run`
+  - `trigger_signals[]`
+  - `objective`
+  - `preparation_steps[]`
+  - `execution_agenda[]`
+  - `artifacts_generated[]`
+    - `name`
+    - `description`
+    - `template`
   - `recommended_program` program id
   - `next_best_action`
   - `checklist[]`
@@ -128,6 +139,8 @@ Account fields:
     - `followup`
     - `issue`
   - `resource_ids[]`
+  - `references[]` absolute URLs
+  - `internal_only` (hidden in customer-safe mode)
 
 ## resources.json
 - `version`, `updated_on`

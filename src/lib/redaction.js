@@ -45,10 +45,11 @@ export const redactAccountForCustomer = (account) => {
 
 export const redactCollectionForCustomer = (accounts) => (accounts || []).map((account) => redactAccountForCustomer(account));
 
-export const redactPlaybookForCustomer = (playbook) => ({
-  ...playbook,
-  checklist: (playbook?.checklist || []).filter((item) => !item.internal_only)
-});
+export const redactPlaybookForCustomer = (playbook) => {
+  const clone = deepClone(playbook || {});
+  clone.checklist = (clone?.checklist || []).filter((item) => !item.internal_only);
+  return redactObjectForCustomer(clone);
+};
 
 export const redactPlaybooksForCustomer = (playbooks) => (playbooks || []).map((item) => redactPlaybookForCustomer(item));
 

@@ -710,6 +710,7 @@ const renderCurrentRoute = () => {
   if (route.name === 'playbooks') {
     view = renderPlaybooksPage({
       playbooks: state.data.playbooks,
+      resources: state.data.resources,
       customerSafe: state.customerSafe,
       checklistState: state.checklistState,
       mode: state.viewMode,
@@ -718,6 +719,7 @@ const renderCurrentRoute = () => {
         state.checklistState[playbookId][checkKey] = value;
         persistPlaybookChecklist(state.checklistState);
       },
+      copyText,
       notify,
       ...common
     });

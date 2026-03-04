@@ -1,325 +1,527 @@
 {
-  "version": 2,
-  "updated_on": "2026-03-03",
+  "version": 3,
+  "updated_on": "2026-03-04",
+  "categories": [
+    "Onboarding Playbooks",
+    "Adoption Playbooks",
+    "Risk Mitigation Playbooks",
+    "Executive Engagement Playbooks",
+    "Expansion Playbooks",
+    "Renewal Playbooks",
+    "Technical Enablement Playbooks"
+  ],
   "playbooks": [
     {
-      "id": "pb-yellow-recovery",
-      "stage": "enable",
-      "topic": "platform foundations",
-      "title": "Yellow Health Recovery",
-      "recommended_program": "PGM-2026-004",
-      "next_best_action": "Rebuild cadence, close stale blockers, and show measurable adoption trend recovery.",
-      "checklist": [
-        {
-          "key": "align",
-          "label": "Confirm objective + definition of done with customer",
-          "internal_only": false
-        },
-        {
-          "key": "program",
-          "label": "Enroll customer in recommended 1:many program",
-          "internal_only": false
-        },
-        {
-          "key": "evidence",
-          "label": "Capture measurable adoption delta and outcome evidence",
-          "internal_only": false
-        },
-        {
-          "key": "risk",
-          "label": "Update risk register and escalation status",
-          "internal_only": true
-        }
-      ],
-      "templates": {
-        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
-        "followup": "Summarize outcomes, owners, timelines, and support path.",
-        "issue": "Create collaboration issue with objective, done criteria, and checklists."
-      },
-      "resource_ids": [
-        "res-health-scoring",
-        "res-platform-value",
-        "res-success-plans"
-      ]
-    },
-    {
-      "id": "pb-renewal-red",
-      "stage": "renew",
-      "topic": "CI",
-      "title": "Renewal Red Stabilization",
-      "recommended_program": "PGM-2026-006",
-      "next_best_action": "Run weekly executive-ready risk update tied to CI reliability evidence.",
-      "checklist": [
-        {
-          "key": "align",
-          "label": "Confirm objective + definition of done with customer",
-          "internal_only": false
-        },
-        {
-          "key": "program",
-          "label": "Enroll customer in recommended 1:many program",
-          "internal_only": false
-        },
-        {
-          "key": "evidence",
-          "label": "Capture measurable adoption delta and outcome evidence",
-          "internal_only": false
-        },
-        {
-          "key": "risk",
-          "label": "Update risk register and escalation status",
-          "internal_only": true
-        }
-      ],
-      "templates": {
-        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
-        "followup": "Summarize outcomes, owners, timelines, and support path.",
-        "issue": "Create collaboration issue with objective, done criteria, and checklists."
-      },
-      "resource_ids": [
-        "res-health-scoring",
-        "res-platform-value",
-        "res-success-plans"
-      ]
-    },
-    {
-      "id": "pb-secure-accel",
-      "stage": "optimize",
-      "topic": "Secure",
-      "title": "Secure Adoption Acceleration",
-      "recommended_program": "PGM-2026-002",
-      "next_best_action": "Increase secure scan coverage and document policy baseline rollout.",
-      "checklist": [
-        {
-          "key": "align",
-          "label": "Confirm objective + definition of done with customer",
-          "internal_only": false
-        },
-        {
-          "key": "program",
-          "label": "Enroll customer in recommended 1:many program",
-          "internal_only": false
-        },
-        {
-          "key": "evidence",
-          "label": "Capture measurable adoption delta and outcome evidence",
-          "internal_only": false
-        },
-        {
-          "key": "risk",
-          "label": "Update risk register and escalation status",
-          "internal_only": true
-        }
-      ],
-      "templates": {
-        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
-        "followup": "Summarize outcomes, owners, timelines, and support path.",
-        "issue": "Create collaboration issue with objective, done criteria, and checklists."
-      },
-      "resource_ids": [
-        "res-health-scoring",
-        "res-platform-value",
-        "res-success-plans"
-      ]
-    },
-    {
-      "id": "pb-cd-drift",
-      "stage": "expand",
-      "topic": "CD",
-      "title": "CD Drift Correction",
-      "recommended_program": "PGM-2026-005",
-      "next_best_action": "Standardize deployment controls and improve rollback safety.",
-      "checklist": [
-        {
-          "key": "align",
-          "label": "Confirm objective + definition of done with customer",
-          "internal_only": false
-        },
-        {
-          "key": "program",
-          "label": "Enroll customer in recommended 1:many program",
-          "internal_only": false
-        },
-        {
-          "key": "evidence",
-          "label": "Capture measurable adoption delta and outcome evidence",
-          "internal_only": false
-        },
-        {
-          "key": "risk",
-          "label": "Update risk register and escalation status",
-          "internal_only": true
-        }
-      ],
-      "templates": {
-        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
-        "followup": "Summarize outcomes, owners, timelines, and support path.",
-        "issue": "Create collaboration issue with objective, done criteria, and checklists."
-      },
-      "resource_ids": [
-        "res-health-scoring",
-        "res-platform-value",
-        "res-success-plans"
-      ]
-    },
-    {
-      "id": "pb-scm-migration",
+      "id": "pb-first-value-acceleration",
+      "category": "Onboarding Playbooks",
       "stage": "onboard",
-      "topic": "SCM",
-      "title": "SCM Migration Execution",
+      "topic": "platform foundations",
+      "title": "First Value Acceleration Playbook",
+      "when_to_run": "Immediately after kickoff when no repository or pipeline is active.",
+      "trigger_signals": [
+        "Kickoff completed with no active repository migration",
+        "No successful pipeline in first 14 days",
+        "License utilization remains below 10%"
+      ],
+      "objective": "Deliver first visible value within 30 days using one production workflow.",
+      "preparation_steps": [
+        "Review onboarding checklist milestones and owners",
+        "Validate access model and runner readiness",
+        "Confirm first implementation workflow with engineering lead"
+      ],
+      "execution_agenda": [
+        "Confirm first value goal and definition of done",
+        "Select pilot repository and configure CI pipeline",
+        "Validate successful pipeline run and owner handoff",
+        "Capture evidence and set next adoption milestone"
+      ],
+      "artifacts_generated": [
+        {
+          "name": "First Value Summary",
+          "description": "Customer-facing summary of first value completion.",
+          "template": "Customer:\nGoal:\nWorkflow Implemented:\nPipeline Created:\nEvidence Date:\nNext Adoption Goal:"
+        }
+      ],
       "recommended_program": "PGM-2026-008",
-      "next_best_action": "Move teams to GitLab SCM and validate MR workflow readiness.",
+      "next_best_action": "Launch onboarding sprint to complete one production-ready pipeline.",
       "checklist": [
         {
-          "key": "align",
-          "label": "Confirm objective + definition of done with customer",
+          "key": "pilot_repo_ready",
+          "label": "Pilot repository selected and imported",
           "internal_only": false
         },
         {
-          "key": "program",
-          "label": "Enroll customer in recommended 1:many program",
+          "key": "runner_ready",
+          "label": "Runner and permissions verified",
           "internal_only": false
         },
         {
-          "key": "evidence",
-          "label": "Capture measurable adoption delta and outcome evidence",
+          "key": "first_pipeline_success",
+          "label": "First successful pipeline completed",
           "internal_only": false
         },
         {
-          "key": "risk",
-          "label": "Update risk register and escalation status",
+          "key": "internal_dependency_watch",
+          "label": "Internal dependency watchlist updated",
           "internal_only": true
         }
       ],
       "templates": {
-        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
-        "followup": "Summarize outcomes, owners, timelines, and support path.",
-        "issue": "Create collaboration issue with objective, done criteria, and checklists."
+        "agenda": "Align first-value scope, configure workflow, and confirm evidence.",
+        "followup": "Recap first-value milestone, owners, and next onboarding checkpoint.",
+        "issue": "Track first-value milestone tasks, blockers, and completion evidence."
       },
       "resource_ids": [
-        "res-health-scoring",
-        "res-platform-value",
-        "res-success-plans"
-      ]
+        "res-onboarding-checklist",
+        "res-platform-overview",
+        "res-first-pipeline"
+      ],
+      "references": [
+        "https://handbook.gitlab.com/handbook/customer-success/onboarding/onboarding-checklist/",
+        "https://about.gitlab.com/stages-devops-lifecycle/",
+        "https://docs.gitlab.com/ee/ci/quick_start/"
+      ],
+      "internal_only": {
+        "watch_items": [
+          "Escalate if first value slips beyond day 30."
+        ]
+      }
     },
     {
-      "id": "pb-ci-depth",
+      "id": "pb-platform-adoption-expansion",
+      "category": "Adoption Playbooks",
       "stage": "enable",
       "topic": "CI",
-      "title": "CI Depth Expansion",
+      "title": "Platform Adoption Expansion Playbook",
+      "when_to_run": "When customer has one to two active use cases and needs broader coverage.",
+      "trigger_signals": [
+        "Platform adoption below 3 green use cases",
+        "Use case scorecards show uneven maturity",
+        "Pipeline activity concentrated in one team"
+      ],
+      "objective": "Expand to 3+ green use cases and improve platform value score.",
+      "preparation_steps": [
+        "Review platform value score and use-case baseline",
+        "Select target use case and success metric",
+        "Map technical prerequisites and owners"
+      ],
+      "execution_agenda": [
+        "Review current workflow and lifecycle gaps",
+        "Prioritize next use case with implementation path",
+        "Schedule workshop motion with customer team",
+        "Define two-week success checkpoint"
+      ],
+      "artifacts_generated": [
+        {
+          "name": "Adoption Expansion Plan",
+          "description": "Plan to move from 1-2 use cases to 3+ green.",
+          "template": "Current Use Cases:\nTarget Use Case:\nTechnical Prerequisites:\nWorkshop Date:\nSuccess Metrics:"
+        }
+      ],
       "recommended_program": "PGM-2026-001",
-      "next_best_action": "Expand shared templates and increase pipeline coverage depth.",
+      "next_best_action": "Prioritize lowest-scoring use case and schedule enablement workshop.",
       "checklist": [
         {
-          "key": "align",
-          "label": "Confirm objective + definition of done with customer",
+          "key": "baseline_reviewed",
+          "label": "Platform baseline reviewed with customer",
           "internal_only": false
         },
         {
-          "key": "program",
-          "label": "Enroll customer in recommended 1:many program",
+          "key": "target_use_case_selected",
+          "label": "Target use case selected with success metric",
           "internal_only": false
         },
         {
-          "key": "evidence",
-          "label": "Capture measurable adoption delta and outcome evidence",
+          "key": "workshop_scheduled",
+          "label": "Workshop date and technical attendees confirmed",
           "internal_only": false
         },
         {
-          "key": "risk",
-          "label": "Update risk register and escalation status",
+          "key": "internal_expansion_notes",
+          "label": "Internal expansion notes captured",
           "internal_only": true
         }
       ],
       "templates": {
-        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
-        "followup": "Summarize outcomes, owners, timelines, and support path.",
-        "issue": "Create collaboration issue with objective, done criteria, and checklists."
+        "agenda": "Review scorecard, pick next use case, and set execution path.",
+        "followup": "Summarize adoption plan, owners, and due dates.",
+        "issue": "Track expansion work items and evidence checkpoints."
       },
       "resource_ids": [
-        "res-health-scoring",
-        "res-platform-value",
-        "res-success-plans"
-      ]
-    },
-    {
-      "id": "pb-outcome-proof",
-      "stage": "renew",
-      "topic": "platform foundations",
-      "title": "Outcome Proof Package",
-      "recommended_program": "PGM-2026-004",
-      "next_best_action": "Map use-case deltas to business outcomes for renewal narrative.",
-      "checklist": [
-        {
-          "key": "align",
-          "label": "Confirm objective + definition of done with customer",
-          "internal_only": false
-        },
-        {
-          "key": "program",
-          "label": "Enroll customer in recommended 1:many program",
-          "internal_only": false
-        },
-        {
-          "key": "evidence",
-          "label": "Capture measurable adoption delta and outcome evidence",
-          "internal_only": false
-        },
-        {
-          "key": "risk",
-          "label": "Update risk register and escalation status",
-          "internal_only": true
-        }
+        "res-platform-value-score",
+        "res-use-case-adoption",
+        "res-ci-docs",
+        "res-appsec-overview"
       ],
-      "templates": {
-        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
-        "followup": "Summarize outcomes, owners, timelines, and support path.",
-        "issue": "Create collaboration issue with objective, done criteria, and checklists."
-      },
-      "resource_ids": [
-        "res-health-scoring",
-        "res-platform-value",
-        "res-success-plans"
+      "references": [
+        "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/",
+        "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/use-case-adoption/",
+        "https://docs.gitlab.com/ee/ci/"
       ]
     },
     {
-      "id": "pb-office-hour-lift",
+      "id": "pb-adoption-stall-recovery",
+      "category": "Risk Mitigation Playbooks",
       "stage": "optimize",
       "topic": "platform foundations",
-      "title": "Office Hour Throughput Lift",
+      "title": "Adoption Stall Recovery Playbook",
+      "when_to_run": "When adoption has stalled for 30+ days or health trends negative.",
+      "trigger_signals": [
+        "Platform value score declining month over month",
+        "No new pipeline or commit growth",
+        "Engagement cadence exceeds expected gap"
+      ],
+      "objective": "Restore momentum by clearing blockers and setting near-term milestones.",
+      "preparation_steps": [
+        "Review health drivers and open requests",
+        "Collect use-case trend evidence",
+        "Prepare blocker-focused technical deep dive"
+      ],
+      "execution_agenda": [
+        "Identify root causes with customer stakeholders",
+        "Prioritize remediation actions and owners",
+        "Route to office hours or lab motion",
+        "Commit to two-week measurable checkpoint"
+      ],
+      "artifacts_generated": [
+        {
+          "name": "Risk Mitigation Action Plan",
+          "description": "Action plan for blocker resolution and accountability.",
+          "template": "Adoption Blocker:\nRoot Cause:\nRemediation Action:\nOwner:\nTarget Completion:"
+        }
+      ],
       "recommended_program": "PGM-2026-003",
-      "next_best_action": "Use recurring office hours to close repeated implementation blockers.",
+      "next_best_action": "Run blocker-resolution session and assign remediation owners.",
       "checklist": [
         {
-          "key": "align",
-          "label": "Confirm objective + definition of done with customer",
+          "key": "root_causes_validated",
+          "label": "Root causes validated with customer",
           "internal_only": false
         },
         {
-          "key": "program",
-          "label": "Enroll customer in recommended 1:many program",
+          "key": "actions_assigned",
+          "label": "Recovery actions assigned with due dates",
           "internal_only": false
         },
         {
-          "key": "evidence",
-          "label": "Capture measurable adoption delta and outcome evidence",
+          "key": "checkpoint_scheduled",
+          "label": "Two-week checkpoint scheduled",
           "internal_only": false
         },
         {
-          "key": "risk",
-          "label": "Update risk register and escalation status",
+          "key": "internal_escalation_review",
+          "label": "Internal escalation review completed",
           "internal_only": true
         }
       ],
       "templates": {
-        "agenda": "Review objective, blockers, evidence, owners, and next milestone dates.",
-        "followup": "Summarize outcomes, owners, timelines, and support path.",
-        "issue": "Create collaboration issue with objective, done criteria, and checklists."
+        "agenda": "Review stall drivers, remediation plan, and milestone timing.",
+        "followup": "Share mitigation actions, owners, and checkpoint date.",
+        "issue": "Track risk mitigation tasks and closure evidence."
       },
       "resource_ids": [
         "res-health-scoring",
-        "res-platform-value",
+        "res-escalation-framework",
+        "res-workshops"
+      ],
+      "references": [
+        "https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/",
+        "https://handbook.gitlab.com/handbook/customer-success/escalations/"
+      ],
+      "internal_only": {
+        "watch_items": [
+          "Escalate to leadership if two checkpoints are missed."
+        ]
+      }
+    },
+    {
+      "id": "pb-executive-business-review",
+      "category": "Executive Engagement Playbooks",
+      "stage": "renew",
+      "topic": "platform foundations",
+      "title": "Executive Business Review (EBR) Playbook",
+      "when_to_run": "Quarterly and during strategic renewal planning.",
+      "trigger_signals": [
+        "Renewal window active",
+        "Executive sponsor alignment required",
+        "Strategic roadmap decisions pending"
+      ],
+      "objective": "Align executives on outcomes delivered, risks, and roadmap priorities.",
+      "preparation_steps": [
+        "Assemble adoption and health trend metrics",
+        "Build value narrative with customer outcomes",
+        "Draft strategic recommendations and decisions needed"
+      ],
+      "execution_agenda": [
+        "Review outcomes delivered since prior checkpoint",
+        "Present platform adoption and maturity movement",
+        "Discuss risk posture and mitigation actions",
+        "Agree roadmap priorities and owner commitments"
+      ],
+      "artifacts_generated": [
+        {
+          "name": "Executive Business Review Summary",
+          "description": "Executive-ready summary of value and next-step strategy.",
+          "template": "Adoption Progress:\nBusiness Outcomes:\nPlatform Expansion Opportunities:\nStrategic Recommendations:"
+        }
+      ],
+      "recommended_program": "PGM-2026-004",
+      "next_best_action": "Run EBR with value narrative and executive decision log.",
+      "checklist": [
+        {
+          "key": "exec_pack_prepared",
+          "label": "Executive metrics pack prepared",
+          "internal_only": false
+        },
+        {
+          "key": "sponsor_confirmed",
+          "label": "Executive sponsor confirmed",
+          "internal_only": false
+        },
+        {
+          "key": "decisions_logged",
+          "label": "Strategic decisions logged with owners",
+          "internal_only": false
+        },
+        {
+          "key": "internal_commercial_watch",
+          "label": "Internal commercial watch points reviewed",
+          "internal_only": true
+        }
+      ],
+      "templates": {
+        "agenda": "Review outcomes, risks, and roadmap alignment with executives.",
+        "followup": "Share executive decisions, owners, and next quarter commitments.",
+        "issue": "Track executive follow-through actions and due dates."
+      },
+      "resource_ids": [
+        "res-ebr",
+        "res-success-plans",
+        "res-vsa",
+        "res-dora-overview"
+      ],
+      "references": [
+        "https://handbook.gitlab.com/handbook/customer-success/customer-success-plans/",
+        "https://docs.gitlab.com/ee/user/analytics/value_stream_analytics/"
+      ]
+    },
+    {
+      "id": "pb-devsecops-capability-expansion",
+      "category": "Expansion Playbooks",
+      "stage": "expand",
+      "topic": "Secure",
+      "title": "DevSecOps Capability Expansion Playbook",
+      "when_to_run": "When CI/CD maturity is stable and secure controls are not yet embedded.",
+      "trigger_signals": [
+        "CI pipelines active in core teams",
+        "Security scanning not integrated",
+        "Compliance pressure increasing"
+      ],
+      "objective": "Introduce secure controls in pipelines while protecting delivery velocity.",
+      "preparation_steps": [
+        "Assess current pipeline and policy baseline",
+        "Identify pilot repositories for Secure rollout",
+        "Confirm findings workflow ownership"
+      ],
+      "execution_agenda": [
+        "Review security gaps in current delivery workflow",
+        "Enable baseline scanning controls in pilot repos",
+        "Validate triage workflow for findings",
+        "Plan phased expansion to additional teams"
+      ],
+      "artifacts_generated": [
+        {
+          "name": "Security Expansion Plan",
+          "description": "Enablement plan for Secure adoption in CI/CD.",
+          "template": "Security Feature Introduced:\nPipeline Changes:\nFindings Workflow:\nRisk Reduction Outcome:"
+        }
+      ],
+      "recommended_program": "PGM-2026-007",
+      "next_best_action": "Launch Secure pilot in one service and measure coverage growth.",
+      "checklist": [
+        {
+          "key": "pilot_scans_enabled",
+          "label": "SAST and dependency scans enabled",
+          "internal_only": false
+        },
+        {
+          "key": "findings_owners_assigned",
+          "label": "Findings triage owners assigned",
+          "internal_only": false
+        },
+        {
+          "key": "coverage_target_set",
+          "label": "Coverage target set for next quarter",
+          "internal_only": false
+        },
+        {
+          "key": "internal_critical_path",
+          "label": "Internal critical-risk escalation path reviewed",
+          "internal_only": true
+        }
+      ],
+      "templates": {
+        "agenda": "Define Secure rollout, owners, and pilot success criteria.",
+        "followup": "Publish secure rollout status and next milestone dates.",
+        "issue": "Track Secure adoption tasks and findings workflow actions."
+      },
+      "resource_ids": [
+        "res-appsec-overview",
+        "res-sast",
+        "res-dependency-scanning",
+        "res-container-scanning"
+      ],
+      "references": [
+        "https://docs.gitlab.com/ee/user/application_security/",
+        "https://docs.gitlab.com/ee/user/application_security/sast/",
+        "https://docs.gitlab.com/ee/user/application_security/dependency_scanning/"
+      ]
+    },
+    {
+      "id": "pb-renewal-readiness",
+      "category": "Renewal Playbooks",
+      "stage": "renew",
+      "topic": "CI",
+      "title": "Renewal Readiness Playbook",
+      "when_to_run": "120 days before renewal or earlier for yellow/red accounts.",
+      "trigger_signals": [
+        "Renewal less than 120 days",
+        "Health trend yellow or red",
+        "Executive sponsor engagement gap"
+      ],
+      "objective": "Validate adoption, engagement, and value proof to improve renewal confidence.",
+      "preparation_steps": [
+        "Review renewal risk signals and adoption coverage",
+        "Compile value proof and outcome evidence",
+        "Confirm executive alignment plan"
+      ],
+      "execution_agenda": [
+        "Assess readiness across adoption, engagement, and value",
+        "Review active risks and mitigation owners",
+        "Set executive communication cadence",
+        "Finalize readiness milestones through renewal date"
+      ],
+      "artifacts_generated": [
+        {
+          "name": "Renewal Readiness Assessment",
+          "description": "Structured readiness checkpoint for renewal execution.",
+          "template": "Health Status:\nAdoption Coverage:\nExecutive Sponsor Alignment:\nRenewal Confidence:\nTop Risks:"
+        }
+      ],
+      "recommended_program": "PGM-2026-006",
+      "next_best_action": "Run renewal readiness checkpoint and close top risk gaps before next exec review.",
+      "checklist": [
+        {
+          "key": "drivers_reviewed",
+          "label": "Health and risk drivers reviewed",
+          "internal_only": false
+        },
+        {
+          "key": "value_pack_ready",
+          "label": "Value proof pack prepared",
+          "internal_only": false
+        },
+        {
+          "key": "exec_touchpoint_set",
+          "label": "Executive touchpoint scheduled",
+          "internal_only": false
+        },
+        {
+          "key": "internal_renewal_strategy",
+          "label": "Internal renewal strategy aligned",
+          "internal_only": true
+        }
+      ],
+      "templates": {
+        "agenda": "Review renewal readiness, risk plan, and executive alignment steps.",
+        "followup": "Share readiness status, blockers, and closure plan.",
+        "issue": "Track renewal-critical tasks, owners, and deadlines."
+      },
+      "resource_ids": [
+        "res-renewal-risk",
+        "res-health-scoring",
+        "res-ebr",
         "res-success-plans"
+      ],
+      "references": [
+        "https://handbook.gitlab.com/handbook/customer-success/renewals/",
+        "https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"
+      ],
+      "internal_only": {
+        "watch_items": [
+          "Escalate if executive sponsor remains unconfirmed inside 45-day window."
+        ]
+      }
+    },
+    {
+      "id": "pb-cicd-workshop",
+      "category": "Technical Enablement Playbooks",
+      "stage": "enable",
+      "topic": "CD",
+      "title": "CI/CD Workshop Playbook",
+      "when_to_run": "When engineering teams need hands-on workflow enablement.",
+      "trigger_signals": [
+        "Pipeline coverage below target",
+        "Developers request technical coaching",
+        "Manual release steps remain high"
+      ],
+      "objective": "Enable repeatable CI/CD execution with documented handoff and ownership.",
+      "preparation_steps": [
+        "Confirm participant roles and repositories",
+        "Validate runner and permissions prerequisites",
+        "Prepare workshop runbook and examples"
+      ],
+      "execution_agenda": [
+        "Walk through GitLab workflow and architecture",
+        "Create pipeline and merge request automation flow",
+        "Review troubleshooting and optimization patterns",
+        "Capture post-workshop rollout actions"
+      ],
+      "artifacts_generated": [
+        {
+          "name": "Workshop Runbook",
+          "description": "Workshop facilitation plan with prerequisite checklist.",
+          "template": "Workshop Type:\nAudience Roles:\nPrerequisites:\nHands-on Steps:\nFollow-up Actions:"
+        }
+      ],
+      "recommended_program": "PGM-2026-005",
+      "next_best_action": "Schedule CI/CD workshop and log implementation follow-up owners.",
+      "checklist": [
+        {
+          "key": "participants_confirmed",
+          "label": "Participants and roles confirmed",
+          "internal_only": false
+        },
+        {
+          "key": "prerequisites_validated",
+          "label": "Prerequisites validated before session",
+          "internal_only": false
+        },
+        {
+          "key": "followup_logged",
+          "label": "Post-workshop actions logged",
+          "internal_only": false
+        },
+        {
+          "key": "internal_facilitator_notes",
+          "label": "Internal facilitator notes captured",
+          "internal_only": true
+        }
+      ],
+      "templates": {
+        "agenda": "Run CI/CD workshop from repo setup through deployment flow.",
+        "followup": "Share workshop outcomes, owners, and adoption checkpoint.",
+        "issue": "Track workshop action items and completion evidence."
+      },
+      "resource_ids": [
+        "res-ci-docs",
+        "res-runners",
+        "res-workshops",
+        "res-training"
+      ],
+      "references": [
+        "https://docs.gitlab.com/ee/ci/",
+        "https://about.gitlab.com/services/education/"
       ]
     }
   ]
