@@ -9,7 +9,7 @@
       "doc_links": [
         "https://docs.gitlab.com/ee/user/project/repository/"
       ],
-      "contributes_to": ["SCM", "lead_time"]
+      "contributes_to": ["SCM", "lead_time", "adoption_depth"]
     },
     {
       "id": "scm_merge_requests_enabled",
@@ -27,7 +27,7 @@
       "doc_links": [
         "https://docs.gitlab.com/ee/user/project/merge_requests/approvals/"
       ],
-      "contributes_to": ["SCM", "change_failure_rate"]
+      "contributes_to": ["SCM", "change_failure_rate", "governance"]
     },
     {
       "id": "ci_pipeline_templates",
@@ -45,11 +45,11 @@
       "doc_links": [
         "https://docs.gitlab.com/runner/"
       ],
-      "contributes_to": ["CI", "deployment_frequency"]
+      "contributes_to": ["CI", "deployment_frequency", "pipeline_reliability"]
     },
     {
       "id": "ci_test_automation",
-      "label": "Automated tests in pipeline",
+      "label": "Automated tests in pipelines",
       "area": "CI",
       "doc_links": [
         "https://docs.gitlab.com/ee/ci/testing/"
@@ -72,7 +72,7 @@
       "doc_links": [
         "https://docs.gitlab.com/ee/user/project/releases/"
       ],
-      "contributes_to": ["CD", "change_failure_rate"]
+      "contributes_to": ["CD", "change_failure_rate", "compliance"]
     },
     {
       "id": "cd_progressive_delivery",
@@ -90,7 +90,7 @@
       "doc_links": [
         "https://docs.gitlab.com/ee/user/application_security/sast/"
       ],
-      "contributes_to": ["Security", "change_failure_rate"]
+      "contributes_to": ["Security", "change_failure_rate", "risk_posture"]
     },
     {
       "id": "security_dependency_scanning",
@@ -99,7 +99,7 @@
       "doc_links": [
         "https://docs.gitlab.com/ee/user/application_security/dependency_scanning/"
       ],
-      "contributes_to": ["Security", "risk_posture"]
+      "contributes_to": ["Security", "risk_posture", "vulnerability_prevention"]
     },
     {
       "id": "security_container_scanning",
@@ -108,7 +108,7 @@
       "doc_links": [
         "https://docs.gitlab.com/ee/user/application_security/container_scanning/"
       ],
-      "contributes_to": ["Security", "risk_posture"]
+      "contributes_to": ["Security", "risk_posture", "compliance"]
     },
     {
       "id": "analytics_value_stream",
@@ -126,7 +126,16 @@
       "doc_links": [
         "https://about.gitlab.com/topics/devops/metrics/"
       ],
-      "contributes_to": ["Analytics", "value_visibility"]
+      "contributes_to": ["Analytics", "value_visibility", "executive_reporting"]
+    },
+    {
+      "id": "analytics_usage_reporting",
+      "label": "Usage reporting baselines established",
+      "area": "Analytics",
+      "doc_links": [
+        "https://docs.gitlab.com/ee/user/analytics/"
+      ],
+      "contributes_to": ["Analytics", "adoption_visibility", "renewal_readiness"]
     },
     {
       "id": "operating_exec_alignment",
@@ -139,12 +148,12 @@
     },
     {
       "id": "operating_cadence_current",
-      "label": "Cadence current (touch within 30 days)",
+      "label": "Engagement cadence current (touch within 30 days)",
       "area": "OperatingModel",
       "doc_links": [
         "https://handbook.gitlab.com/handbook/customer-success/"
       ],
-      "contributes_to": ["OperatingModel", "engagement_health"]
+      "contributes_to": ["OperatingModel", "engagement_health", "journey_stage"]
     },
     {
       "id": "operating_renewal_window_soon",
@@ -180,7 +189,7 @@
       "doc_links": [
         "https://about.gitlab.com/stages-devops-lifecycle/"
       ],
-      "contributes_to": ["OperatingModel", "adoption_story"]
+      "contributes_to": ["OperatingModel", "adoption_story", "executive_alignment"]
     }
   ]
 }
