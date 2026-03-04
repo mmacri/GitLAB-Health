@@ -867,6 +867,26 @@ textarea.artifact,
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.operating-card-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.operating-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-muted);
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.operating-card h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
 .action-card {
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -1342,6 +1362,7 @@ textarea.artifact,
   .matrix-grid,
   .landing-grid,
   .action-card-grid,
+  .operating-card-grid,
   .playbook-grid {
     grid-template-columns: 1fr;
   }

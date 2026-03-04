@@ -35,6 +35,14 @@ const scoreTone = (score) => {
   return 'risk';
 };
 
+const priorityTone = (priority) => {
+  const value = String(priority || '').toLowerCase();
+  if (value === 'critical') return 'risk';
+  if (value === 'high') return 'warn';
+  if (value === 'medium') return 'neutral';
+  return 'good';
+};
+
 const freshnessChip = (days) => {
   if (days === null || days === undefined) return statusChip({ label: 'Missing', tone: 'missing' });
   if (days > 30) return statusChip({ label: `${days}d stale`, tone: 'stale' });
@@ -427,6 +435,9 @@ export const renderAccountPage = (ctx) => {
     ...item,
     complete: Boolean(actionCompletion?.[item.id])
   }));
+  const operatingRecommendations = workspace?.operatingModel?.recommendations || [];
+  const operatingSignals = workspace?.operatingModel?.signals || {};
+  const operatingById = new Map(operatingRecommendations.map((item) => [item.id, item]));
 
   const licenseUtilization = Math.min(96, Math.max(22, Math.round((Number(account.adoption?.platform_adoption_score || 0) * 0.72) + 18)));
   const freshnessDays = workspace.signal?.healthStaleDays;
@@ -551,6 +562,47 @@ export const renderAccountPage = (ctx) => {
                   `
                 )
                 .join('')}
+            </div>
+          </div>
+
+          <div class="card compact-card">
+            <div class="metric-head">
+              <h3>Recommended Actions (Operating Model Engine)</h3>
+              ${statusChip({ label: `${operatingRecommendations.length} triggered`, tone: operatingRecommendations.length ? 'good' : 'neutral' })}
+            </div>
+            <p class="muted">Rules evaluate adoption, health, engagement, lifecycle, and renewal signals to recommend execution motions.</p>
+            <div class="kpi-grid kpi-4">
+              ${metricTile({ label: 'Use cases green', value: `${operatingSignals.use_case_green_count ?? workspace.signal?.greenUseCaseCount ?? 0}/4`, tone: (operatingSignals.use_case_green_count ?? workspace.signal?.greenUseCaseCount ?? 0) >= 3 ? 'good' : 'warn' })}
+              ${metricTile({ label: 'Renewal days', value: operatingSignals.renewal_days ?? renewalDays ?? 'n/a', tone: Number(operatingSignals.renewal_days ?? renewalDays ?? 999) <= 120 ? 'warn' : 'good' })}
+              ${metricTile({ label: 'Days since touch', value: operatingSignals.days_since_last_touch ?? workspace.signal?.touchStaleDays ?? 'n/a', tone: Number(operatingSignals.days_since_last_touch ?? workspace.signal?.touchStaleDays ?? 0) > 30 ? 'warn' : 'good' })}
+              ${metricTile({ label: 'Value metrics gap', value: (operatingSignals.value_metrics_missing ? 'Yes' : 'No'), tone: operatingSignals.value_metrics_missing ? 'warn' : 'good' })}
+            </div>
+
+            <div class="operating-card-grid">
+              ${
+                operatingRecommendations.length
+                  ? operatingRecommendations
+                      .map(
+                        (item) => `
+                          <article class="operating-card">
+                            <div class="metric-head">
+                              <h4>${item.title}</h4>
+                              ${statusChip({ label: item.priority, tone: priorityTone(item.priority) })}
+                            </div>
+                            <p class="muted"><strong>Why:</strong> ${item.why}</p>
+                            <p class="muted"><strong>Recommendation:</strong> ${item.recommendation}</p>
+                            <p class="muted"><strong>Playbook:</strong> ${item.playbook_title}</p>
+                            ${item.resource?.url ? `<p class="muted"><a href="${item.resource.url}" target="_blank" rel="noopener noreferrer">${item.resource.title || item.resource.url}</a></p>` : ''}
+                            <div class="page-actions">
+                              <button class="ghost-btn" type="button" data-operating-copy-issue="${item.id}">Copy issue template</button>
+                              <button class="ghost-btn" type="button" data-operating-open-playbook="${item.id}">Open playbook</button>
+                            </div>
+                          </article>
+                        `
+                      )
+                      .join('')
+                  : '<p class="empty-text">No operating-model rules are currently triggered for this account.</p>'
+              }
             </div>
           </div>
 
@@ -919,6 +971,18 @@ export const renderAccountPage = (ctx) => {
   });
   wrapper.querySelectorAll('[data-action-open-playbook]').forEach((button) => {
     button.addEventListener('click', () => navigate('playbooks'));
+  });
+  wrapper.querySelectorAll('[data-operating-open-playbook]').forEach((button) => {
+    button.addEventListener('click', () => navigate('playbooks'));
+  });
+  wrapper.querySelectorAll('[data-operating-copy-issue]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const ruleId = button.getAttribute('data-operating-copy-issue');
+      const recommendation = operatingById.get(ruleId);
+      if (!recommendation?.issue_template) return;
+      await copyText(recommendation.issue_template);
+      notify('Operating-model issue template copied.');
+    });
   });
   wrapper.querySelectorAll('[data-action-complete]').forEach((input) => {
     input.addEventListener('change', () => {

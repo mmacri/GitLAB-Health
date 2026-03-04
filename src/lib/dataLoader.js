@@ -209,14 +209,15 @@ export const persistPlaybookChecklist = (checklistState) => storage.set(STORAGE_
 
 export const loadDashboardData = async () => {
   const loadErrors = [];
-  const [accountsDoc, requestsDoc, programsDoc, playbooksDoc, resourcesDoc, templatesDoc, cheatsheetDoc] = await Promise.all([
+  const [accountsDoc, requestsDoc, programsDoc, playbooksDoc, resourcesDoc, templatesDoc, cheatsheetDoc, rulesDoc] = await Promise.all([
     fetchJson('accounts.json', { accounts: [] }, loadErrors),
     fetchJson('requests.json', { requests: [] }, loadErrors),
     fetchJson('programs.json', { programs: [] }, loadErrors),
     fetchJson('playbooks.json', { playbooks: [] }, loadErrors),
     fetchJson('resources.json', { categories: [], resources: [] }, loadErrors),
     fetchJson('templates.json', { templates: {} }, loadErrors),
-    fetchJson('cheatsheet.json', {}, loadErrors)
+    fetchJson('cheatsheet.json', {}, loadErrors),
+    fetchJson('rules.json', { rules: [] }, loadErrors)
   ]);
 
   const accounts = normalizeDuplicateAccountContent(mergeAccounts(Array.isArray(accountsDoc.accounts) ? accountsDoc.accounts : []));
@@ -226,12 +227,14 @@ export const loadDashboardData = async () => {
   const resources = Array.isArray(resourcesDoc.resources) ? resourcesDoc.resources : [];
   const categories = Array.isArray(resourcesDoc.categories) ? resourcesDoc.categories : [];
   const templates = templatesDoc?.templates && typeof templatesDoc.templates === 'object' ? templatesDoc.templates : {};
+  const rules = Array.isArray(rulesDoc.rules) ? rulesDoc.rules : [];
 
   return {
     accounts,
     requests,
     programs,
     playbooks,
+    rules,
     resources,
     categories,
     templates,

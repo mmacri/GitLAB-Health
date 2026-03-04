@@ -154,6 +154,25 @@ Account fields:
   - `tooltip`
   - `customer_safe` boolean (derived from audience)
 
+## rules.json
+- `version`, `updated_on`
+- `rules[]`
+  - `id`
+  - `title`
+  - `category`
+  - `priority` (`critical|high|medium|low`)
+  - `conditions[]`
+    - `key`
+    - `operator` (`<|<=|>|>=|==|!=|includes|missing|exists`)
+    - `value`
+  - `recommendation`
+  - `why_template`
+  - `playbook_hint`
+  - `resource`
+    - `title`
+    - `url`
+  - `issue_template`
+
 ## templates.json
 - `updated_on`
 - `templates`

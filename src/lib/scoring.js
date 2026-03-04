@@ -1,4 +1,5 @@
 import { daysUntil, diffInDays, parseDate } from './date.js';
+import { evaluateOperatingModelEngine } from './operatingModelEngine.js';
 
 const HEALTH_RANK = { green: 1, yellow: 2, red: 3 };
 const STAGE_PRIORITY = { onboard: 2, enable: 3, expand: 2, optimize: 2, renew: 4 };
@@ -258,15 +259,25 @@ export const buildAccountWorkspace = (data, accountId, now = new Date()) => {
   if (!account) return null;
 
   const signal = computeAccountSignals(account, data.requests, data.playbooks, data.programs, now);
+  const operatingModel = evaluateOperatingModelEngine({
+    account,
+    signal,
+    rules: data.rules || [],
+    playbooks: data.playbooks || [],
+    resources: data.resources || [],
+    now
+  });
   const greenCount = useCaseGreenCount(account);
   const renewalWindow =
     signal.renewalDays === null ? 'unknown' : signal.renewalDays <= 90 ? '0-90' : signal.renewalDays <= 180 ? '91-180' : '180+';
 
+  const engineImmediate = (operatingModel.recommendations || []).slice(0, 3).map((item) => `${item.title}: ${item.recommendation}`);
   const immediate = [
+    ...engineImmediate,
     signal.playbook?.next_best_action || 'Confirm lifecycle objective and done criteria for the next milestone.',
     signal.reasons[0] || 'Validate account risk and freshness signals.',
     signal.recommendedProgram ? `Invite to ${signal.recommendedProgram.title}` : 'Select best-fit program motion.'
-  ];
+  ].slice(0, 5);
 
   const dueSoon = signal.requestList
     .slice(0, 4)
@@ -283,6 +294,7 @@ export const buildAccountWorkspace = (data, accountId, now = new Date()) => {
   return {
     account,
     signal,
+    operatingModel,
     platformSummary: `${greenCount} of ${useCaseEntries(account).length || 4} use cases >= 75`,
     openRequests: signal.requestList,
     recommendedProgram: signal.recommendedProgram,

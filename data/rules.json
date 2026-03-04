@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "updated_on": "2026-03-04",
+  "rules": [
+    {
+      "id": "low_adoption_expansion",
+      "title": "Adoption Expansion",
+      "category": "Adoption Opportunity",
+      "priority": "high",
+      "conditions": [
+        { "key": "use_case_green_count", "operator": "<", "value": 3 }
+      ],
+      "recommendation": "Run a DevOps lifecycle expansion workshop to reach 3+ green use cases.",
+      "why_template": "Use cases green: {{use_case_green_count}} of 4 (target 3+).",
+      "playbook_hint": "Platform Adoption Expansion Playbook",
+      "resource": {
+        "title": "Platform Value Score",
+        "url": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/"
+      },
+      "issue_template": "# Adoption Expansion Motion\n\n## Why now\n{{why}}\n\n## Recommended action\n{{recommendation}}\n\n## Execution checklist\n- [ ] Confirm target use case and owner\n- [ ] Schedule expansion workshop\n- [ ] Capture post-workshop adoption delta"
+    },
+    {
+      "id": "renewal_risk_window",
+      "title": "Renewal Risk",
+      "category": "Renewal Readiness",
+      "priority": "critical",
+      "conditions": [
+        { "key": "renewal_days", "operator": "<=", "value": 120 },
+        { "key": "health_is_yellow_or_red", "operator": "==", "value": true }
+      ],
+      "recommendation": "Run Renewal Readiness Playbook and schedule executive alignment immediately.",
+      "why_template": "Renewal in {{renewal_days}} days with health {{health_overall}}.",
+      "playbook_hint": "Renewal Readiness Playbook",
+      "resource": {
+        "title": "Renewals Framework",
+        "url": "https://handbook.gitlab.com/handbook/customer-success/renewals/"
+      },
+      "issue_template": "# Renewal Risk Stabilization\n\n## Why now\n{{why}}\n\n## Recommended action\n{{recommendation}}\n\n## Execution checklist\n- [ ] Confirm renewal risk owner\n- [ ] Book executive alignment session\n- [ ] Publish weekly readiness update"
+    },
+    {
+      "id": "engagement_gap",
+      "title": "Engagement Gap",
+      "category": "Risk Alert",
+      "priority": "medium",
+      "conditions": [
+        { "key": "days_since_last_touch", "operator": ">", "value": 30 }
+      ],
+      "recommendation": "Schedule a technical enablement workshop to re-establish cadence.",
+      "why_template": "Last customer interaction was {{days_since_last_touch}} days ago.",
+      "playbook_hint": "Office Hours Unblock Playbook",
+      "resource": {
+        "title": "GitLab Learning Resources",
+        "url": "https://about.gitlab.com/learn/"
+      },
+      "issue_template": "# Engagement Cadence Recovery\n\n## Why now\n{{why}}\n\n## Recommended action\n{{recommendation}}\n\n## Execution checklist\n- [ ] Confirm workshop audience\n- [ ] Set next touch date\n- [ ] Log follow-up outcome"
+    },
+    {
+      "id": "value_visibility_gap",
+      "title": "Value Visibility",
+      "category": "Executive Engagement Trigger",
+      "priority": "high",
+      "conditions": [
+        { "key": "adoption_high", "operator": "==", "value": true },
+        { "key": "value_metrics_missing", "operator": "==", "value": true }
+      ],
+      "recommendation": "Prepare Executive Business Review with DevOps performance evidence.",
+      "why_template": "Adoption is high but value metrics are incomplete or missing.",
+      "playbook_hint": "Executive Business Review (EBR) Playbook",
+      "resource": {
+        "title": "Value Stream Analytics",
+        "url": "https://docs.gitlab.com/ee/user/analytics/value_stream_analytics/"
+      },
+      "issue_template": "# Value Visibility Motion\n\n## Why now\n{{why}}\n\n## Recommended action\n{{recommendation}}\n\n## Execution checklist\n- [ ] Build EBR metric pack\n- [ ] Validate business outcomes with sponsor\n- [ ] Share customer-safe summary"
+    },
+    {
+      "id": "executive_alignment_gap",
+      "title": "Executive Alignment",
+      "category": "Executive Engagement Trigger",
+      "priority": "medium",
+      "conditions": [
+        { "key": "executive_alignment_missing", "operator": "==", "value": true },
+        { "key": "renewal_days", "operator": "<=", "value": 180 }
+      ],
+      "recommendation": "Schedule an executive checkpoint and align success metrics to renewal goals.",
+      "why_template": "Executive alignment is not confirmed and renewal is in {{renewal_days}} days.",
+      "playbook_hint": "Executive Business Review (EBR) Playbook",
+      "resource": {
+        "title": "Customer Success Handbook",
+        "url": "https://handbook.gitlab.com/handbook/customer-success/"
+      },
+      "issue_template": "# Executive Alignment Motion\n\n## Why now\n{{why}}\n\n## Recommended action\n{{recommendation}}\n\n## Execution checklist\n- [ ] Confirm executive sponsor attendance\n- [ ] Align metrics to renewal objective\n- [ ] Capture executive decisions and owners"
+    }
+  ]
+}

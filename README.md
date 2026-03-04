@@ -34,6 +34,7 @@ Static GitLab Pages-compatible operating dashboard for pooled Customer Success E
 - Resources page (`/resources`) with customer-safe filtering.
 - Export center (`/exports`) for portfolio/account export actions and share snapshot URL.
 - Intake workflow (`/intake`) kept as a tools route for request capture + artifact generation.
+- Operating Model Engine (rules-driven) that generates account-level next-best actions, risk alerts, executive triggers, and copy-ready issue templates.
 
 ## Routes
 - `/` -> Portfolio Home (default)
@@ -57,6 +58,7 @@ Canonical app data lives under `data/`:
 - `data/programs.json`
 - `data/playbooks.json`
 - `data/resources.json`
+- `data/rules.json`
 - `data/schema.md` (field definitions + customer-safe policy)
 
 Current seeded sample size:
