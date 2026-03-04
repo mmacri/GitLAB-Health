@@ -29,6 +29,7 @@ pages:
     - cp index.html public/intake/index.html
     - cp index.html public/journey/index.html
     - cp index.html public/account/index.html
+    - node -e "const fs=require('fs');const path=require('path');const raw=JSON.parse(fs.readFileSync('data/accounts.json','utf8'));const accounts=Array.isArray(raw.accounts)?raw.accounts:[];for(const a of accounts){const id=String(a.id||'').trim();if(!id)continue;const accountDir=path.join('public','account',id);const journeyDir=path.join('public','journey',id);fs.mkdirSync(accountDir,{recursive:true});fs.mkdirSync(journeyDir,{recursive:true});fs.copyFileSync('index.html',path.join(accountDir,'index.html'));fs.copyFileSync('index.html',path.join(journeyDir,'index.html'));}"
   artifacts:
     paths:
       - public
