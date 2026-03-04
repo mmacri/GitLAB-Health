@@ -25,19 +25,39 @@ const useCaseSummary = (account) => {
 
 export const buildSuccessPlanMarkdown = ({
   account,
+  customerName,
+  executiveSponsor,
   lifecycleStage,
+  primaryDevopsGoals = [],
+  useCasesImplemented = [],
+  targetDevOpsMaturity,
   objectives = [],
   successMetrics = [],
   initiatives = [],
   milestones = []
 }) => {
-  const titleAccount = account?.name || 'Selected account';
+  const titleAccount = customerName || account?.name || 'Selected account';
+  const scopedUseCases =
+    useCasesImplemented.length
+      ? useCasesImplemented
+      : Object.entries(account?.adoption?.use_case_scores || {})
+          .filter(([, score]) => Number(score) >= 60)
+          .map(([name]) => name);
   const lines = [
     `# Customer Success Plan - ${titleAccount}`,
     '',
+    `- Customer: ${valueOr(titleAccount)}`,
+    `- Executive Sponsor: ${valueOr(executiveSponsor)}`,
     `- Stage: ${valueOr(lifecycleStage || account?.lifecycle_stage)}`,
     `- Renewal Date: ${formatDate(account?.renewal_date)}`,
     `- Platform Adoption: ${valueOr(account?.adoption?.platform_adoption_level)}`,
+    `- Target DevOps Maturity: ${valueOr(targetDevOpsMaturity)}`,
+    '',
+    '## Strategic Goals',
+    ...(primaryDevopsGoals.length ? primaryDevopsGoals.map((item) => `- ${item}`) : ['- Define strategic goal']),
+    '',
+    '## GitLab Use Cases',
+    ...(scopedUseCases.length ? scopedUseCases.map((item) => `- ${item}`) : ['- Define use case coverage']),
     '',
     '## Objectives',
     ...(objectives.length ? objectives.map((item) => `- [ ] ${item}`) : ['- [ ] Define objective']),
@@ -55,6 +75,71 @@ export const buildSuccessPlanMarkdown = ({
     '',
     '## Notes',
     '- Keep outcomes tied to measurable adoption and business value.'
+  ];
+  return lines.join('\n');
+};
+
+export const buildExecutiveBusinessReviewMarkdown = ({
+  account,
+  customerName,
+  quarter,
+  adoptionProgress = [],
+  businessOutcomes = [],
+  devopsMetrics = [],
+  strategicOpportunities = []
+}) => {
+  const accountName = customerName || account?.name || 'Account';
+  const lines = [
+    `# Executive Business Review - ${accountName}`,
+    '',
+    `- Customer: ${valueOr(accountName)}`,
+    `- Quarter: ${valueOr(quarter)}`,
+    `- Segment: ${valueOr(account?.segment)}`,
+    `- Renewal Date: ${formatDate(account?.renewal_date)}`,
+    '',
+    '## DevOps Progress',
+    ...(adoptionProgress.length ? adoptionProgress.map((item) => `- ${item}`) : ['- Add adoption progress highlights']),
+    '',
+    '## Business Outcomes',
+    ...(businessOutcomes.length ? businessOutcomes.map((item) => `- ${item}`) : ['- Add business outcomes']),
+    '',
+    '## DevOps Metrics',
+    ...(devopsMetrics.length ? devopsMetrics.map((item) => `- ${item}`) : ['- Add metrics and trend context']),
+    '',
+    '## Strategic Opportunities',
+    ...(strategicOpportunities.length ? strategicOpportunities.map((item) => `- ${item}`) : ['- Add strategic opportunities'])
+  ];
+  return lines.join('\n');
+};
+
+export const buildAdoptionExpansionPlanMarkdown = ({
+  account,
+  currentUseCases = [],
+  targetUseCases = [],
+  engineeringTeamSize,
+  currentDevopsWorkflow,
+  technicalRequirements = [],
+  enablementPlan = []
+}) => {
+  const accountName = account?.name || 'Account';
+  const lines = [
+    `# Adoption Expansion Plan - ${accountName}`,
+    '',
+    `- Customer: ${valueOr(accountName)}`,
+    `- Engineering Team Size: ${valueOr(engineeringTeamSize)}`,
+    `- Current DevOps Workflow: ${valueOr(currentDevopsWorkflow)}`,
+    '',
+    '## Current Capabilities',
+    ...(currentUseCases.length ? currentUseCases.map((item) => `- ${item}`) : ['- Add current capabilities']),
+    '',
+    '## Recommended Next Steps',
+    ...(targetUseCases.length ? targetUseCases.map((item) => `- ${item}`) : ['- Add target use cases']),
+    '',
+    '## Technical Requirements',
+    ...(technicalRequirements.length ? technicalRequirements.map((item) => `- ${item}`) : ['- Add technical requirements']),
+    '',
+    '## Enablement Plan',
+    ...(enablementPlan.length ? enablementPlan.map((item) => `- ${item}`) : ['- Add enablement sessions and owners'])
   ];
   return lines.join('\n');
 };

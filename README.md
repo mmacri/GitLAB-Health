@@ -4,12 +4,13 @@ Static GitLab Pages-compatible operating dashboard for pooled Customer Success E
 
 ## What this app provides
 - Portfolio-first information architecture with grouped primary navigation:
+  - Today
   - Portfolio
-  - Account
-  - Programs
+  - Accounts
+  - Success Plans
   - Playbooks
   - Resources
-  - Exports
+  - Cheatsheet
 - Default pooled command view on `/` with:
   - Work Queue
   - Outliers with reasons
@@ -39,6 +40,8 @@ Static GitLab Pages-compatible operating dashboard for pooled Customer Success E
 - `/portfolio` -> Portfolio operating table
 - `/account/:id` -> Account workspace
 - `/account` -> redirects to selected/default account
+- `/toolkit` -> Success Plans workspace (generators + visuals)
+- `/success-plans` -> alias route to Success Plans workspace
 - `/programs` -> 1:many enablement programs
 - `/playbooks` -> Response plans + checklist execution
 - `/resources` -> Curated handbook resources

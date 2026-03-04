@@ -914,6 +914,54 @@ textarea.artifact,
   border-radius: 10px;
 }
 
+.visual-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.trend-svg {
+  width: 100%;
+  height: auto;
+  margin-top: 8px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+}
+
+.maturity-map {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.maturity-row {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 10px;
+}
+
+.maturity-row span,
+.maturity-row strong {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.maturity-bar {
+  border-radius: 999px;
+  height: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  overflow: hidden;
+}
+
+.maturity-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--info), var(--primary));
+}
+
 .divider {
   height: 1px;
   background: var(--border);
@@ -1287,6 +1335,7 @@ textarea.artifact,
   .dashboard-grid,
   .today-grid,
   .grid-3,
+  .visual-grid,
   .toolkit-grid,
   .workspace-layout,
   .flow-steps,

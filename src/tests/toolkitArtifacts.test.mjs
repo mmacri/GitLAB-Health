@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 
 import { buildEngagementLogCsv } from '../lib/engagementLog.js';
 import {
+  buildAdoptionExpansionPlanMarkdown,
   buildCollaborationIssueBody,
+  buildExecutiveBusinessReviewMarkdown,
   buildExecutiveSnapshotMarkdown,
   buildGitLabIssueDraftUrl,
   buildRenewalChecklistMarkdown,
@@ -17,7 +19,12 @@ const sampleAccount = readJson('data/accounts.json').accounts[0];
 test('success plan generator returns complete markdown', () => {
   const markdown = buildSuccessPlanMarkdown({
     account: sampleAccount,
+    customerName: sampleAccount.name,
+    executiveSponsor: 'VP Engineering',
     lifecycleStage: 'enable',
+    primaryDevopsGoals: ['Improve deployment frequency'],
+    useCasesImplemented: ['Source Control', 'CI/CD'],
+    targetDevOpsMaturity: 'Standardized CI/CD',
     objectives: ['Objective A'],
     successMetrics: ['Metric A'],
     initiatives: ['Initiative A'],
@@ -25,6 +32,7 @@ test('success plan generator returns complete markdown', () => {
   });
 
   assert.ok(markdown.includes('# Customer Success Plan'));
+  assert.ok(markdown.includes('Executive Sponsor'));
   assert.ok(markdown.includes('Objective A'));
   assert.ok(markdown.includes('Metric A'));
   assert.ok(markdown.includes('Kickoff workshop'));
@@ -71,6 +79,34 @@ test('renewal checklist and collaboration issue include required sections', () =
   assert.ok(issueBody.includes('## Desired Outcome'));
   assert.ok(issueBody.includes('## Definition of Done'));
   assert.ok(issueBody.includes('Book workshop'));
+});
+
+test('executive business review and adoption expansion generators return expected sections', () => {
+  const ebr = buildExecutiveBusinessReviewMarkdown({
+    account: sampleAccount,
+    quarter: 'Q2 2026',
+    adoptionProgress: ['CI rollout completed'],
+    businessOutcomes: ['Reduced lead time'],
+    devopsMetrics: ['Deployment frequency up'],
+    strategicOpportunities: ['Expand secure coverage']
+  });
+
+  const expansion = buildAdoptionExpansionPlanMarkdown({
+    account: sampleAccount,
+    currentUseCases: ['Source Control', 'CI Pipelines'],
+    targetUseCases: ['Security Scanning'],
+    engineeringTeamSize: 120,
+    currentDevopsWorkflow: 'GitLab SCM + partial CI',
+    technicalRequirements: ['Pipeline templates'],
+    enablementPlan: ['Security workshop']
+  });
+
+  assert.ok(ebr.includes('# Executive Business Review'));
+  assert.ok(ebr.includes('CI rollout completed'));
+  assert.ok(ebr.includes('Strategic Opportunities'));
+  assert.ok(expansion.includes('# Adoption Expansion Plan'));
+  assert.ok(expansion.includes('Technical Requirements'));
+  assert.ok(expansion.includes('Security workshop'));
 });
 
 test('gitlab issue draft URL and customer-safe engagement csv are generated correctly', () => {

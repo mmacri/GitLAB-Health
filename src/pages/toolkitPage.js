@@ -5,7 +5,9 @@ import { formatDate, toIsoDate } from '../lib/date.js';
 import { triggerDownload } from '../lib/exports.js';
 import { addEngagementLogEntry, buildEngagementLogCsv, buildEngagementLogJson, loadEngagementLog } from '../lib/engagementLog.js';
 import {
+  buildAdoptionExpansionPlanMarkdown,
   buildCollaborationIssueBody,
+  buildExecutiveBusinessReviewMarkdown,
   buildExecutiveSnapshotMarkdown,
   buildGitLabIssueDraftUrl,
   buildRenewalChecklistMarkdown,
@@ -92,8 +94,31 @@ const openSuccessPlanModal = ({ accounts, templates, defaultAccountId, copyText,
       <select name="account_id">${accountOptions(accounts, defaultAccountId || '', true)}</select>
     </label>
     <label>
+      Customer name
+      <input name="customer_name" type="text" placeholder="Customer name (optional override)" />
+    </label>
+    <label>
+      Executive sponsor
+      <input name="executive_sponsor" type="text" placeholder="Name / title" />
+    </label>
+    <label>
       Lifecycle stage
       <input name="stage" type="text" value="enable" />
+    </label>
+    <label>
+      Target DevOps maturity
+      <input name="target_maturity" type="text" value="Standardized CI/CD with Secure controls" />
+    </label>
+    <label>
+      Primary DevOps goals (one per line)
+      <textarea name="primary_goals">Improve deployment frequency
+Reduce lead time for changes</textarea>
+    </label>
+    <label>
+      GitLab use cases implemented (one per line)
+      <textarea name="use_cases">Source Control
+CI/CD Pipelines
+Security Scanning</textarea>
     </label>
     <label>
       Milestones (YYYY-MM-DD | description)
@@ -120,6 +145,10 @@ const openSuccessPlanModal = ({ accounts, templates, defaultAccountId, copyText,
       <button class="ghost-btn" type="button" data-download>Download .md</button>
       <button class="ghost-btn" type="button" data-open-issue>Open New Issue Draft</button>
     </div>
+    <p class="muted form-span">
+      References: <a href="https://handbook.gitlab.com/handbook/customer-success/" target="_blank" rel="noopener noreferrer">Customer Success Handbook</a> ·
+      <a href="https://about.gitlab.com/stages-devops-lifecycle/" target="_blank" rel="noopener noreferrer">DevOps lifecycle overview</a>
+    </p>
   `;
 
   const build = () => {
@@ -127,7 +156,12 @@ const openSuccessPlanModal = ({ accounts, templates, defaultAccountId, copyText,
     const account = byId(accounts, accountId);
     const markdown = buildSuccessPlanMarkdown({
       account,
+      customerName: form.elements.namedItem('customer_name').value,
+      executiveSponsor: form.elements.namedItem('executive_sponsor').value,
       lifecycleStage: form.elements.namedItem('stage').value,
+      primaryDevopsGoals: parseMultilineItems(form.elements.namedItem('primary_goals').value),
+      useCasesImplemented: parseMultilineItems(form.elements.namedItem('use_cases').value),
+      targetDevOpsMaturity: form.elements.namedItem('target_maturity').value,
       objectives: parseMultilineItems(form.elements.namedItem('objectives').value),
       successMetrics: parseMultilineItems(form.elements.namedItem('metrics').value),
       initiatives: parseMultilineItems(form.elements.namedItem('initiatives').value),
@@ -138,7 +172,7 @@ const openSuccessPlanModal = ({ accounts, templates, defaultAccountId, copyText,
   };
 
   build();
-  ['account_id', 'stage', 'objectives', 'metrics', 'initiatives', 'milestones'].forEach((name) => {
+  ['account_id', 'customer_name', 'executive_sponsor', 'stage', 'target_maturity', 'primary_goals', 'use_cases', 'objectives', 'metrics', 'initiatives', 'milestones'].forEach((name) => {
     form.elements.namedItem(name).addEventListener('input', build);
     form.elements.namedItem(name).addEventListener('change', build);
   });
@@ -233,6 +267,222 @@ const openExecutiveSnapshotModal = ({ accounts, defaultAccountId, copyText, noti
   });
 
   modal.open({ title: 'Executive Adoption Snapshot Generator', content: form });
+};
+
+const openExecutiveBusinessReviewModal = ({ accounts, defaultAccountId, copyText, notify }) => {
+  const modal = ensureToolkitModal();
+  const account = byId(accounts, defaultAccountId) || accounts[0] || null;
+  const quarterDefaults = `Q${Math.ceil((new Date().getMonth() + 1) / 3)} ${new Date().getFullYear()}`;
+  const form = document.createElement('form');
+  form.className = 'form-grid';
+  form.innerHTML = `
+    <label class="form-span">
+      Account
+      <select name="account_id">${accountOptions(accounts, account?.id || '', false)}</select>
+    </label>
+    <label>
+      Quarter
+      <input name="quarter" type="text" value="${quarterDefaults}" />
+    </label>
+    <label>
+      Customer name override (optional)
+      <input name="customer_name" type="text" />
+    </label>
+    <label>
+      Adoption progress (one per line)
+      <textarea name="adoption_progress">CI pipelines expanded to additional teams
+Automated testing enabled for release paths</textarea>
+    </label>
+    <label>
+      Business outcomes (one per line)
+      <textarea name="business_outcomes">Faster deployment throughput
+Reduced change failure rate</textarea>
+    </label>
+    <label>
+      DevOps metrics (one per line)
+      <textarea name="devops_metrics">Deployment frequency: improving QoQ
+Lead time for changes: trending down</textarea>
+    </label>
+    <label>
+      Strategic opportunities (one per line)
+      <textarea name="opportunities">Expand security scanning coverage
+Implement release automation controls</textarea>
+    </label>
+    <label class="form-span">
+      Preview
+      <textarea name="preview" class="artifact" readonly></textarea>
+    </label>
+    <div class="form-actions form-span">
+      <button class="qa" type="button" data-copy>Copy Markdown</button>
+      <button class="ghost-btn" type="button" data-download>Download .md</button>
+      <button class="ghost-btn" type="button" data-pdf>Export PDF</button>
+      <button class="ghost-btn" type="button" data-copy-outline>Copy Presentation Outline</button>
+    </div>
+    <p class="muted form-span">
+      References: <a href="https://docs.gitlab.com/ee/user/analytics/value_stream_analytics/" target="_blank" rel="noopener noreferrer">Value Stream Analytics</a> ·
+      <a href="https://about.gitlab.com/topics/devops/metrics/" target="_blank" rel="noopener noreferrer">DevOps metrics overview</a>
+    </p>
+  `;
+
+  const build = () => {
+    const selected = byId(accounts, form.elements.namedItem('account_id').value) || account;
+    const markdown = buildExecutiveBusinessReviewMarkdown({
+      account: selected,
+      customerName: form.elements.namedItem('customer_name').value,
+      quarter: form.elements.namedItem('quarter').value,
+      adoptionProgress: parseMultilineItems(form.elements.namedItem('adoption_progress').value),
+      businessOutcomes: parseMultilineItems(form.elements.namedItem('business_outcomes').value),
+      devopsMetrics: parseMultilineItems(form.elements.namedItem('devops_metrics').value),
+      strategicOpportunities: parseMultilineItems(form.elements.namedItem('opportunities').value)
+    });
+    form.elements.namedItem('preview').value = markdown;
+    return { markdown, account: selected };
+  };
+
+  build();
+  ['account_id', 'quarter', 'customer_name', 'adoption_progress', 'business_outcomes', 'devops_metrics', 'opportunities'].forEach((name) => {
+    form.elements.namedItem(name).addEventListener('input', build);
+    form.elements.namedItem(name).addEventListener('change', build);
+  });
+
+  form.querySelector('[data-copy]')?.addEventListener('click', async () => {
+    const { markdown } = build();
+    await copyText(markdown);
+    notify('EBR markdown copied.');
+  });
+
+  form.querySelector('[data-download]')?.addEventListener('click', () => {
+    const { markdown, account: selected } = build();
+    triggerDownload(`executive-business-review-${asFilename(selected?.name || 'account')}.md`, markdown, 'text/markdown;charset=utf-8');
+  });
+
+  form.querySelector('[data-pdf]')?.addEventListener('click', () => {
+    const { markdown, account: selected } = build();
+    openPrintWindow(`Executive Business Review - ${selected?.name || 'Account'}`, markdown);
+    notify('EBR print view opened for PDF save.');
+  });
+
+  form.querySelector('[data-copy-outline]')?.addEventListener('click', async () => {
+    const { markdown } = build();
+    const outline = markdown
+      .split('\n')
+      .filter((line) => line.startsWith('#') || line.startsWith('- '))
+      .join('\n');
+    await copyText(outline);
+    notify('Presentation outline copied.');
+  });
+
+  modal.open({ title: 'Executive Business Review Generator', content: form });
+};
+
+const openAdoptionExpansionModal = ({ accounts, defaultAccountId, copyText, notify }) => {
+  const modal = ensureToolkitModal();
+  const account = byId(accounts, defaultAccountId) || accounts[0] || null;
+  const scoreNames = Object.entries(account?.adoption?.use_case_scores || {})
+    .sort((left, right) => Number(right[1]) - Number(left[1]))
+    .map(([name]) => name);
+  const currentDefaults = scoreNames.filter((name) => Number(account?.adoption?.use_case_scores?.[name] || 0) >= 70);
+  const targetDefaults = scoreNames.filter((name) => Number(account?.adoption?.use_case_scores?.[name] || 0) < 70);
+
+  const form = document.createElement('form');
+  form.className = 'form-grid';
+  form.innerHTML = `
+    <label class="form-span">
+      Account
+      <select name="account_id">${accountOptions(accounts, account?.id || '', false)}</select>
+    </label>
+    <label>
+      Current use cases (one per line)
+      <textarea name="current_use_cases">${currentDefaults.join('\n') || 'Source Control\nCI Pipelines'}</textarea>
+    </label>
+    <label>
+      Target use cases (one per line)
+      <textarea name="target_use_cases">${targetDefaults.join('\n') || 'Security Scanning\nDeployment Automation'}</textarea>
+    </label>
+    <label>
+      Engineering team size
+      <input name="team_size" type="number" min="1" step="1" value="85" />
+    </label>
+    <label>
+      Current DevOps workflow
+      <textarea name="workflow">Code review in GitLab with partial CI coverage and manual release approvals.</textarea>
+    </label>
+    <label>
+      Technical requirements (one per line)
+      <textarea name="requirements">Pipeline templates
+Security scanning configuration
+Runner capacity alignment</textarea>
+    </label>
+    <label>
+      Enablement plan (one per line)
+      <textarea name="enablement_plan">Security workshop
+Pipeline optimization session
+Office-hours unblock cadence</textarea>
+    </label>
+    <label class="form-span">
+      Preview
+      <textarea name="preview" class="artifact" readonly></textarea>
+    </label>
+    <div class="form-actions form-span">
+      <button class="qa" type="button" data-copy>Copy Markdown</button>
+      <button class="ghost-btn" type="button" data-download>Download .md</button>
+      <button class="ghost-btn" type="button" data-copy-issue>Copy GitLab issue template</button>
+    </div>
+    <p class="muted form-span">
+      References: <a href="https://docs.gitlab.com/ee/user/application_security/" target="_blank" rel="noopener noreferrer">Application Security</a> ·
+      <a href="https://docs.gitlab.com/ee/ci/" target="_blank" rel="noopener noreferrer">CI/CD pipelines</a>
+    </p>
+  `;
+
+  const build = () => {
+    const selected = byId(accounts, form.elements.namedItem('account_id').value) || account;
+    const markdown = buildAdoptionExpansionPlanMarkdown({
+      account: selected,
+      currentUseCases: parseMultilineItems(form.elements.namedItem('current_use_cases').value),
+      targetUseCases: parseMultilineItems(form.elements.namedItem('target_use_cases').value),
+      engineeringTeamSize: form.elements.namedItem('team_size').value,
+      currentDevopsWorkflow: form.elements.namedItem('workflow').value,
+      technicalRequirements: parseMultilineItems(form.elements.namedItem('requirements').value),
+      enablementPlan: parseMultilineItems(form.elements.namedItem('enablement_plan').value)
+    });
+    form.elements.namedItem('preview').value = markdown;
+    return { markdown, account: selected };
+  };
+
+  build();
+  ['account_id', 'current_use_cases', 'target_use_cases', 'team_size', 'workflow', 'requirements', 'enablement_plan'].forEach((name) => {
+    form.elements.namedItem(name).addEventListener('input', build);
+    form.elements.namedItem(name).addEventListener('change', build);
+  });
+
+  form.querySelector('[data-copy]')?.addEventListener('click', async () => {
+    const { markdown } = build();
+    await copyText(markdown);
+    notify('Adoption expansion plan copied.');
+  });
+
+  form.querySelector('[data-download]')?.addEventListener('click', () => {
+    const { markdown, account: selected } = build();
+    triggerDownload(`adoption-expansion-plan-${asFilename(selected?.name || 'account')}.md`, markdown, 'text/markdown;charset=utf-8');
+  });
+
+  form.querySelector('[data-copy-issue]')?.addEventListener('click', async () => {
+    const { markdown, account: selected } = build();
+    const issue = [
+      `# Adoption Expansion Plan | ${selected?.name || 'Account'}`,
+      '',
+      markdown,
+      '',
+      '## Tracking',
+      '- [ ] Confirm owners and due dates',
+      '- [ ] Schedule enablement sessions',
+      '- [ ] Validate post-session adoption delta'
+    ].join('\n');
+    await copyText(issue);
+    notify('Adoption expansion issue template copied.');
+  });
+
+  modal.open({ title: 'Adoption Expansion Planner', content: form });
 };
 
 const openWorkshopPlanModal = ({ accounts, templates, defaultAccountId, copyText, notify }) => {
@@ -611,12 +861,17 @@ const TOOL_DEFS = [
   {
     id: 'success-plan',
     title: 'Customer Success Plan Generator',
-    summary: 'Generate GitLab-ready markdown plans with outcomes, metrics, initiatives, and milestones.'
+    summary: 'Generate GitLab-ready success plans aligned to goals, use cases, maturity targets, metrics, and milestones.'
   },
   {
-    id: 'exec-snapshot',
-    title: 'Executive Adoption Snapshot',
-    summary: 'Produce customer-safe executive summary markdown and print-friendly PDF output.'
+    id: 'ebr-generator',
+    title: 'Executive Business Review Generator',
+    summary: 'Generate quarterly executive review artifacts with progress, outcomes, DevOps metrics, and strategic opportunities.'
+  },
+  {
+    id: 'adoption-expansion',
+    title: 'Adoption Expansion Planner',
+    summary: 'Build technical expansion plans from current use cases to target use cases with requirements and enablement actions.'
   },
   {
     id: 'workshop-plan',
@@ -639,6 +894,102 @@ const TOOL_DEFS = [
     summary: 'Log touchpoints to local storage and export timeline data as JSON or CSV.'
   }
 ];
+
+const healthScore = (value) => {
+  const normalized = String(value || '').toLowerCase();
+  if (normalized === 'green') return 3;
+  if (normalized === 'yellow') return 2;
+  return 1;
+};
+
+const healthTrendSeries = (account) => {
+  const baseline = healthScore(account?.health?.overall);
+  const trend = Number(account?.adoption?.trend_30d || 0);
+  const slope = trend > 0 ? 0.28 : trend < 0 ? -0.28 : 0;
+  return [-0.45, -0.25, -0.1, 0, slope, slope + (trend > 0 ? 0.12 : trend < 0 ? -0.12 : 0)]
+    .map((delta) => Math.max(1, Math.min(3, Number((baseline + delta).toFixed(2)))));
+};
+
+const trendPolyline = (values = []) =>
+  values
+    .map((value, index) => {
+      const x = 46 + index * 62;
+      const y = 130 - (value - 1) * 42;
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+const maturityRows = (account) =>
+  Object.entries(account?.adoption?.use_case_scores || {})
+    .map(([name, score]) => {
+      const value = Number(score || 0);
+      return `
+        <div class="maturity-row">
+          <span>${name}</span>
+          <div class="maturity-bar"><i style="width:${Math.max(0, Math.min(100, value))}%"></i></div>
+          <strong>${value}</strong>
+        </div>
+      `;
+    })
+    .join('');
+
+const toolkitVisualSuite = (account) => {
+  const values = healthTrendSeries(account);
+  return `
+    <section class="visual-grid">
+      <article class="card compact-card">
+        <div class="metric-head">
+          <h3>DevOps Lifecycle Diagram</h3>
+          ${statusChip({ label: 'Plan -> Secure', tone: 'neutral' })}
+        </div>
+        <svg viewBox="0 0 1000 132" class="lifecycle-svg" role="img" aria-label="DevOps lifecycle stages">
+          ${['Plan', 'Code', 'Build', 'Test', 'Release', 'Deploy', 'Operate', 'Monitor', 'Secure']
+            .map((step, index) => {
+              const x = 18 + index * 108;
+              return `<g><rect x="${x}" y="30" width="92" height="52" rx="10" fill="#fff" stroke="#cbd5e1"></rect><text x="${x + 46}" y="62" text-anchor="middle" fill="#334155" font-size="13">${step}</text></g>`;
+            })
+            .join('')}
+          <path d="M110 56 L126 56 M218 56 L234 56 M326 56 L342 56 M434 56 L450 56 M542 56 L558 56 M650 56 L666 56 M758 56 L774 56 M866 56 L882 56" stroke="#6e49cb" stroke-width="3" stroke-linecap="round"></path>
+        </svg>
+        <p class="muted"><a href="https://about.gitlab.com/stages-devops-lifecycle/" target="_blank" rel="noopener noreferrer">Reference</a></p>
+      </article>
+
+      <article class="card compact-card">
+        <div class="metric-head">
+          <h3>Customer Health Trend</h3>
+          ${statusChip({ label: account?.health?.overall || 'unknown', tone: account?.health?.overall || 'neutral' })}
+        </div>
+        <svg viewBox="0 0 420 170" class="trend-svg" role="img" aria-label="Customer health trend line">
+          <line x1="32" y1="46" x2="390" y2="46" stroke="#cbd5e1"></line>
+          <line x1="32" y1="88" x2="390" y2="88" stroke="#e5e7eb"></line>
+          <line x1="32" y1="130" x2="390" y2="130" stroke="#fecaca"></line>
+          <text x="4" y="50" fill="#16a34a" font-size="11">Green</text>
+          <text x="4" y="92" fill="#d97706" font-size="11">Yellow</text>
+          <text x="4" y="134" fill="#dc2626" font-size="11">Red</text>
+          <polyline points="${trendPolyline(values)}" fill="none" stroke="#6e49cb" stroke-width="3"></polyline>
+          ${values
+            .map((value, index) => {
+              const x = 46 + index * 62;
+              const y = 130 - (value - 1) * 42;
+              return `<circle cx="${x}" cy="${y}" r="4" fill="#6e49cb"></circle>`;
+            })
+            .join('')}
+        </svg>
+        <p class="muted">Trend derived from current health + 30-day adoption movement for fast risk review.</p>
+      </article>
+
+      <article class="card compact-card">
+        <div class="metric-head">
+          <h3>Adoption Maturity Map</h3>
+          ${statusChip({ label: account?.adoption?.platform_adoption_level || 'Developing', tone: 'neutral' })}
+        </div>
+        <div class="maturity-map">
+          ${maturityRows(account)}
+        </div>
+      </article>
+    </section>
+  `;
+};
 
 const toolkitFlowVisual = () => `
   <section class="card">
@@ -669,6 +1020,8 @@ const toolkitFlowVisual = () => `
 
 const openTool = (toolId, ctx) => {
   if (toolId === 'success-plan') return openSuccessPlanModal(ctx);
+  if (toolId === 'ebr-generator') return openExecutiveBusinessReviewModal(ctx);
+  if (toolId === 'adoption-expansion') return openAdoptionExpansionModal(ctx);
   if (toolId === 'exec-snapshot') return openExecutiveSnapshotModal(ctx);
   if (toolId === 'workshop-plan') return openWorkshopPlanModal(ctx);
   if (toolId === 'renewal-checklist') return openRenewalChecklistModal(ctx);
@@ -680,6 +1033,7 @@ const openTool = (toolId, ctx) => {
 export const renderToolkitPage = (ctx) => {
   const { accounts, templates, customerSafe, onToggleSafe, navigate, notify, copyText, selectedAccountId } = ctx;
   const defaultAccountId = selectedAccountId || accounts?.[0]?.id || '';
+  const focusAccount = byId(accounts, defaultAccountId) || accounts?.[0] || null;
   const entries = loadEngagementLog();
 
   const wrapper = document.createElement('section');
@@ -688,9 +1042,9 @@ export const renderToolkitPage = (ctx) => {
   wrapper.innerHTML = `
     <header class="page-head page-intro">
       <div>
-        <p class="eyebrow">Toolkit</p>
-        <h1>CSE Productivity Toolkit</h1>
-        <p class="hero-lede">Workflow-first generators for success planning, executive communication, renewals, collaboration issues, and engagement logging.</p>
+        <p class="eyebrow">Success Plans</p>
+        <h1>CSE Success Planning Workspace</h1>
+        <p class="hero-lede">Generate customer success plans, executive business reviews, and adoption expansion plans with real operational artifacts.</p>
       </div>
       <div class="page-actions">
         <button class="ghost-btn" type="button" data-go-today>Back to Today</button>
@@ -709,6 +1063,8 @@ export const renderToolkitPage = (ctx) => {
         ${metricTile({ label: 'Mode', value: customerSafe ? 'Customer-safe' : 'Internal', tone: customerSafe ? 'good' : 'warn' })}
       </div>
     </section>
+
+    ${toolkitVisualSuite(focusAccount)}
 
     ${toolkitFlowVisual()}
 
@@ -760,10 +1116,12 @@ export const renderToolkitPage = (ctx) => {
 
 export const toolkitCommandEntries = () =>
   [
-    { id: 'toolkit-success-plan', label: 'Toolkit: Success Plan Generator', meta: 'Toolkit', action: { route: 'toolkit' } },
-    { id: 'toolkit-exec-snapshot', label: 'Toolkit: Executive Snapshot', meta: 'Toolkit', action: { route: 'toolkit' } },
-    { id: 'toolkit-workshop', label: 'Toolkit: Workshop Planner', meta: 'Toolkit', action: { route: 'toolkit' } },
-    { id: 'toolkit-renewal', label: 'Toolkit: Renewal Checklist', meta: 'Toolkit', action: { route: 'toolkit' } },
-    { id: 'toolkit-issue', label: 'Toolkit: Collaboration Issue', meta: 'Toolkit', action: { route: 'toolkit' } },
-    { id: 'toolkit-engagement', label: 'Toolkit: Engagement Logger', meta: 'Toolkit', action: { route: 'toolkit' } }
+    { id: 'toolkit-open', label: 'Open Success Plans', meta: 'Success Plans', action: { route: 'toolkit' } },
+    { id: 'toolkit-success-plan', label: 'Success Plan Generator', meta: 'Success Plans', action: { route: 'toolkit' } },
+    { id: 'toolkit-ebr', label: 'Executive Business Review Generator', meta: 'Success Plans', action: { route: 'toolkit' } },
+    { id: 'toolkit-adoption-expansion', label: 'Adoption Expansion Planner', meta: 'Success Plans', action: { route: 'toolkit' } },
+    { id: 'toolkit-workshop', label: 'Workshop Planner', meta: 'Success Plans', action: { route: 'toolkit' } },
+    { id: 'toolkit-renewal', label: 'Renewal Checklist', meta: 'Success Plans', action: { route: 'toolkit' } },
+    { id: 'toolkit-issue', label: 'Collaboration Issue Generator', meta: 'Success Plans', action: { route: 'toolkit' } },
+    { id: 'toolkit-engagement', label: 'Engagement Logger', meta: 'Success Plans', action: { route: 'toolkit' } }
   ];
