@@ -66,6 +66,12 @@ body {
   font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 a {
   color: var(--primary);
 }
@@ -344,6 +350,10 @@ button:hover {
   max-width: var(--page-max);
   margin: 0 auto;
   padding: 0 var(--page-pad) var(--s-8);
+}
+
+.app-shell > * {
+  min-width: 0;
 }
 
 .sidebar {

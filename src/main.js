@@ -45,8 +45,12 @@ const syncHeaderOffset = () => {
 const observeHeaderOffset = () => {
   syncHeaderOffset();
 
-  window.addEventListener('resize', syncHeaderOffset);
-  window.addEventListener('orientationchange', syncHeaderOffset);
+  const onViewportChange = () => {
+    closeHeaderMenus();
+    syncHeaderOffset();
+  };
+  window.addEventListener('resize', onViewportChange);
+  window.addEventListener('orientationchange', onViewportChange);
 
   const header = document.querySelector('.app-header');
   if (header && 'ResizeObserver' in window) {
