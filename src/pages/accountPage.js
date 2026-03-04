@@ -296,6 +296,52 @@ const adoptionRadarDiagram = (account) => {
   `;
 };
 
+const scoreToStageStatus = (score) => {
+  const value = Number(score || 0);
+  if (value >= 75) return { label: 'Adopted', tone: 'good' };
+  if (value >= 55) return { label: 'Partial', tone: 'warn' };
+  return { label: 'Not adopted', tone: 'neutral' };
+};
+
+const devopsJourneyMap = (account) => {
+  const scores = account?.adoption?.use_case_scores || {};
+  const scm = scoreToStageStatus(scores.SCM);
+  const ci = scoreToStageStatus(scores.CI);
+  const cd = scoreToStageStatus(scores.CD);
+  const secure = scoreToStageStatus(scores.Secure);
+  const hasObjectives = (account?.outcomes?.objectives || []).length > 0;
+  const plan = hasObjectives ? { label: 'Defined', tone: 'good' } : { label: 'Partial', tone: 'warn' };
+  const hasDora = Boolean(account?.outcomes?.value_metrics?.dora);
+  const operate = hasDora ? { label: 'Instrumented', tone: 'good' } : { label: 'Partial', tone: 'warn' };
+  const monitor = hasDora ? { label: 'Instrumented', tone: 'good' } : { label: 'Not adopted', tone: 'neutral' };
+  const stages = [
+    { name: 'Plan', status: plan },
+    { name: 'Code', status: scm },
+    { name: 'Build', status: ci },
+    { name: 'Test', status: ci },
+    { name: 'Release', status: cd },
+    { name: 'Deploy', status: cd },
+    { name: 'Operate', status: operate },
+    { name: 'Monitor', status: monitor },
+    { name: 'Secure', status: secure }
+  ];
+
+  return `
+    <div class="devops-map-grid">
+      ${stages
+        .map(
+          (item) => `
+            <article class="devops-map-stage">
+              <strong>${item.name}</strong>
+              ${statusChip({ label: item.status.label, tone: item.status.tone })}
+            </article>
+          `
+        )
+        .join('')}
+    </div>
+  `;
+};
+
 const buildChangeLog = (account, workspace, engagementEvents = []) => {
   const loggerEntries = (engagementEvents || []).map((item) => ({
     date: item.date,
@@ -547,6 +593,7 @@ export const renderAccountPage = (ctx) => {
       </div>
       <div class="page-actions">
         <button class="ghost-btn" type="button" data-go-home>Back to Today</button>
+        <button class="ghost-btn" type="button" data-go-simulator>Open Simulator</button>
         <button class="ghost-btn" type="button" data-header-export-customer-csv>Customer-safe CSV</button>
         <button class="ghost-btn" type="button" data-header-export-customer-pdf>Customer-safe PDF</button>
         <label class="safe-toggle">
@@ -749,6 +796,11 @@ export const renderAccountPage = (ctx) => {
             <ul class="simple-list">
               ${pathToGreen.map((step) => `<li>${step}</li>`).join('')}
             </ul>
+          </div>
+          <div class="card compact-card">
+            <h3>DevOps Adoption Journey Map</h3>
+            <p class="muted">Lifecycle stage-level adoption aligned to GitLab platform journey (Plan -> Secure).</p>
+            ${devopsJourneyMap(account)}
           </div>
           <div class="card compact-card">
             <h3>Adoption Maturity Radar</h3>
@@ -978,6 +1030,7 @@ export const renderAccountPage = (ctx) => {
   wrapper.querySelector('[data-drawer-host]').appendChild(drawer);
 
   wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
+  wrapper.querySelector('[data-go-simulator]')?.addEventListener('click', () => navigate('simulator'));
   wrapper.querySelector('[data-safe-toggle]')?.addEventListener('change', (event) => onToggleSafe(Boolean(event.target.checked)));
   wrapper.querySelector('[data-header-export-customer-csv]')?.addEventListener('click', () => onExportAccountCsv(internalAccount, { customerSafe: true }));
   wrapper.querySelector('[data-header-export-customer-pdf]')?.addEventListener('click', () => onExportAccountPdf(internalAccount, { customerSafe: true }));

@@ -1052,6 +1052,29 @@ textarea.artifact,
   border: 1px solid var(--border);
 }
 
+.devops-map-grid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.devops-map-stage {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-muted);
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.devops-map-stage strong {
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
 .maturity-map {
   display: grid;
   gap: 10px;
@@ -1467,6 +1490,7 @@ textarea.artifact,
   .today-grid,
   .grid-3,
   .visual-grid,
+  .devops-map-grid,
   .toolkit-grid,
   .simulator-grid,
   .workspace-layout,

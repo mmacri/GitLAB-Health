@@ -28,6 +28,7 @@ Static GitLab Pages-compatible operating dashboard for pooled Customer Success E
 - Account workspace on `/account/:id` with:
   - above-the-fold snapshot bar
   - tabbed dashboard grids (Snapshot, Adoption, Health & Risk, Outcomes, Engagement, Journey, Resources, Cheatsheet)
+  - DevOps adoption journey map (Plan -> Secure) in Adoption tab
   - adoption maturity radar visual in Adoption tab
   - legacy section anchor IDs retained inside tabs
   - missing-data chips with inline edit modal (localStorage-backed)
