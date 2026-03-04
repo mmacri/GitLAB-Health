@@ -348,8 +348,9 @@ button:hover {
   position: sticky;
   top: var(--header-offset);
   align-self: start;
-  width: 100%;
-  max-width: 280px;
+  justify-self: start;
+  width: 280px;
+  max-width: 100%;
 }
 
 .main {
@@ -366,6 +367,13 @@ button:hover {
   padding-bottom: var(--space-10);
 }
 
+.route-stage > .page {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  min-height: auto;
+}
+
 .route-stage [id] {
   scroll-margin-top: calc(var(--header-offset) + var(--s-2));
 }
@@ -373,7 +381,7 @@ button:hover {
 .left-rail {
   display: grid;
   gap: 14px;
-  max-height: none;
+  max-height: calc(100vh - var(--header-offset) - var(--s-5));
   overflow: auto;
 }
 
@@ -1688,16 +1696,16 @@ textarea.artifact,
   display: none !important;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .app-shell {
     grid-template-columns: 1fr;
   }
 
   .sidebar {
     position: static;
-    justify-self: start;
-    width: min(320px, 100%);
-    max-width: min(320px, 100%);
+    justify-self: stretch;
+    width: 100%;
+    max-width: 100%;
   }
 
   .left-rail {
