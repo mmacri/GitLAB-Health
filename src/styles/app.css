@@ -881,6 +881,17 @@ textarea.artifact,
   font-size: 14px;
 }
 
+.action-card.is-complete {
+  border-color: rgba(22, 163, 74, 0.4);
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.action-card.is-complete h4,
+.action-card.is-complete .muted {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
 .landing-grid article {
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -1197,6 +1208,10 @@ textarea.artifact,
   color: var(--ink-soft);
   margin: 0;
   font-size: 13px;
+}
+
+.is-hidden-mode {
+  display: none !important;
 }
 
 @media (max-width: 1260px) {

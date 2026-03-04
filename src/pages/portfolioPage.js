@@ -152,8 +152,114 @@ const matrixVisual = (matrix) => `
   </section>
 `;
 
+const buildAmerCompliance = (signals = []) => {
+  if (!signals.length) {
+    return {
+      configured: false,
+      checks: []
+    };
+  }
+
+  const total = signals.length;
+  const count = (predicate) => signals.filter(predicate).length;
+  return {
+    configured: true,
+    checks: [
+      {
+        id: 'cadence-within-30',
+        label: 'Cadence within 30 days',
+        pass: count((signal) => Number(signal.touchStaleDays ?? 999) <= 30),
+        total
+      },
+      {
+        id: 'ebr-scheduled',
+        label: 'Next EBR scheduled',
+        pass: count((signal) => Boolean(signal.account?.engagement?.next_ebr_date)),
+        total
+      },
+      {
+        id: 'workshop-90d',
+        label: 'Workshop participation in last 90 days',
+        pass: count((signal) => Number(signal.account?.engagement?.program_attendance?.last_90d || 0) > 0),
+        total
+      },
+      {
+        id: 'health-freshness',
+        label: 'Health updated in last 30 days',
+        pass: count((signal) => Number(signal.healthStaleDays ?? 999) <= 30),
+        total
+      }
+    ]
+  };
+};
+
+const amerComplianceCard = (summary) => {
+  if (!summary.configured) {
+    return `
+      <section class="card">
+        <div class="metric-head">
+          <h2>AMER Handbook Compliance</h2>
+          ${statusChip({ label: 'Not configured', tone: 'missing' })}
+        </div>
+        <p class="muted">Checks not configured.</p>
+        <div class="page-actions">
+          <button class="ghost-btn" type="button" data-configure-expectations>Configure expectations</button>
+        </div>
+      </section>
+    `;
+  }
+
+  const passed = summary.checks.filter((item) => item.pass === item.total).length;
+  return `
+    <section class="card">
+      <div class="metric-head">
+        <h2>AMER Handbook Compliance</h2>
+        ${statusChip({ label: `${passed}/${summary.checks.length} checks fully met`, tone: passed === summary.checks.length ? 'good' : 'warn' })}
+      </div>
+      <ul class="simple-list">
+        ${summary.checks
+          .map(
+            (item) =>
+              `<li>${item.label}: <strong>${item.pass}/${item.total}</strong> ${
+                item.pass === item.total
+                  ? statusChip({ label: 'met', tone: 'good' })
+                  : statusChip({ label: 'attention', tone: 'warn' })
+              }</li>`
+          )
+          .join('')}
+      </ul>
+    </section>
+  `;
+};
+
+const applyModeDensity = (wrapper, mode) => {
+  const normalized = String(mode || 'today').toLowerCase();
+  const todayHide = new Set([
+    'CSE Operating Loop',
+    'Health x Adoption Matrix',
+    'Recent Logged Engagements',
+    'Program Invitations Needed',
+    'Recent Health Changes',
+    'Expand & Renew Quick Check',
+    'Outcomes Quick Check'
+  ]);
+  const reviewHide = new Set(['CSE Operating Loop', 'Recent Logged Engagements', 'Program Invitations Needed']);
+
+  const shouldHide = (heading) => {
+    if (!heading) return false;
+    if (normalized === 'deep') return false;
+    if (normalized === 'review') return reviewHide.has(heading);
+    return todayHide.has(heading);
+  };
+
+  wrapper.querySelectorAll('section.card').forEach((section) => {
+    const heading = section.querySelector('h2')?.textContent?.trim();
+    section.classList.toggle('is-hidden-mode', shouldHide(heading));
+  });
+};
+
 export const renderPortfolioHomePage = (ctx) => {
-  const { portfolio, filters, navigate, onLogAttendance, onExportPortfolio, onCopyShare, updatedOn, accountLoadError, onRetryData } = ctx;
+  const { portfolio, filters, navigate, onLogAttendance, onExportPortfolio, onCopyShare, updatedOn, accountLoadError, onRetryData, mode } = ctx;
 
   const staleThreshold = Number(filters.staleDays || 30);
   const allSignals = [...(portfolio.signals || [])].sort((left, right) => (right.outlierScore || 0) - (left.outlierScore || 0));
@@ -174,6 +280,7 @@ export const renderPortfolioHomePage = (ctx) => {
   const programInviteNeeds = allSignals.filter((signal) => signal.recommendedProgram && Number(signal.greenUseCaseCount || 0) < 3);
   const engagementLog = loadEngagementLog();
   const matrix = healthMatrix(allSignals);
+  const compliance = buildAmerCompliance(allSignals);
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
@@ -201,6 +308,7 @@ export const renderPortfolioHomePage = (ctx) => {
         ${metricTile({ label: 'Stale > 30d', value: staleSignals.length, tone: staleSignals.length ? 'warn' : 'good' })}
         ${metricTile({ label: 'Renewal < 90d', value: renewalSignals.length, tone: renewalSignals.length ? 'warn' : 'good' })}
       </div>
+      <p class="muted page-meta">Mode behavior: ${String(mode || 'today')}.</p>
     </section>
 
     ${
@@ -217,6 +325,8 @@ export const renderPortfolioHomePage = (ctx) => {
            </section>`
         : ''
     }
+
+    ${amerComplianceCard(compliance)}
 
     ${operatingLoopVisual()}
     ${matrixVisual(matrix)}
@@ -399,6 +509,7 @@ export const renderPortfolioHomePage = (ctx) => {
   wrapper.querySelector('[data-export-portfolio]')?.addEventListener('click', onExportPortfolio);
   wrapper.querySelector('[data-share-snapshot]')?.addEventListener('click', onCopyShare);
   wrapper.querySelector('[data-retry-data]')?.addEventListener('click', () => onRetryData?.());
+  wrapper.querySelector('[data-configure-expectations]')?.addEventListener('click', () => navigate('playbooks'));
 
   wrapper.addEventListener('click', (event) => {
     const accountLink = event.target.closest('[data-open-account]');
@@ -415,6 +526,8 @@ export const renderPortfolioHomePage = (ctx) => {
       onLogAttendance(programId, 1);
     }
   });
+
+  applyModeDensity(wrapper, mode);
 
   return wrapper;
 };

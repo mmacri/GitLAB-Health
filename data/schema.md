@@ -163,6 +163,8 @@ Account fields:
 - `glh-gitlab-config`
   - `baseUrl`
   - `projectPath`
+- `glh-action-cards`
+  - `{ [accountId]: { [actionId]: boolean } }`
 
 ## Customer-safe denylist
 - `internal_only`

@@ -371,6 +371,8 @@ export const renderAccountPage = (ctx) => {
     workspace,
     customerSafe,
     mode,
+    actionCompletion,
+    onToggleActionCompletion,
     navigate,
     onToggleSafe,
     onCopyInvite,
@@ -421,7 +423,10 @@ export const renderAccountPage = (ctx) => {
   const lifecycle = lifecycleStageProgress(lifecycleStage);
   const startTab = journeyMode ? 'journey' : 'summary';
   const adoptionLanding = buildAdoptionLandingZone(account, workspace, pathToGreen);
-  const actionCards = buildActionCards(account, workspace);
+  const actionCards = buildActionCards(account, workspace).map((item) => ({
+    ...item,
+    complete: Boolean(actionCompletion?.[item.id])
+  }));
 
   const licenseUtilization = Math.min(96, Math.max(22, Math.round((Number(account.adoption?.platform_adoption_score || 0) * 0.72) + 18)));
   const freshnessDays = workspace.signal?.healthStaleDays;
@@ -529,10 +534,14 @@ export const renderAccountPage = (ctx) => {
               ${actionCards
                 .map(
                   (item) => `
-                    <article class="action-card">
+                    <article class="action-card ${item.complete ? 'is-complete' : ''}">
                       <h4>${item.title}</h4>
                       <p class="muted">${item.why}</p>
                       <p class="muted">Due: ${formatDate(item.dueDate)} | Owner: ${item.owner}</p>
+                      <label class="missing-field">
+                        <input type="checkbox" data-action-complete="${item.id}" ${item.complete ? 'checked' : ''} />
+                        <span>${item.complete ? 'Completed' : 'Mark complete'}</span>
+                      </label>
                       <div class="page-actions">
                         <button class="ghost-btn" type="button" data-action-copy-issue="${item.id}">Copy GitLab issue body</button>
                         <button class="ghost-btn" type="button" data-action-copy-agenda="${item.id}">Copy agenda</button>
@@ -910,6 +919,13 @@ export const renderAccountPage = (ctx) => {
   });
   wrapper.querySelectorAll('[data-action-open-playbook]').forEach((button) => {
     button.addEventListener('click', () => navigate('playbooks'));
+  });
+  wrapper.querySelectorAll('[data-action-complete]').forEach((input) => {
+    input.addEventListener('change', () => {
+      const actionId = input.getAttribute('data-action-complete');
+      onToggleActionCompletion?.(internalAccount.id, actionId, Boolean(input.checked));
+      notify(input.checked ? 'Action marked complete.' : 'Action marked incomplete.');
+    });
   });
 
   wrapper.querySelector('[data-log-engagement]')?.addEventListener('click', () => {

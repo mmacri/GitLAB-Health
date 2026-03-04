@@ -386,6 +386,17 @@
       "type": "Docs",
       "tooltip": "Supports cross-functional execution tracking.",
       "customer_safe": true
+    },
+    {
+      "id": "res-cse-job-family",
+      "title": "CSE Role Overview (Job Family)",
+      "summary": "Role intent and expectations for Customer Success Engineers.",
+      "url": "https://handbook.gitlab.com/job-families/sales/customer-success-engineer/",
+      "category": "Onboarding",
+      "audience": "Customer-safe",
+      "type": "Handbook",
+      "tooltip": "Use to align stakeholders on CSE role boundaries and value.",
+      "customer_safe": true
     }
   ]
 }

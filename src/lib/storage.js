@@ -49,5 +49,6 @@ export const STORAGE_KEYS = {
   selectedAccountId: 'glh-selected-account-id',
   gitlabConfig: 'glh-gitlab-config',
   engagementLog: 'engagement_log_v1',
-  toolkitLaunch: 'glh-toolkit-launch'
+  toolkitLaunch: 'glh-toolkit-launch',
+  actionCards: 'glh-action-cards'
 };

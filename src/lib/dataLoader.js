@@ -198,7 +198,8 @@ export const resetLocalState = () => {
     STORAGE_KEYS.playbookChecklist,
     STORAGE_KEYS.gitlabConfig,
     STORAGE_KEYS.engagementLog,
-    STORAGE_KEYS.toolkitLaunch
+    STORAGE_KEYS.toolkitLaunch,
+    STORAGE_KEYS.actionCards
   ].forEach((key) => storage.remove(key));
 };
 

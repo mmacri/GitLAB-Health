@@ -53,7 +53,8 @@ const state = {
     belowThreeGreen: false
   },
   checklistState: {},
-  selectedAccountId: storage.get(STORAGE_KEYS.selectedAccountId, '')
+  selectedAccountId: storage.get(STORAGE_KEYS.selectedAccountId, ''),
+  actionCardCompletion: storage.get(STORAGE_KEYS.actionCards, {})
 };
 
 const notify = (message) => {
@@ -123,6 +124,19 @@ const setPortfolioFilters = (patch) => {
     ...state.portfolioFilters,
     ...patch
   };
+  render();
+};
+
+const setActionCardCompletion = (accountId, actionId, complete) => {
+  if (!accountId || !actionId) return;
+  const current = state.actionCardCompletion && typeof state.actionCardCompletion === 'object' ? state.actionCardCompletion : {};
+  const accountState = { ...(current[accountId] || {}) };
+  accountState[actionId] = Boolean(complete);
+  state.actionCardCompletion = {
+    ...current,
+    [accountId]: accountState
+  };
+  storage.set(STORAGE_KEYS.actionCards, state.actionCardCompletion);
   render();
 };
 
@@ -556,6 +570,7 @@ const commandEntries = (workspace) => {
 
 const reloadData = async () => {
   state.data = await loadDashboardData();
+  state.actionCardCompletion = storage.get(STORAGE_KEYS.actionCards, {});
   if (!state.selectedAccountId && state.data.accounts?.length) {
     setSelectedAccount(state.data.accounts[0].id);
   }
@@ -601,6 +616,7 @@ const renderCurrentRoute = () => {
       filters: state.portfolioFilters,
       onSetFilters: setPortfolioFilters,
       updatedOn: state.data.updated_on,
+      mode: state.viewMode,
       accountLoadError,
       onRetryData: reloadData,
       onCopyInvite,
@@ -643,6 +659,8 @@ const renderCurrentRoute = () => {
       resources: state.data.resources,
       customerSafe: state.customerSafe,
       mode: state.viewMode,
+      actionCompletion: state.actionCardCompletion[workspace?.account?.id || ''] || {},
+      onToggleActionCompletion: setActionCardCompletion,
       onToggleSafe: setSafeMode,
       onCopyInvite,
       onExportAccountCsv: (account, options) => exportAccountCsv(account, options),
@@ -660,6 +678,8 @@ const renderCurrentRoute = () => {
       resources: state.data.resources,
       customerSafe: state.customerSafe,
       mode: state.viewMode,
+      actionCompletion: state.actionCardCompletion[workspace?.account?.id || ''] || {},
+      onToggleActionCompletion: setActionCardCompletion,
       onToggleSafe: setSafeMode,
       onCopyInvite,
       onExportAccountCsv: (account, options) => exportAccountCsv(account, options),
