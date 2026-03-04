@@ -4,6 +4,7 @@ Static GitLab Pages-compatible operating dashboard for pooled Customer Success E
 
 ## What this app provides
 - Portfolio-first information architecture with grouped primary navigation:
+  - Sidebar-first primary navigation for workflow routing (top bar reserved for utilities)
   - Today
   - Portfolio
   - Manager

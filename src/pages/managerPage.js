@@ -1,4 +1,6 @@
 import { metricTile } from '../components/metricTile.js';
+import { pageHeader } from '../components/pageHeader.js';
+import { sectionCard } from '../components/sectionCard.js';
 import { statusChip } from '../components/statusChip.js';
 
 const clamp = (value) => Math.max(0, Math.min(100, Number(value || 0)));
@@ -62,18 +64,15 @@ export const renderManagerPage = (ctx) => {
   wrapper.className = 'route-page page-shell section-stack';
   wrapper.setAttribute('data-page', 'manager');
   wrapper.innerHTML = `
-    <header class="page-head page-intro">
-      <div>
-        <p class="eyebrow">Manager</p>
-        <h1>CSE Manager Dashboard</h1>
-        <p class="hero-lede">Team-level portfolio oversight for health distribution, adoption coverage, renewal risk, and engagement gaps.</p>
-      </div>
-      <div class="page-actions">
-        <button class="ghost-btn" type="button" data-go-portfolio>Back to Portfolio</button>
-      </div>
-    </header>
+    ${pageHeader({
+      eyebrow: 'Manager',
+      title: 'CSE Manager Dashboard',
+      subtitle: 'Team-level portfolio oversight for health distribution, adoption coverage, renewal risk, and engagement gaps.',
+      actionsHtml: '<button class="ghost-btn" type="button" data-go-portfolio>Back to Portfolio</button>'
+    })}
 
-    <section class="card">
+    ${sectionCard({
+      bodyHtml: `
       <div class="kpi-grid kpi-4">
         ${metricTile({ label: 'Total accounts', value: signals.length, tone: 'neutral' })}
         ${metricTile({ label: 'Average adoption', value: avgAdoption, tone: avgAdoption >= 70 ? 'good' : 'warn' })}
@@ -85,68 +84,69 @@ export const renderManagerPage = (ctx) => {
         ${metricTile({ label: 'Attention', value: health.yellow, tone: 'warn' })}
         ${metricTile({ label: 'Risk', value: health.red, tone: 'risk' })}
       </div>
-    </section>
+      `
+    })}
 
     <section class="dashboard-grid">
       <div class="main-col">
-        <article class="card">
-          <div class="metric-head">
-            <h2>Portfolio Health Distribution</h2>
-            ${statusChip({ label: `${signals.length} accounts`, tone: 'neutral' })}
-          </div>
-          <div class="mix-chart">
-            ${barRow('Healthy', health.green, total, 'good')}
-            ${barRow('Attention', health.yellow, total, 'warn')}
-            ${barRow('Risk', health.red, total, 'risk')}
-          </div>
-        </article>
+        ${sectionCard({
+          title: 'Portfolio Health Distribution',
+          chipHtml: statusChip({ label: `${signals.length} accounts`, tone: 'neutral' }),
+          bodyHtml: `
+            <div class="mix-chart">
+              ${barRow('Healthy', health.green, total, 'good')}
+              ${barRow('Attention', health.yellow, total, 'warn')}
+              ${barRow('Risk', health.red, total, 'risk')}
+            </div>
+          `
+        })}
 
-        <article class="card">
-          <div class="metric-head">
-            <h2>Use Case Adoption Distribution</h2>
-            ${statusChip({ label: 'Platform score bands', tone: 'neutral' })}
-          </div>
-          <div class="mix-chart">
-            ${barRow('High (75+)', adoption.high, total, 'good')}
-            ${barRow('Medium (55-74)', adoption.medium, total, 'warn')}
-            ${barRow('Low (<55)', adoption.low, total, 'risk')}
-          </div>
-        </article>
+        ${sectionCard({
+          title: 'Use Case Adoption Distribution',
+          chipHtml: statusChip({ label: 'Platform score bands', tone: 'neutral' }),
+          bodyHtml: `
+            <div class="mix-chart">
+              ${barRow('High (75+)', adoption.high, total, 'good')}
+              ${barRow('Medium (55-74)', adoption.medium, total, 'warn')}
+              ${barRow('Low (<55)', adoption.low, total, 'risk')}
+            </div>
+          `
+        })}
       </div>
 
       <div class="mid-col">
-        <article class="card">
-          <div class="metric-head">
-            <h2>Renewal Risk Map</h2>
-            ${statusChip({ label: `${renewal90} in 90d`, tone: renewal90 > 0 ? 'warn' : 'good' })}
-          </div>
-          <ul class="simple-list">
-            ${
-              topRisks.length
-                ? topRisks
-                    .map(
-                      (signal) =>
-                        `<li><a href="#" data-open-account="${signal.account.id}">${signal.account.name}</a> - renewal ${signal.renewalDays ?? 'n/a'}d - ${signal.reasons[0] || 'review required'}</li>`
-                    )
-                    .join('')
-                : '<li>No risk accounts detected.</li>'
-            }
-          </ul>
-        </article>
+        ${sectionCard({
+          title: 'Renewal Risk Map',
+          chipHtml: statusChip({ label: `${renewal90} in 90d`, tone: renewal90 > 0 ? 'warn' : 'good' }),
+          bodyHtml: `
+            <ul class="simple-list">
+              ${
+                topRisks.length
+                  ? topRisks
+                      .map(
+                        (signal) =>
+                          `<li><a href="#" data-open-account="${signal.account.id}">${signal.account.name}</a> - renewal ${signal.renewalDays ?? 'n/a'}d - ${signal.reasons[0] || 'review required'}</li>`
+                      )
+                      .join('')
+                  : '<li>No risk accounts detected.</li>'
+              }
+            </ul>
+          `
+        })}
       </div>
 
       <div class="right-col">
-        <article class="card">
-          <div class="metric-head">
-            <h3>Manager Actions</h3>
-            ${statusChip({ label: 'Coverage', tone: 'neutral' })}
-          </div>
-          <ul class="drawer-list">
-            <li>Assign immediate support to red health accounts.</li>
-            <li>Review no-engagement accounts with no upcoming touch (${noUpcomingTouch}).</li>
-            <li>Prioritize renewal accounts with adoption below 3 green use cases.</li>
-          </ul>
-        </article>
+        ${sectionCard({
+          title: 'Manager Actions',
+          chipHtml: statusChip({ label: 'Coverage', tone: 'neutral' }),
+          bodyHtml: `
+            <ul class="drawer-list">
+              <li>Assign immediate support to red health accounts.</li>
+              <li>Review no-engagement accounts with no upcoming touch (${noUpcomingTouch}).</li>
+              <li>Prioritize renewal accounts with adoption below 3 green use cases.</li>
+            </ul>
+          `
+        })}
       </div>
     </section>
   `;

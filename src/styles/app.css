@@ -54,6 +54,18 @@ h4 {
   line-height: 1.2;
 }
 
+h1 {
+  font-size: clamp(30px, 4vw, 36px);
+}
+
+h2 {
+  font-size: clamp(24px, 2.8vw, 28px);
+}
+
+h3 {
+  font-size: clamp(20px, 2.2vw, 22px);
+}
+
 .page {
   background: var(--page-bg);
   min-height: 100vh;
@@ -387,7 +399,6 @@ kbd {
 }
 
 .page-head h1 {
-  font-size: clamp(26px, 3vw, 28px);
   margin-bottom: var(--space-3);
 }
 

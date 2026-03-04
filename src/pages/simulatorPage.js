@@ -1,4 +1,5 @@
 import { metricTile } from '../components/metricTile.js';
+import { pageHeader } from '../components/pageHeader.js';
 import { statusChip } from '../components/statusChip.js';
 import { triggerDownload } from '../lib/exports.js';
 import {
@@ -163,20 +164,19 @@ export const renderSimulatorPage = (ctx) => {
   let activeArtifact = 'executive-summary';
 
   wrapper.innerHTML = `
-    <header class="page-head page-intro">
-      <div>
-        <p class="eyebrow">Simulator</p>
-        <h1>Adoption Simulator</h1>
-        <p class="hero-lede">Toggle capability scenarios to forecast journey stage, platform adoption depth, and next-best CSE actions using deterministic handbook-aligned rules.</p>
-      </div>
-      <div class="page-actions">
+    ${pageHeader({
+      eyebrow: 'Simulator',
+      title: 'Adoption Simulator',
+      subtitle:
+        'Toggle capability scenarios to forecast journey stage, platform adoption depth, and next-best CSE actions using deterministic handbook-aligned rules.',
+      actionsHtml: `
         <button class="ghost-btn" type="button" data-go-today>Back to Today</button>
         <label class="safe-toggle">
           <input type="checkbox" data-safe-toggle ${customerSafe ? 'checked' : ''} />
           <span>Customer-safe</span>
         </label>
-      </div>
-    </header>
+      `
+    })}
 
     <section class="simulator-grid">
       <div class="simulator-col">
