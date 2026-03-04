@@ -604,6 +604,14 @@ const renderShellContext = () => {
   }
 };
 
+const syncTopbarHeight = () => {
+  const topbar = appRoot.querySelector('.app-header');
+  if (!topbar) return;
+  const height = Math.ceil(topbar.getBoundingClientRect().height);
+  const safeHeight = Number.isFinite(height) ? Math.max(0, height) : 0;
+  document.documentElement.style.setProperty('--topbar-height', `${safeHeight}px`);
+};
+
 const copyShareSnapshot = async () => {
   const route = routePath(state.route.name, state.route.params);
   const url = buildShareSnapshotUrl({
@@ -953,6 +961,7 @@ const render = () => {
   renderLeftRail();
   renderCurrentRoute();
   setActiveNav();
+  window.requestAnimationFrame(syncTopbarHeight);
 };
 
 state.basePath = detectBasePath(window.location.pathname);
@@ -1041,6 +1050,7 @@ const bindGlobalEvents = () => {
     const expanded = moreButton.getAttribute('aria-expanded') === 'true';
     moreMenu.hidden = expanded;
     moreButton.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+    window.requestAnimationFrame(syncTopbarHeight);
   });
 
   document.addEventListener('click', (event) => {
@@ -1048,6 +1058,7 @@ const bindGlobalEvents = () => {
     if (event.target.closest('[data-more-menu]') || event.target.closest('[data-open-more]')) return;
     moreMenu.hidden = true;
     moreButton?.setAttribute('aria-expanded', 'false');
+    window.requestAnimationFrame(syncTopbarHeight);
   });
 
   appRoot.querySelector('[data-copy-snapshot]')?.addEventListener('click', async () => {
@@ -1074,6 +1085,11 @@ const bindGlobalEvents = () => {
       filtersPanel.setAttribute('hidden', 'hidden');
       filtersButton.setAttribute('aria-expanded', 'false');
     }
+    window.requestAnimationFrame(syncTopbarHeight);
+  });
+
+  window.addEventListener('resize', () => {
+    window.requestAnimationFrame(syncTopbarHeight);
   });
 
   appRoot.querySelector('[data-go-portfolio]')?.addEventListener('click', () => {
@@ -1109,6 +1125,7 @@ const init = async () => {
   }
 
   bindGlobalEvents();
+  syncTopbarHeight();
 
   palette = createCommandPalette({
     onSelect(entry) {
