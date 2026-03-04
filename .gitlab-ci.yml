@@ -18,6 +18,17 @@ pages:
     - mkdir -p public
     - cp -R assets data print src public/
     - cp index.html 404.html cheatsheet.html .nojekyll README.md public/
+    - mkdir -p public/today public/portfolio public/toolkit public/programs public/resources public/playbooks public/exports public/intake public/journey public/account
+    - cp index.html public/today/index.html
+    - cp index.html public/portfolio/index.html
+    - cp index.html public/toolkit/index.html
+    - cp index.html public/programs/index.html
+    - cp index.html public/resources/index.html
+    - cp index.html public/playbooks/index.html
+    - cp index.html public/exports/index.html
+    - cp index.html public/intake/index.html
+    - cp index.html public/journey/index.html
+    - cp index.html public/account/index.html
   artifacts:
     paths:
       - public
