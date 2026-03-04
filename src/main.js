@@ -624,15 +624,21 @@ const renderShellContext = () => {
   const jumpSelect = appRoot.querySelector('[data-global-jump]');
   if (jumpSelect) {
     const isAccountContext = state.route.name === 'account' || state.route.name === 'journey';
-    const sectionOptions = ACCOUNT_SECTION_LINKS.map((item) => ({
-      value: `section:${item.id}`,
-      label: item.label
-    }));
-    const options = [
-      { value: '', label: isAccountContext ? 'Jump to account section' : 'Open account section' },
-      { value: activeAccount ? `account:${activeAccount.id}` : 'account', label: activeAccount ? `Account: ${activeAccount.name}` : 'Account' },
-      ...sectionOptions
-    ];
+    const options = [{ value: '', label: isAccountContext ? 'Jump to account section' : 'Open account workspace' }];
+    if (activeAccount || state.data?.accounts?.length) {
+      options.push({
+        value: activeAccount ? `account:${activeAccount.id}` : 'account',
+        label: activeAccount ? `Account: ${activeAccount.name}` : 'Account'
+      });
+    }
+    if (isAccountContext) {
+      options.push(
+        ...ACCOUNT_SECTION_LINKS.map((item) => ({
+          value: `section:${item.id}`,
+          label: item.label
+        }))
+      );
+    }
     jumpSelect.innerHTML = options.map((item) => `<option value="${item.value}">${item.label}</option>`).join('');
     jumpSelect.value = '';
   }
