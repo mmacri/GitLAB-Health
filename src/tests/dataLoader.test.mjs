@@ -40,6 +40,9 @@ test('loadDashboardData resolves project base path for deep routes', async () =>
     if (text.endsWith('/data/templates.json')) {
       return buildResponse({ templates: { issue_default_description: 'Example' } });
     }
+    if (text.endsWith('/data/cheatsheet.json')) {
+      return buildResponse({ title: 'Cheatsheet' });
+    }
 
     throw new Error(`Unexpected fetch URL: ${text}`);
   };
@@ -47,7 +50,7 @@ test('loadDashboardData resolves project base path for deep routes', async () =>
   try {
     const loaded = await loadDashboardData();
 
-    assert.equal(urls.length, 6);
+    assert.equal(urls.length, 7);
     assert.ok(urls.every((url) => url.startsWith('/GitLAB-Health/data/')));
     assert.equal(loaded.accounts.length, 1);
     assert.equal(loaded.requests.length, 1);
@@ -56,6 +59,7 @@ test('loadDashboardData resolves project base path for deep routes', async () =>
     assert.equal(loaded.resources.length, 1);
     assert.equal(loaded.categories.length, 1);
     assert.equal(loaded.templates.issue_default_description, 'Example');
+    assert.equal(loaded.cheatsheet.title, 'Cheatsheet');
   } finally {
     globalThis.window = originalWindow;
     globalThis.fetch = originalFetch;

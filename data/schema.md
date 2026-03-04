@@ -34,6 +34,7 @@ Account fields:
   - `cadence` string
   - `last_touch_date` date
   - `next_touch_date` date or null
+  - `next_ebr_date` date or null (single source of truth for next EBR date)
   - `program_attendance`
     - `last_90d` number
     - `webinars` number
@@ -134,7 +135,7 @@ Account fields:
 - `resources[]`
   - `id`, `title`, `summary`, `url`
   - `category` (`Onboarding|Adoption|Risk|Renewal|Enablement`)
-  - `audience` (`Customer Safe|Internal`)
+  - `audience` (`Customer-safe|Internal`)
   - `type` (`Handbook|Docs|Playbook`)
   - `tooltip`
   - `customer_safe` boolean (derived from audience)

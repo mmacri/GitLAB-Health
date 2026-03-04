@@ -48,10 +48,20 @@ const upcomingEngagements = (signals, days = 14) =>
   (signals || [])
     .filter((signal) => {
       const nextTouch = signal.account.engagement?.next_touch_date;
-      const dueIn = nextTouch ? Math.floor((toTime(nextTouch) - Date.now()) / (1000 * 60 * 60 * 24)) : null;
-      return dueIn !== null && dueIn >= 0 && dueIn <= days;
+      const nextEbr = signal.account.engagement?.next_ebr_date;
+      const touchDueIn = nextTouch ? Math.floor((toTime(nextTouch) - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+      const ebrDueIn = nextEbr ? Math.floor((toTime(nextEbr) - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+      const touchInWindow = touchDueIn !== null && touchDueIn >= 0 && touchDueIn <= days;
+      const ebrInWindow = ebrDueIn !== null && ebrDueIn >= 0 && ebrDueIn <= days;
+      return touchInWindow || ebrInWindow;
     })
-    .sort((left, right) => toTime(left.account.engagement?.next_touch_date) - toTime(right.account.engagement?.next_touch_date));
+    .sort((left, right) => {
+      const leftTouch = toTime(left.account.engagement?.next_touch_date);
+      const leftEbr = toTime(left.account.engagement?.next_ebr_date);
+      const rightTouch = toTime(right.account.engagement?.next_touch_date);
+      const rightEbr = toTime(right.account.engagement?.next_ebr_date);
+      return Math.min(leftTouch, leftEbr) - Math.min(rightTouch, rightEbr);
+    });
 
 const recentHealthChanges = (signals) =>
   (signals || [])
@@ -143,7 +153,7 @@ const matrixVisual = (matrix) => `
 `;
 
 export const renderPortfolioHomePage = (ctx) => {
-  const { portfolio, filters, navigate, onLogAttendance, onExportPortfolio, onCopyShare, updatedOn } = ctx;
+  const { portfolio, filters, navigate, onLogAttendance, onExportPortfolio, onCopyShare, updatedOn, accountLoadError, onRetryData } = ctx;
 
   const staleThreshold = Number(filters.staleDays || 30);
   const allSignals = [...(portfolio.signals || [])].sort((left, right) => (right.outlierScore || 0) - (left.outlierScore || 0));
@@ -193,6 +203,21 @@ export const renderPortfolioHomePage = (ctx) => {
       </div>
     </section>
 
+    ${
+      accountLoadError
+        ? `<section class="card">
+             <div class="metric-head">
+               <h2>Account Data Status</h2>
+               ${statusChip({ label: 'Load error', tone: 'risk' })}
+             </div>
+             <p class="muted">Account data failed to load. Retry loading dataset before continuing triage.</p>
+             <div class="page-actions">
+               <button class="qa" type="button" data-retry-data>Retry</button>
+             </div>
+           </section>`
+        : ''
+    }
+
     ${operatingLoopVisual()}
     ${matrixVisual(matrix)}
 
@@ -223,7 +248,7 @@ export const renderPortfolioHomePage = (ctx) => {
             (signal) =>
               `<a href="#" data-open-account="${signal.account.id}">${signal.account.name}</a> - next engagement ${formatDate(
                 signal.account.engagement?.next_touch_date
-              )}`,
+              )}, next EBR ${formatDate(signal.account.engagement?.next_ebr_date)}`,
             'No customer engagements due in the next 14 days.'
           )}
         </section>
@@ -373,6 +398,7 @@ export const renderPortfolioHomePage = (ctx) => {
   wrapper.querySelector('[data-go-intake]')?.addEventListener('click', () => navigate('intake'));
   wrapper.querySelector('[data-export-portfolio]')?.addEventListener('click', onExportPortfolio);
   wrapper.querySelector('[data-share-snapshot]')?.addEventListener('click', onCopyShare);
+  wrapper.querySelector('[data-retry-data]')?.addEventListener('click', () => onRetryData?.());
 
   wrapper.addEventListener('click', (event) => {
     const accountLink = event.target.closest('[data-open-account]');
@@ -394,7 +420,7 @@ export const renderPortfolioHomePage = (ctx) => {
 };
 
 export const renderPortfolioPage = (ctx) => {
-  const { portfolio, filters, onSetFilters, navigate, onExportPortfolio, updatedOn } = ctx;
+  const { portfolio, filters, onSetFilters, navigate, onExportPortfolio, updatedOn, accountLoadError, onRetryData } = ctx;
   const segments = uniqueSegments(portfolio.signals);
   const lowUseCases = uniqueUseCases(portfolio.signals);
   const staleThreshold = Number(filters.staleDays || 30);
@@ -493,6 +519,19 @@ export const renderPortfolioPage = (ctx) => {
       </div>
     </section>
 
+    ${
+      accountLoadError
+        ? `<section class="card">
+             <div class="metric-head">
+               <h2>Portfolio Data Error</h2>
+               ${statusChip({ label: 'Accounts unavailable', tone: 'risk' })}
+             </div>
+             <p class="muted">Account data failed to load. Retry to restore portfolio table.</p>
+             <button class="qa" type="button" data-retry-data>Retry</button>
+           </section>`
+        : ''
+    }
+
     ${matrixVisual(matrix)}
 
     <section>
@@ -546,7 +585,7 @@ export const renderPortfolioPage = (ctx) => {
       <td>${row.account.lifecycle_stage || row.account.health?.lifecycle_stage || 'enable'}</td>
       <td>${statusChip({ label: row.account.health?.overall, tone: statusToneFromHealth(row.account.health?.overall) })}</td>
       <td>${row.greenUseCaseCount || 0}/4 green</td>
-      <td>${row.renewalDays === 999 ? 'Missing data' : `${row.renewalDays}d`}</td>
+      <td>${row.renewalDays === 999 ? 'Not configured' : `${row.renewalDays}d`}</td>
       <td>${formatDate(row.account.engagement?.last_touch_date)}</td>
       <td>${row.healthStaleDays === null ? 'Missing' : `${row.healthStaleDays}d`}</td>
     `
@@ -555,6 +594,7 @@ export const renderPortfolioPage = (ctx) => {
 
   wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
   wrapper.querySelector('[data-export-portfolio]')?.addEventListener('click', onExportPortfolio);
+  wrapper.querySelector('[data-retry-data]')?.addEventListener('click', () => onRetryData?.());
 
   wrapper.querySelectorAll('[data-filter]').forEach((input) => {
     input.addEventListener('change', () => {

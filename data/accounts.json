@@ -34,7 +34,8 @@
           "webinars": 1,
           "labs": 0,
           "office_hours": 0
-        }
+        },
+        "next_ebr_date": "2026-04-20"
       },
       "journey": {
         "time_to_engage_days": 6,
@@ -171,7 +172,8 @@
           "webinars": 2,
           "labs": 1,
           "office_hours": 1
-        }
+        },
+        "next_ebr_date": "2026-04-21"
       },
       "journey": {
         "time_to_engage_days": 7,
@@ -308,7 +310,8 @@
           "webinars": 3,
           "labs": 2,
           "office_hours": 0
-        }
+        },
+        "next_ebr_date": "2026-04-23"
       },
       "journey": {
         "time_to_engage_days": 8,
@@ -445,7 +448,8 @@
           "webinars": 1,
           "labs": 0,
           "office_hours": 1
-        }
+        },
+        "next_ebr_date": "2026-04-24"
       },
       "journey": {
         "time_to_engage_days": 9,
@@ -582,7 +586,8 @@
           "webinars": 2,
           "labs": 1,
           "office_hours": 0
-        }
+        },
+        "next_ebr_date": "2026-04-25"
       },
       "journey": {
         "time_to_engage_days": 10,
@@ -719,7 +724,8 @@
           "webinars": 3,
           "labs": 2,
           "office_hours": 1
-        }
+        },
+        "next_ebr_date": "2026-04-26"
       },
       "journey": {
         "time_to_engage_days": 11,
@@ -856,7 +862,8 @@
           "webinars": 1,
           "labs": 0,
           "office_hours": 0
-        }
+        },
+        "next_ebr_date": "2026-04-27"
       },
       "journey": {
         "time_to_engage_days": 12,
@@ -993,7 +1000,8 @@
           "webinars": 2,
           "labs": 1,
           "office_hours": 1
-        }
+        },
+        "next_ebr_date": "2026-04-28"
       },
       "journey": {
         "time_to_engage_days": 13,
@@ -1130,7 +1138,8 @@
           "webinars": 3,
           "labs": 2,
           "office_hours": 0
-        }
+        },
+        "next_ebr_date": "2026-04-29"
       },
       "journey": {
         "time_to_engage_days": 14,
@@ -1267,7 +1276,8 @@
           "webinars": 1,
           "labs": 0,
           "office_hours": 1
-        }
+        },
+        "next_ebr_date": "2026-04-30"
       },
       "journey": {
         "time_to_engage_days": 15,
@@ -1404,7 +1414,8 @@
           "webinars": 2,
           "labs": 1,
           "office_hours": 0
-        }
+        },
+        "next_ebr_date": "2026-04-05"
       },
       "journey": {
         "time_to_engage_days": 16,
@@ -1541,7 +1552,8 @@
           "webinars": 3,
           "labs": 2,
           "office_hours": 1
-        }
+        },
+        "next_ebr_date": "2026-04-21"
       },
       "journey": {
         "time_to_engage_days": 17,

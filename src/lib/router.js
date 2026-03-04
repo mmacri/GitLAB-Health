@@ -7,6 +7,7 @@ const KNOWN_TOP_LEVEL = new Set([
   'programs',
   'playbooks',
   'resources',
+  'cheatsheet',
   'exports',
   'intake'
 ]);
@@ -63,6 +64,9 @@ export const parseRoute = (pathname, basePath = '') => {
   if (normalized === '/resources') {
     return { name: 'resources', params: {}, path: normalized };
   }
+  if (normalized === '/cheatsheet') {
+    return { name: 'cheatsheet', params: {}, path: normalized };
+  }
   if (normalized === '/exports') {
     return { name: 'exports', params: {}, path: normalized };
   }
@@ -107,6 +111,7 @@ export const routePath = (routeName, params = {}) => {
   if (routeName === 'programs') return '/programs';
   if (routeName === 'playbooks') return '/playbooks';
   if (routeName === 'resources') return '/resources';
+  if (routeName === 'cheatsheet') return '/cheatsheet';
   if (routeName === 'exports') return '/exports';
   if (routeName === 'intake') return '/intake';
   return '/';

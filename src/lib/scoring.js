@@ -90,6 +90,7 @@ export const computeAccountSignals = (account, requests, playbooks, programs, no
   const renewalDays = daysUntil(account?.renewal_date, now);
   const healthStaleDays = diffInDays(account?.health?.last_updated, now);
   const touchStaleDays = diffInDays(account?.engagement?.last_touch_date, now);
+  const nextEbrDays = daysUntil(account?.engagement?.next_ebr_date, now);
   const staleThreshold = DEFAULT_STALE_DAYS;
   const requestList = activeRequests(requests, account.id);
   const overdueRequests = requestList.filter((request) => {
@@ -129,6 +130,7 @@ export const computeAccountSignals = (account, requests, playbooks, programs, no
     renewalDays,
     healthStaleDays,
     touchStaleDays,
+    nextEbrDays,
     requestList,
     overdueRequests,
     lowestUseCaseName,

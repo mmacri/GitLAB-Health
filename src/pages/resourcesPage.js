@@ -2,8 +2,9 @@ import { renderActionDrawer } from '../components/actionDrawer.js';
 import { statusChip } from '../components/statusChip.js';
 
 const normalizeAudience = (resource) => {
-  if (resource.audience) return String(resource.audience);
-  return resource.customer_safe ? 'Customer Safe' : 'Internal';
+  const raw = resource.audience ? String(resource.audience).trim().toLowerCase() : resource.customer_safe ? 'customer-safe' : 'internal';
+  if (raw === 'internal') return 'Internal';
+  return 'Customer-safe';
 };
 
 const normalizeCategory = (resource) => {

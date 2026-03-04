@@ -45,7 +45,7 @@ const missingEditable = (label, path, value, type = 'text') => {
   if (!isMissing(value)) return `<span>${value}</span>`;
   return `
     <span class="missing-field">
-      ${statusChip({ label: 'Missing data', tone: 'missing' })}
+      ${statusChip({ label: 'Not configured', tone: 'missing' })}
       <button class="ghost-btn" type="button" data-edit-missing="${path}" data-edit-label="${label}" data-edit-type="${type}">Add/update</button>
     </span>
   `;
@@ -148,6 +148,46 @@ const buildAdoptionLandingZone = (account, workspace, pathToGreen) => {
         : 'Maintain monthly outcome evidence updates tied to success plan'
     ]
   };
+};
+
+const buildActionCards = (account, workspace) => {
+  const reasons = workspace?.signal?.reasons || [];
+  const renewalDays = Number(workspace?.signal?.renewalDays ?? 999);
+  const primaryReason = reasons[0] || 'No primary risk driver captured.';
+  const secondaryReason = reasons[1] || 'Maintain adoption momentum and evidence capture.';
+  const dueTouch = account?.engagement?.next_touch_date || account?.engagement?.next_ebr_date || account?.renewal_date || '';
+  const dueRenewal = account?.renewal_date || dueTouch;
+  const dueEbr = account?.engagement?.next_ebr_date || dueTouch;
+
+  return [
+    {
+      id: 'act-immediate',
+      title: 'Run immediate recovery motion',
+      why: primaryReason,
+      dueDate: dueTouch,
+      owner: 'CSE',
+      playbook: 'playbooks'
+    },
+    {
+      id: 'act-ebr',
+      title: 'Prepare executive alignment package',
+      why: `Use EBR narrative to align outcomes and risk posture. ${secondaryReason}`,
+      dueDate: dueEbr,
+      owner: 'CSM',
+      playbook: 'playbooks'
+    },
+    {
+      id: 'act-renewal',
+      title: renewalDays <= 120 ? 'Close renewal readiness gaps' : 'Build expansion readiness plan',
+      why:
+        renewalDays <= 120
+          ? 'Renewal is within focus window; attach validated value evidence and risk mitigations.'
+          : 'Sustain 3+ green adoption and document measurable value milestones.',
+      dueDate: dueRenewal,
+      owner: 'AE',
+      playbook: 'playbooks'
+    }
+  ];
 };
 
 const lifecycleFlowDiagram = () => `
@@ -381,6 +421,7 @@ export const renderAccountPage = (ctx) => {
   const lifecycle = lifecycleStageProgress(lifecycleStage);
   const startTab = journeyMode ? 'journey' : 'summary';
   const adoptionLanding = buildAdoptionLandingZone(account, workspace, pathToGreen);
+  const actionCards = buildActionCards(account, workspace);
 
   const licenseUtilization = Math.min(96, Math.max(22, Math.round((Number(account.adoption?.platform_adoption_score || 0) * 0.72) + 18)));
   const freshnessDays = workspace.signal?.healthStaleDays;
@@ -411,7 +452,7 @@ export const renderAccountPage = (ctx) => {
       <div>
         <p class="eyebrow">Account Workspace</p>
         <h1>${account.name}</h1>
-        <p class="hero-lede">Segment ${account.segment} | Renewal in ${renewalDays ?? 'Missing data'} days | Stage ${lifecycleStage}</p>
+        <p class="hero-lede">Segment ${account.segment} | Renewal in ${renewalDays ?? 'Not configured'} days | Next EBR ${formatDate(account.engagement?.next_ebr_date)} | Stage ${lifecycleStage}</p>
         <div class="lifecycle-progress">
           <div class="lifecycle-track" aria-hidden="true">
             <span style="width:${lifecycle.percent}%"></span>
@@ -441,10 +482,10 @@ export const renderAccountPage = (ctx) => {
 
     <section class="snapshot-bar card">
       ${metricTile({ label: 'Health score', value: account.adoption?.platform_adoption_score || 0, meta: account.health?.overall, tone: statusToneFromHealth(account.health?.overall), tooltip: 'Health score reflects adoption + engagement + lifecycle signals.' })}
-      ${metricTile({ label: 'Platform adoption', value: account.adoption?.platform_adoption_level || 'Missing data', meta: 'Target 3+ green use cases', tone: scoreTone(account.adoption?.platform_adoption_score), tooltip: '3+ green use cases indicates healthy platform depth.' })}
+      ${metricTile({ label: 'Platform adoption', value: account.adoption?.platform_adoption_level || 'Not configured', meta: 'Target 3+ green use cases', tone: scoreTone(account.adoption?.platform_adoption_score), tooltip: '3+ green use cases indicates healthy platform depth.' })}
       ${metricTile({ label: 'License utilization', value: toPercent(licenseUtilization), meta: 'Sample benchmark metric', tone: licenseUtilization >= 70 ? 'good' : licenseUtilization >= 50 ? 'warn' : 'risk' })}
-      ${metricTile({ label: 'Renewal countdown', value: renewalDays ?? 'Missing data', meta: 'days', tone: renewalDays <= 90 ? 'risk' : renewalDays <= 180 ? 'warn' : 'good' })}
-      ${metricTile({ label: 'Data freshness', value: freshnessDays === null ? 'Missing data' : `${freshnessDays}d`, meta: account.health?.last_updated || 'No update date', tone: freshnessDays > 30 ? 'warn' : 'good', tooltip: 'Stale means health update older than 30 days.' })}
+      ${metricTile({ label: 'Renewal countdown', value: renewalDays ?? 'Not configured', meta: 'days', tone: renewalDays <= 90 ? 'risk' : renewalDays <= 180 ? 'warn' : 'good' })}
+      ${metricTile({ label: 'Data freshness', value: freshnessDays === null ? 'Not configured' : `${freshnessDays}d`, meta: account.health?.last_updated || 'No update date', tone: freshnessDays > 30 ? 'warn' : 'good', tooltip: 'Stale means health update older than 30 days.' })}
     </section>
 
     <section class="workspace-layout">
@@ -483,10 +524,33 @@ export const renderAccountPage = (ctx) => {
           </div>
 
           <div class="card compact-card">
+            <h3>Next Best Action Cards</h3>
+            <div class="action-card-grid">
+              ${actionCards
+                .map(
+                  (item) => `
+                    <article class="action-card">
+                      <h4>${item.title}</h4>
+                      <p class="muted">${item.why}</p>
+                      <p class="muted">Due: ${formatDate(item.dueDate)} | Owner: ${item.owner}</p>
+                      <div class="page-actions">
+                        <button class="ghost-btn" type="button" data-action-copy-issue="${item.id}">Copy GitLab issue body</button>
+                        <button class="ghost-btn" type="button" data-action-copy-agenda="${item.id}">Copy agenda</button>
+                        <button class="ghost-btn" type="button" data-action-open-playbook="${item.id}">Open playbook</button>
+                      </div>
+                    </article>
+                  `
+                )
+                .join('')}
+            </div>
+          </div>
+
+          <div class="card compact-card">
             <h3>Missing Data</h3>
             <ul class="simple-list">
               <li>Last updated: ${missingEditable('Last updated', 'health.last_updated', account.health?.last_updated, 'date')}</li>
               <li>Next touch: ${missingEditable('Next touch', 'engagement.next_touch_date', account.engagement?.next_touch_date, 'date')}</li>
+              <li>Next EBR: ${missingEditable('Next EBR', 'engagement.next_ebr_date', account.engagement?.next_ebr_date, 'date')}</li>
               <li>Pipeline speed: ${missingEditable('Pipeline speed', 'outcomes.value_metrics.pipeline_speed', account.outcomes?.value_metrics?.pipeline_speed, 'text')}</li>
             </ul>
           </div>
@@ -644,9 +708,10 @@ export const renderAccountPage = (ctx) => {
             <button class="ghost-btn" type="button" data-log-engagement>Log engagement touchpoint</button>
           </div>
           <div class="kpi-grid kpi-3">
-            ${metricTile({ label: 'Cadence', value: account.engagement?.cadence || 'Missing data', tone: 'neutral' })}
-            ${metricTile({ label: 'Last touch', value: account.engagement?.last_touch_date || 'Missing data', tone: 'neutral' })}
-            ${metricTile({ label: 'Next touch', value: account.engagement?.next_touch_date || 'Missing data', tone: isMissing(account.engagement?.next_touch_date) ? 'warn' : 'good' })}
+            ${metricTile({ label: 'Cadence', value: account.engagement?.cadence || 'Not configured', tone: 'neutral' })}
+            ${metricTile({ label: 'Last touch', value: account.engagement?.last_touch_date || 'Not configured', tone: 'neutral' })}
+            ${metricTile({ label: 'Next touch', value: account.engagement?.next_touch_date || 'Not configured', tone: isMissing(account.engagement?.next_touch_date) ? 'warn' : 'good' })}
+            ${metricTile({ label: 'Next EBR', value: account.engagement?.next_ebr_date || 'Not configured', tone: isMissing(account.engagement?.next_ebr_date) ? 'warn' : 'good' })}
           </div>
           <div class="card compact-card">
             <h3>Program Participation (90d)</h3>
@@ -718,9 +783,9 @@ export const renderAccountPage = (ctx) => {
             </div>
           </div>
           <div class="kpi-grid kpi-3">
-            ${metricTile({ label: 'Time saved', value: account.outcomes?.value_metrics?.time_saved_hours || 'Missing data', meta: 'hours', tone: 'good' })}
-            ${metricTile({ label: 'Pipeline speed', value: account.outcomes?.value_metrics?.pipeline_speed || 'Missing data', tone: isMissing(account.outcomes?.value_metrics?.pipeline_speed) ? 'warn' : 'good' })}
-            ${metricTile({ label: 'Security coverage', value: account.outcomes?.value_metrics?.security_coverage || 'Missing data', tone: 'neutral' })}
+            ${metricTile({ label: 'Time saved', value: account.outcomes?.value_metrics?.time_saved_hours || 'Not configured', meta: 'hours', tone: 'good' })}
+            ${metricTile({ label: 'Pipeline speed', value: account.outcomes?.value_metrics?.pipeline_speed || 'Not configured', tone: isMissing(account.outcomes?.value_metrics?.pipeline_speed) ? 'warn' : 'good' })}
+            ${metricTile({ label: 'Security coverage', value: account.outcomes?.value_metrics?.security_coverage || 'Not configured', tone: 'neutral' })}
           </div>
         </section>
 
@@ -829,6 +894,22 @@ export const renderAccountPage = (ctx) => {
   wrapper.querySelector('[data-copy-yellow-summary]')?.addEventListener('click', async () => {
     await copyText(yellowResponseSummary(workspace, account));
     notify('Health response summary copied.');
+  });
+
+  wrapper.querySelectorAll('[data-action-copy-issue]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      await copyText(state.artifacts.issue);
+      notify('Action issue body copied.');
+    });
+  });
+  wrapper.querySelectorAll('[data-action-copy-agenda]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      await copyText(state.artifacts.agenda);
+      notify('Action agenda copied.');
+    });
+  });
+  wrapper.querySelectorAll('[data-action-open-playbook]').forEach((button) => {
+    button.addEventListener('click', () => navigate('playbooks'));
   });
 
   wrapper.querySelector('[data-log-engagement]')?.addEventListener('click', () => {

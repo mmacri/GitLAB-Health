@@ -30,7 +30,7 @@
       "summary": "Defines pooled CSE coverage responsibilities and technical outcome focus.",
       "url": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/",
       "category": "Onboarding",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Handbook",
       "tooltip": "Use this for stakeholder alignment on pooled CSE engagement model.",
       "customer_safe": true
@@ -41,7 +41,7 @@
       "summary": "Health model guidance for product, risk, outcomes, voice, and engagement.",
       "url": "https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/",
       "category": "Risk",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Handbook",
       "tooltip": "Anchor health explanations to adoption and engagement signals.",
       "customer_safe": true
@@ -63,7 +63,7 @@
       "summary": "Scoring intent for platform-level adoption depth across use cases.",
       "url": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/",
       "category": "Adoption",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Handbook",
       "tooltip": "Use 3+ green use cases as a target state indicator.",
       "customer_safe": true
@@ -74,7 +74,7 @@
       "summary": "How use-case maturity scoring is evaluated and interpreted.",
       "url": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/",
       "category": "Adoption",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Handbook",
       "tooltip": "Map workshop outcomes to maturity progression.",
       "customer_safe": true
@@ -85,7 +85,7 @@
       "summary": "Framework for customer objectives, milestones, and evidence tracking.",
       "url": "https://handbook.gitlab.com/handbook/customer-success/csm/success-plans/",
       "category": "Renewal",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Handbook",
       "tooltip": "Connect adoption evidence to business outcomes.",
       "customer_safe": true
@@ -96,7 +96,7 @@
       "summary": "Structure and narrative guidance for executive value reviews.",
       "url": "https://handbook.gitlab.com/handbook/customer-success/csm/ebr/",
       "category": "Renewal",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Handbook",
       "tooltip": "Use for renewal and expansion storyline preparation.",
       "customer_safe": true
@@ -107,7 +107,7 @@
       "summary": "Operating expectations for regular customer touchpoints.",
       "url": "https://handbook.gitlab.com/handbook/customer-success/csm/cadence-calls/",
       "category": "Enablement",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Handbook",
       "tooltip": "Use to structure next-touch plans and follow-up artifacts.",
       "customer_safe": true
@@ -118,7 +118,7 @@
       "summary": "Primary index for customer success operating practices and role guidance.",
       "url": "https://handbook.gitlab.com/handbook/customer-success/",
       "category": "Onboarding",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Handbook",
       "tooltip": "General handbook index for CS and CSE references.",
       "customer_safe": true
@@ -129,7 +129,7 @@
       "summary": "CSM operating model pages and lifecycle engagement patterns.",
       "url": "https://handbook.gitlab.com/handbook/customer-success/csm/",
       "category": "Onboarding",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Handbook",
       "tooltip": "Use for cross-functional alignment with CSM motions.",
       "customer_safe": true
@@ -140,7 +140,7 @@
       "summary": "Quick-start content for teams new to GitLab workflows.",
       "url": "https://docs.gitlab.com/user/get_started/get_started_user/",
       "category": "Onboarding",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Share during kickoff to shorten onboarding ramp.",
       "customer_safe": true
@@ -151,7 +151,7 @@
       "summary": "Hands-on setup path for first CI pipeline and runner integration.",
       "url": "https://docs.gitlab.com/ci/quick_start/",
       "category": "Adoption",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Ideal pre-read for CI workshop attendees.",
       "customer_safe": true
@@ -162,7 +162,7 @@
       "summary": "Pipeline behaviors, rules, and optimization references.",
       "url": "https://docs.gitlab.com/ci/pipelines/",
       "category": "Adoption",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Use for troubleshooting and reliability tuning.",
       "customer_safe": true
@@ -173,7 +173,7 @@
       "summary": "Runner configuration and scaling guidance for CI delivery.",
       "url": "https://docs.gitlab.com/runner/",
       "category": "Adoption",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Reference for capacity and queue-time improvements.",
       "customer_safe": true
@@ -184,7 +184,7 @@
       "summary": "Code review workflows and merge request capabilities.",
       "url": "https://docs.gitlab.com/user/project/merge_requests/",
       "category": "Adoption",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Use to improve SCM adoption consistency.",
       "customer_safe": true
@@ -195,7 +195,7 @@
       "summary": "Branch governance controls for secure collaboration.",
       "url": "https://docs.gitlab.com/user/project/repository/branches/protected/",
       "category": "Risk",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Useful for policy and compliance conversations.",
       "customer_safe": true
@@ -206,7 +206,7 @@
       "summary": "Static application security testing setup in GitLab pipelines.",
       "url": "https://docs.gitlab.com/user/application_security/sast/",
       "category": "Enablement",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Attach to secure adoption workshops.",
       "customer_safe": true
@@ -217,7 +217,7 @@
       "summary": "Dependency vulnerability scanning configuration guidance.",
       "url": "https://docs.gitlab.com/user/application_security/dependency_scanning/",
       "category": "Enablement",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Use for secure baseline rollout milestones.",
       "customer_safe": true
@@ -228,7 +228,7 @@
       "summary": "Container image scanning setup and pipeline integration.",
       "url": "https://docs.gitlab.com/user/application_security/container_scanning/",
       "category": "Enablement",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Supports shift-left security enablement motions.",
       "customer_safe": true
@@ -239,7 +239,7 @@
       "summary": "Dynamic security testing setup for application coverage.",
       "url": "https://docs.gitlab.com/user/application_security/dast/",
       "category": "Enablement",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Use for progressive secure maturity plans.",
       "customer_safe": true
@@ -250,7 +250,7 @@
       "summary": "Value stream insights and lead-time analysis documentation.",
       "url": "https://docs.gitlab.com/user/group/value_stream_analytics/",
       "category": "Renewal",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Good source for value evidence in executive narratives.",
       "customer_safe": true
@@ -261,7 +261,7 @@
       "summary": "DORA metrics definitions and analytics references in GitLab.",
       "url": "https://docs.gitlab.com/user/analytics/dora_metrics/",
       "category": "Renewal",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Connect platform adoption with engineering outcomes.",
       "customer_safe": true
@@ -272,7 +272,7 @@
       "summary": "CD release patterns using environments and deployment views.",
       "url": "https://docs.gitlab.com/ci/environments/",
       "category": "Adoption",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Use in CD adoption and release governance motions.",
       "customer_safe": true
@@ -283,7 +283,7 @@
       "summary": "Release management and release evidence capabilities.",
       "url": "https://docs.gitlab.com/user/project/releases/",
       "category": "Renewal",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Use as artifact source for value and governance proof.",
       "customer_safe": true
@@ -294,7 +294,7 @@
       "summary": "Progressive delivery and risk-controlled release guidance.",
       "url": "https://docs.gitlab.com/operations/feature_flags/",
       "category": "Risk",
-      "audience": "Customer Safe",
+      "audience": "Customer-safe",
       "type": "Docs",
       "tooltip": "Good for mitigation plans in yellow/red risk situations.",
       "customer_safe": true
@@ -309,6 +309,83 @@
       "type": "Playbook",
       "tooltip": "Internal runbook references for controlled rollout strategy.",
       "customer_safe": false
+    },
+    {
+      "id": "res-playbooks-index",
+      "title": "CS Playbooks Index",
+      "summary": "Index of customer success playbooks for adoption and risk motions.",
+      "url": "https://handbook.gitlab.com/handbook/customer-success/playbooks/",
+      "category": "Enablement",
+      "audience": "Customer-safe",
+      "type": "Handbook",
+      "tooltip": "Use for selecting motion-specific playbooks.",
+      "customer_safe": true
+    },
+    {
+      "id": "res-csm-onboarding",
+      "title": "CSM Onboarding",
+      "summary": "Onboarding workflow guidance for early lifecycle execution.",
+      "url": "https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/",
+      "category": "Onboarding",
+      "audience": "Customer-safe",
+      "type": "Handbook",
+      "tooltip": "Use for kickoff through first-value planning.",
+      "customer_safe": true
+    },
+    {
+      "id": "res-devops-adoption-report",
+      "title": "DevOps Adoption Report",
+      "summary": "Docs for adoption reporting at group and project levels.",
+      "url": "https://docs.gitlab.com/user/group/devops_adoption/",
+      "category": "Adoption",
+      "audience": "Customer-safe",
+      "type": "Docs",
+      "tooltip": "Supports use-case adoption evidence.",
+      "customer_safe": true
+    },
+    {
+      "id": "res-ci-cd-analytics",
+      "title": "CI/CD Analytics",
+      "summary": "Pipeline and deployment analytics for trend monitoring.",
+      "url": "https://docs.gitlab.com/user/analytics/ci_cd_analytics/",
+      "category": "Renewal",
+      "audience": "Customer-safe",
+      "type": "Docs",
+      "tooltip": "Use for outcomes narrative tied to delivery throughput.",
+      "customer_safe": true
+    },
+    {
+      "id": "res-security-dashboard",
+      "title": "Security Dashboard",
+      "summary": "Security dashboard metrics and vulnerability tracking guidance.",
+      "url": "https://docs.gitlab.com/user/application_security/security_dashboard/",
+      "category": "Risk",
+      "audience": "Customer-safe",
+      "type": "Docs",
+      "tooltip": "Use for security risk and remediation reviews.",
+      "customer_safe": true
+    },
+    {
+      "id": "res-merge-request-reviews",
+      "title": "Merge Request Reviews",
+      "summary": "Review workflow optimization guidance for code collaboration.",
+      "url": "https://docs.gitlab.com/user/project/merge_requests/reviews/",
+      "category": "Adoption",
+      "audience": "Customer-safe",
+      "type": "Docs",
+      "tooltip": "Use for SCM adoption consistency.",
+      "customer_safe": true
+    },
+    {
+      "id": "res-issues-workflow",
+      "title": "Issues Workflow",
+      "summary": "Issue tracking practices for planning and delivery alignment.",
+      "url": "https://docs.gitlab.com/user/project/issues/",
+      "category": "Enablement",
+      "audience": "Customer-safe",
+      "type": "Docs",
+      "tooltip": "Supports cross-functional execution tracking.",
+      "customer_safe": true
     }
   ]
 }

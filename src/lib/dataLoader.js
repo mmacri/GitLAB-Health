@@ -8,13 +8,20 @@ const resolveDataUrl = (filename) => {
   return `${base}/data/${filename}`;
 };
 
-const fetchJson = async (url, fallback) => {
+const fetchJson = async (filename, fallback, loadErrors) => {
+  const url = resolveDataUrl(filename);
   try {
     const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) throw new Error(`Failed to load ${url}: ${response.status}`);
     return await response.json();
   } catch (error) {
     console.warn(error.message);
+    if (Array.isArray(loadErrors)) {
+      loadErrors.push({
+        file: filename,
+        message: error.message
+      });
+    }
     return fallback;
   }
 };
@@ -200,13 +207,15 @@ export const loadPlaybookChecklist = () => storage.get(STORAGE_KEYS.playbookChec
 export const persistPlaybookChecklist = (checklistState) => storage.set(STORAGE_KEYS.playbookChecklist, checklistState);
 
 export const loadDashboardData = async () => {
-  const [accountsDoc, requestsDoc, programsDoc, playbooksDoc, resourcesDoc, templatesDoc] = await Promise.all([
-    fetchJson(resolveDataUrl('accounts.json'), { accounts: [] }),
-    fetchJson(resolveDataUrl('requests.json'), { requests: [] }),
-    fetchJson(resolveDataUrl('programs.json'), { programs: [] }),
-    fetchJson(resolveDataUrl('playbooks.json'), { playbooks: [] }),
-    fetchJson(resolveDataUrl('resources.json'), { categories: [], resources: [] }),
-    fetchJson(resolveDataUrl('templates.json'), { templates: {} })
+  const loadErrors = [];
+  const [accountsDoc, requestsDoc, programsDoc, playbooksDoc, resourcesDoc, templatesDoc, cheatsheetDoc] = await Promise.all([
+    fetchJson('accounts.json', { accounts: [] }, loadErrors),
+    fetchJson('requests.json', { requests: [] }, loadErrors),
+    fetchJson('programs.json', { programs: [] }, loadErrors),
+    fetchJson('playbooks.json', { playbooks: [] }, loadErrors),
+    fetchJson('resources.json', { categories: [], resources: [] }, loadErrors),
+    fetchJson('templates.json', { templates: {} }, loadErrors),
+    fetchJson('cheatsheet.json', {}, loadErrors)
   ]);
 
   const accounts = normalizeDuplicateAccountContent(mergeAccounts(Array.isArray(accountsDoc.accounts) ? accountsDoc.accounts : []));
@@ -225,6 +234,8 @@ export const loadDashboardData = async () => {
     resources,
     categories,
     templates,
+    cheatsheet: cheatsheetDoc && typeof cheatsheetDoc === 'object' ? cheatsheetDoc : {},
+    loadErrors,
     updated_on: accountsDoc.updated_on || requestsDoc.updated_on || programsDoc.updated_on || resourcesDoc.updated_on || null
   };
 };

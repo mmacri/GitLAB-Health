@@ -23,6 +23,7 @@ import { renderPortfolioHomePage, renderPortfolioPage, portfolioCommandEntries }
 import { renderProgramsPage, programsCommandEntries } from './pages/programsPage.js';
 import { renderResourcesPage, resourcesCommandEntries } from './pages/resourcesPage.js';
 import { renderToolkitPage, toolkitCommandEntries } from './pages/toolkitPage.js';
+import { renderCheatsheetPage, cheatsheetCommandEntries } from './pages/cheatsheetPage.js';
 
 const appRoot = document.querySelector('[data-app-root]');
 const routeRoot = document.querySelector('[data-route-root]');
@@ -163,6 +164,8 @@ const setActiveNav = () => {
 const renderLeftRail = () => {
   if (!leftRailRoot) return;
   const accounts = state.data?.accounts || [];
+  const loadErrors = Array.isArray(state.data?.loadErrors) ? state.data.loadErrors : [];
+  const accountLoadError = loadErrors.some((item) => item.file === 'accounts.json');
   const current = currentAccount();
   const isAccountContext = state.route.name === 'account' || state.route.name === 'journey';
   const redCount = accounts.filter((account) => String(account.health?.overall || '').toLowerCase() === 'red').length;
@@ -213,7 +216,9 @@ const renderLeftRail = () => {
                     `<button class="rail-link ${account.id === state.selectedAccountId ? 'is-active' : ''}" type="button" data-rail-account="${account.id}">${account.name}</button>`
                 )
                 .join('')
-            : '<p class="empty-text">No accounts loaded.</p>'
+            : accountLoadError
+              ? '<p class="empty-text">Account data failed to load.</p>'
+              : '<p class="empty-text">No accounts loaded.</p>'
         }
       </div>
     </div>
@@ -497,6 +502,27 @@ const openToolkitTool = (toolId) => {
 };
 
 const commandEntries = (workspace) => {
+  const accountSectionCommands = workspace?.account
+    ? ACCOUNT_SECTION_LINKS.map((item) => ({
+        id: `account-section-${item.id}`,
+        label: `Jump section: ${item.label}`,
+        meta: `Account: ${workspace.account.name}`,
+        action: {
+          custom: () => {
+            const accountId = workspace.account.id;
+            setSelectedAccount(accountId);
+            router.navigate('account', { id: accountId });
+            window.setTimeout(() => {
+              const tabButton = routeRoot.querySelector(`[data-tab-target="${item.id}"]`);
+              tabButton?.click();
+              const panel = routeRoot.querySelector(`[data-tab-panel="${item.id}"]`);
+              panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 80);
+          }
+        }
+      }))
+    : [];
+
   return [
     { id: 'cmd-home', label: 'Open Today Console', meta: 'Today', action: { route: 'home' } },
     { id: 'cmd-portfolio', label: 'Open Portfolio Table', meta: 'Portfolio', action: { route: 'portfolio' } },
@@ -505,6 +531,7 @@ const commandEntries = (workspace) => {
     { id: 'cmd-programs', label: 'Open Programs', meta: 'Programs', action: { route: 'programs' } },
     { id: 'cmd-playbooks', label: 'Open Playbooks', meta: 'Playbooks', action: { route: 'playbooks' } },
     { id: 'cmd-resources', label: 'Open Resources', meta: 'Resources', action: { route: 'resources' } },
+    { id: 'cmd-cheatsheet', label: 'Open Cheatsheet', meta: 'Cheatsheet', action: { route: 'cheatsheet' } },
     { id: 'cmd-exports', label: 'Open Exports', meta: 'Exports', action: { route: 'exports' } },
     { id: 'cmd-intake', label: 'Create Intake Request', meta: 'Tools', action: { route: 'intake' } },
     { id: 'cmd-tool-success-plan', label: 'Toolkit: Success Plan Generator', meta: 'Toolkit', action: { custom: () => openToolkitTool('success-plan') } },
@@ -518,16 +545,28 @@ const commandEntries = (workspace) => {
     ...programsCommandEntries(state.data.programs),
     ...playbooksCommandEntries(state.data.playbooks),
     ...resourcesCommandEntries(),
+    ...cheatsheetCommandEntries(),
     ...toolkitCommandEntries(),
     ...exportsCommandEntries(),
     ...intakeCommandEntries(state.data.accounts),
+    ...accountSectionCommands,
     ...accountCommandEntries(workspace)
   ];
+};
+
+const reloadData = async () => {
+  state.data = await loadDashboardData();
+  if (!state.selectedAccountId && state.data.accounts?.length) {
+    setSelectedAccount(state.data.accounts[0].id);
+  }
+  render();
 };
 
 const renderCurrentRoute = () => {
   const route = state.route;
   const portfolio = buildPortfolioView(state.data);
+  const loadErrors = Array.isArray(state.data?.loadErrors) ? state.data.loadErrors : [];
+  const accountLoadError = loadErrors.some((item) => item.file === 'accounts.json');
 
   if (route.name === 'account') {
     if (route.params.id) setSelectedAccount(route.params.id);
@@ -562,6 +601,8 @@ const renderCurrentRoute = () => {
       filters: state.portfolioFilters,
       onSetFilters: setPortfolioFilters,
       updatedOn: state.data.updated_on,
+      accountLoadError,
+      onRetryData: reloadData,
       onCopyInvite,
       onLogAttendance,
       onExportPortfolio: () => exportPortfolioCsv(state.data.accounts, state.data.requests),
@@ -576,6 +617,8 @@ const renderCurrentRoute = () => {
       filters: state.portfolioFilters,
       onSetFilters: setPortfolioFilters,
       updatedOn: state.data.updated_on,
+      accountLoadError,
+      onRetryData: reloadData,
       onExportPortfolio: () => exportPortfolioCsv(state.data.accounts, state.data.requests),
       ...common
     });
@@ -672,6 +715,13 @@ const renderCurrentRoute = () => {
     });
   }
 
+  if (route.name === 'cheatsheet') {
+    view = renderCheatsheetPage({
+      cheatsheet: state.data.cheatsheet || {},
+      ...common
+    });
+  }
+
   if (route.name === 'exports') {
     view = renderExportsPage({
       account: currentAccount(),
@@ -764,11 +814,10 @@ const bindGlobalEvents = () => {
   settingsRoot?.querySelector('[data-reset-local-state]')?.addEventListener('click', async () => {
     resetLocalState();
     state.checklistState = {};
-    state.data = await loadDashboardData();
+    await reloadData();
     settingsRoot.classList.remove('is-open');
     settingsRoot.setAttribute('aria-hidden', 'true');
     notify('Local state reset.');
-    render();
   });
 };
 
