@@ -336,6 +336,7 @@ button:hover {
 /* App shell */
 .app-shell {
   position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
   gap: 24px;
@@ -373,8 +374,9 @@ button:hover {
 .left-rail {
   display: grid;
   gap: 14px;
-  max-height: none;
+  max-height: calc(100vh - var(--header-offset) - var(--s-4));
   overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .rail-group {
@@ -1702,9 +1704,10 @@ textarea.artifact,
   }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 960px) {
   .app-shell {
     grid-template-columns: 1fr;
+    padding: 0 var(--s-4) var(--s-8);
   }
 
   .sidebar {
@@ -1715,6 +1718,7 @@ textarea.artifact,
 
   .left-rail {
     max-height: none;
+    overflow: visible;
   }
 }
 
@@ -1743,10 +1747,6 @@ textarea.artifact,
 }
 
 @media (max-width: 960px) {
-  .app-shell {
-    padding: 0 var(--s-4) var(--s-8);
-  }
-
   .header__row {
     padding: var(--s-3) var(--s-4);
   }

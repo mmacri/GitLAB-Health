@@ -238,6 +238,14 @@ const ROUTE_LABELS = {
   manager: 'Manager'
 };
 
+const focusAccountSection = (sectionId) => {
+  if (!sectionId) return;
+  const tabButton = routeRoot.querySelector(`[data-tab-target="${sectionId}"]`);
+  tabButton?.click();
+  const panel = routeRoot.querySelector(`[data-tab-panel="${sectionId}"]`);
+  panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
 const setActiveNav = () => {
   navItems().forEach((link) => {
     const route = link.getAttribute('data-nav-route');
@@ -348,11 +356,7 @@ const renderLeftRail = () => {
   leftRailRoot.querySelectorAll('[data-rail-section]').forEach((button) => {
     button.addEventListener('click', () => {
       const sectionId = button.getAttribute('data-rail-section');
-      if (!sectionId) return;
-      const tabButton = routeRoot.querySelector(`[data-tab-target="${sectionId}"]`);
-      tabButton?.click();
-      const panel = routeRoot.querySelector(`[data-tab-panel="${sectionId}"]`);
-      panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      focusAccountSection(sectionId);
     });
   });
 
@@ -595,28 +599,18 @@ const renderShellContext = () => {
 
   const jumpSelect = appRoot.querySelector('[data-global-jump]');
   if (jumpSelect) {
+    const isAccountContext = state.route.name === 'account' || state.route.name === 'journey';
+    const sectionOptions = ACCOUNT_SECTION_LINKS.map((item) => ({
+      value: `section:${item.id}`,
+      label: item.label
+    }));
     const options = [
-      { value: 'home', label: 'Today' },
-      { value: 'portfolio', label: 'Portfolio' },
+      { value: '', label: isAccountContext ? 'Jump to account section' : 'Open account section' },
       { value: activeAccount ? `account:${activeAccount.id}` : 'account', label: activeAccount ? `Account: ${activeAccount.name}` : 'Account' },
-      { value: 'programs', label: 'Programs' },
-      { value: 'toolkit', label: 'Success Plans' },
-      { value: 'simulator', label: 'Simulator' },
-      { value: 'playbooks', label: 'Playbooks' },
-      { value: 'resources', label: 'Resources' },
-      { value: 'cheatsheet', label: 'Cheatsheet' },
-      { value: 'manager', label: 'Manager' },
-      { value: 'exports', label: 'Exports' },
-      { value: 'intake', label: 'Intake' }
+      ...sectionOptions
     ];
     jumpSelect.innerHTML = options.map((item) => `<option value="${item.value}">${item.label}</option>`).join('');
-    const currentValue =
-      state.route.name === 'account' || state.route.name === 'journey'
-        ? activeAccount
-          ? `account:${activeAccount.id}`
-          : 'account'
-        : state.route.name;
-    jumpSelect.value = options.some((item) => item.value === currentValue) ? currentValue : 'home';
+    jumpSelect.value = '';
   }
 
   const safeLabel = appRoot.querySelector('[data-safe-label]');
@@ -1029,11 +1023,29 @@ const bindGlobalEvents = () => {
   appRoot.querySelector('[data-global-jump]')?.addEventListener('change', (event) => {
     const value = String(event.target.value || '').trim();
     if (!value) return;
+    if (value.startsWith('section:')) {
+      const sectionId = value.split(':')[1] || '';
+      const accountId = state.selectedAccountId || state.data.accounts?.[0]?.id || '';
+      if (!accountId || !sectionId) return;
+      const applyFocus = () => focusAccountSection(sectionId);
+      if (state.route.name === 'account' || state.route.name === 'journey') {
+        applyFocus();
+      } else {
+        setSelectedAccount(accountId);
+        router.navigate('account', { id: accountId });
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => applyFocus());
+        });
+      }
+      event.target.value = '';
+      return;
+    }
     if (value.startsWith('account:')) {
       const accountId = value.split(':')[1] || state.selectedAccountId || state.data.accounts?.[0]?.id || '';
       if (!accountId) return;
       setSelectedAccount(accountId);
       router.navigate('account', { id: accountId });
+      event.target.value = '';
       return;
     }
     if (value === 'account') {
@@ -1041,9 +1053,10 @@ const bindGlobalEvents = () => {
       if (!accountId) return;
       setSelectedAccount(accountId);
       router.navigate('account', { id: accountId });
+      event.target.value = '';
       return;
     }
-    router.navigate(value);
+    event.target.value = '';
   });
 
   appRoot.querySelector('[data-global-safe-toggle]')?.addEventListener('change', (event) => {
