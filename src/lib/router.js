@@ -1,4 +1,5 @@
 const KNOWN_TOP_LEVEL = new Set([
+  'today',
   'portfolio',
   'account',
   'journey',
@@ -38,6 +39,9 @@ export const parseRoute = (pathname, basePath = '') => {
   const normalized = localPath === '' ? '/' : localPath;
 
   if (normalized === '/') {
+    return { name: 'home', params: {}, path: normalized };
+  }
+  if (normalized === '/today') {
     return { name: 'home', params: {}, path: normalized };
   }
   if (normalized === '/portfolio') {
@@ -87,7 +91,7 @@ export const parseRoute = (pathname, basePath = '') => {
 };
 
 export const routePath = (routeName, params = {}) => {
-  if (routeName === 'home') return '/';
+  if (routeName === 'home') return '/today';
   if (routeName === 'portfolio') return '/portfolio';
   if (routeName === 'account') {
     return params.id ? `/account/${encodeURIComponent(params.id || '')}` : '/account';

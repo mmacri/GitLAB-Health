@@ -14,6 +14,11 @@ test('routing resolves / to home', () => {
   assert.equal(route.name, 'home');
 });
 
+test('routing resolves /today to home', () => {
+  const route = parseRoute('/today');
+  assert.equal(route.name, 'home');
+});
+
 test('routing resolves account route with project base path', () => {
   const basePath = detectBasePath('/GitLAB-Health/account/northwind-industries');
   assert.equal(basePath, '/GitLAB-Health');
@@ -26,6 +31,7 @@ test('routing resolves account route with project base path', () => {
 test('route path builder produces account href', () => {
   assert.equal(routePath('account', { id: 'contoso-financial-services' }), '/account/contoso-financial-services');
   assert.equal(buildHref('account', { id: 'contoso-financial-services' }, '/GitLAB-Health'), '/GitLAB-Health/account/contoso-financial-services');
+  assert.equal(routePath('home'), '/today');
 });
 
 test('router supports playbooks and exports routes', () => {

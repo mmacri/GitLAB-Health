@@ -490,7 +490,7 @@ const renderCurrentRoute = () => {
       portfolio,
       filters: state.portfolioFilters,
       onSetFilters: setPortfolioFilters,
-      mode: state.viewMode,
+      updatedOn: state.data.updated_on,
       onCopyInvite,
       onLogAttendance,
       onExportPortfolio: () => exportPortfolioCsv(state.data.accounts, state.data.requests),
@@ -504,7 +504,7 @@ const renderCurrentRoute = () => {
       portfolio,
       filters: state.portfolioFilters,
       onSetFilters: setPortfolioFilters,
-      mode: state.viewMode,
+      updatedOn: state.data.updated_on,
       onExportPortfolio: () => exportPortfolioCsv(state.data.accounts, state.data.requests),
       ...common
     });
