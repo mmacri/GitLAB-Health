@@ -236,6 +236,66 @@ const lifecycleFlowDiagram = () => `
   </svg>
 `;
 
+const adoptionRadarDiagram = (account) => {
+  const scores = account?.adoption?.use_case_scores || {};
+  const normalized = {
+    SCM: Math.max(0, Math.min(100, Number(scores.SCM || 0))),
+    CI: Math.max(0, Math.min(100, Number(scores.CI || 0))),
+    CD: Math.max(0, Math.min(100, Number(scores.CD || 0))),
+    Secure: Math.max(0, Math.min(100, Number(scores.Secure || 0)))
+  };
+  const centerX = 200;
+  const centerY = 160;
+  const maxRadius = 110;
+  const axes = [
+    { key: 'SCM', angle: -Math.PI / 2 },
+    { key: 'CI', angle: 0 },
+    { key: 'CD', angle: Math.PI / 2 },
+    { key: 'Secure', angle: Math.PI }
+  ];
+
+  const polygon = axes
+    .map((item) => {
+      const radius = (normalized[item.key] / 100) * maxRadius;
+      const x = centerX + Math.cos(item.angle) * radius;
+      const y = centerY + Math.sin(item.angle) * radius;
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+  const guides = [25, 50, 75, 100]
+    .map((percent) => {
+      const radius = (percent / 100) * maxRadius;
+      return `<circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="none" stroke="#e5e7eb"></circle>`;
+    })
+    .join('');
+
+  const spokes = axes
+    .map((item) => {
+      const x = centerX + Math.cos(item.angle) * maxRadius;
+      const y = centerY + Math.sin(item.angle) * maxRadius;
+      return `<line x1="${centerX}" y1="${centerY}" x2="${x}" y2="${y}" stroke="#cbd5e1"></line>`;
+    })
+    .join('');
+
+  const labels = axes
+    .map((item) => {
+      const x = centerX + Math.cos(item.angle) * (maxRadius + 26);
+      const y = centerY + Math.sin(item.angle) * (maxRadius + 26);
+      return `<text x="${x}" y="${y}" text-anchor="middle" font-size="12" fill="#334155">${item.key} ${normalized[item.key]}</text>`;
+    })
+    .join('');
+
+  return `
+    <svg class="adoption-radar" viewBox="0 0 400 320" role="img" aria-label="Adoption radar across SCM, CI, CD, and Secure use cases">
+      ${guides}
+      ${spokes}
+      <polygon points="${polygon}" fill="rgba(110, 73, 203, 0.25)" stroke="#6e49cb" stroke-width="2"></polygon>
+      ${labels}
+    </svg>
+  `;
+};
+
 const buildChangeLog = (account, workspace, engagementEvents = []) => {
   const loggerEntries = (engagementEvents || []).map((item) => ({
     date: item.date,
@@ -689,6 +749,11 @@ export const renderAccountPage = (ctx) => {
             <ul class="simple-list">
               ${pathToGreen.map((step) => `<li>${step}</li>`).join('')}
             </ul>
+          </div>
+          <div class="card compact-card">
+            <h3>Adoption Maturity Radar</h3>
+            <p class="muted">Use this visual to present relative adoption maturity across core use cases in executive and technical reviews.</p>
+            ${adoptionRadarDiagram(account)}
           </div>
           <div class="card compact-card">
             <h3>Recommended Workshop</h3>

@@ -24,9 +24,11 @@ Static GitLab Pages-compatible operating dashboard for pooled Customer Success E
   - stale data
   - lowest use-case
   - has open request
+  - manager dashboard snapshot (health distribution, average adoption, renewal/engagement coverage, focus accounts)
 - Account workspace on `/account/:id` with:
   - above-the-fold snapshot bar
   - tabbed dashboard grids (Snapshot, Adoption, Health & Risk, Outcomes, Engagement, Journey, Resources, Cheatsheet)
+  - adoption maturity radar visual in Adoption tab
   - legacy section anchor IDs retained inside tabs
   - missing-data chips with inline edit modal (localStorage-backed)
   - pinned right-side Action Drawer

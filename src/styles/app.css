@@ -1043,6 +1043,15 @@ textarea.artifact,
   border: 1px solid var(--border);
 }
 
+.adoption-radar {
+  width: 100%;
+  height: auto;
+  margin-top: 8px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+}
+
 .maturity-map {
   display: grid;
   gap: 10px;

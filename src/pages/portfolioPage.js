@@ -152,6 +152,85 @@ const matrixVisual = (matrix) => `
   </section>
 `;
 
+const managerSnapshot = (signals = []) => {
+  const total = signals.length || 1;
+  const adoptionScores = signals.map((signal) => Number(signal.account?.adoption?.platform_adoption_score || 0));
+  const avgAdoption = adoptionScores.length
+    ? Math.round(adoptionScores.reduce((sum, value) => sum + value, 0) / adoptionScores.length)
+    : 0;
+  const renewal90 = signals.filter((signal) => Number(signal.renewalDays ?? 999) <= 90).length;
+  const noEngagement30 = signals.filter((signal) => Number(signal.touchStaleDays ?? 999) > 30).length;
+  const noUpcomingTouch = signals.filter((signal) => !signal.account?.engagement?.next_touch_date).length;
+  const healthCounts = {
+    green: signals.filter((signal) => String(signal.account?.health?.overall || '').toLowerCase() === 'green').length,
+    yellow: signals.filter((signal) => String(signal.account?.health?.overall || '').toLowerCase() === 'yellow').length,
+    red: signals.filter((signal) => String(signal.account?.health?.overall || '').toLowerCase() === 'red').length
+  };
+  const topFocus = [...signals]
+    .sort((left, right) => Number(right.outlierScore || 0) - Number(left.outlierScore || 0))
+    .slice(0, 5)
+    .map((signal) => ({
+      id: signal.account.id,
+      name: signal.account.name,
+      reason: signal.reasons[0] || 'Review adoption + engagement signals.'
+    }));
+
+  return {
+    total,
+    avgAdoption,
+    renewal90,
+    noEngagement30,
+    noUpcomingTouch,
+    healthCounts,
+    topFocus
+  };
+};
+
+const managerDashboardCard = (snapshot) => `
+  <section class="card">
+    <div class="metric-head">
+      <h2>Manager Dashboard</h2>
+      ${statusChip({ label: `${snapshot.total} accounts`, tone: 'neutral' })}
+    </div>
+    <div class="kpi-grid kpi-4">
+      ${metricTile({ label: 'Avg adoption score', value: snapshot.avgAdoption, tone: snapshot.avgAdoption >= 70 ? 'good' : 'warn' })}
+      ${metricTile({ label: 'Renewals < 90d', value: snapshot.renewal90, tone: snapshot.renewal90 > 0 ? 'warn' : 'good' })}
+      ${metricTile({ label: 'No engagement > 30d', value: snapshot.noEngagement30, tone: snapshot.noEngagement30 > 0 ? 'risk' : 'good' })}
+      ${metricTile({ label: 'Missing next touch', value: snapshot.noUpcomingTouch, tone: snapshot.noUpcomingTouch > 0 ? 'warn' : 'good' })}
+    </div>
+    <div class="divider"></div>
+    <div class="matrix-grid">
+      <article class="matrix-cell matrix-good">
+        <h3>Healthy</h3>
+        <p>${snapshot.healthCounts.green}</p>
+        <span>${Math.round((snapshot.healthCounts.green / snapshot.total) * 100)}% of portfolio</span>
+      </article>
+      <article class="matrix-cell matrix-warn">
+        <h3>Attention</h3>
+        <p>${snapshot.healthCounts.yellow}</p>
+        <span>${Math.round((snapshot.healthCounts.yellow / snapshot.total) * 100)}% of portfolio</span>
+      </article>
+      <article class="matrix-cell matrix-risk">
+        <h3>At Risk</h3>
+        <p>${snapshot.healthCounts.red}</p>
+        <span>${Math.round((snapshot.healthCounts.red / snapshot.total) * 100)}% of portfolio</span>
+      </article>
+      <article class="matrix-cell matrix-info">
+        <h3>Top Focus Accounts</h3>
+        <ul class="simple-list">
+          ${
+            snapshot.topFocus.length
+              ? snapshot.topFocus
+                  .map((item) => `<li><a href="#" data-open-account="${item.id}">${item.name}</a> - ${item.reason}</li>`)
+                  .join('')
+              : '<li>No current focus accounts.</li>'
+          }
+        </ul>
+      </article>
+    </div>
+  </section>
+`;
+
 const buildAmerCompliance = (signals = []) => {
   if (!signals.length) {
     return {
@@ -540,6 +619,7 @@ export const renderPortfolioPage = (ctx) => {
   const filtered = applyPortfolioFilters(portfolio.signals, filters);
   const outlierSignals = applyPortfolioFilters(portfolio.outliers, filters);
   const matrix = healthMatrix(filtered);
+  const managerView = managerSnapshot(filtered);
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
@@ -644,6 +724,8 @@ export const renderPortfolioPage = (ctx) => {
            </section>`
         : ''
     }
+
+    ${managerDashboardCard(managerView)}
 
     ${matrixVisual(matrix)}
 
