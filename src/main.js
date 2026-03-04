@@ -32,6 +32,7 @@ const routeRoot = document.querySelector('[data-route-root]');
 const leftRailRoot = document.querySelector('[data-left-rail]');
 const toastRoot = document.querySelector('[data-toast]');
 const settingsRoot = document.querySelector('[data-settings]');
+let headerResizeObserver = null;
 
 const syncHeaderOffset = () => {
   const header = document.querySelector('.app-header');
@@ -45,11 +46,15 @@ const observeHeaderOffset = () => {
   syncHeaderOffset();
 
   window.addEventListener('resize', syncHeaderOffset);
+  window.addEventListener('orientationchange', syncHeaderOffset);
 
   const header = document.querySelector('.app-header');
   if (header && 'ResizeObserver' in window) {
-    const ro = new ResizeObserver(() => syncHeaderOffset());
-    ro.observe(header);
+    if (headerResizeObserver) {
+      headerResizeObserver.disconnect();
+    }
+    headerResizeObserver = new ResizeObserver(() => syncHeaderOffset());
+    headerResizeObserver.observe(header);
   }
 };
 
