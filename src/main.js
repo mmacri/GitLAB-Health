@@ -38,7 +38,7 @@ const syncHeaderOffset = () => {
   const header = document.querySelector('.app-header');
   if (!header) return;
 
-  const offset = Math.ceil(header.getBoundingClientRect().height + 16);
+  const offset = Math.max(120, Math.ceil(header.getBoundingClientRect().height + 16));
   document.documentElement.style.setProperty('--header-offset', `${offset}px`);
 };
 
@@ -1080,6 +1080,7 @@ const bindGlobalEvents = () => {
     const expanded = moreButton.getAttribute('aria-expanded') === 'true';
     moreMenu.hidden = expanded;
     moreButton.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+    syncHeaderOffset();
   });
 
   document.addEventListener('click', (event) => {
@@ -1087,18 +1088,21 @@ const bindGlobalEvents = () => {
     if (event.target.closest('[data-more-menu]') || event.target.closest('[data-open-more]')) return;
     moreMenu.hidden = true;
     moreButton?.setAttribute('aria-expanded', 'false');
+    syncHeaderOffset();
   });
 
   appRoot.querySelector('[data-copy-snapshot]')?.addEventListener('click', async () => {
     await copyShareSnapshot();
     if (moreMenu) moreMenu.hidden = true;
     moreButton?.setAttribute('aria-expanded', 'false');
+    syncHeaderOffset();
   });
 
   appRoot.querySelector('[data-go-resources]')?.addEventListener('click', () => {
     router.navigate('resources');
     if (moreMenu) moreMenu.hidden = true;
     moreButton?.setAttribute('aria-expanded', 'false');
+    syncHeaderOffset();
   });
 
   const filtersButton = appRoot.querySelector('[data-open-filters]');
@@ -1113,6 +1117,7 @@ const bindGlobalEvents = () => {
       filtersPanel.setAttribute('hidden', 'hidden');
       filtersButton.setAttribute('aria-expanded', 'false');
     }
+    syncHeaderOffset();
   });
 
   appRoot.querySelector('[data-go-portfolio]')?.addEventListener('click', () => {

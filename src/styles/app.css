@@ -371,6 +371,11 @@ button:hover {
   padding-bottom: var(--space-10);
 }
 
+[data-tab-panel],
+[id^="section-"] {
+  scroll-margin-top: calc(var(--header-offset) + var(--s-4));
+}
+
 .left-rail {
   display: grid;
   gap: 14px;
