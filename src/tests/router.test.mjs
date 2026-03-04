@@ -35,6 +35,7 @@ test('route path builder produces account href', () => {
 });
 
 test('router supports playbooks and exports routes', () => {
+  assert.equal(parseRoute('/simulator').name, 'simulator');
   assert.equal(parseRoute('/toolkit').name, 'toolkit');
   assert.equal(parseRoute('/success-plans').name, 'toolkit');
   assert.equal(parseRoute('/playbooks').name, 'playbooks');
@@ -45,6 +46,7 @@ test('router supports playbooks and exports routes', () => {
   assert.equal(routePath('toolkit'), '/toolkit');
   assert.equal(routePath('success-plans'), '/success-plans');
   assert.equal(routePath('playbooks'), '/playbooks');
+  assert.equal(routePath('simulator'), '/simulator');
   assert.equal(routePath('cheatsheet'), '/cheatsheet');
   assert.equal(routePath('exports'), '/exports');
   assert.equal(routePath('journey'), '/journey');

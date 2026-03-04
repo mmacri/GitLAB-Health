@@ -16,7 +16,7 @@
     />
     <script>
       (function () {
-        var known = ['today', 'portfolio', 'toolkit', 'success-plans', 'account', 'journey', 'programs', 'playbooks', 'resources', 'cheatsheet', 'exports', 'intake'];
+        var known = ['today', 'portfolio', 'simulator', 'toolkit', 'success-plans', 'account', 'journey', 'programs', 'playbooks', 'resources', 'cheatsheet', 'exports', 'intake'];
         var parts = window.location.pathname.split('/').filter(Boolean);
         var base = '';
         if (parts.length > 1 && known.indexOf(parts[1]) >= 0) {
@@ -48,6 +48,7 @@
             <div class="nav-links" aria-label="Main navigation">
               <a href="#" data-nav-route="home" class="is-active">Today</a>
               <a href="#" data-nav-route="portfolio">Portfolio</a>
+              <a href="#" data-nav-route="simulator">Simulator</a>
               <a href="#" data-nav-route="account">Accounts</a>
               <a href="#" data-nav-route="toolkit">Success Plans</a>
               <a href="#" data-nav-route="playbooks">Playbooks</a>

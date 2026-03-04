@@ -24,6 +24,7 @@ import { renderProgramsPage, programsCommandEntries } from './pages/programsPage
 import { renderResourcesPage, resourcesCommandEntries } from './pages/resourcesPage.js';
 import { renderToolkitPage, toolkitCommandEntries } from './pages/toolkitPage.js';
 import { renderCheatsheetPage, cheatsheetCommandEntries } from './pages/cheatsheetPage.js';
+import { renderSimulatorPage, simulatorCommandEntries } from './pages/simulatorPage.js';
 
 const appRoot = document.querySelector('[data-app-root]');
 const routeRoot = document.querySelector('[data-route-root]');
@@ -540,6 +541,7 @@ const commandEntries = (workspace) => {
   return [
     { id: 'cmd-home', label: 'Open Today Console', meta: 'Today', action: { route: 'home' } },
     { id: 'cmd-portfolio', label: 'Open Portfolio Table', meta: 'Portfolio', action: { route: 'portfolio' } },
+    { id: 'cmd-simulator', label: 'Open Adoption Simulator', meta: 'Simulator', action: { route: 'simulator' } },
     { id: 'cmd-account', label: 'Open Accounts Workspace', meta: 'Accounts', action: { route: 'account' } },
     { id: 'cmd-toolkit', label: 'Open Success Plans', meta: 'Success Plans', action: { route: 'toolkit' } },
     { id: 'cmd-journey', label: 'Open Journey Workspace', meta: 'Journey', action: { route: 'journey' } },
@@ -558,6 +560,7 @@ const commandEntries = (workspace) => {
     { id: 'cmd-tool-log', label: 'Engagement Logger', meta: 'Success Plans', action: { custom: () => openToolkitTool('engagement-logger') } },
     { id: 'cmd-share', label: 'Copy Share Snapshot', meta: 'Exports', action: { custom: copyShareSnapshot } },
     ...portfolioCommandEntries(state.data),
+    ...simulatorCommandEntries(),
     ...programsCommandEntries(state.data.programs),
     ...playbooksCommandEntries(state.data.playbooks),
     ...resourcesCommandEntries(),
@@ -651,6 +654,18 @@ const renderCurrentRoute = () => {
       notify,
       copyText,
       selectedAccountId: state.selectedAccountId,
+      ...common
+    });
+  }
+
+  if (route.name === 'simulator') {
+    view = renderSimulatorPage({
+      capabilities: state.data.simulatorCapabilities || [],
+      rules: state.data.simulatorRules || [],
+      customerSafe: state.customerSafe,
+      onToggleSafe: setSafeMode,
+      copyText,
+      notify,
       ...common
     });
   }

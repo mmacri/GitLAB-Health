@@ -46,6 +46,12 @@ test('loadDashboardData resolves project base path for deep routes', async () =>
     if (text.endsWith('/data/rules.json')) {
       return buildResponse({ rules: [{ id: 'rule-1' }] });
     }
+    if (text.endsWith('/data/simulator_capabilities.json')) {
+      return buildResponse({ capabilities: [{ id: 'cap-1' }] });
+    }
+    if (text.endsWith('/data/simulator_rules.json')) {
+      return buildResponse({ rules: [{ id: 'sim-rule-1' }] });
+    }
 
     throw new Error(`Unexpected fetch URL: ${text}`);
   };
@@ -53,7 +59,7 @@ test('loadDashboardData resolves project base path for deep routes', async () =>
   try {
     const loaded = await loadDashboardData();
 
-    assert.equal(urls.length, 8);
+    assert.equal(urls.length, 10);
     assert.ok(urls.every((url) => url.startsWith('/GitLAB-Health/data/')));
     assert.equal(loaded.accounts.length, 1);
     assert.equal(loaded.requests.length, 1);
@@ -64,6 +70,8 @@ test('loadDashboardData resolves project base path for deep routes', async () =>
     assert.equal(loaded.templates.issue_default_description, 'Example');
     assert.equal(loaded.cheatsheet.title, 'Cheatsheet');
     assert.equal(loaded.rules.length, 1);
+    assert.equal(loaded.simulatorCapabilities.length, 1);
+    assert.equal(loaded.simulatorRules.length, 1);
   } finally {
     globalThis.window = originalWindow;
     globalThis.fetch = originalFetch;

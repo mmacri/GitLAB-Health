@@ -6,6 +6,7 @@ Static GitLab Pages-compatible operating dashboard for pooled Customer Success E
 - Portfolio-first information architecture with grouped primary navigation:
   - Today
   - Portfolio
+  - Simulator
   - Accounts
   - Success Plans
   - Playbooks
@@ -35,10 +36,16 @@ Static GitLab Pages-compatible operating dashboard for pooled Customer Success E
 - Export center (`/exports`) for portfolio/account export actions and share snapshot URL.
 - Intake workflow (`/intake`) kept as a tools route for request capture + artifact generation.
 - Operating Model Engine (rules-driven) that generates account-level next-best actions, risk alerts, executive triggers, and copy-ready issue templates.
+- Simulator page (`/simulator`) for deterministic scenario modeling:
+  - capability toggles + presets
+  - lifecycle map + journey stage computation
+  - next-best actions + impact forecast
+  - copy/download markdown artifacts (success plan, executive summary, workshop plan, issue body)
 
 ## Routes
 - `/` -> Portfolio Home (default)
 - `/portfolio` -> Portfolio operating table
+- `/simulator` -> Adoption simulator
 - `/account/:id` -> Account workspace
 - `/account` -> redirects to selected/default account
 - `/toolkit` -> Success Plans workspace (generators + visuals)
@@ -59,6 +66,8 @@ Canonical app data lives under `data/`:
 - `data/playbooks.json`
 - `data/resources.json`
 - `data/rules.json`
+- `data/simulator_capabilities.json`
+- `data/simulator_rules.json`
 - `data/schema.md` (field definitions + customer-safe policy)
 
 Current seeded sample size:

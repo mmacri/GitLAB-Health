@@ -173,6 +173,34 @@ Account fields:
     - `url`
   - `issue_template`
 
+## simulator_capabilities.json
+- `version`, `updated_on`
+- `capabilities[]`
+  - `id` string
+  - `label` string
+  - `area` (`SCM|CI|CD|Security|Analytics|OperatingModel`)
+  - `doc_links[]` absolute URLs (customer-safe)
+  - `contributes_to[]` derived metric tags (customer-safe)
+
+## simulator_rules.json
+- `version`, `updated_on`
+- `rules[]`
+  - `id` string
+  - `type` (`use_case|stage|action`)
+  - `condition`
+    - `all_capabilities[]` optional
+    - `any_capabilities[]` optional
+    - `any_missing_capabilities[]` optional
+    - `metric_conditions[]`
+      - `key`
+      - `operator` (`<|<=|>|>=|==|!=|includes`)
+      - `value`
+  - `outputs`
+    - for `use_case`: `use_case`, `status`
+    - for `stage`: `journey_stage`, `priority`
+    - for `action`: `title`, `description`, `why`, `playbook`, `resource_title`, `resource_url`, `impact_adjustments`
+  - `references[]` absolute URLs (customer-safe)
+
 ## templates.json
 - `updated_on`
 - `templates`

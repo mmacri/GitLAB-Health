@@ -1,0 +1,279 @@
+{
+  "version": 1,
+  "updated_on": "2026-03-04",
+  "rules": [
+    {
+      "id": "use_case_scm_green",
+      "type": "use_case",
+      "condition": {
+        "all_capabilities": ["scm_repositories_migrated", "scm_merge_requests_enabled", "scm_review_policies"]
+      },
+      "outputs": {
+        "use_case": "SCM",
+        "status": "green"
+      },
+      "references": [
+        "https://docs.gitlab.com/ee/user/project/repository/",
+        "https://docs.gitlab.com/ee/user/project/merge_requests/"
+      ]
+    },
+    {
+      "id": "use_case_ci_green",
+      "type": "use_case",
+      "condition": {
+        "all_capabilities": ["ci_pipeline_templates", "ci_shared_runners", "ci_test_automation"]
+      },
+      "outputs": {
+        "use_case": "CI",
+        "status": "green"
+      },
+      "references": [
+        "https://docs.gitlab.com/ee/ci/"
+      ]
+    },
+    {
+      "id": "use_case_cd_green",
+      "type": "use_case",
+      "condition": {
+        "all_capabilities": ["cd_environments", "cd_release_governance"]
+      },
+      "outputs": {
+        "use_case": "CD",
+        "status": "green"
+      },
+      "references": [
+        "https://docs.gitlab.com/ee/user/project/releases/",
+        "https://docs.gitlab.com/ee/operations/feature_flags/"
+      ]
+    },
+    {
+      "id": "use_case_security_green",
+      "type": "use_case",
+      "condition": {
+        "all_capabilities": ["security_sast", "security_dependency_scanning"]
+      },
+      "outputs": {
+        "use_case": "Security",
+        "status": "green"
+      },
+      "references": [
+        "https://docs.gitlab.com/ee/user/application_security/"
+      ]
+    },
+    {
+      "id": "use_case_analytics_green",
+      "type": "use_case",
+      "condition": {
+        "all_capabilities": ["analytics_value_stream", "analytics_dora_tracking"]
+      },
+      "outputs": {
+        "use_case": "Analytics",
+        "status": "green"
+      },
+      "references": [
+        "https://docs.gitlab.com/ee/user/analytics/value_stream_analytics/",
+        "https://about.gitlab.com/topics/devops/metrics/"
+      ]
+    },
+    {
+      "id": "stage_align",
+      "type": "stage",
+      "condition": {
+        "metric_conditions": [
+          { "key": "use_case_green_count", "operator": "==", "value": 0 }
+        ]
+      },
+      "outputs": {
+        "journey_stage": "Align",
+        "priority": 1
+      },
+      "references": [
+        "https://handbook.gitlab.com/handbook/customer-success/"
+      ]
+    },
+    {
+      "id": "stage_onboard",
+      "type": "stage",
+      "condition": {
+        "metric_conditions": [
+          { "key": "use_case_green_count", "operator": "==", "value": 1 }
+        ]
+      },
+      "outputs": {
+        "journey_stage": "Onboard",
+        "priority": 2
+      },
+      "references": [
+        "https://handbook.gitlab.com/handbook/customer-success/onboarding/"
+      ]
+    },
+    {
+      "id": "stage_enable",
+      "type": "stage",
+      "condition": {
+        "metric_conditions": [
+          { "key": "use_case_green_count", "operator": "==", "value": 2 }
+        ]
+      },
+      "outputs": {
+        "journey_stage": "Enable",
+        "priority": 3
+      },
+      "references": [
+        "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/"
+      ]
+    },
+    {
+      "id": "stage_expand",
+      "type": "stage",
+      "condition": {
+        "metric_conditions": [
+          { "key": "use_case_green_count", "operator": ">=", "value": 3 }
+        ],
+        "all_capabilities": ["operating_exec_alignment"]
+      },
+      "outputs": {
+        "journey_stage": "Expand",
+        "priority": 4
+      },
+      "references": [
+        "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/"
+      ]
+    },
+    {
+      "id": "stage_renew",
+      "type": "stage",
+      "condition": {
+        "all_capabilities": ["operating_renewal_window_soon"],
+        "metric_conditions": [
+          { "key": "use_case_green_count", "operator": ">=", "value": 2 }
+        ]
+      },
+      "outputs": {
+        "journey_stage": "Renew",
+        "priority": 5
+      },
+      "references": [
+        "https://handbook.gitlab.com/handbook/customer-success/renewals/"
+      ]
+    },
+    {
+      "id": "action_low_adoption",
+      "type": "action",
+      "condition": {
+        "metric_conditions": [
+          { "key": "use_case_green_count", "operator": "<", "value": 3 }
+        ]
+      },
+      "outputs": {
+        "title": "Adoption Expansion Needed",
+        "description": "Run Adoption Expansion Workshop to reach 3+ green use cases.",
+        "why": "Use cases implemented: {{use_case_green_count}}. Target is 3+.",
+        "playbook": "Platform Adoption Expansion Playbook",
+        "resource_title": "Platform Value Score",
+        "resource_url": "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/",
+        "impact_adjustments": {
+          "deployment_frequency": 1,
+          "lead_time": 1
+        }
+      },
+      "references": [
+        "https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/",
+        "https://handbook.gitlab.com/job-families/sales/customer-success-engineer/"
+      ]
+    },
+    {
+      "id": "action_security_enablement",
+      "type": "action",
+      "condition": {
+        "any_missing_capabilities": ["security_sast", "security_dependency_scanning"]
+      },
+      "outputs": {
+        "title": "Security Enablement Gap",
+        "description": "Schedule Security Enablement Workshop and add baseline scans in CI.",
+        "why": "Security use case is not fully enabled.",
+        "playbook": "DevSecOps Capability Expansion Playbook",
+        "resource_title": "GitLab Application Security",
+        "resource_url": "https://docs.gitlab.com/ee/user/application_security/",
+        "impact_adjustments": {
+          "change_failure_rate": 1,
+          "mttr": 1
+        }
+      },
+      "references": [
+        "https://docs.gitlab.com/ee/user/application_security/"
+      ]
+    },
+    {
+      "id": "action_renewal_risk",
+      "type": "action",
+      "condition": {
+        "all_capabilities": ["operating_renewal_window_soon"],
+        "metric_conditions": [
+          { "key": "use_case_green_count", "operator": "<", "value": 3 }
+        ]
+      },
+      "outputs": {
+        "title": "Renewal Readiness Trigger",
+        "description": "Run renewal readiness motion and align executive stakeholders.",
+        "why": "Renewal window is soon and adoption depth is below threshold.",
+        "playbook": "Renewal Readiness Playbook",
+        "resource_title": "Renewals Framework",
+        "resource_url": "https://handbook.gitlab.com/handbook/customer-success/renewals/",
+        "impact_adjustments": {
+          "deployment_frequency": 1
+        }
+      },
+      "references": [
+        "https://handbook.gitlab.com/handbook/customer-success/renewals/"
+      ]
+    },
+    {
+      "id": "action_engagement_gap",
+      "type": "action",
+      "condition": {
+        "any_missing_capabilities": ["operating_cadence_current"]
+      },
+      "outputs": {
+        "title": "Engagement Cadence Gap",
+        "description": "Schedule technical enablement workshop and restore monthly engagement cadence.",
+        "why": "Cadence-current signal is disabled.",
+        "playbook": "Office Hours Unblock Playbook",
+        "resource_title": "GitLab Learn",
+        "resource_url": "https://about.gitlab.com/learn/",
+        "impact_adjustments": {
+          "lead_time": 1,
+          "mttr": 1
+        }
+      },
+      "references": [
+        "https://about.gitlab.com/learn/"
+      ]
+    },
+    {
+      "id": "action_value_visibility",
+      "type": "action",
+      "condition": {
+        "metric_conditions": [
+          { "key": "use_case_green_count", "operator": ">=", "value": 3 }
+        ],
+        "any_missing_capabilities": ["operating_value_metrics_ready"]
+      },
+      "outputs": {
+        "title": "Value Visibility Needed",
+        "description": "Prepare an Executive Business Review with value evidence and trend metrics.",
+        "why": "Adoption is mature but value metrics baseline is missing.",
+        "playbook": "Executive Business Review (EBR) Playbook",
+        "resource_title": "Value Stream Analytics",
+        "resource_url": "https://docs.gitlab.com/ee/user/analytics/value_stream_analytics/",
+        "impact_adjustments": {
+          "change_failure_rate": 1
+        }
+      },
+      "references": [
+        "https://docs.gitlab.com/ee/user/analytics/value_stream_analytics/",
+        "https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"
+      ]
+    }
+  ]
+}

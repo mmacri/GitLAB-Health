@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "updated_on": "2026-03-04",
+  "capabilities": [
+    {
+      "id": "scm_repositories_migrated",
+      "label": "Repositories migrated to GitLab",
+      "area": "SCM",
+      "doc_links": [
+        "https://docs.gitlab.com/ee/user/project/repository/"
+      ],
+      "contributes_to": ["SCM", "lead_time"]
+    },
+    {
+      "id": "scm_merge_requests_enabled",
+      "label": "Merge requests enabled",
+      "area": "SCM",
+      "doc_links": [
+        "https://docs.gitlab.com/ee/user/project/merge_requests/"
+      ],
+      "contributes_to": ["SCM", "code_quality", "lead_time"]
+    },
+    {
+      "id": "scm_review_policies",
+      "label": "Code review policies configured",
+      "area": "SCM",
+      "doc_links": [
+        "https://docs.gitlab.com/ee/user/project/merge_requests/approvals/"
+      ],
+      "contributes_to": ["SCM", "change_failure_rate"]
+    },
+    {
+      "id": "ci_pipeline_templates",
+      "label": "Pipeline templates standardized",
+      "area": "CI",
+      "doc_links": [
+        "https://docs.gitlab.com/ee/ci/"
+      ],
+      "contributes_to": ["CI", "deployment_frequency", "lead_time"]
+    },
+    {
+      "id": "ci_shared_runners",
+      "label": "Shared runners available",
+      "area": "CI",
+      "doc_links": [
+        "https://docs.gitlab.com/runner/"
+      ],
+      "contributes_to": ["CI", "deployment_frequency"]
+    },
+    {
+      "id": "ci_test_automation",
+      "label": "Automated tests in pipeline",
+      "area": "CI",
+      "doc_links": [
+        "https://docs.gitlab.com/ee/ci/testing/"
+      ],
+      "contributes_to": ["CI", "change_failure_rate", "lead_time"]
+    },
+    {
+      "id": "cd_environments",
+      "label": "Environments configured",
+      "area": "CD",
+      "doc_links": [
+        "https://docs.gitlab.com/ee/ci/environments/"
+      ],
+      "contributes_to": ["CD", "deployment_frequency", "mttr"]
+    },
+    {
+      "id": "cd_release_governance",
+      "label": "Release governance enabled",
+      "area": "CD",
+      "doc_links": [
+        "https://docs.gitlab.com/ee/user/project/releases/"
+      ],
+      "contributes_to": ["CD", "change_failure_rate"]
+    },
+    {
+      "id": "cd_progressive_delivery",
+      "label": "Progressive delivery enabled",
+      "area": "CD",
+      "doc_links": [
+        "https://docs.gitlab.com/ee/operations/feature_flags/"
+      ],
+      "contributes_to": ["CD", "mttr", "deployment_frequency"]
+    },
+    {
+      "id": "security_sast",
+      "label": "SAST enabled",
+      "area": "Security",
+      "doc_links": [
+        "https://docs.gitlab.com/ee/user/application_security/sast/"
+      ],
+      "contributes_to": ["Security", "change_failure_rate"]
+    },
+    {
+      "id": "security_dependency_scanning",
+      "label": "Dependency scanning enabled",
+      "area": "Security",
+      "doc_links": [
+        "https://docs.gitlab.com/ee/user/application_security/dependency_scanning/"
+      ],
+      "contributes_to": ["Security", "risk_posture"]
+    },
+    {
+      "id": "security_container_scanning",
+      "label": "Container scanning enabled",
+      "area": "Security",
+      "doc_links": [
+        "https://docs.gitlab.com/ee/user/application_security/container_scanning/"
+      ],
+      "contributes_to": ["Security", "risk_posture"]
+    },
+    {
+      "id": "analytics_value_stream",
+      "label": "Value Stream Analytics enabled",
+      "area": "Analytics",
+      "doc_links": [
+        "https://docs.gitlab.com/ee/user/analytics/value_stream_analytics/"
+      ],
+      "contributes_to": ["Analytics", "value_visibility", "lead_time"]
+    },
+    {
+      "id": "analytics_dora_tracking",
+      "label": "DORA metrics tracking active",
+      "area": "Analytics",
+      "doc_links": [
+        "https://about.gitlab.com/topics/devops/metrics/"
+      ],
+      "contributes_to": ["Analytics", "value_visibility"]
+    },
+    {
+      "id": "operating_exec_alignment",
+      "label": "Executive alignment confirmed",
+      "area": "OperatingModel",
+      "doc_links": [
+        "https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/"
+      ],
+      "contributes_to": ["OperatingModel", "journey_stage", "renewal_readiness"]
+    },
+    {
+      "id": "operating_cadence_current",
+      "label": "Cadence current (touch within 30 days)",
+      "area": "OperatingModel",
+      "doc_links": [
+        "https://handbook.gitlab.com/handbook/customer-success/"
+      ],
+      "contributes_to": ["OperatingModel", "engagement_health"]
+    },
+    {
+      "id": "operating_renewal_window_soon",
+      "label": "Renewal window is soon (<120 days)",
+      "area": "OperatingModel",
+      "doc_links": [
+        "https://handbook.gitlab.com/handbook/customer-success/renewals/"
+      ],
+      "contributes_to": ["OperatingModel", "renewal_readiness", "actions"]
+    },
+    {
+      "id": "operating_value_metrics_ready",
+      "label": "Value metrics baseline prepared",
+      "area": "OperatingModel",
+      "doc_links": [
+        "https://docs.gitlab.com/ee/user/analytics/value_stream_analytics/"
+      ],
+      "contributes_to": ["OperatingModel", "value_visibility", "executive_engagement"]
+    },
+    {
+      "id": "operating_cse_role_context",
+      "label": "CSE operating model context applied",
+      "area": "OperatingModel",
+      "doc_links": [
+        "https://handbook.gitlab.com/job-families/sales/customer-success-engineer/"
+      ],
+      "contributes_to": ["OperatingModel", "actions", "playbook_alignment"]
+    },
+    {
+      "id": "lifecycle_story_visible",
+      "label": "DevOps lifecycle story shared",
+      "area": "OperatingModel",
+      "doc_links": [
+        "https://about.gitlab.com/stages-devops-lifecycle/"
+      ],
+      "contributes_to": ["OperatingModel", "adoption_story"]
+    }
+  ]
+}

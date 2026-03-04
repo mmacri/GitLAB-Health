@@ -13,6 +13,7 @@ test('global navigation is defined once and account jump nav is contextual', () 
   assert.equal(navContainerCount, 1, 'top-level nav links container should only appear once');
   assert.ok(!indexHtml.includes('Navigate Close'), 'legacy duplicate bottom navigation should not exist');
   assert.ok(indexHtml.includes('>Accounts<'), 'primary navigation should include Accounts');
+  assert.ok(indexHtml.includes('>Simulator<'), 'primary navigation should include Simulator');
   assert.ok(indexHtml.includes('>Success Plans<'), 'primary navigation should include Success Plans');
   assert.ok(mainSource.includes('Jump To Section'), 'account contextual section jump should exist');
 });

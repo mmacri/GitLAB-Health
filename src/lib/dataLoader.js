@@ -209,7 +209,18 @@ export const persistPlaybookChecklist = (checklistState) => storage.set(STORAGE_
 
 export const loadDashboardData = async () => {
   const loadErrors = [];
-  const [accountsDoc, requestsDoc, programsDoc, playbooksDoc, resourcesDoc, templatesDoc, cheatsheetDoc, rulesDoc] = await Promise.all([
+  const [
+    accountsDoc,
+    requestsDoc,
+    programsDoc,
+    playbooksDoc,
+    resourcesDoc,
+    templatesDoc,
+    cheatsheetDoc,
+    rulesDoc,
+    simulatorCapabilitiesDoc,
+    simulatorRulesDoc
+  ] = await Promise.all([
     fetchJson('accounts.json', { accounts: [] }, loadErrors),
     fetchJson('requests.json', { requests: [] }, loadErrors),
     fetchJson('programs.json', { programs: [] }, loadErrors),
@@ -217,7 +228,9 @@ export const loadDashboardData = async () => {
     fetchJson('resources.json', { categories: [], resources: [] }, loadErrors),
     fetchJson('templates.json', { templates: {} }, loadErrors),
     fetchJson('cheatsheet.json', {}, loadErrors),
-    fetchJson('rules.json', { rules: [] }, loadErrors)
+    fetchJson('rules.json', { rules: [] }, loadErrors),
+    fetchJson('simulator_capabilities.json', { capabilities: [] }, loadErrors),
+    fetchJson('simulator_rules.json', { rules: [] }, loadErrors)
   ]);
 
   const accounts = normalizeDuplicateAccountContent(mergeAccounts(Array.isArray(accountsDoc.accounts) ? accountsDoc.accounts : []));
@@ -228,6 +241,10 @@ export const loadDashboardData = async () => {
   const categories = Array.isArray(resourcesDoc.categories) ? resourcesDoc.categories : [];
   const templates = templatesDoc?.templates && typeof templatesDoc.templates === 'object' ? templatesDoc.templates : {};
   const rules = Array.isArray(rulesDoc.rules) ? rulesDoc.rules : [];
+  const simulatorCapabilities = Array.isArray(simulatorCapabilitiesDoc.capabilities)
+    ? simulatorCapabilitiesDoc.capabilities
+    : [];
+  const simulatorRules = Array.isArray(simulatorRulesDoc.rules) ? simulatorRulesDoc.rules : [];
 
   return {
     accounts,
@@ -235,6 +252,8 @@ export const loadDashboardData = async () => {
     programs,
     playbooks,
     rules,
+    simulatorCapabilities,
+    simulatorRules,
     resources,
     categories,
     templates,
