@@ -104,6 +104,90 @@ const buildPathToGreen = (account) => {
     .map(([name, score]) => `Lift ${name} from ${score} to 75+ through targeted workshop + follow-up evidence.`);
 };
 
+const buildAdoptionLandingZone = (account, workspace, pathToGreen) => {
+  const objectiveTitles = (account?.outcomes?.objectives || [])
+    .map((objective) => objective?.title)
+    .filter(Boolean)
+    .slice(0, 3);
+  const lowestUseCase = workspace?.signal?.lowestUseCaseName || 'Secure';
+  const lowestScore = Number(workspace?.signal?.lowestUseCaseScore || 0);
+  const riskDrivers = (workspace?.signal?.reasons || []).slice(0, 3);
+  const recommendedProgram = workspace?.recommendedProgram?.title || 'Targeted use-case acceleration workshop';
+  const renewalDays = Number(workspace?.signal?.renewalDays ?? 999);
+  const nextTouch = account?.engagement?.next_touch_date || 'Not configured';
+
+  return {
+    topGoals: objectiveTitles.length
+      ? objectiveTitles
+      : [
+          `Improve ${lowestUseCase} adoption from ${lowestScore} toward 75+ threshold`,
+          'Increase verified platform value evidence for executive reviews',
+          'Sustain 30-day adoption growth without engagement gaps'
+        ],
+    requiredTasks: [
+      ...pathToGreen.slice(0, 2),
+      `Schedule next enablement touchpoint (currently ${nextTouch}).`
+    ],
+    risks: riskDrivers.length
+      ? riskDrivers
+      : [
+          'No current risk drivers logged; validate risk register at next review.',
+          'Confirm renewal stakeholders have latest value narrative.',
+          'Validate data freshness before executive summary export.'
+        ],
+    workshops: [
+      recommendedProgram,
+      `Focused ${lowestUseCase} office hours for technical unblock`,
+      'Executive outcomes readout session'
+    ],
+    successCriteria: [
+      'Reach and maintain 3+ green use cases',
+      'Close at least one at-risk objective before next review cycle',
+      renewalDays <= 120
+        ? 'Complete renewal readiness evidence pack before renewal committee checkpoint'
+        : 'Maintain monthly outcome evidence updates tied to success plan'
+    ]
+  };
+};
+
+const lifecycleFlowDiagram = () => `
+  <svg class="lifecycle-svg" viewBox="0 0 980 210" role="img" aria-label="Lifecycle flow from kickoff to renewal">
+    <defs>
+      <linearGradient id="flowLine" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#0284c7"></stop>
+        <stop offset="100%" stop-color="#6e49cb"></stop>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="980" height="210" rx="14" fill="#f8fafc" stroke="#e5e7eb"></rect>
+    <line x1="90" y1="110" x2="890" y2="110" stroke="url(#flowLine)" stroke-width="8" stroke-linecap="round"></line>
+    <g>
+      <circle cx="110" cy="110" r="24" fill="#e0f2fe" stroke="#0284c7"></circle>
+      <text x="110" y="115" text-anchor="middle" font-size="12" fill="#0f172a">1</text>
+      <text x="110" y="154" text-anchor="middle" font-size="13" fill="#111827">Kickoff</text>
+    </g>
+    <g>
+      <circle cx="300" cy="110" r="24" fill="#dcfce7" stroke="#16a34a"></circle>
+      <text x="300" y="115" text-anchor="middle" font-size="12" fill="#0f172a">2</text>
+      <text x="300" y="154" text-anchor="middle" font-size="13" fill="#111827">Onboarding</text>
+    </g>
+    <g>
+      <circle cx="490" cy="110" r="24" fill="#dbeafe" stroke="#2563eb"></circle>
+      <text x="490" y="115" text-anchor="middle" font-size="12" fill="#0f172a">3</text>
+      <text x="490" y="154" text-anchor="middle" font-size="13" fill="#111827">First Value</text>
+    </g>
+    <g>
+      <circle cx="680" cy="110" r="24" fill="#ede9fe" stroke="#6e49cb"></circle>
+      <text x="680" y="115" text-anchor="middle" font-size="12" fill="#0f172a">4</text>
+      <text x="680" y="154" text-anchor="middle" font-size="13" fill="#111827">Expansion</text>
+    </g>
+    <g>
+      <circle cx="870" cy="110" r="24" fill="#ffedd5" stroke="#d97706"></circle>
+      <text x="870" y="115" text-anchor="middle" font-size="12" fill="#0f172a">5</text>
+      <text x="870" y="154" text-anchor="middle" font-size="13" fill="#111827">Renewal</text>
+    </g>
+  </svg>
+`;
+
 const buildChangeLog = (account, workspace, engagementEvents = []) => {
   const loggerEntries = (engagementEvents || []).map((item) => ({
     date: item.date,
@@ -296,6 +380,7 @@ export const renderAccountPage = (ctx) => {
   const timelineEvents = changeLog.filter((item) => ['Engagement', 'Usage', 'Outcomes'].includes(item.category));
   const lifecycle = lifecycleStageProgress(lifecycleStage);
   const startTab = journeyMode ? 'journey' : 'summary';
+  const adoptionLanding = buildAdoptionLandingZone(account, workspace, pathToGreen);
 
   const licenseUtilization = Math.min(96, Math.max(22, Math.round((Number(account.adoption?.platform_adoption_score || 0) * 0.72) + 18)));
   const freshnessDays = workspace.signal?.healthStaleDays;
@@ -413,6 +498,11 @@ export const renderAccountPage = (ctx) => {
             Lifecycle progression follows Align -> Onboard -> Enable -> Expand -> Renew. Current stage: <strong>${STAGE_LABELS[lifecycle.current] || 'Enable'}</strong>.
           </div>
           <div class="card compact-card">
+            <h3>Cheatsheet: Lifecycle Flow Diagram</h3>
+            <p class="muted">Use this visual in CSE reviews to align customer teams on lifecycle progression.</p>
+            ${lifecycleFlowDiagram()}
+          </div>
+          <div class="card compact-card">
             <h3>Customer Success Journey Stages</h3>
             <div class="table-wrap">
               <table class="data-table">
@@ -443,6 +533,31 @@ export const renderAccountPage = (ctx) => {
           <div class="metric-head"><h2>Adoption</h2></div>
           <div class="callout">
             Platform adoption success is 3+ green use cases. Lowest use case today: <strong>${lowestUseCase} (${lowestScore})</strong>.
+          </div>
+          <div class="card compact-card">
+            <h3>Adoption Landing Zone</h3>
+            <div class="landing-grid">
+              <article>
+                <h4>Top goals</h4>
+                <ul class="simple-list">${adoptionLanding.topGoals.map((item) => `<li>${item}</li>`).join('')}</ul>
+              </article>
+              <article>
+                <h4>Required tasks</h4>
+                <ul class="simple-list">${adoptionLanding.requiredTasks.map((item) => `<li>${item}</li>`).join('')}</ul>
+              </article>
+              <article>
+                <h4>Risks to watch</h4>
+                <ul class="simple-list">${adoptionLanding.risks.map((item) => `<li>${item}</li>`).join('')}</ul>
+              </article>
+              <article>
+                <h4>Recommended workshops</h4>
+                <ul class="simple-list">${adoptionLanding.workshops.map((item) => `<li>${item}</li>`).join('')}</ul>
+              </article>
+              <article>
+                <h4>Success criteria</h4>
+                <ul class="simple-list">${adoptionLanding.successCriteria.map((item) => `<li>${item}</li>`).join('')}</ul>
+              </article>
+            </div>
           </div>
           <div class="card compact-card">
             <h3>Path to 3+ Green</h3>

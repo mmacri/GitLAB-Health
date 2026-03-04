@@ -142,6 +142,15 @@ const applyQueryOverrides = () => {
 };
 
 const navItems = () => appRoot.querySelectorAll('[data-nav-route]');
+const ACCOUNT_SECTION_LINKS = [
+  { id: 'summary', label: 'Summary' },
+  { id: 'journey', label: 'Journey' },
+  { id: 'adoption', label: 'Adoption' },
+  { id: 'health', label: 'Health & Risk' },
+  { id: 'engagement', label: 'Engagement' },
+  { id: 'outcomes', label: 'Outcomes' },
+  { id: 'exports', label: 'Exports' }
+];
 
 const setActiveNav = () => {
   navItems().forEach((link) => {
@@ -155,6 +164,17 @@ const renderLeftRail = () => {
   if (!leftRailRoot) return;
   const accounts = state.data?.accounts || [];
   const current = currentAccount();
+  const isAccountContext = state.route.name === 'account' || state.route.name === 'journey';
+  const redCount = accounts.filter((account) => String(account.health?.overall || '').toLowerCase() === 'red').length;
+  const renewalWindowCount = accounts.filter((account) => {
+    const target = account.renewal_date ? new Date(account.renewal_date).getTime() : Number.POSITIVE_INFINITY;
+    return Number.isFinite(target) && Math.floor((target - Date.now()) / (1000 * 60 * 60 * 24)) <= 90;
+  }).length;
+  const staleCount = accounts.filter((account) => {
+    const lastUpdated = account.health?.last_updated ? new Date(account.health.last_updated).getTime() : null;
+    if (!lastUpdated) return true;
+    return Math.floor((Date.now() - lastUpdated) / (1000 * 60 * 60 * 24)) > 30;
+  }).length;
   const recentAccounts = [...accounts]
     .sort((left, right) => {
       if (left.id === state.selectedAccountId) return -1;
@@ -165,10 +185,20 @@ const renderLeftRail = () => {
 
   leftRailRoot.innerHTML = `
     <div class="rail-group">
-      <p class="rail-label">Workflow</p>
-      <button class="rail-link ${state.route.name === 'intake' ? 'is-active' : ''}" type="button" data-rail-route="intake">Create Request</button>
-      <button class="rail-link ${state.route.name === 'playbooks' ? 'is-active' : ''}" type="button" data-rail-route="playbooks">Playbooks</button>
-      <button class="rail-link ${state.route.name === 'exports' ? 'is-active' : ''}" type="button" data-rail-route="exports">Exports</button>
+      <p class="rail-label">${isAccountContext ? 'Jump To Section' : 'Daily Focus'}</p>
+      ${
+        isAccountContext
+          ? ACCOUNT_SECTION_LINKS.map(
+              (item) =>
+                `<button class="rail-link" type="button" data-rail-section="${item.id}">${item.label}</button>`
+            ).join('')
+          : `<ul class="rail-shortcuts">
+               <li>Accounts loaded: ${accounts.length}</li>
+               <li>Red health: ${redCount}</li>
+               <li>Renewal < 90 days: ${renewalWindowCount}</li>
+               <li>Stale health > 30d: ${staleCount}</li>
+             </ul>`
+      }
       <button class="rail-link" type="button" data-rail-open-current ${current ? '' : 'disabled'}>Open Current Account</button>
     </div>
 
@@ -189,12 +219,13 @@ const renderLeftRail = () => {
     </div>
 
     <div class="rail-group">
-      <p class="rail-label">CSE Loop</p>
+      <p class="rail-label">${isAccountContext ? 'Usage Guidance' : 'CSE Loop'}</p>
       <ul class="rail-shortcuts">
-        <li>1. Triage queue in Today</li>
-        <li>2. Execute program or workshop motion</li>
-        <li>3. Log engagement and update outcomes</li>
-        <li>4. Export customer-safe summary</li>
+        ${
+          isAccountContext
+            ? '<li>Use tabs for workflow details and section-level actions.</li><li>Use customer-safe mode before sharing artifacts.</li><li>Use Exports tab for PDF/CSV and copy templates.</li>'
+            : '<li>1. Triage queue in Today</li><li>2. Execute program or workshop motion</li><li>3. Log engagement and update outcomes</li><li>4. Export customer-safe summary</li>'
+        }
       </ul>
     </div>
 
@@ -207,22 +238,22 @@ const renderLeftRail = () => {
     </div>
   `;
 
-  leftRailRoot.querySelectorAll('[data-rail-route]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const routeName = button.getAttribute('data-rail-route');
-      if (routeName === 'journey') {
-        const targetId = currentAccount()?.id || state.data.accounts?.[0]?.id || '';
-        if (targetId) setSelectedAccount(targetId);
-      }
-      router.navigate(routeName);
-    });
-  });
-
   leftRailRoot.querySelector('[data-rail-open-current]')?.addEventListener('click', () => {
     const targetId = currentAccount()?.id || state.data.accounts?.[0]?.id || '';
     if (!targetId) return;
     setSelectedAccount(targetId);
     router.navigate('account', { id: targetId });
+  });
+
+  leftRailRoot.querySelectorAll('[data-rail-section]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const sectionId = button.getAttribute('data-rail-section');
+      if (!sectionId) return;
+      const tabButton = routeRoot.querySelector(`[data-tab-target="${sectionId}"]`);
+      tabButton?.click();
+      const panel = routeRoot.querySelector(`[data-tab-panel="${sectionId}"]`);
+      panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   });
 
   leftRailRoot.querySelectorAll('[data-rail-account]').forEach((button) => {
@@ -635,6 +666,8 @@ const renderCurrentRoute = () => {
       categories: state.data.categories,
       customerSafe: state.customerSafe,
       mode: state.viewMode,
+      copyText,
+      notify,
       ...common
     });
   }

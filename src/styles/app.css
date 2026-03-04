@@ -855,6 +855,34 @@ textarea.artifact,
   color: var(--ink-muted);
 }
 
+.landing-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.landing-grid article {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-muted);
+  padding: 10px;
+}
+
+.landing-grid h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--ink-soft);
+}
+
+.lifecycle-svg {
+  width: 100%;
+  height: auto;
+  margin-top: 8px;
+  border-radius: 10px;
+}
+
 .divider {
   height: 1px;
   background: var(--border);
@@ -995,6 +1023,23 @@ textarea.artifact,
   gap: 6px;
   color: var(--ink-muted);
   font-size: 13px;
+}
+
+.resource-tools {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.resource-tools .ghost-btn,
+.resource-tools .qa {
+  white-space: nowrap;
+}
+
+.resource-check {
+  width: 16px;
+  height: 16px;
 }
 
 .command-palette {
@@ -1187,7 +1232,8 @@ textarea.artifact,
   .toolkit-grid,
   .workspace-layout,
   .flow-steps,
-  .matrix-grid {
+  .matrix-grid,
+  .landing-grid {
     grid-template-columns: 1fr;
   }
 

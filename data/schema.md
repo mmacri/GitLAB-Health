@@ -133,9 +133,11 @@ Account fields:
 - `categories[]` (`id`, `label`)
 - `resources[]`
   - `id`, `title`, `summary`, `url`
-  - `categories[]`
+  - `category` (`Onboarding|Adoption|Risk|Renewal|Enablement`)
+  - `audience` (`Customer Safe|Internal`)
+  - `type` (`Handbook|Docs|Playbook`)
   - `tooltip`
-  - `customer_safe` boolean
+  - `customer_safe` boolean (derived from audience)
 
 ## templates.json
 - `updated_on`
