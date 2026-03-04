@@ -16,7 +16,7 @@
     />
     <script>
       (function () {
-        var known = ['today', 'portfolio', 'account', 'journey', 'programs', 'playbooks', 'resources', 'exports', 'intake'];
+        var known = ['today', 'portfolio', 'toolkit', 'account', 'journey', 'programs', 'playbooks', 'resources', 'exports', 'intake'];
         var parts = window.location.pathname.split('/').filter(Boolean);
         var base = '';
         if (parts.length > 1 && known.indexOf(parts[1]) >= 0) {
@@ -48,6 +48,7 @@
             <div class="nav-links" aria-label="Main navigation">
               <a href="#" data-nav-route="home" class="is-active">Today</a>
               <a href="#" data-nav-route="portfolio">Portfolio</a>
+              <a href="#" data-nav-route="toolkit">Toolkit</a>
               <a href="#" data-nav-route="journey">Journey</a>
               <a href="#" data-nav-route="programs">Programs</a>
               <a href="#" data-nav-route="resources">Resources</a>

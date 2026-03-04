@@ -100,9 +100,16 @@ export const persistAccountField = (accountId, path, value) => {
 };
 
 export const resetLocalState = () => {
-  [STORAGE_KEYS.requests, STORAGE_KEYS.programs, STORAGE_KEYS.intakeDraft, STORAGE_KEYS.accountOverrides, STORAGE_KEYS.playbookChecklist].forEach(
-    (key) => storage.remove(key)
-  );
+  [
+    STORAGE_KEYS.requests,
+    STORAGE_KEYS.programs,
+    STORAGE_KEYS.intakeDraft,
+    STORAGE_KEYS.accountOverrides,
+    STORAGE_KEYS.playbookChecklist,
+    STORAGE_KEYS.gitlabConfig,
+    STORAGE_KEYS.engagementLog,
+    STORAGE_KEYS.toolkitLaunch
+  ].forEach((key) => storage.remove(key));
 };
 
 export const loadPlaybookChecklist = () => storage.get(STORAGE_KEYS.playbookChecklist, {});
@@ -110,12 +117,13 @@ export const loadPlaybookChecklist = () => storage.get(STORAGE_KEYS.playbookChec
 export const persistPlaybookChecklist = (checklistState) => storage.set(STORAGE_KEYS.playbookChecklist, checklistState);
 
 export const loadDashboardData = async () => {
-  const [accountsDoc, requestsDoc, programsDoc, playbooksDoc, resourcesDoc] = await Promise.all([
+  const [accountsDoc, requestsDoc, programsDoc, playbooksDoc, resourcesDoc, templatesDoc] = await Promise.all([
     fetchJson(resolveDataUrl('accounts.json'), { accounts: [] }),
     fetchJson(resolveDataUrl('requests.json'), { requests: [] }),
     fetchJson(resolveDataUrl('programs.json'), { programs: [] }),
     fetchJson(resolveDataUrl('playbooks.json'), { playbooks: [] }),
-    fetchJson(resolveDataUrl('resources.json'), { categories: [], resources: [] })
+    fetchJson(resolveDataUrl('resources.json'), { categories: [], resources: [] }),
+    fetchJson(resolveDataUrl('templates.json'), { templates: {} })
   ]);
 
   const accounts = mergeAccounts(Array.isArray(accountsDoc.accounts) ? accountsDoc.accounts : []);
@@ -124,6 +132,7 @@ export const loadDashboardData = async () => {
   const playbooks = Array.isArray(playbooksDoc.playbooks) ? playbooksDoc.playbooks : [];
   const resources = Array.isArray(resourcesDoc.resources) ? resourcesDoc.resources : [];
   const categories = Array.isArray(resourcesDoc.categories) ? resourcesDoc.categories : [];
+  const templates = templatesDoc?.templates && typeof templatesDoc.templates === 'object' ? templatesDoc.templates : {};
 
   return {
     accounts,
@@ -132,6 +141,7 @@ export const loadDashboardData = async () => {
     playbooks,
     resources,
     categories,
+    templates,
     updated_on: accountsDoc.updated_on || requestsDoc.updated_on || programsDoc.updated_on || resourcesDoc.updated_on || null
   };
 };

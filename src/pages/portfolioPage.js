@@ -2,6 +2,7 @@ import { createDataTable } from '../components/dataTable.js';
 import { metricTile } from '../components/metricTile.js';
 import { statusChip, statusToneFromHealth } from '../components/statusChip.js';
 import { formatDate, parseDate } from '../lib/date.js';
+import { loadEngagementLog } from '../lib/engagementLog.js';
 import { applyPortfolioFilters } from '../lib/scoring.js';
 
 const uniqueSegments = (signals) => ['all', ...new Set((signals || []).map((signal) => signal.account.segment))];
@@ -84,6 +85,7 @@ export const renderPortfolioHomePage = (ctx) => {
   const engagementDue = upcomingEngagements(allSignals, 14);
   const healthChanges = recentHealthChanges(allSignals);
   const programInviteNeeds = allSignals.filter((signal) => signal.recommendedProgram && Number(signal.greenUseCaseCount || 0) < 3);
+  const engagementLog = loadEngagementLog();
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
@@ -239,6 +241,26 @@ export const renderPortfolioHomePage = (ctx) => {
                     `<li><a href="#" data-open-account="${item.account.id}">${item.account.name}</a> - ${item.entry.category}: ${item.entry.summary}</li>`
                 )
                 .join('') || '<li>No recent health changes recorded.</li>'
+            }
+          </ul>
+        </section>
+
+        <section class="card">
+          <div class="metric-head">
+            <h2>Recent Logged Engagements</h2>
+            ${statusChip({ label: `${engagementLog.length} logged`, tone: 'neutral' })}
+          </div>
+          <ul class="simple-list">
+            ${
+              engagementLog
+                .slice(0, 8)
+                .map(
+                  (entry) =>
+                    `<li><a href="#" data-open-account="${entry.account_id}">${entry.account_name || entry.account_id}</a> - ${entry.type} on ${formatDate(
+                      entry.date
+                    )}</li>`
+                )
+                .join('') || '<li>No engagement events logged yet.</li>'
             }
           </ul>
         </section>

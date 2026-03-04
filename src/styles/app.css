@@ -511,6 +511,12 @@ kbd {
   gap: var(--space-6);
 }
 
+.toolkit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+
 .outlier-card {
   height: 100%;
 }
@@ -1010,7 +1016,7 @@ textarea.artifact,
 .app-modal__panel,
 .app-settings__panel {
   position: relative;
-  width: min(620px, calc(100% - 30px));
+  width: min(920px, calc(100% - 30px));
   margin: 10vh auto 0;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1094,6 +1100,7 @@ textarea.artifact,
   .dashboard-grid,
   .today-grid,
   .grid-3,
+  .toolkit-grid,
   .workspace-layout {
     grid-template-columns: 1fr;
   }

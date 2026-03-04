@@ -12,6 +12,7 @@ import {
 } from './lib/dataLoader.js';
 import { buildShareSnapshotUrl, exportAccountCsv, exportAccountSummaryPdf, exportPortfolioCsv } from './lib/exports.js';
 import { formatDateTime, toIsoDate } from './lib/date.js';
+import { addEngagementLogEntry } from './lib/engagementLog.js';
 import { buildAccountWorkspace, buildPortfolioView } from './lib/scoring.js';
 import { storage, STORAGE_KEYS } from './lib/storage.js';
 import { renderAccountPage, accountCommandEntries } from './pages/accountPage.js';
@@ -21,6 +22,7 @@ import { renderPlaybooksPage, playbooksCommandEntries } from './pages/playbooksP
 import { renderPortfolioHomePage, renderPortfolioPage, portfolioCommandEntries } from './pages/portfolioPage.js';
 import { renderProgramsPage, programsCommandEntries } from './pages/programsPage.js';
 import { renderResourcesPage, resourcesCommandEntries } from './pages/resourcesPage.js';
+import { renderToolkitPage, toolkitCommandEntries } from './pages/toolkitPage.js';
 
 const appRoot = document.querySelector('[data-app-root]');
 const routeRoot = document.querySelector('[data-route-root]');
@@ -165,6 +167,7 @@ const renderLeftRail = () => {
       <p class="rail-label">Operate</p>
       <button class="rail-link ${state.route.name === 'home' ? 'is-active' : ''}" type="button" data-rail-route="home">Today</button>
       <button class="rail-link ${state.route.name === 'portfolio' ? 'is-active' : ''}" type="button" data-rail-route="portfolio">Portfolio</button>
+      <button class="rail-link ${state.route.name === 'toolkit' ? 'is-active' : ''}" type="button" data-rail-route="toolkit">Toolkit</button>
       <button class="rail-link ${state.route.name === 'journey' ? 'is-active' : ''}" type="button" data-rail-route="journey">Journey</button>
       <button class="rail-link ${state.route.name === 'programs' ? 'is-active' : ''}" type="button" data-rail-route="programs">Programs</button>
       <button class="rail-link ${state.route.name === 'resources' ? 'is-active' : ''}" type="button" data-rail-route="resources">Resources</button>
@@ -282,6 +285,14 @@ const onLogAttendance = (programId, amount = 1, accountId = '') => {
     'Engagement',
     `Program attendance logged for ${program.title}.`
   );
+  addEngagementLogEntry({
+    account_id: accountId,
+    account_name: account.name,
+    date: today,
+    type: `program attendance (${program.type})`,
+    notes_customer_safe: `Attendance logged for ${program.title}.`,
+    notes_internal: `Program attendance incremented by ${normalizedAmount}.`
+  });
   render();
 };
 
@@ -320,6 +331,14 @@ const onLogEngagement = (accountId, summary = 'Engagement touchpoint logged.') =
   persistAccountField(accountId, 'engagement.last_touch_date', today);
   persistAccountField(accountId, 'engagement.next_touch_date', nextTouch);
   appendChangeLog(accountId, 'Engagement', summary, today);
+  addEngagementLogEntry({
+    account_id: account.id,
+    account_name: account.name,
+    date: today,
+    type: 'cadence call',
+    notes_customer_safe: summary,
+    notes_internal: `Auto next touch set to ${nextTouch}.`
+  });
   render();
 };
 
@@ -344,6 +363,14 @@ const onInviteAccountToProgram = async (programId, accountId) => {
   };
   persistAccountField(accountId, 'engagement.next_touch_date', nextTouchDate);
   appendChangeLog(accountId, 'Engagement', `Invited to program ${program.title}.`, nextTouchDate);
+  addEngagementLogEntry({
+    account_id: account.id,
+    account_name: account.name,
+    date: toIsoDate(new Date()),
+    type: 'program invitation',
+    notes_customer_safe: `Invite sent for ${program.title}.`,
+    notes_internal: `Next touch moved to ${nextTouchDate}.`
+  });
   notify(`Invite copied for ${account.name}.`);
   render();
 };
@@ -424,6 +451,10 @@ const copyShareSnapshot = async () => {
 };
 
 let palette = null;
+const openToolkitTool = (toolId) => {
+  storage.set(STORAGE_KEYS.toolkitLaunch, toolId);
+  router.navigate('toolkit');
+};
 
 const commandEntries = (workspace) => {
   const accountEntries = (state.data.accounts || []).map((account) => ({
@@ -436,17 +467,25 @@ const commandEntries = (workspace) => {
   return [
     { id: 'cmd-home', label: 'Open Today Console', meta: 'Today', action: { route: 'home' } },
     { id: 'cmd-portfolio', label: 'Open Portfolio Table', meta: 'Portfolio', action: { route: 'portfolio' } },
+    { id: 'cmd-toolkit', label: 'Open CSE Toolkit', meta: 'Toolkit', action: { route: 'toolkit' } },
     { id: 'cmd-journey', label: 'Open Journey Workspace', meta: 'Journey', action: { route: 'journey' } },
     { id: 'cmd-programs', label: 'Open Programs', meta: 'Programs', action: { route: 'programs' } },
     { id: 'cmd-playbooks', label: 'Open Playbooks', meta: 'Playbooks', action: { route: 'playbooks' } },
     { id: 'cmd-resources', label: 'Open Resources', meta: 'Resources', action: { route: 'resources' } },
     { id: 'cmd-exports', label: 'Open Exports', meta: 'Exports', action: { route: 'exports' } },
     { id: 'cmd-intake', label: 'Create Intake Request', meta: 'Tools', action: { route: 'intake' } },
+    { id: 'cmd-tool-success-plan', label: 'Toolkit: Success Plan Generator', meta: 'Toolkit', action: { custom: () => openToolkitTool('success-plan') } },
+    { id: 'cmd-tool-exec-snapshot', label: 'Toolkit: Executive Snapshot', meta: 'Toolkit', action: { custom: () => openToolkitTool('exec-snapshot') } },
+    { id: 'cmd-tool-workshop', label: 'Toolkit: Workshop Planning Toolkit', meta: 'Toolkit', action: { custom: () => openToolkitTool('workshop-plan') } },
+    { id: 'cmd-tool-renewal', label: 'Toolkit: Renewal Readiness Checklist', meta: 'Toolkit', action: { custom: () => openToolkitTool('renewal-checklist') } },
+    { id: 'cmd-tool-issue', label: 'Toolkit: Collaboration Issue Generator', meta: 'Toolkit', action: { custom: () => openToolkitTool('issue-generator') } },
+    { id: 'cmd-tool-log', label: 'Toolkit: Engagement Logger', meta: 'Toolkit', action: { custom: () => openToolkitTool('engagement-logger') } },
     { id: 'cmd-share', label: 'Copy Share Snapshot', meta: 'Exports', action: { custom: copyShareSnapshot } },
     ...portfolioCommandEntries(state.data),
     ...programsCommandEntries(state.data.programs),
     ...playbooksCommandEntries(state.data.playbooks),
     ...resourcesCommandEntries(),
+    ...toolkitCommandEntries(),
     ...exportsCommandEntries(),
     ...intakeCommandEntries(state.data.accounts),
     ...accountCommandEntries(workspace),
@@ -506,6 +545,19 @@ const renderCurrentRoute = () => {
       onSetFilters: setPortfolioFilters,
       updatedOn: state.data.updated_on,
       onExportPortfolio: () => exportPortfolioCsv(state.data.accounts, state.data.requests),
+      ...common
+    });
+  }
+
+  if (route.name === 'toolkit') {
+    view = renderToolkitPage({
+      accounts: state.data.accounts,
+      templates: state.data.templates || {},
+      customerSafe: state.customerSafe,
+      onToggleSafe: setSafeMode,
+      notify,
+      copyText,
+      selectedAccountId: state.selectedAccountId,
       ...common
     });
   }

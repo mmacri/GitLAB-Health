@@ -46,5 +46,8 @@ export const STORAGE_KEYS = {
   intakeDraft: 'glh-intake-draft',
   accountOverrides: 'glh-account-overrides',
   playbookChecklist: 'glh-playbook-checklist',
-  selectedAccountId: 'glh-selected-account-id'
+  selectedAccountId: 'glh-selected-account-id',
+  gitlabConfig: 'glh-gitlab-config',
+  engagementLog: 'engagement_log_v1',
+  toolkitLaunch: 'glh-toolkit-launch'
 };

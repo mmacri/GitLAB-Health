@@ -1,0 +1,31 @@
+{
+  "updated_on": "2026-03-03",
+  "templates": {
+    "success_plan_objectives": [
+      "Drive platform adoption to 3+ green use cases before renewal window.",
+      "Validate measurable value metrics with customer stakeholders.",
+      "Close top technical adoption blockers through targeted enablement."
+    ],
+    "success_plan_metrics": [
+      "CI adoption percentage across active projects",
+      "Security scan coverage in critical repositories",
+      "Lead time and deployment frequency trend"
+    ],
+    "success_plan_initiatives": [
+      "Run hands-on CI/CD implementation lab",
+      "Deliver Secure policy enablement workshop",
+      "Establish recurring office hours for technical blockers"
+    ],
+    "workshop_prerequisites": [
+      "Project maintainers invited and confirmed",
+      "Runner access and project permissions validated",
+      "Current .gitlab-ci.yml files available for review"
+    ],
+    "renewal_next_steps": [
+      "Prepare executive readout for renewal checkpoint",
+      "Confirm sponsor alignment on realized outcomes",
+      "Document mitigation plan for remaining yellow/red signals"
+    ],
+    "issue_default_description": "Cross-functional coordination request for pooled CSE on-demand support."
+  }
+}

@@ -4,6 +4,7 @@ import { statusChip, statusToneFromHealth } from '../components/statusChip.js';
 import { wireTabs } from '../components/tabs.js';
 import { buildCustomerAgenda, buildFollowupEmail, buildIssueBody } from '../lib/artifacts.js';
 import { formatDate, isMissing, toIsoDate } from '../lib/date.js';
+import { listEngagementEventsForAccount } from '../lib/engagementLog.js';
 import { redactAccountForCustomer } from '../lib/redaction.js';
 import { useCaseEntries } from '../lib/scoring.js';
 
@@ -103,14 +104,24 @@ const buildPathToGreen = (account) => {
     .map(([name, score]) => `Lift ${name} from ${score} to 75+ through targeted workshop + follow-up evidence.`);
 };
 
-const buildChangeLog = (account, workspace) => {
+const buildChangeLog = (account, workspace, engagementEvents = []) => {
+  const loggerEntries = (engagementEvents || []).map((item) => ({
+    date: item.date,
+    category: 'Engagement',
+    summary: `${item.type}: ${item.notes_customer_safe || 'Engagement logged.'}`
+  }));
   const explicitLog = Array.isArray(account.change_log) ? account.change_log : [];
-  if (explicitLog.length) return explicitLog;
+  if (explicitLog.length) {
+    return [...loggerEntries, ...explicitLog]
+      .sort((left, right) => String(right.date || '').localeCompare(String(left.date || '')))
+      .slice(0, 40);
+  }
 
   const completeObjectives = (account.outcomes?.objectives || []).filter((item) => item.status === 'complete').length;
   const trend = Number(account.adoption?.trend_30d || 0);
 
   return [
+    ...loggerEntries,
     {
       date: account.health?.last_updated || account.engagement?.last_touch_date || '',
       category: 'Usage',
@@ -265,7 +276,8 @@ export const renderAccountPage = (ctx) => {
   const internalAccount = workspace.account;
   const account = customerSafe ? redactAccountForCustomer(internalAccount) : internalAccount;
   const openRequests = workspace.openRequests || [];
-  const changeLog = buildChangeLog(account, workspace);
+  const engagementEvents = listEngagementEventsForAccount(internalAccount.id, { customerSafe });
+  const changeLog = buildChangeLog(account, workspace, engagementEvents);
   const pathToGreen = buildPathToGreen(account);
   const drivers = (workspace.signal?.reasons || []).slice(0, 3);
   const lowestUseCase = workspace.signal?.lowestUseCaseName || 'SCM';

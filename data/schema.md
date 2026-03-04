@@ -137,8 +137,37 @@ Account fields:
   - `tooltip`
   - `customer_safe` boolean
 
+## templates.json
+- `updated_on`
+- `templates`
+  - `success_plan_objectives[]` (customer-safe)
+  - `success_plan_metrics[]` (customer-safe)
+  - `success_plan_initiatives[]` (customer-safe)
+  - `workshop_prerequisites[]` (customer-safe)
+  - `renewal_next_steps[]` (customer-safe)
+  - `issue_default_description` (customer-safe)
+
+## Local storage schema
+- `engagement_log_v1[]`
+  - `id`
+  - `account_id`
+  - `account_name`
+  - `date`
+  - `type`
+  - `notes_customer_safe` (customer-safe)
+  - `notes_internal` (internal-only)
+  - `created_at`
+- `glh-gitlab-config`
+  - `baseUrl`
+  - `projectPath`
+
 ## Customer-safe denylist
 - `internal_only`
 - `internal_only.sentiment_notes`
 - `internal_only.expansion_hypotheses`
 - `internal_only.escalations`
+- `notes_internal`
+- `internal_notes`
+- `sentiment*`
+- `expansion*`
+- `escalation*`
