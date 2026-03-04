@@ -58,6 +58,26 @@ const observeHeaderOffset = () => {
   }
 };
 
+const closeHeaderMenus = () => {
+  const moreButton = appRoot?.querySelector('[data-open-more]');
+  const moreMenu = appRoot?.querySelector('[data-more-menu]');
+  const filtersButton = appRoot?.querySelector('[data-open-filters]');
+  const filtersPanel = appRoot?.querySelector('[data-filters-panel]');
+
+  if (moreMenu && !moreMenu.hidden) {
+    moreMenu.hidden = true;
+  }
+  if (moreButton) {
+    moreButton.setAttribute('aria-expanded', 'false');
+  }
+  if (filtersPanel && !filtersPanel.hasAttribute('hidden')) {
+    filtersPanel.setAttribute('hidden', 'hidden');
+  }
+  if (filtersButton) {
+    filtersButton.setAttribute('aria-expanded', 'false');
+  }
+};
+
 if (!appRoot || !routeRoot || !leftRailRoot) {
   throw new Error('App shell is missing required mount points.');
 }
@@ -1074,9 +1094,19 @@ const bindGlobalEvents = () => {
 
   const moreButton = appRoot.querySelector('[data-open-more]');
   const moreMenu = appRoot.querySelector('[data-more-menu]');
+  const filtersButton = appRoot.querySelector('[data-open-filters]');
+  const filtersPanel = appRoot.querySelector('[data-filters-panel]');
+
+  moreButton?.setAttribute('aria-expanded', 'false');
+  filtersButton?.setAttribute('aria-expanded', 'false');
+
   moreButton?.addEventListener('click', (event) => {
     event.stopPropagation();
     if (!moreMenu) return;
+    if (filtersPanel && !filtersPanel.hasAttribute('hidden')) {
+      filtersPanel.setAttribute('hidden', 'hidden');
+      filtersButton?.setAttribute('aria-expanded', 'false');
+    }
     const expanded = moreButton.getAttribute('aria-expanded') === 'true';
     moreMenu.hidden = expanded;
     moreButton.setAttribute('aria-expanded', expanded ? 'false' : 'true');
@@ -1084,10 +1114,22 @@ const bindGlobalEvents = () => {
   });
 
   document.addEventListener('click', (event) => {
-    if (!moreMenu || moreMenu.hidden) return;
-    if (event.target.closest('[data-more-menu]') || event.target.closest('[data-open-more]')) return;
-    moreMenu.hidden = true;
-    moreButton?.setAttribute('aria-expanded', 'false');
+    const insideMore = event.target.closest('[data-more-menu]') || event.target.closest('[data-open-more]');
+    if (moreMenu && !moreMenu.hidden && !insideMore) {
+      moreMenu.hidden = true;
+      moreButton?.setAttribute('aria-expanded', 'false');
+    }
+    const insideFilters = event.target.closest('[data-filters-panel]') || event.target.closest('[data-open-filters]');
+    if (filtersPanel && !filtersPanel.hasAttribute('hidden') && !insideFilters) {
+      filtersPanel.setAttribute('hidden', 'hidden');
+      filtersButton?.setAttribute('aria-expanded', 'false');
+    }
+    syncHeaderOffset();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    closeHeaderMenus();
     syncHeaderOffset();
   });
 
@@ -1105,10 +1147,12 @@ const bindGlobalEvents = () => {
     syncHeaderOffset();
   });
 
-  const filtersButton = appRoot.querySelector('[data-open-filters]');
-  const filtersPanel = appRoot.querySelector('[data-filters-panel]');
   filtersButton?.addEventListener('click', () => {
     if (!filtersPanel) return;
+    if (moreMenu && !moreMenu.hidden) {
+      moreMenu.hidden = true;
+      moreButton?.setAttribute('aria-expanded', 'false');
+    }
     const hidden = filtersPanel.hasAttribute('hidden');
     if (hidden) {
       filtersPanel.removeAttribute('hidden');
@@ -1173,6 +1217,7 @@ const init = async () => {
 
   router.subscribe((route) => {
     state.route = route;
+    closeHeaderMenus();
     render();
   });
 

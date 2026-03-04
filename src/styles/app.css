@@ -1707,6 +1707,11 @@ textarea.artifact,
     width: 100%;
     max-width: 260px;
   }
+
+  .left-rail {
+    max-height: none;
+    overflow: visible;
+  }
 }
 
 @media (max-width: 960px) {
