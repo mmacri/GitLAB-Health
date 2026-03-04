@@ -1,6 +1,6 @@
 import { createCommandPalette } from './components/commandPalette.js';
 import { createModal } from './components/modal.js';
-import { buildHref, createRouter, detectBasePath, routePath } from './lib/router.js';
+import { createRouter, detectBasePath, parseRoute, routePath } from './lib/router.js';
 import {
   loadDashboardData,
   loadPlaybookChecklist,
@@ -152,10 +152,28 @@ const applyQueryOverrides = () => {
     storage.set(STORAGE_KEYS.safeMode, true);
   }
 
-  if (!route) return;
-  const normalized = route.startsWith('/') ? route : `/${route}`;
+  const normalizeRouteForHash = (value) => {
+    const input = String(value || '').trim();
+    if (!input) return '/today';
+    const hashIndex = input.indexOf('#');
+    const fromHash = hashIndex >= 0 ? input.slice(hashIndex + 1).split('?')[0] : '';
+    const fromPath = input.split('?')[0];
+    const candidate = fromHash && fromHash.startsWith('/') ? fromHash : fromPath;
+    if (!candidate) return '/today';
+    return candidate.startsWith('/') ? candidate : `/${candidate}`;
+  };
+
   const base = state.basePath.replace(/\/+$/, '');
-  window.history.replaceState({}, '', `${base}${normalized}`);
+  if (route) {
+    const normalized = normalizeRouteForHash(route);
+    window.history.replaceState({}, '', `${base || ''}/#${normalized}`);
+    return;
+  }
+
+  if (window.location.hash) return;
+  const current = parseRoute(window.location.pathname, state.basePath);
+  const target = current.path === '/' ? '/today' : current.path;
+  window.history.replaceState({}, '', `${base || ''}/#${target}`);
 };
 
 const navItems = () => appRoot.querySelectorAll('[data-nav-route]');

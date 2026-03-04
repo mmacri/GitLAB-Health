@@ -19,6 +19,13 @@ test('routing resolves /today to home', () => {
   assert.equal(route.name, 'home');
 });
 
+test('routing resolves hash-style URLs used by static pages', () => {
+  assert.equal(parseRoute('#/today').name, 'home');
+  assert.equal(parseRoute('/#/portfolio').name, 'portfolio');
+  assert.equal(parseRoute('/#/account/northwind-industries').name, 'account');
+  assert.equal(parseRoute('/#/account/northwind-industries').params.id, 'northwind-industries');
+});
+
 test('routing resolves account route with project base path', () => {
   const basePath = detectBasePath('/GitLAB-Health/account/northwind-industries');
   assert.equal(basePath, '/GitLAB-Health');

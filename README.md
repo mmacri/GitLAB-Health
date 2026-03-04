@@ -14,7 +14,7 @@ Static GitLab Pages-compatible operating dashboard for pooled Customer Success E
   - Playbooks
   - Resources
   - Cheatsheet
-- Default pooled command view on `/` with:
+- Default pooled command view on `/#/today` (and `/` auto-canonicalized) with:
   - Work Queue
   - Outliers with reasons
   - Program cards with invite/attendance actions
@@ -48,21 +48,23 @@ Static GitLab Pages-compatible operating dashboard for pooled Customer Success E
   - copy/download markdown artifacts (success plan, executive summary, workshop plan, issue body)
 
 ## Routes
-- `/` -> Portfolio Home (default)
-- `/portfolio` -> Portfolio operating table
-- `/manager` -> Team-level manager dashboard
-- `/simulator` -> Adoption simulator
-- `/account/:id` -> Account workspace
-- `/account` -> redirects to selected/default account
-- `/toolkit` -> Success Plans workspace (generators + visuals)
-- `/success-plans` -> alias route to Success Plans workspace
-- `/programs` -> 1:many enablement programs
-- `/playbooks` -> Response plans + checklist execution
-- `/resources` -> Curated handbook resources
-- `/exports` -> Export center
-- `/intake` -> Engagement request intake
+Hash-style routes are canonical for GitLab/GitHub Pages reliability:
+- `/#/today` -> Today console (default)
+- `/#/portfolio` -> Portfolio operating table
+- `/#/manager` -> Team-level manager dashboard
+- `/#/simulator` -> Adoption simulator
+- `/#/account/:id` -> Account workspace
+- `/#/account` -> redirects to selected/default account
+- `/#/toolkit` -> Success Plans workspace (generators + visuals)
+- `/#/success-plans` -> alias route to Success Plans workspace
+- `/#/programs` -> 1:many enablement programs
+- `/#/playbooks` -> Response plans + checklist execution
+- `/#/resources` -> Curated handbook resources
+- `/#/exports` -> Export center
+- `/#/intake` -> Engagement request intake
 
-`404.html` includes SPA fallback redirect so deep links work on static Pages hosting.
+Path-style links are still accepted and auto-canonicalized to hash routes.
+`404.html` redirects deep links to the matching hash route.
 
 ## Data model
 Canonical app data lives under `data/`:
@@ -75,6 +77,14 @@ Canonical app data lives under `data/`:
 - `data/simulator_capabilities.json`
 - `data/simulator_rules.json`
 - `data/schema.md` (field definitions + customer-safe policy)
+
+## Local state keys
+The app persists interactive state with canonical `gh_*` keys and auto-migrates legacy `glh-*` keys:
+- `gh_customer_safe_mode`
+- `gh_engagement_log_v1`
+- `gh_user_overrides_v1`
+- `gh_gitlab_base_url`
+- `gh_gitlab_project_path`
 
 Current seeded sample size:
 - `accounts.json`: 12 realistic accounts (varied health/adoption/renewal states)

@@ -197,6 +197,8 @@ export const resetLocalState = () => {
     STORAGE_KEYS.accountOverrides,
     STORAGE_KEYS.playbookChecklist,
     STORAGE_KEYS.gitlabConfig,
+    STORAGE_KEYS.gitlabBaseUrl,
+    STORAGE_KEYS.gitlabProjectPath,
     STORAGE_KEYS.engagementLog,
     STORAGE_KEYS.toolkitLaunch,
     STORAGE_KEYS.actionCards

@@ -79,8 +79,25 @@ const parseMilestones = (value) =>
     return { date: datePart?.trim() || '', description: descriptionParts.join('|').trim() || line };
   });
 
-const getGitLabConfig = () => storage.get(STORAGE_KEYS.gitlabConfig, { baseUrl: 'https://gitlab.com', projectPath: '' });
-const setGitLabConfig = (value) => storage.set(STORAGE_KEYS.gitlabConfig, value);
+const getGitLabConfig = () => {
+  const legacyObject = storage.get(STORAGE_KEYS.gitlabConfig, {});
+  const baseUrl = storage.get(STORAGE_KEYS.gitlabBaseUrl, legacyObject.baseUrl || 'https://gitlab.com');
+  const projectPath = storage.get(STORAGE_KEYS.gitlabProjectPath, legacyObject.projectPath || '');
+  return {
+    baseUrl: String(baseUrl || 'https://gitlab.com'),
+    projectPath: String(projectPath || '')
+  };
+};
+
+const setGitLabConfig = (value) => {
+  const next = {
+    baseUrl: String(value?.baseUrl || 'https://gitlab.com').trim(),
+    projectPath: String(value?.projectPath || '').trim()
+  };
+  storage.set(STORAGE_KEYS.gitlabBaseUrl, next.baseUrl);
+  storage.set(STORAGE_KEYS.gitlabProjectPath, next.projectPath);
+  storage.set(STORAGE_KEYS.gitlabConfig, next);
+};
 
 const openSuccessPlanModal = ({ accounts, templates, defaultAccountId, copyText, notify, customerSafe }) => {
   const modal = ensureToolkitModal();

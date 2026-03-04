@@ -11,8 +11,8 @@
         var hasBase = parts.length > 1 && known.indexOf(parts[0]) === -1;
         var base = hasBase ? '/' + parts[0] : '';
         var routePath = hasBase ? '/' + parts.slice(1).join('/') : '/' + parts.join('/');
-        if (routePath === '/') routePath = '/';
-        var target = base + '/?route=' + encodeURIComponent(routePath + window.location.search + window.location.hash);
+        if (routePath === '/' || !routePath) routePath = '/today';
+        var target = base + '/#' + routePath;
         window.location.replace(target);
       })();
     </script>

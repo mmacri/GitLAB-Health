@@ -17,6 +17,35 @@ const KNOWN_TOP_LEVEL = new Set([
 
 const trimSlash = (value) => value.replace(/\/+$/, '');
 
+const normalizePath = (value) => {
+  const text = String(value || '').trim();
+  if (!text) return '/';
+  const withoutQuery = text.split('?')[0] || '';
+  if (!withoutQuery) return '/';
+  if (withoutQuery.startsWith('/')) return withoutQuery;
+  return `/${withoutQuery}`;
+};
+
+const hashToPath = (hash) => {
+  const text = String(hash || '').trim();
+  if (!text) return '';
+  const clean = text.startsWith('#') ? text.slice(1) : text;
+  if (!clean) return '';
+  if (clean.startsWith('!/')) return normalizePath(clean.slice(1));
+  if (clean.startsWith('/')) return normalizePath(clean);
+  return '';
+};
+
+const normalizeRouteInput = (value) => {
+  const text = String(value || '/');
+  const hashIndex = text.indexOf('#');
+  if (hashIndex >= 0) {
+    const parsedHash = hashToPath(text.slice(hashIndex));
+    if (parsedHash) return parsedHash;
+  }
+  return normalizePath(text);
+};
+
 export const detectBasePath = (pathname) => {
   const parts = String(pathname || '/')
     .split('/')
@@ -40,7 +69,8 @@ const stripBase = (pathname, basePath) => {
 };
 
 export const parseRoute = (pathname, basePath = '') => {
-  const localPath = stripBase(pathname || '/', trimSlash(basePath));
+  const normalizedInput = normalizeRouteInput(pathname || '/');
+  const localPath = stripBase(normalizedInput, trimSlash(basePath));
   const normalized = localPath === '' ? '/' : localPath;
 
   if (normalized === '/') {
@@ -140,14 +170,23 @@ export const buildHref = (routeName, params = {}, basePath = '') => {
 
 export const createRouter = (basePath = '') => {
   const listeners = new Set();
+  const base = trimSlash(basePath || '');
+
+  const currentPath = () => {
+    const hashPath = hashToPath(window.location.hash);
+    if (hashPath) return { path: hashPath, useBasePath: false };
+    return { path: window.location.pathname, useBasePath: true };
+  };
 
   const emit = () => {
-    const route = parseRoute(window.location.pathname, basePath);
+    const current = currentPath();
+    const route = parseRoute(current.path, current.useBasePath ? base : '');
     listeners.forEach((listener) => listener(route));
   };
 
   const navigate = (routeName, params = {}, options = {}) => {
-    const href = buildHref(routeName, params, basePath);
+    const path = routePath(routeName, params);
+    const href = `${base || ''}/#${path}`;
     if (options.replace) {
       window.history.replaceState({}, '', href);
     } else {
@@ -156,10 +195,14 @@ export const createRouter = (basePath = '') => {
     emit();
   };
 
+  window.addEventListener('hashchange', emit);
   window.addEventListener('popstate', emit);
 
   return {
-    getCurrentRoute: () => parseRoute(window.location.pathname, basePath),
+    getCurrentRoute: () => {
+      const current = currentPath();
+      return parseRoute(current.path, current.useBasePath ? base : '');
+    },
     navigate,
     subscribe(listener) {
       listeners.add(listener);
