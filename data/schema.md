@@ -134,9 +134,10 @@ Account fields:
 - `categories[]` (`id`, `label`)
 - `resources[]`
   - `id`, `title`, `summary`, `url`
-  - `category` (`Onboarding|Adoption|Risk|Renewal|Enablement`)
+  - `category` (`Onboarding|Adoption|Health & Risk|Engagement|Value & Outcomes|Platform Enablement|Operating Model`)
   - `audience` (`Customer-safe|Internal`)
   - `type` (`Handbook|Docs|Playbook`)
+  - `tags[]` string
   - `tooltip`
   - `customer_safe` boolean (derived from audience)
 

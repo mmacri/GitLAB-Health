@@ -3,13 +3,23 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const doc = JSON.parse(readFileSync('data/resources.json', 'utf8'));
-const allowedCategories = new Set(['Onboarding', 'Adoption', 'Risk', 'Renewal', 'Enablement']);
+const allowedCategories = new Set([
+  'Onboarding',
+  'Adoption',
+  'Health & Risk',
+  'Engagement',
+  'Value & Outcomes',
+  'Platform Enablement',
+  'Operating Model'
+]);
 const allowedAudiences = new Set(['Customer-safe', 'Internal']);
 const allowedTypes = new Set(['Handbook', 'Docs', 'Playbook']);
 
 test('resources registry is populated and handbook-aligned', () => {
   assert.ok(Array.isArray(doc.resources), 'resources array must exist');
   assert.ok(doc.resources.length >= 30, 'resources registry should contain at least 30 entries');
+  const byUrl = new Set();
+  const byTitle = new Set();
 
   doc.resources.forEach((resource) => {
     assert.ok(resource.id, 'resource.id is required');
@@ -19,5 +29,13 @@ test('resources registry is populated and handbook-aligned', () => {
     assert.ok(allowedCategories.has(resource.category), `invalid category: ${resource.category}`);
     assert.ok(allowedAudiences.has(resource.audience), `invalid audience: ${resource.audience}`);
     assert.ok(allowedTypes.has(resource.type), `invalid type: ${resource.type}`);
+    assert.ok(Array.isArray(resource.tags), `resource.tags must be array for ${resource.id}`);
+
+    const canonicalUrl = resource.url.replace(/\/+$/, '').toLowerCase();
+    const canonicalTitle = resource.title.trim().toLowerCase();
+    assert.ok(!byUrl.has(canonicalUrl), `duplicate url found: ${resource.url}`);
+    assert.ok(!byTitle.has(canonicalTitle), `duplicate title found: ${resource.title}`);
+    byUrl.add(canonicalUrl);
+    byTitle.add(canonicalTitle);
   });
 });

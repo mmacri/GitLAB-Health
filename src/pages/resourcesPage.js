@@ -22,6 +22,7 @@ const normalizeResource = (resource) => ({
   category: normalizeCategory(resource),
   audience: normalizeAudience(resource),
   type: normalizeType(resource),
+  tags: Array.isArray(resource.tags) ? resource.tags : [],
   customer_safe: normalizeAudience(resource).toLowerCase() !== 'internal'
 });
 
@@ -54,7 +55,12 @@ const guidanceMap = () => `
 
 const toMarkdownList = (items) =>
   items
-    .map((item) => `- [${item.title}](${item.url}) — ${item.category} | ${item.type} | ${item.audience}`)
+    .map(
+      (item) =>
+        `- [${item.title}](${item.url}) — ${item.category} | ${item.type} | ${item.audience}${
+          item.tags?.length ? ` | tags: ${item.tags.join(', ')}` : ''
+        }`
+    )
     .join('\n');
 
 export const renderResourcesPage = (ctx) => {
@@ -136,7 +142,9 @@ export const renderResourcesPage = (ctx) => {
               <th>Category</th>
               <th>Audience</th>
               <th>Type</th>
+              <th>Tags</th>
               <th>Link</th>
+              <th>Copy</th>
             </tr>
           </thead>
           <tbody data-resource-rows></tbody>
@@ -191,7 +199,7 @@ export const renderResourcesPage = (ctx) => {
   const rowsHost = wrapper.querySelector('[data-resource-rows]');
 
   const getFiltered = () => {
-    const query = String(search?.value || '').trim().toLowerCase();
+      const query = String(search?.value || '').trim().toLowerCase();
     const category = categoryFilter?.value || 'all';
     const audience = audienceFilter?.value || 'all';
     const type = typeFilter?.value || 'all';
@@ -201,7 +209,8 @@ export const renderResourcesPage = (ctx) => {
       const categoryMatch = category === 'all' || item.category === category;
       const audienceMatch = audience === 'all' || item.audience === audience;
       const typeMatch = type === 'all' || item.type === type;
-      const queryMatch = text.includes(query);
+      const tagsText = (item.tags || []).join(' ').toLowerCase();
+      const queryMatch = text.includes(query) || tagsText.includes(query);
       return categoryMatch && audienceMatch && typeMatch && queryMatch;
     });
   };
@@ -221,12 +230,14 @@ export const renderResourcesPage = (ctx) => {
                 <td>${item.category}</td>
                 <td>${statusChip({ label: item.audience, tone: item.customer_safe ? 'good' : 'warn' })}</td>
                 <td>${item.type}</td>
+                <td>${item.tags?.length ? item.tags.join(', ') : '-'}</td>
                 <td><a href="${item.url}" target="_blank" rel="noopener noreferrer">Open link</a></td>
+                <td><button class="ghost-btn" type="button" data-copy-resource="${item.id}">Copy</button></td>
               </tr>
             `
           )
           .join('')
-      : '<tr><td colspan="6">No resources match the current filters.</td></tr>';
+      : '<tr><td colspan="8">No resources match the current filters.</td></tr>';
   };
 
   const copyBundle = async (items, emptyMessage) => {
@@ -272,6 +283,16 @@ export const renderResourcesPage = (ctx) => {
     } else {
       selection.delete(id);
     }
+  });
+
+  rowsHost.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-copy-resource]');
+    if (!button) return;
+    const resourceId = button.getAttribute('data-copy-resource');
+    const item = visible.find((resource) => resource.id === resourceId);
+    if (!item) return;
+    await copyText(toMarkdownList([item]));
+    notify(`Copied link: ${item.title}`);
   });
 
   renderRows();
