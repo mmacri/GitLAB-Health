@@ -6,6 +6,7 @@ Static GitLab Pages-compatible operating dashboard for pooled Customer Success E
 - Portfolio-first information architecture with grouped primary navigation:
   - Today
   - Portfolio
+  - Manager
   - Simulator
   - Accounts
   - Success Plans
@@ -48,6 +49,7 @@ Static GitLab Pages-compatible operating dashboard for pooled Customer Success E
 ## Routes
 - `/` -> Portfolio Home (default)
 - `/portfolio` -> Portfolio operating table
+- `/manager` -> Team-level manager dashboard
 - `/simulator` -> Adoption simulator
 - `/account/:id` -> Account workspace
 - `/account` -> redirects to selected/default account

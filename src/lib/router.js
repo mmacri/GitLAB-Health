@@ -1,6 +1,7 @@
 const KNOWN_TOP_LEVEL = new Set([
   'today',
   'portfolio',
+  'manager',
   'simulator',
   'toolkit',
   'success-plans',
@@ -50,6 +51,9 @@ export const parseRoute = (pathname, basePath = '') => {
   }
   if (normalized === '/portfolio') {
     return { name: 'portfolio', params: {}, path: normalized };
+  }
+  if (normalized === '/manager') {
+    return { name: 'manager', params: {}, path: normalized };
   }
   if (normalized === '/simulator') {
     return { name: 'simulator', params: {}, path: normalized };
@@ -109,6 +113,7 @@ export const parseRoute = (pathname, basePath = '') => {
 export const routePath = (routeName, params = {}) => {
   if (routeName === 'home') return '/today';
   if (routeName === 'portfolio') return '/portfolio';
+  if (routeName === 'manager') return '/manager';
   if (routeName === 'simulator') return '/simulator';
   if (routeName === 'toolkit') return '/toolkit';
   if (routeName === 'success-plans') return '/success-plans';

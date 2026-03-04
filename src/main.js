@@ -25,6 +25,7 @@ import { renderResourcesPage, resourcesCommandEntries } from './pages/resourcesP
 import { renderToolkitPage, toolkitCommandEntries } from './pages/toolkitPage.js';
 import { renderCheatsheetPage, cheatsheetCommandEntries } from './pages/cheatsheetPage.js';
 import { renderSimulatorPage, simulatorCommandEntries } from './pages/simulatorPage.js';
+import { renderManagerPage, managerCommandEntries } from './pages/managerPage.js';
 
 const appRoot = document.querySelector('[data-app-root]');
 const routeRoot = document.querySelector('[data-route-root]');
@@ -167,6 +168,17 @@ const ACCOUNT_SECTION_LINKS = [
   { id: 'outcomes', label: 'Outcomes' },
   { id: 'exports', label: 'Exports' }
 ];
+const PRIMARY_NAV_ITEMS = [
+  { route: 'home', label: 'Today', icon: 'T' },
+  { route: 'portfolio', label: 'Portfolio', icon: 'P' },
+  { route: 'account', label: 'Accounts', icon: 'A' },
+  { route: 'toolkit', label: 'Success Plans', icon: 'SP' },
+  { route: 'simulator', label: 'Simulator', icon: 'S' },
+  { route: 'playbooks', label: 'Playbooks', icon: 'PB' },
+  { route: 'resources', label: 'Resources', icon: 'R' },
+  { route: 'cheatsheet', label: 'Cheatsheet', icon: 'C' },
+  { route: 'manager', label: 'Manager', icon: 'M' }
+];
 
 const setActiveNav = () => {
   navItems().forEach((link) => {
@@ -202,6 +214,16 @@ const renderLeftRail = () => {
     .slice(0, 8);
 
   leftRailRoot.innerHTML = `
+    <div class="rail-group">
+      <p class="rail-label">Primary Navigation</p>
+      <div class="rail-list">
+        ${PRIMARY_NAV_ITEMS.map(
+          (item) =>
+            `<button class="rail-link rail-nav-link" type="button" data-nav-route="${item.route}"><span class="rail-nav-icon">${item.icon}</span><span>${item.label}</span></button>`
+        ).join('')}
+      </div>
+    </div>
+
     <div class="rail-group">
       <p class="rail-label">${isAccountContext ? 'Jump To Section' : 'Daily Focus'}</p>
       ${
@@ -495,8 +517,6 @@ const renderShellContext = () => {
   if (safeLabel) {
     safeLabel.textContent = state.customerSafe ? `Customer-safe mode • ${state.viewMode}` : `Internal mode • ${state.viewMode}`;
   }
-
-  setActiveNav();
 };
 
 const copyShareSnapshot = async () => {
@@ -541,6 +561,7 @@ const commandEntries = (workspace) => {
   return [
     { id: 'cmd-home', label: 'Open Today Console', meta: 'Today', action: { route: 'home' } },
     { id: 'cmd-portfolio', label: 'Open Portfolio Table', meta: 'Portfolio', action: { route: 'portfolio' } },
+    { id: 'cmd-manager', label: 'Open Manager Dashboard', meta: 'Manager', action: { route: 'manager' } },
     { id: 'cmd-simulator', label: 'Open Adoption Simulator', meta: 'Simulator', action: { route: 'simulator' } },
     { id: 'cmd-account', label: 'Open Accounts Workspace', meta: 'Accounts', action: { route: 'account' } },
     { id: 'cmd-toolkit', label: 'Open Success Plans', meta: 'Success Plans', action: { route: 'toolkit' } },
@@ -560,6 +581,7 @@ const commandEntries = (workspace) => {
     { id: 'cmd-tool-log', label: 'Engagement Logger', meta: 'Success Plans', action: { custom: () => openToolkitTool('engagement-logger') } },
     { id: 'cmd-share', label: 'Copy Share Snapshot', meta: 'Exports', action: { custom: copyShareSnapshot } },
     ...portfolioCommandEntries(state.data),
+    ...managerCommandEntries(),
     ...simulatorCommandEntries(),
     ...programsCommandEntries(state.data.programs),
     ...playbooksCommandEntries(state.data.playbooks),
@@ -641,6 +663,14 @@ const renderCurrentRoute = () => {
       accountLoadError,
       onRetryData: reloadData,
       onExportPortfolio: () => exportPortfolioCsv(state.data.accounts, state.data.requests),
+      ...common
+    });
+  }
+
+  if (route.name === 'manager') {
+    view = renderManagerPage({
+      portfolio,
+      mode: state.viewMode,
       ...common
     });
   }
@@ -803,6 +833,7 @@ const render = () => {
   renderShellContext();
   renderLeftRail();
   renderCurrentRoute();
+  setActiveNav();
 };
 
 state.basePath = detectBasePath(window.location.pathname);
@@ -810,24 +841,24 @@ applyQueryOverrides();
 const router = createRouter(state.basePath);
 
 const bindGlobalEvents = () => {
-  navItems().forEach((link) => {
-    link.addEventListener('click', (event) => {
-      event.preventDefault();
-      const name = link.getAttribute('data-nav-route');
-      if (name === 'account') {
-        const targetId = currentAccount()?.id || state.data.accounts?.[0]?.id || '';
-        setSelectedAccount(targetId);
-        router.navigate('account', { id: targetId });
-        return;
-      }
-      if (name === 'journey') {
-        const targetId = currentAccount()?.id || state.data.accounts?.[0]?.id || '';
-        if (targetId) setSelectedAccount(targetId);
-        router.navigate('journey', { id: targetId });
-        return;
-      }
-      router.navigate(name);
-    });
+  appRoot.addEventListener('click', (event) => {
+    const link = event.target.closest('[data-nav-route]');
+    if (!link) return;
+    event.preventDefault();
+    const name = link.getAttribute('data-nav-route');
+    if (name === 'account') {
+      const targetId = currentAccount()?.id || state.data.accounts?.[0]?.id || '';
+      setSelectedAccount(targetId);
+      router.navigate('account', { id: targetId });
+      return;
+    }
+    if (name === 'journey') {
+      const targetId = currentAccount()?.id || state.data.accounts?.[0]?.id || '';
+      if (targetId) setSelectedAccount(targetId);
+      router.navigate('journey', { id: targetId });
+      return;
+    }
+    router.navigate(name);
   });
 
   appRoot.querySelector('[data-global-safe-toggle]')?.addEventListener('change', (event) => {

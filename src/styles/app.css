@@ -1,6 +1,6 @@
 :root {
-  --page-bg: #f6f7f9;
-  --bg: #f6f7f9;
+  --page-bg: #f8f9fb;
+  --bg: #f8f9fb;
   --card-bg: #ffffff;
   --surface: #ffffff;
   --surface-muted: #f9fafb;
@@ -10,28 +10,28 @@
   --ink: #111827;
   --ink-muted: #6b7280;
   --ink-soft: #6b7280;
-  --primary: #6e49cb;
-  --primary-strong: #5b3db2;
-  --secondary: #0284c7;
-  --success: #16a34a;
-  --warning: #d97706;
-  --danger: #dc2626;
+  --primary: #7759c2;
+  --primary-strong: #5d43a2;
+  --secondary: #428bca;
+  --success: #1aaa55;
+  --warning: #fca121;
+  --danger: #e24329;
   --neutral: #475569;
   --missing: #9ca3af;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 18px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 8px 24px rgba(31, 41, 55, 0.11);
-  --radius-lg: 18px;
+  --radius-lg: 14px;
   --radius-md: 12px;
   --radius-sm: 8px;
   --space-1: 4px;
   --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --max-w: 1240px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 40px;
+  --space-6: 64px;
+  --space-8: 40px;
+  --space-10: 64px;
+  --max-w: 1200px;
 }
 
 body {
@@ -39,7 +39,7 @@ body {
   color: var(--ink);
   margin: 0;
   font-size: 16px;
-  font-family: "Space Grotesk", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 a {
@@ -108,9 +108,10 @@ h4 {
 }
 
 .brand-title {
-  font-family: "Bebas Neue", sans-serif;
-  font-size: 25px;
-  letter-spacing: 0.9px;
+  font-family: "Inter", sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0;
 }
 
 .brand-sub {
@@ -298,8 +299,25 @@ button:hover {
 .rail-link:hover,
 .rail-link.is-active {
   color: var(--primary);
-  border-color: rgba(110, 73, 203, 0.35);
-  background: rgba(110, 73, 203, 0.08);
+  border-color: rgba(119, 89, 194, 0.35);
+  background: rgba(119, 89, 194, 0.08);
+}
+
+.rail-nav-link {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.rail-nav-icon {
+  width: 24px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
 }
 
 .rail-list {

@@ -10,13 +10,10 @@
     <title>GitLab CSE On-Demand Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <script>
       (function () {
-        var known = ['today', 'portfolio', 'simulator', 'toolkit', 'success-plans', 'account', 'journey', 'programs', 'playbooks', 'resources', 'cheatsheet', 'exports', 'intake'];
+        var known = ['today', 'portfolio', 'manager', 'simulator', 'toolkit', 'success-plans', 'account', 'journey', 'programs', 'playbooks', 'resources', 'cheatsheet', 'exports', 'intake'];
         var parts = window.location.pathname.split('/').filter(Boolean);
         var base = '';
         if (parts.length > 1 && known.indexOf(parts[1]) >= 0) {
@@ -43,17 +40,6 @@
                 <span class="brand-title">GitLab CSE On-Demand</span>
                 <span class="brand-sub">Pooled Customer Success Engineering Operations</span>
               </div>
-            </div>
-
-            <div class="nav-links" aria-label="Main navigation">
-              <a href="#" data-nav-route="home" class="is-active">Today</a>
-              <a href="#" data-nav-route="portfolio">Portfolio</a>
-              <a href="#" data-nav-route="simulator">Simulator</a>
-              <a href="#" data-nav-route="account">Accounts</a>
-              <a href="#" data-nav-route="toolkit">Success Plans</a>
-              <a href="#" data-nav-route="playbooks">Playbooks</a>
-              <a href="#" data-nav-route="resources">Resources</a>
-              <a href="#" data-nav-route="cheatsheet">Cheatsheet</a>
             </div>
 
             <div class="nav-actions">
