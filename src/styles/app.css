@@ -1,5 +1,3 @@
-@import './design-tokens.css';
-
 :root {
   /* spacing scale */
   --s-1: var(--space-1);
@@ -734,6 +732,7 @@ hr {
   position: sticky;
   top: calc(var(--header-offset) - 16px);
   z-index: var(--z-sticky);
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.05);
 }
 
 .mode-tab {
@@ -922,8 +921,8 @@ hr {
 
 .customer-safe-banner {
   position: sticky;
-  top: calc(var(--header-offset) + 8px);
-  z-index: var(--z-safe-banner);
+  top: calc(var(--header-offset) + 30px);
+  z-index: 190;
   display: grid;
   gap: 10px;
   border: 1px solid rgba(21, 128, 61, 0.35);
