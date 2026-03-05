@@ -164,6 +164,8 @@ p {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  min-width: 0;
+  flex-wrap: nowrap;
 }
 
 .status-pill {
@@ -458,7 +460,9 @@ button:hover {
   color: var(--sidebar-text);
   display: flex;
   flex-direction: column;
-  height: calc(100vh - var(--header-offset) + 16px);
+  height: calc(100vh - var(--header-offset));
+  max-height: calc(100vh - var(--header-offset));
+  min-height: 360px;
   position: sticky;
   top: var(--header-offset);
   overflow-y: auto;
@@ -2601,6 +2605,52 @@ textarea.artifact,
 
   .simulator-grid {
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+
+@media (max-width: 1240px) {
+  .app-header {
+    padding: 0 var(--space-4);
+    gap: var(--space-3);
+  }
+
+  .app-header__left {
+    gap: var(--space-2);
+  }
+
+  .app-header__right {
+    gap: var(--space-1);
+  }
+
+  .search-trigger {
+    min-width: 180px;
+    max-width: 300px;
+  }
+
+  .search-trigger__kbd {
+    display: none;
+  }
+
+  .app-header [data-safe-label] {
+    max-width: 180px;
+  }
+}
+
+@media (max-width: 1120px) {
+  .app-header [data-safe-label] {
+    display: none;
+  }
+
+  .safe-toggle {
+    padding-inline: var(--space-2);
+  }
+
+  .safe-toggle > span:last-child {
+    display: none;
+  }
+
+  .header-btn--with-label {
+    padding-inline: var(--space-2);
   }
 }
 

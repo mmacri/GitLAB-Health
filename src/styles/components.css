@@ -451,10 +451,17 @@
 }
 
 .search-trigger {
-  min-width: 280px;
-  max-width: 460px;
+  min-width: clamp(180px, 32vw, 280px);
+  max-width: 440px;
+  flex: 1 1 280px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--gl-surface-2) 78%, var(--gl-surface));
+}
+
+.search-trigger__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .search-trigger__kbd {
@@ -551,6 +558,24 @@
   .today-dashboard .data-table td .page-actions {
     display: grid;
     gap: var(--gl-space-1);
+  }
+}
+
+@media (max-width: 1240px) {
+  .search-trigger {
+    max-width: 320px;
+    flex-basis: 220px;
+  }
+
+  .search-trigger__kbd {
+    display: none;
+  }
+}
+
+@media (max-width: 1120px) {
+  .search-trigger {
+    max-width: 260px;
+    flex-basis: 180px;
   }
 }
 
