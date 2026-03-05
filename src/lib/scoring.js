@@ -312,9 +312,44 @@ export const buildAccountWorkspace = (data, accountId, now = new Date()) => {
 
 const WORKSPACE_STAGE_ORDER = ['Align', 'Onboard', 'Adopt', 'Enable', 'Expand', 'Renew'];
 const RISK_WEIGHTS = { Low: 10, Medium: 20, High: 35, Critical: 45 };
+const DEFAULT_SCORE_WEIGHTS = { adoption: 45, engagement: 30, risk: 25 };
 
 const ensureWorkspaceCustomer = (workspace, customerId) =>
   (workspace?.customers || []).find((customer) => customer.id === customerId) || null;
+
+const normalizeWeight = (value) => Math.max(0, Number(value || 0));
+
+const scoringWeights = (workspace) => {
+  const configured = workspace?.settings?.scoringWeights || DEFAULT_SCORE_WEIGHTS;
+  const adoption = normalizeWeight(configured.adoption);
+  const engagement = normalizeWeight(configured.engagement);
+  const risk = normalizeWeight(configured.risk);
+  const total = adoption + engagement + risk;
+  if (!total) return { adoption: 0.45, engagement: 0.3, risk: 0.25, normalized: DEFAULT_SCORE_WEIGHTS, total: 100 };
+  return {
+    adoption: adoption / total,
+    engagement: engagement / total,
+    risk: risk / total,
+    normalized: {
+      adoption: Math.round((adoption / total) * 100),
+      engagement: Math.round((engagement / total) * 100),
+      risk: Math.round((risk / total) * 100)
+    },
+    total
+  };
+};
+
+const activeDismissals = (workspace, customerId, now = new Date()) => {
+  const dismissals = workspace?.risk?.[customerId]?.dismissals || [];
+  const nowTime = now.getTime();
+  return dismissals.filter((dismissal) => {
+    const until = new Date(dismissal.dismissedUntil || 0).getTime();
+    return dismissal.code && Number.isFinite(until) && until >= nowTime;
+  });
+};
+
+const isSignalDismissed = (workspace, customerId, code, now = new Date()) =>
+  activeDismissals(workspace, customerId, now).some((dismissal) => dismissal.code === code);
 
 const latestEngagementTs = (workspace, customerId) => {
   const entries = (workspace?.engagements?.[customerId] || []).slice();
@@ -357,13 +392,14 @@ export const deriveRiskSignals = (workspace, customerId, now = new Date()) => {
   if (!customer) return [];
   const adoption = workspace?.adoption?.[customerId] || {};
   const useCases = adoption.useCases || {};
+  const stages = adoption.devsecopsStages || {};
   const timeToValue = Array.isArray(adoption.timeToValue) ? adoption.timeToValue : [];
-  const signals = [];
+  const autoSignals = [];
 
   const lastTouch = latestEngagementTs(workspace, customerId);
   const touchDays = lastTouch ? diffInDays(String(lastTouch).slice(0, 10), now) : 999;
   if ((touchDays ?? 999) > 60) {
-    signals.push({
+    autoSignals.push({
       code: 'LOW_ENGAGEMENT',
       severity: 'Medium',
       detectedAt: now.toISOString(),
@@ -374,7 +410,7 @@ export const deriveRiskSignals = (workspace, customerId, now = new Date()) => {
 
   const renewalDays = daysUntil(customer.renewalDate, now);
   if (renewalDays !== null && renewalDays <= 90) {
-    signals.push({
+    autoSignals.push({
       code: 'RENEWAL_SOON',
       severity: renewalDays <= 45 ? 'High' : 'Medium',
       detectedAt: now.toISOString(),
@@ -384,7 +420,7 @@ export const deriveRiskSignals = (workspace, customerId, now = new Date()) => {
   }
 
   if (Number(useCases.Security?.percent || 0) < 30) {
-    signals.push({
+    autoSignals.push({
       code: 'LOW_SECURITY_ADOPTION',
       severity: 'Medium',
       detectedAt: now.toISOString(),
@@ -394,7 +430,7 @@ export const deriveRiskSignals = (workspace, customerId, now = new Date()) => {
   }
 
   if (Number(useCases.CICD?.percent || 0) < 40) {
-    signals.push({
+    autoSignals.push({
       code: 'LOW_CICD_ADOPTION',
       severity: 'Medium',
       detectedAt: now.toISOString(),
@@ -405,7 +441,7 @@ export const deriveRiskSignals = (workspace, customerId, now = new Date()) => {
 
   const firstPipeline = timeToValue.find((item) => String(item.milestone || '').toLowerCase().includes('pipeline'));
   if (!firstPipeline || String(firstPipeline.status || '').toLowerCase() !== 'done') {
-    signals.push({
+    autoSignals.push({
       code: 'NO_TIME_TO_VALUE',
       severity: 'High',
       detectedAt: now.toISOString(),
@@ -413,6 +449,20 @@ export const deriveRiskSignals = (workspace, customerId, now = new Date()) => {
       source: 'derived'
     });
   }
+
+  const cicdPercent = Number(useCases.CICD?.percent || 0);
+  const secureStage = String(stages.Secure || '');
+  if (cicdPercent >= 60 && secureStage === 'Not Started') {
+    autoSignals.push({
+      code: 'STAGE_GAP_SECURE',
+      severity: 'Medium',
+      detectedAt: now.toISOString(),
+      detail: 'Secure stage is not started while CI/CD adoption is above 60%',
+      source: 'derived'
+    });
+  }
+
+  const signals = autoSignals.filter((signal) => !isSignalDismissed(workspace, customerId, signal.code, now));
 
   const manualSignals = (workspace?.risk?.[customerId]?.signals || []).filter((signal) => signal.source !== 'derived');
   const dedupe = new Map();
@@ -431,8 +481,9 @@ export const computeRiskScore = (workspace, customerId, now = new Date()) => {
   return Math.max(0, Math.min(100, Math.round(weight + playbookPenalty)));
 };
 
-const healthFromScores = ({ adoptionScore, engagementScore, riskScore }) => {
-  const total = adoptionScore * 0.45 + engagementScore * 0.3 + (100 - riskScore) * 0.25;
+const healthFromScores = ({ adoptionScore, engagementScore, riskScore, weights }) => {
+  const modelWeights = weights || { adoption: 0.45, engagement: 0.3, risk: 0.25 };
+  const total = adoptionScore * modelWeights.adoption + engagementScore * modelWeights.engagement + (100 - riskScore) * modelWeights.risk;
   if (total >= 75) return 'Green';
   if (total >= 55) return 'Yellow';
   return 'Red';
@@ -444,8 +495,10 @@ export const scoreBreakdown = (workspace, customerId, now = new Date()) => {
   const riskScore = computeRiskScore(workspace, customerId, now);
   const customer = ensureWorkspaceCustomer(workspace, customerId);
   const signals = deriveRiskSignals(workspace, customerId, now);
+  const dismissals = activeDismissals(workspace, customerId, now);
+  const weights = scoringWeights(workspace);
   const healthOverride = workspace?.risk?.[customerId]?.overrideHealth || null;
-  const health = healthOverride || healthFromScores({ adoptionScore, engagementScore, riskScore });
+  const health = healthOverride || healthFromScores({ adoptionScore, engagementScore, riskScore, weights });
   const engagementDays = diffInDays(String(latestEngagementTs(workspace, customerId) || '').slice(0, 10), now) ?? 999;
 
   return {
@@ -455,15 +508,18 @@ export const scoreBreakdown = (workspace, customerId, now = new Date()) => {
     riskScore,
     health,
     riskSignals: signals,
+    dismissedSignals: dismissals,
     lastEngagementDate: latestEngagementTs(workspace, customerId),
     engagementDays,
     renewalDays: daysUntil(customer?.renewalDate, now),
+    weights: weights.normalized,
     why: [
-      `Adoption ${adoptionScore} contributes ${(adoptionScore * 0.45).toFixed(1)} points`,
-      `Engagement ${engagementScore} contributes ${(engagementScore * 0.3).toFixed(1)} points`,
-      `Risk burden ${riskScore} subtracts ${(riskScore * 0.25).toFixed(1)} points`,
+      `Adoption ${adoptionScore} contributes ${(adoptionScore * weights.adoption).toFixed(1)} points (${weights.normalized.adoption}% weight)`,
+      `Engagement ${engagementScore} contributes ${(engagementScore * weights.engagement).toFixed(1)} points (${weights.normalized.engagement}% weight)`,
+      `Risk burden ${riskScore} subtracts ${(riskScore * weights.risk).toFixed(1)} points (${weights.normalized.risk}% weight)`,
       `Engagement recency: ${engagementDays === 999 ? 'no touch logged' : `${engagementDays} days since last touch`}`,
-      signals.length ? `${signals.length} active risk signal(s): ${signals.map((item) => item.code).join(', ')}` : 'No active risk signals'
+      signals.length ? `${signals.length} active risk signal(s): ${signals.map((item) => item.code).join(', ')}` : 'No active risk signals',
+      dismissals.length ? `${dismissals.length} signal dismissal(s) active through ${dismissals.map((item) => String(item.dismissedUntil || '').slice(0, 10)).join(', ')}` : 'No active dismissals'
     ]
   };
 };

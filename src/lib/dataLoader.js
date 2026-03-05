@@ -2,6 +2,7 @@ import { storage, STORAGE_KEYS } from './storage.js';
 import { detectBasePath } from './router.js';
 import { loadEngagementLog } from './engagementLog.js';
 import { buildWorkspaceFromLegacy, createDefaultWorkspace, ensureWorkspaceShape, validateWorkspace } from './model.js';
+import { validateWorkspaceIntegrity } from './validators.js';
 
 const resolveDataUrl = (filename) => {
   if (typeof window === 'undefined') return `data/${filename}`;
@@ -306,10 +307,11 @@ export const loadDashboardData = async () => {
   const sampleWorkspace = ensureWorkspaceShape(sampleWorkspaceInput || legacyWorkspace, legacyWorkspace);
 
   const storedWorkspace = storage.get(STORAGE_KEYS.workspace, null);
-  const workspace = hydrateWorkspaceFromEngagementLog(
-    ensureWorkspaceShape(storedWorkspace || legacyWorkspace, sampleWorkspace)
-  );
-  const workspaceErrors = validateWorkspace(workspace);
+  const workspace = hydrateWorkspaceFromEngagementLog(ensureWorkspaceShape(storedWorkspace || legacyWorkspace, sampleWorkspace));
+  const modelErrors = validateWorkspace(workspace);
+  const integrity = validateWorkspaceIntegrity(workspace, sampleWorkspace);
+  const workspaceErrors = [...modelErrors, ...integrity.errors];
+  const workspaceWarnings = integrity.warnings;
 
   if (!storedWorkspace) {
     storage.set(STORAGE_KEYS.workspace, workspace);
@@ -330,6 +332,7 @@ export const loadDashboardData = async () => {
     workspace,
     sampleWorkspace,
     workspaceErrors,
+    workspaceWarnings,
     loadErrors,
     updated_on: accountsDoc.updated_on || requestsDoc.updated_on || programsDoc.updated_on || resourcesDoc.updated_on || null
   };

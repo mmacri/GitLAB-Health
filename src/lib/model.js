@@ -420,6 +420,7 @@ export const ensureWorkspaceShape = (workspace, fallback = null) => {
     output.risk[customerId] = {
       signals: ensureArray(risk.signals),
       playbook: ensureArray(risk.playbook),
+      dismissals: ensureArray(risk.dismissals),
       overrideHealth: risk.overrideHealth || null
     };
     if (!Array.isArray(output.expansion[customerId])) {

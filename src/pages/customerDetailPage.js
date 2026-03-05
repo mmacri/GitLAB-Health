@@ -142,8 +142,8 @@ const renderEngagementRows = (entries = []) => {
     .join('');
 };
 
-const renderRiskRows = (signals = []) => {
-  if (!signals.length) return '<tr><td colspan="4">No active risk signals.</td></tr>';
+const renderRiskRows = (customerId, signals = []) => {
+  if (!signals.length) return '<tr><td colspan="5">No active risk signals.</td></tr>';
   return signals
     .map(
       (signal) => `
@@ -152,6 +152,13 @@ const renderRiskRows = (signals = []) => {
         <td>${statusChip({ label: signal.severity, tone: normalize(signal.severity) === 'high' || normalize(signal.severity) === 'critical' ? 'risk' : 'warn' })}</td>
         <td>${signal.detail || ''}</td>
         <td>${signal.source || 'manual'}</td>
+        <td>
+          ${
+            signal.source === 'derived'
+              ? `<button class="ghost-btn" type="button" data-dismiss-signal="${customerId}:${signal.code}">Dismiss 14d</button>`
+              : '<span class="muted">Manual</span>'
+          }
+        </td>
       </tr>
     `
     )
@@ -255,6 +262,7 @@ export const renderCustomerDetailPage = (ctx) => {
     onAddRiskSignal,
     onAddPlaybookAction,
     onTogglePlaybookStatus,
+    onDismissRiskSignal,
     onAddExpansion,
     onSetExpansionStatus,
     onAddVoc,
@@ -301,6 +309,12 @@ export const renderCustomerDetailPage = (ctx) => {
           ${statusChip({ label: customerSafe ? 'Customer-safe view' : 'Internal view', tone: customerSafe ? 'good' : 'neutral' })}
         </div>
         <div class="lifecycle-track"><span style="width:${stagePercent}%;"></span></div>
+        <details class="score-why">
+          <summary>Why these scores?</summary>
+          <ul class="simple-list">
+            ${(metrics?.why || []).map((reason) => `<li>${reason}</li>`).join('') || '<li>No score factors available yet.</li>'}
+          </ul>
+        </details>
       </div>
     </section>
 
@@ -449,10 +463,11 @@ export const renderCustomerDetailPage = (ctx) => {
           </label>
           <div class="table-wrap">
             <table class="data-table">
-              <thead><tr><th>Signal</th><th>Severity</th><th>Detail</th><th>Source</th></tr></thead>
-              <tbody>${renderRiskRows(riskSignals)}</tbody>
+              <thead><tr><th>Signal</th><th>Severity</th><th>Detail</th><th>Source</th><th>Action</th></tr></thead>
+              <tbody>${renderRiskRows(customerId, riskSignals)}</tbody>
             </table>
           </div>
+          <p class="muted">Active dismissals: ${(metrics?.dismissedSignals || []).length}</p>
           <form class="form-grid" data-add-risk style="margin-top:12px;">
             <label><span>Code</span><input name="code" required /></label>
             <label><span>Severity</span>
@@ -608,6 +623,14 @@ export const renderCustomerDetailPage = (ctx) => {
       code: String(form.get('code') || '').trim(),
       severity: String(form.get('severity') || 'Medium').trim(),
       detail: String(form.get('detail') || '').trim()
+    });
+  });
+
+  wrapper.querySelectorAll('[data-dismiss-signal]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const [id, code] = String(button.getAttribute('data-dismiss-signal') || '').split(':');
+      if (!id || !code) return;
+      onDismissRiskSignal?.(id, code);
     });
   });
 

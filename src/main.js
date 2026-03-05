@@ -210,7 +210,8 @@ const ensureWorkspaceDerived = (workspace) => {
   const model = ensureWorkspaceShape(workspace, state.data?.sampleWorkspace || createDefaultWorkspace());
   (model.customers || []).forEach((customer) => {
     const customerId = customer.id;
-    if (!model.risk[customerId]) model.risk[customerId] = { signals: [], playbook: [], overrideHealth: null };
+    if (!model.risk[customerId]) model.risk[customerId] = { signals: [], playbook: [], dismissals: [], overrideHealth: null };
+    if (!Array.isArray(model.risk[customerId].dismissals)) model.risk[customerId].dismissals = [];
     const manualSignals = (model.risk[customerId].signals || []).filter((signal) => signal.source !== 'derived');
     const derivedSignals = deriveRiskSignals(model, customerId, new Date()).filter((signal) => signal.source === 'derived');
     model.risk[customerId].signals = [...manualSignals, ...derivedSignals];
@@ -680,7 +681,7 @@ const onCreateCustomer = () => {
     };
     workspace.successPlans[customerId] = workspace.successPlans[customerId] || { outcomes: [], milestones: [] };
     workspace.engagements[customerId] = workspace.engagements[customerId] || [];
-    workspace.risk[customerId] = workspace.risk[customerId] || { signals: [], playbook: [], overrideHealth: null };
+    workspace.risk[customerId] = workspace.risk[customerId] || { signals: [], playbook: [], dismissals: [], overrideHealth: null };
     workspace.expansion[customerId] = workspace.expansion[customerId] || [];
     setSelectedCustomer(customerId);
     notify(`Created ${customer.name}.`);
@@ -797,8 +798,34 @@ const onWorkspaceAddEngagement = (customerId, payload) => {
   });
 };
 
+const onWorkspaceQuickLogEngagement = (customerId) => {
+  withWorkspaceCustomer(customerId, (workspace, customer) => {
+    const today = toIsoDate(new Date());
+    if (!Array.isArray(workspace.engagements[customerId])) workspace.engagements[customerId] = [];
+    workspace.engagements[customerId].unshift({
+      id: createWorkspaceId('eng'),
+      ts: `${today}T12:00:00.000Z`,
+      type: 'Async Review',
+      summary: 'Quick log from Today command center to maintain engagement coverage.',
+      tags: ['today-queue', 'coverage'],
+      nextSteps: ['Confirm owner and due date for next best action'],
+      owner: 'CSE'
+    });
+    addEngagementLogEntry({
+      account_id: customerId,
+      account_name: customer.name,
+      date: today,
+      type: 'Async Review',
+      notes_customer_safe: 'Engagement logged from CSE command center.',
+      notes_internal: 'Quick log for engagement recency and action follow-through.'
+    });
+    notify(`Engagement logged for ${customer.name}.`);
+  });
+};
+
 const onWorkspaceSetRiskOverride = (customerId, value) => {
   withWorkspaceCustomer(customerId, (workspace) => {
+    workspace.risk[customerId] = workspace.risk[customerId] || { signals: [], playbook: [], dismissals: [], overrideHealth: null };
     workspace.risk[customerId].overrideHealth = value || null;
     notify('Risk health override updated.');
   });
@@ -806,6 +833,7 @@ const onWorkspaceSetRiskOverride = (customerId, value) => {
 
 const onWorkspaceAddRiskSignal = (customerId, payload) => {
   withWorkspaceCustomer(customerId, (workspace) => {
+    workspace.risk[customerId] = workspace.risk[customerId] || { signals: [], playbook: [], dismissals: [], overrideHealth: null };
     const signal = {
       code: payload.code,
       severity: payload.severity,
@@ -818,8 +846,30 @@ const onWorkspaceAddRiskSignal = (customerId, payload) => {
   });
 };
 
+const onWorkspaceDismissRiskSignal = (customerId, code, dismissedUntil) => {
+  withWorkspaceCustomer(customerId, (workspace) => {
+    const risk = workspace.risk[customerId] || { signals: [], playbook: [], dismissals: [], overrideHealth: null };
+    const dismissals = Array.isArray(risk.dismissals) ? risk.dismissals : [];
+    const until = dismissedUntil || toIsoDate(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000));
+    const next = [
+      ...dismissals.filter((item) => item.code !== code),
+      {
+        code,
+        dismissedUntil: `${String(until).slice(0, 10)}T23:59:59.000Z`,
+        dismissedAt: new Date().toISOString()
+      }
+    ];
+    workspace.risk[customerId] = {
+      ...risk,
+      dismissals: next
+    };
+    notify(`Dismissed ${code} until ${String(until).slice(0, 10)}.`);
+  });
+};
+
 const onWorkspaceAddPlaybookAction = (customerId, payload) => {
   withWorkspaceCustomer(customerId, (workspace) => {
+    workspace.risk[customerId] = workspace.risk[customerId] || { signals: [], playbook: [], dismissals: [], overrideHealth: null };
     workspace.risk[customerId].playbook = [...(workspace.risk[customerId].playbook || []), payload];
     notify('Mitigation action added.');
   });
@@ -827,6 +877,7 @@ const onWorkspaceAddPlaybookAction = (customerId, payload) => {
 
 const onWorkspaceTogglePlaybookStatus = (customerId, index, complete) => {
   withWorkspaceCustomer(customerId, (workspace) => {
+    workspace.risk[customerId] = workspace.risk[customerId] || { signals: [], playbook: [], dismissals: [], overrideHealth: null };
     const list = workspace.risk[customerId].playbook || [];
     if (!list[index]) return;
     list[index].status = complete ? 'Complete' : 'Planned';
@@ -941,14 +992,20 @@ const onResetWorkspace = async () => {
   notify('Local workspace reset.');
 };
 
-const onUpdateScoringWeights = (weights) => {
+  const onUpdateScoringWeights = (weights) => {
   updateWorkspace((workspace) => {
     workspace.settings = workspace.settings || {};
-    workspace.settings.scoringWeights = {
-      adoption: Math.max(0, Number(weights.adoption || 0)),
-      engagement: Math.max(0, Number(weights.engagement || 0)),
-      risk: Math.max(0, Number(weights.risk || 0))
-    };
+    const adoption = Math.max(0, Number(weights.adoption || 0));
+    const engagement = Math.max(0, Number(weights.engagement || 0));
+    const risk = Math.max(0, Number(weights.risk || 0));
+    const total = adoption + engagement + risk;
+    workspace.settings.scoringWeights = total
+      ? {
+          adoption: Math.round((adoption / total) * 100),
+          engagement: Math.round((engagement / total) * 100),
+          risk: Math.round((risk / total) * 100)
+        }
+      : { adoption: 45, engagement: 30, risk: 25 };
     notify('Scoring weights updated.');
   });
 };
@@ -1401,12 +1458,15 @@ const renderCurrentRoute = () => {
   if (route.name === 'home') {
     view = renderPortfolioHomePage({
       portfolio,
+      workspace: workspaceModel,
+      workspacePortfolio,
       filters: state.portfolioFilters,
       onSetFilters: setPortfolioFilters,
       updatedOn: state.data.updated_on,
       mode: state.viewMode,
       accountLoadError,
       onRetryData: reloadData,
+      onQuickLogEngagement: onWorkspaceQuickLogEngagement,
       onCopyInvite,
       onLogAttendance,
       onExportPortfolio: () => exportPortfolioCsv(workspaceModel),
@@ -1418,6 +1478,8 @@ const renderCurrentRoute = () => {
   if (route.name === 'portfolio') {
     view = renderPortfolioPage({
       portfolio,
+      workspace: workspaceModel,
+      workspacePortfolio,
       filters: state.portfolioFilters,
       onSetFilters: setPortfolioFilters,
       updatedOn: state.data.updated_on,
@@ -1470,6 +1532,7 @@ const renderCurrentRoute = () => {
       onAddEngagement: onWorkspaceAddEngagement,
       onSetRiskOverride: onWorkspaceSetRiskOverride,
       onAddRiskSignal: onWorkspaceAddRiskSignal,
+      onDismissRiskSignal: onWorkspaceDismissRiskSignal,
       onAddPlaybookAction: onWorkspaceAddPlaybookAction,
       onTogglePlaybookStatus: onWorkspaceTogglePlaybookStatus,
       onAddExpansion: onWorkspaceAddExpansion,

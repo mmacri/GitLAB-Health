@@ -1,6 +1,7 @@
 import { createDataTable } from '../components/dataTable.js';
 import { metricTile } from '../components/metricTile.js';
 import { statusChip, statusToneFromHealth } from '../components/statusChip.js';
+import { barChartSvg, donutChartSvg } from '../lib/charts.js';
 import { formatDate, parseDate } from '../lib/date.js';
 import { loadEngagementLog } from '../lib/engagementLog.js';
 import { applyPortfolioFilters } from '../lib/scoring.js';
@@ -337,7 +338,262 @@ const applyModeDensity = (wrapper, mode) => {
   });
 };
 
+const useCaseCoverageAverages = (workspace) => {
+  const totals = {
+    SCM: 0,
+    CICD: 0,
+    Security: 0,
+    Compliance: 0,
+    ReleaseAutomation: 0,
+    Observability: 0
+  };
+  const customers = workspace?.customers || [];
+  customers.forEach((customer) => {
+    const useCases = workspace?.adoption?.[customer.id]?.useCases || {};
+    Object.keys(totals).forEach((key) => {
+      totals[key] += Number(useCases[key]?.percent || 0);
+    });
+  });
+  const divisor = Math.max(1, customers.length);
+  return Object.fromEntries(Object.entries(totals).map(([key, value]) => [key, Math.round(value / divisor)]));
+};
+
+const buildWorkspaceActionQueue = (workspace, rows = []) => {
+  const actions = [];
+  rows.forEach((row) => {
+    const customerId = row.customer.id;
+    const customer = row.customer;
+    const adoption = workspace?.adoption?.[customerId] || {};
+    const useCases = adoption.useCases || {};
+    const milestones = adoption.timeToValue || [];
+    const firstPipelineDone = milestones.some(
+      (item) => String(item.milestone || '').toLowerCase().includes('first pipeline run') && String(item.status || '').toLowerCase() === 'done'
+    );
+    const topSignal = row.riskSignals?.[0];
+
+    if (topSignal) {
+      actions.push({
+        id: `risk_${customerId}_${topSignal.code}`,
+        customerId,
+        customerName: customer.name,
+        reason: topSignal.detail || topSignal.code,
+        action: topSignal.code === 'RENEWAL_SOON' ? 'Run renewal readiness playbook and align executive narrative.' : 'Address active risk signal via targeted enablement action.',
+        due: customer.renewalDate || new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+        severity: topSignal.severity || 'Medium'
+      });
+    }
+
+    if (Number(useCases.CICD?.percent || 0) < 40) {
+      actions.push({
+        id: `cicd_${customerId}`,
+        customerId,
+        customerName: customer.name,
+        reason: `CI/CD adoption is ${Number(useCases.CICD?.percent || 0)}% (<40%)`,
+        action: 'Invite to CI/CD Adoption Lab and schedule pipeline template workshop.',
+        due: new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10),
+        severity: 'Medium'
+      });
+    }
+
+    if (Number(useCases.Security?.percent || 0) < 30) {
+      actions.push({
+        id: `security_${customerId}`,
+        customerId,
+        customerName: customer.name,
+        reason: `Security adoption is ${Number(useCases.Security?.percent || 0)}% (<30%)`,
+        action: 'Run Secure enablement session and add default scan jobs to pipeline baseline.',
+        due: new Date(Date.now() + 12 * 86400000).toISOString().slice(0, 10),
+        severity: 'Medium'
+      });
+    }
+
+    if (!firstPipelineDone) {
+      actions.push({
+        id: `ttv_${customerId}`,
+        customerId,
+        customerName: customer.name,
+        reason: 'First pipeline run milestone not complete.',
+        action: 'Execute time-to-value motion: first pipeline, runner baseline, and owner handoff.',
+        due: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+        severity: 'High'
+      });
+    }
+  });
+
+  return actions
+    .sort((left, right) => {
+      const severityRank = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+      const bySeverity = (severityRank[right.severity] || 1) - (severityRank[left.severity] || 1);
+      if (bySeverity) return bySeverity;
+      return new Date(left.due || 0).getTime() - new Date(right.due || 0).getTime();
+    })
+    .slice(0, 12);
+};
+
+const renderWorkspaceTodayPage = (ctx) => {
+  const {
+    workspace,
+    workspacePortfolio,
+    mode,
+    navigate,
+    onExportPortfolio,
+    onCopyShare,
+    onQuickLogEngagement
+  } = ctx;
+  const rows = workspacePortfolio?.rows || [];
+  const healthDistribution = workspacePortfolio?.healthDistribution || { green: 0, yellow: 0, red: 0 };
+  const engagementCoverage = workspacePortfolio?.engagementCoverage || { in30: 0, in60: 0, in90: 0, over90: 0 };
+  const useCaseCoverage = useCaseCoverageAverages(workspace);
+  const actions = buildWorkspaceActionQueue(workspace, rows);
+  const expansionCandidates = rows.filter((row) => Number(row.openExpansionCount || 0) > 0).length;
+  const engagementCoveragePercent = rows.length ? Math.round((Number(engagementCoverage.in30 || 0) / rows.length) * 100) : 0;
+
+  const wrapper = document.createElement('section');
+  wrapper.className = 'route-page page-shell section-stack';
+  wrapper.setAttribute('data-page', 'today');
+  wrapper.innerHTML = `
+    <header class="page-head page-intro">
+      <div>
+        <p class="eyebrow">Today</p>
+        <h1>Today Console</h1>
+        <p class="hero-lede">Portfolio command center for pooled CSE operations: prioritize risk, lift adoption, and prove outcomes.</p>
+        <p class="muted page-meta">Mode behavior: ${String(mode || 'today')}.</p>
+      </div>
+      <div class="page-actions">
+        <button class="ghost-btn" type="button" data-go-portfolio>Open Portfolio Filters</button>
+        <button class="ghost-btn" type="button" data-go-playbooks>Open Playbooks</button>
+        <button class="ghost-btn" type="button" data-export-portfolio>Export Portfolio CSV</button>
+        <button class="ghost-btn" type="button" data-share-snapshot>Copy snapshot link</button>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="metric-grid kpi-5">
+        ${metricTile({ label: 'Accounts in scope', value: rows.length, tone: 'neutral' })}
+        ${metricTile({ label: 'At-risk', value: rows.filter((row) => String(row.health || '').toLowerCase() !== 'green').length, tone: 'risk' })}
+        ${metricTile({ label: 'Active programs', value: (workspace?.programs || []).length, tone: 'good' })}
+        ${metricTile({ label: 'Expansion candidates', value: expansionCandidates, tone: expansionCandidates ? 'warn' : 'neutral' })}
+        ${metricTile({ label: 'Engagement coverage 30d', value: `${engagementCoveragePercent}%`, tone: engagementCoveragePercent >= 70 ? 'good' : 'warn' })}
+      </div>
+    </section>
+
+    <section class="grid-cards">
+      <article class="card">
+        <div class="metric-head">
+          <h2>Health Distribution</h2>
+          ${statusChip({ label: `${rows.length} customers`, tone: 'neutral' })}
+        </div>
+        <div class="chart-wrap">
+          ${donutChartSvg([
+            { label: 'Green', value: healthDistribution.green || 0, color: '#16A34A' },
+            { label: 'Yellow', value: healthDistribution.yellow || 0, color: '#D97706' },
+            { label: 'Red', value: healthDistribution.red || 0, color: '#DC2626' }
+          ])}
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="metric-head">
+          <h2>Use Case Adoption Coverage</h2>
+          ${statusChip({ label: 'Average percent', tone: 'neutral' })}
+        </div>
+        <div class="chart-wrap">
+          ${barChartSvg([
+            { label: 'SCM', value: useCaseCoverage.SCM, color: '#6E49CB' },
+            { label: 'CI/CD', value: useCaseCoverage.CICD, color: '#0284C7' },
+            { label: 'Security', value: useCaseCoverage.Security, color: '#16A34A' },
+            { label: 'Compliance', value: useCaseCoverage.Compliance, color: '#475569' },
+            { label: 'Release', value: useCaseCoverage.ReleaseAutomation, color: '#D97706' },
+            { label: 'Observe', value: useCaseCoverage.Observability, color: '#7C3AED' }
+          ])}
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="metric-head">
+          <h2>Engagement Recency Histogram</h2>
+          ${statusChip({ label: '0-30 / 31-60 / 61-90 / 90+', tone: 'neutral' })}
+        </div>
+        <div class="chart-wrap">
+          ${barChartSvg([
+            { label: '0-30', value: Number(engagementCoverage.in30 || 0), color: '#16A34A' },
+            { label: '31-60', value: Number(engagementCoverage.in60 || 0), color: '#0284C7' },
+            { label: '61-90', value: Number(engagementCoverage.in90 || 0), color: '#D97706' },
+            { label: '90+', value: Number(engagementCoverage.over90 || 0), color: '#DC2626' }
+          ])}
+        </div>
+      </article>
+    </section>
+
+    <section class="card">
+      <div class="metric-head">
+        <h2>Next Best Actions</h2>
+        ${statusChip({ label: `${actions.length} prioritized`, tone: actions.length ? 'warn' : 'good' })}
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Customer</th><th>Reason</th><th>Recommended Action</th><th>Due</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${
+              actions.length
+                ? actions
+                    .map(
+                      (item) => `
+                    <tr>
+                      <td><a href="#" data-open-customer="${item.customerId}">${item.customerName}</a></td>
+                      <td>${item.reason}</td>
+                      <td>${item.action}</td>
+                      <td>${formatDate(item.due)}</td>
+                      <td>
+                        <div class="page-actions">
+                          <button class="ghost-btn" type="button" data-quick-log="${item.customerId}">Log engagement</button>
+                          <button class="ghost-btn" type="button" data-open-playbooks>Open playbook</button>
+                        </div>
+                      </td>
+                    </tr>
+                  `
+                    )
+                    .join('')
+                : '<tr><td colspan="5">No immediate actions generated. Portfolio signals are currently stable.</td></tr>'
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+
+  wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
+  wrapper.querySelector('[data-go-playbooks]')?.addEventListener('click', () => navigate('playbooks'));
+  wrapper.querySelector('[data-export-portfolio]')?.addEventListener('click', () => onExportPortfolio?.());
+  wrapper.querySelector('[data-share-snapshot]')?.addEventListener('click', () => onCopyShare?.());
+
+  wrapper.addEventListener('click', (event) => {
+    const customerLink = event.target.closest('[data-open-customer]');
+    if (customerLink) {
+      event.preventDefault();
+      navigate('customer', { id: customerLink.getAttribute('data-open-customer') });
+      return;
+    }
+    const logButton = event.target.closest('[data-quick-log]');
+    if (logButton) {
+      onQuickLogEngagement?.(logButton.getAttribute('data-quick-log'));
+      return;
+    }
+    const playbookButton = event.target.closest('[data-open-playbooks]');
+    if (playbookButton) {
+      navigate('playbooks');
+    }
+  });
+
+  applyModeDensity(wrapper, mode);
+  return wrapper;
+};
+
 export const renderPortfolioHomePage = (ctx) => {
+  if ((ctx.workspacePortfolio?.rows || []).length && ctx.workspace) {
+    return renderWorkspaceTodayPage(ctx);
+  }
+
   const { portfolio, filters, navigate, onLogAttendance, onExportPortfolio, onCopyShare, updatedOn, accountLoadError, onRetryData, mode } = ctx;
 
   const staleThreshold = Number(filters.staleDays || 30);
@@ -612,6 +868,152 @@ export const renderPortfolioHomePage = (ctx) => {
 };
 
 export const renderPortfolioPage = (ctx) => {
+  if ((ctx.workspacePortfolio?.rows || []).length && ctx.workspace) {
+    const { workspace, workspacePortfolio, filters, onSetFilters, navigate, onExportPortfolio } = ctx;
+    const rows = workspacePortfolio.rows || [];
+    const greenUseCaseCount = (customerId) => {
+      const useCases = workspace?.adoption?.[customerId]?.useCases || {};
+      return Object.values(useCases).filter((item) => Number(item?.percent || 0) >= 75).length;
+    };
+    const filteredRows = rows.filter((row) => {
+      if (filters.health && filters.health !== 'all' && String(row.health || '').toLowerCase() !== String(filters.health || '').toLowerCase()) return false;
+      if (filters.renewalWindow === '0-90' && Number(row.renewalDays ?? 999) > 90) return false;
+      if (filters.renewalWindow === '91-180' && (Number(row.renewalDays ?? 999) <= 90 || Number(row.renewalDays ?? 999) > 180)) return false;
+      if (filters.renewalWindow === '180+' && Number(row.renewalDays ?? 0) <= 180) return false;
+      if (filters.staleOnly && Number(row.engagementDays ?? 999) <= 30) return false;
+      if (filters.belowThreeGreen && greenUseCaseCount(row.customer.id) >= 3) return false;
+      return true;
+    });
+
+    const wrapper = document.createElement('section');
+    wrapper.className = 'route-page page-shell section-stack';
+    wrapper.setAttribute('data-page', 'portfolio');
+    wrapper.innerHTML = `
+      <header class="page-head page-intro">
+        <div>
+          <p class="eyebrow">Portfolio</p>
+          <h1>Portfolio Review</h1>
+          <p class="hero-lede">Review and prioritize customer coverage by health, adoption depth, engagement recency, and renewal window.</p>
+        </div>
+        <div class="page-actions">
+          <button class="ghost-btn" type="button" data-go-home>Back to Today</button>
+          <button class="qa" type="button" data-export-portfolio>Export Portfolio CSV</button>
+        </div>
+      </header>
+
+      <section class="card">
+        <div class="metric-grid kpi-4">
+          ${metricTile({ label: 'Customers', value: filteredRows.length, tone: 'neutral' })}
+          ${metricTile({ label: 'At-risk', value: filteredRows.filter((row) => String(row.health || '').toLowerCase() !== 'green').length, tone: 'risk' })}
+          ${metricTile({ label: 'Renewal < 90d', value: filteredRows.filter((row) => Number(row.renewalDays ?? 999) <= 90).length, tone: 'warn' })}
+          ${metricTile({ label: 'Engagement > 30d', value: filteredRows.filter((row) => Number(row.engagementDays ?? 999) > 30).length, tone: 'warn' })}
+        </div>
+        <div class="divider"></div>
+        <div class="filter-row">
+          <label>
+            Health
+            <select data-filter=\"health\">
+              <option value=\"all\" ${filters.health === 'all' ? 'selected' : ''}>All</option>
+              <option value=\"green\" ${filters.health === 'green' ? 'selected' : ''}>Green</option>
+              <option value=\"yellow\" ${filters.health === 'yellow' ? 'selected' : ''}>Yellow</option>
+              <option value=\"red\" ${filters.health === 'red' ? 'selected' : ''}>Red</option>
+            </select>
+          </label>
+          <label>
+            Renewal Window
+            <select data-filter=\"renewalWindow\">
+              <option value=\"all\" ${filters.renewalWindow === 'all' ? 'selected' : ''}>All</option>
+              <option value=\"0-90\" ${filters.renewalWindow === '0-90' ? 'selected' : ''}>0-90 days</option>
+              <option value=\"91-180\" ${filters.renewalWindow === '91-180' ? 'selected' : ''}>91-180 days</option>
+              <option value=\"180+\" ${filters.renewalWindow === '180+' ? 'selected' : ''}>180+ days</option>
+            </select>
+          </label>
+          <label class=\"safe-toggle\">
+            <input type=\"checkbox\" data-filter=\"staleOnly\" ${filters.staleOnly ? 'checked' : ''} />
+            <span>Stale &gt; 30d</span>
+          </label>
+          <label class=\"safe-toggle\">
+            <input type=\"checkbox\" data-filter=\"belowThreeGreen\" ${filters.belowThreeGreen ? 'checked' : ''} />
+            <span>Below 3 green use cases</span>
+          </label>
+        </div>
+      </section>
+
+      <section class=\"card\">
+        <div class=\"metric-head\">
+          <h2>Portfolio Table</h2>
+          ${statusChip({ label: `${filteredRows.length} rows`, tone: 'neutral' })}
+        </div>
+        <div class=\"table-wrap\">
+          <table class=\"data-table\">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Tier</th>
+                <th>Renewal</th>
+                <th>Health</th>
+                <th>Adoption</th>
+                <th>Engagement</th>
+                <th>Risk</th>
+                <th>CI/CD %</th>
+                <th>Security %</th>
+                <th>Last engagement</th>
+                <th>Open expansion</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${
+                filteredRows.length
+                  ? filteredRows
+                      .map(
+                        (row) => `
+                      <tr>
+                        <td><a href=\"#\" data-open-customer=\"${row.customer.id}\">${row.customer.name}</a></td>
+                        <td>${row.customer.tier || 'Standard'}</td>
+                        <td>${formatDate(row.customer.renewalDate)}</td>
+                        <td>${statusChip({ label: row.health, tone: statusToneFromHealth(row.health) })}</td>
+                        <td>${row.adoptionScore}</td>
+                        <td>${row.engagementScore}</td>
+                        <td>${row.riskScore}</td>
+                        <td>${row.cicdPercent}%</td>
+                        <td>${row.securityPercent}%</td>
+                        <td>${formatDate(String(row.lastEngagementDate || '').slice(0, 10))}</td>
+                        <td>${row.openExpansionCount}</td>
+                      </tr>
+                    `
+                      )
+                      .join('')
+                  : '<tr><td colspan=\"11\">No customers match current filters.</td></tr>'
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    `;
+
+    wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
+    wrapper.querySelector('[data-export-portfolio]')?.addEventListener('click', () => onExportPortfolio?.());
+    wrapper.querySelectorAll('[data-filter]').forEach((node) => {
+      node.addEventListener('change', (event) => {
+        const key = event.target.getAttribute('data-filter');
+        if (!key) return;
+        if (event.target.type === 'checkbox') {
+          onSetFilters?.({ [key]: Boolean(event.target.checked) });
+          return;
+        }
+        onSetFilters?.({ [key]: event.target.value });
+      });
+    });
+    wrapper.addEventListener('click', (event) => {
+      const link = event.target.closest('[data-open-customer]');
+      if (!link) return;
+      event.preventDefault();
+      navigate('customer', { id: link.getAttribute('data-open-customer') });
+    });
+
+    return wrapper;
+  }
+
   const { portfolio, filters, onSetFilters, navigate, onExportPortfolio, updatedOn, accountLoadError, onRetryData } = ctx;
   const segments = uniqueSegments(portfolio.signals);
   const lowUseCases = uniqueUseCases(portfolio.signals);

@@ -37,7 +37,7 @@ Workspace shape (high-level):
 - `successPlans[customerId]` (outcomes + milestones)
 - `programs[]` (cohort + funnel + impact + sessions)
 - `engagements[customerId][]`
-- `risk[customerId]` (signals + playbook + override)
+- `risk[customerId]` (signals + playbook + dismissals + override)
 - `expansion[customerId][]`
 - `voc[]`
 - `team`
@@ -83,6 +83,11 @@ Auto-derived risk signals:
 - `LOW_SECURITY_ADOPTION`
 - `LOW_CICD_ADOPTION`
 - `NO_TIME_TO_VALUE`
+- `STAGE_GAP_SECURE`
+
+Risk operations:
+- Auto-signals can be dismissed per customer with `dismissedUntil` windows.
+- Scoring weights are configurable in Settings and normalized to 100.
 
 ## Exports
 - Portfolio CSV (workspace model columns)
@@ -105,6 +110,7 @@ Route: `/#/settings`
 - Add risk playbook templates
 - Add program templates
 - Create monthly snapshot
+- Run workspace integrity checks before import/export (`npm run integrity`)
 
 ## Run locally
 ```powershell
@@ -121,6 +127,12 @@ node --test --test-isolation=none src/tests/*.mjs
 ```
 
 `--test-isolation=none` is used because some Windows environments block child process spawn in isolated mode.
+
+Integrity check:
+
+```powershell
+npm run integrity
+```
 
 ## GitLab Pages
 The app is static and hash-routed for deep-link compatibility on GitLab Pages.

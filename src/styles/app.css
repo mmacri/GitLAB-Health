@@ -579,6 +579,16 @@ hr {
   gap: 8px;
 }
 
+.score-why {
+  margin-top: 4px;
+}
+
+.score-why > summary {
+  font-size: 12px;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
 .lifecycle-track {
   width: 100%;
   height: 8px;
@@ -718,6 +728,10 @@ hr {
 
 .kpi-4 {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.kpi-5 {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .kpi-3 {
@@ -1798,6 +1812,7 @@ textarea.artifact,
     min-width: 140px;
   }
 
+  .kpi-5,
   .kpi-4,
   .kpi-3,
   .snapshot-bar,
