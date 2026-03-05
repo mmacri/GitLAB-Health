@@ -114,6 +114,16 @@
     </style>
     <script>
       (function () {
+        try {
+          var storedTheme = window.localStorage.getItem('gh_theme_v1');
+          if (storedTheme) {
+            var parsedTheme = JSON.parse(storedTheme);
+            document.documentElement.setAttribute('data-theme', parsedTheme === 'dark' ? 'dark' : 'light');
+          }
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+
         var known = ['today', 'portfolio', 'customers', 'customer', 'manager', 'simulator', 'toolkit', 'success-plans', 'account', 'journey', 'programs', 'program', 'playbooks', 'risks', 'expansion', 'voc', 'reports', 'settings', 'resources', 'cheatsheet', 'exports', 'intake'];
         var parts = window.location.pathname.split('/').filter(Boolean);
         var base = '';

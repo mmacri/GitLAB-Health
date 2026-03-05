@@ -32,7 +32,7 @@ export const donutChartSvg = (segments = [], options = {}) => {
       const start = currentAngle;
       const end = currentAngle + sweep;
       currentAngle += sweep;
-      return `<path d="${arcPath(cx, cy, radius, start, end)}" stroke="${segment.color || '#64748b'}" stroke-width="${stroke}" fill="none" stroke-linecap="round"></path>`;
+      return `<path d="${arcPath(cx, cy, radius, start, end)}" stroke="${segment.color || 'var(--gl-brand-purple)'}" stroke-width="${stroke}" fill="none" stroke-linecap="round"></path>`;
     })
     .join('');
 
@@ -40,17 +40,17 @@ export const donutChartSvg = (segments = [], options = {}) => {
     .map(
       (segment, index) =>
         `<g transform="translate(12, ${height - 18 - (segments.length - index - 1) * 16})">
-          <rect width="10" height="10" fill="${segment.color || '#64748b'}"></rect>
-          <text x="16" y="9" font-size="11" fill="#334155">${segment.label || 'Segment'}: ${segment.value ?? 0}</text>
+          <rect width="10" height="10" fill="${segment.color || 'var(--gl-brand-purple)'}"></rect>
+          <text x="16" y="9" font-size="11" fill="var(--gl-text)">${segment.label || 'Segment'}: ${segment.value ?? 0}</text>
         </g>`
     )
     .join('');
 
   return `
     <svg viewBox="0 0 ${width} ${height}" class="chart-svg" role="img" aria-label="Donut chart">
-      <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#e2e8f0" stroke-width="${stroke}"></circle>
+      <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="var(--gl-border)" stroke-width="${stroke}"></circle>
       ${arcs}
-      <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-size="22" font-weight="700" fill="#0f172a">${total}</text>
+      <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-size="22" font-weight="700" fill="var(--gl-text)">${total}</text>
       ${legend}
     </svg>
   `;
@@ -67,7 +67,7 @@ export const barChartSvg = (items = [], options = {}) => {
 
   return `
     <svg viewBox="0 0 ${width} ${height}" class="chart-svg" role="img" aria-label="Bar chart">
-      <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="#cbd5e1"></line>
+      <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="var(--gl-border)"></line>
       ${items
         .map((item, index) => {
           const value = clamp(item.value, 0, max);
@@ -76,9 +76,9 @@ export const barChartSvg = (items = [], options = {}) => {
           const y = height - padding - h;
           const w = Math.max(18, barWidth * 0.68);
           return `
-            <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${item.color || '#6e49cb'}" rx="6"></rect>
-            <text x="${x + w / 2}" y="${height - 10}" text-anchor="middle" font-size="11" fill="#475569">${item.label || ''}</text>
-            <text x="${x + w / 2}" y="${y - 6}" text-anchor="middle" font-size="10" fill="#334155">${value}</text>
+            <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${item.color || 'var(--gl-brand-purple)'}" rx="6"></rect>
+            <text x="${x + w / 2}" y="${height - 10}" text-anchor="middle" font-size="11" fill="var(--gl-text-muted)">${item.label || ''}</text>
+            <text x="${x + w / 2}" y="${y - 6}" text-anchor="middle" font-size="10" fill="var(--gl-text)">${value}</text>
           `;
         })
         .join('')}
@@ -105,13 +105,13 @@ export const lineChartSvg = (points = [], options = {}) => {
 
   return `
     <svg viewBox="0 0 ${width} ${height}" class="chart-svg" role="img" aria-label="Trend line chart">
-      <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="#cbd5e1"></line>
-      ${path ? `<path d="${path}" fill="none" stroke="#0284c7" stroke-width="3"></path>` : ''}
+      <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="var(--gl-border)"></line>
+      ${path ? `<path d="${path}" fill="none" stroke="var(--gl-brand-purple)" stroke-width="3"></path>` : ''}
       ${coords
         .map(
           (item) => `
-            <circle cx="${item.x}" cy="${item.y}" r="4.5" fill="#0284c7"></circle>
-            <text x="${item.x}" y="${height - 10}" text-anchor="middle" font-size="10" fill="#475569">${item.label || ''}</text>
+            <circle cx="${item.x}" cy="${item.y}" r="4.5" fill="var(--gl-brand-purple)"></circle>
+            <text x="${item.x}" y="${height - 10}" text-anchor="middle" font-size="10" fill="var(--gl-text-muted)">${item.label || ''}</text>
           `
         )
         .join('')}
@@ -136,8 +136,8 @@ export const funnelChartSvg = (steps = [], options = {}) => {
           const x = (width - barWidth) / 2;
           const y = topPadding + index * stepHeight;
           return `
-            <rect x="${x}" y="${y}" width="${barWidth}" height="${stepHeight - 6}" rx="8" fill="${step.color || '#6e49cb'}"></rect>
-            <text x="${width / 2}" y="${y + (stepHeight - 6) / 2 + 4}" text-anchor="middle" font-size="12" fill="#ffffff">${step.label}: ${value}</text>
+            <rect x="${x}" y="${y}" width="${barWidth}" height="${stepHeight - 6}" rx="8" fill="${step.color || 'var(--gl-brand-purple)'}"></rect>
+            <text x="${width / 2}" y="${y + (stepHeight - 6) / 2 + 4}" text-anchor="middle" font-size="12" fill="var(--gl-surface)">${step.label}: ${value}</text>
           `;
         })
         .join('')}

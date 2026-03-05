@@ -529,9 +529,9 @@ const renderWorkspaceTodayPage = (ctx) => {
         </div>
         <div class="chart-wrap">
           ${donutChartSvg([
-            { label: 'Green', value: healthDistribution.green || 0, color: '#16A34A' },
-            { label: 'Yellow', value: healthDistribution.yellow || 0, color: '#D97706' },
-            { label: 'Red', value: healthDistribution.red || 0, color: '#DC2626' }
+            { label: 'Green', value: healthDistribution.green || 0, color: 'var(--gl-success)' },
+            { label: 'Yellow', value: healthDistribution.yellow || 0, color: 'var(--gl-warning)' },
+            { label: 'Red', value: healthDistribution.red || 0, color: 'var(--gl-danger)' }
           ])}
         </div>
       </article>
@@ -543,12 +543,12 @@ const renderWorkspaceTodayPage = (ctx) => {
         </div>
         <div class="chart-wrap">
           ${barChartSvg([
-            { label: 'SCM', value: useCaseCoverage.SCM, color: '#6E49CB' },
-            { label: 'CI/CD', value: useCaseCoverage.CICD, color: '#0284C7' },
-            { label: 'Security', value: useCaseCoverage.Security, color: '#16A34A' },
-            { label: 'Compliance', value: useCaseCoverage.Compliance, color: '#475569' },
-            { label: 'Release', value: useCaseCoverage.ReleaseAutomation, color: '#D97706' },
-            { label: 'Observe', value: useCaseCoverage.Observability, color: '#7C3AED' }
+            { label: 'SCM', value: useCaseCoverage.SCM, color: 'var(--gl-brand-purple)' },
+            { label: 'CI/CD', value: useCaseCoverage.CICD, color: 'var(--gl-info)' },
+            { label: 'Security', value: useCaseCoverage.Security, color: 'var(--gl-success)' },
+            { label: 'Compliance', value: useCaseCoverage.Compliance, color: 'var(--gl-neutral)' },
+            { label: 'Release', value: useCaseCoverage.ReleaseAutomation, color: 'var(--gl-warning)' },
+            { label: 'Observe', value: useCaseCoverage.Observability, color: 'var(--gl-brand-teal)' }
           ])}
         </div>
       </article>
@@ -562,10 +562,10 @@ const renderWorkspaceTodayPage = (ctx) => {
         </div>
         <div class="chart-wrap">
           ${barChartSvg([
-            { label: '0-30', value: Number(engagementCoverage.in30 || 0), color: '#16A34A' },
-            { label: '31-60', value: Number(engagementCoverage.in60 || 0), color: '#0284C7' },
-            { label: '61-90', value: Number(engagementCoverage.in90 || 0), color: '#D97706' },
-            { label: '90+', value: Number(engagementCoverage.over90 || 0), color: '#DC2626' }
+            { label: '0-30', value: Number(engagementCoverage.in30 || 0), color: 'var(--gl-success)' },
+            { label: '31-60', value: Number(engagementCoverage.in60 || 0), color: 'var(--gl-info)' },
+            { label: '61-90', value: Number(engagementCoverage.in90 || 0), color: 'var(--gl-warning)' },
+            { label: '90+', value: Number(engagementCoverage.over90 || 0), color: 'var(--gl-danger)' }
           ])}
         </div>
       </article>
