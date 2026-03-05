@@ -2,6 +2,40 @@
 
 Static GitLab Pages-compatible Customer Success Engineering operating console aligned to the pooled CSE model (Align -> Enable -> Expand).
 
+## UI Design System Alignment
+The UI layer follows GitLab Pajamas-inspired product patterns:
+- Dashboard hierarchy: KPI row -> panel grid -> action queue -> table panels
+- Reusable card/panel structure
+- Consistent badges/chips for status
+- Shared typography/spacing tokens
+- Keyboard-visible focus and accessible control states
+
+Reference docs:
+- https://design.gitlab.com/
+- https://design.gitlab.com/patterns/dashboards
+- https://design.gitlab.com/components/card
+- https://design.gitlab.com/components/dashboard-panel
+- https://design.gitlab.com/components/badge
+- https://design.gitlab.com/brand-design/color
+- https://design.gitlab.com/brand-design/typography
+
+## Theme Tokens
+Primary token/style files:
+- `src/styles/tokens.css`
+- `src/styles/base.css`
+- `src/styles/components.css`
+- `src/styles/utilities.css`
+
+Core token groups:
+- Surfaces/text: `--gl-bg`, `--gl-surface`, `--gl-surface-2`, `--gl-border`, `--gl-text`, `--gl-text-muted`
+- Brand/status: `--gl-brand-orange`, `--gl-brand-purple`, `--gl-brand-teal`, `--gl-success`, `--gl-warning`, `--gl-danger`, `--gl-info`
+- Spacing/radius: `--gl-space-1..8`, `--gl-radius-1..3`
+- Elevation/focus: `--gl-shadow-1`, `--gl-shadow-2`, `--gl-focus`
+
+Theme mode:
+- Light and dark themes are driven by `html[data-theme]`
+- Persisted key: `gh_theme_v1`
+
 ## Core capabilities
 - Portfolio command center on `/#/today`
 - Portfolio triage table on `/#/portfolio`
@@ -66,6 +100,10 @@ Legacy static datasets are still loaded and supported:
 - `gh_program_attendance_v1`
 - `gh_playbook_checklist_v1`
 - `gh_action_cards_v1`
+- `gh_density_v1`
+- `gh_default_mode_v1`
+- `gh_default_persona_v1`
+- `gh_theme_v1`
 - `gh_selected_account_id`
 - `gh_gitlab_base_url`
 - `gh_gitlab_project_path`
@@ -138,3 +176,20 @@ The app is static and hash-routed for deep-link compatibility on GitLab Pages.
 Deploy flow:
 - run tests in CI
 - publish static files (`index.html`, `404.html`, `src/`, `data/`, `assets/`, `print/`)
+
+## Component Inventory
+Reusable UI modules:
+- `src/components/ui/Card.js` (`card`, `dashboardPanel`, `createCardElement`)
+- `src/components/ui/Badge.js` (`badge`, `badgeToneFromHealth`)
+- `src/components/ui/Button.js` (`buttonHtml`)
+- `src/components/ui/Tabs.js` (`tabs`)
+- `src/components/ui/Table.js` (`table`)
+- `src/components/ui/EmptyState.js` (`uiEmptyState`)
+- `src/components/ui/Skeleton.js` (`skeletonCard`)
+
+## Extend With New Panels
+To add a new dashboard panel:
+1. Use `dashboardPanel(...)` or a `.card` section shell.
+2. Apply status language with `statusChip(...)` / `badge(...)`.
+3. Keep spacing on token scale (`--gl-space-*`) and avoid hard-coded values.
+4. Wire page actions in the existing page module without altering storage model contracts.

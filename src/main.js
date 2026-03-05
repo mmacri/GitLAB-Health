@@ -129,6 +129,7 @@ if (!appRoot || !routeRoot || !leftRailRoot) {
 
 const initialDefaultMode = storage.get(STORAGE_KEYS.defaultMode, 'today') || 'today';
 const initialDefaultPersona = storage.get(STORAGE_KEYS.defaultPersona, 'cse') || 'cse';
+const initialTheme = storage.get(STORAGE_KEYS.theme, 'light') || 'light';
 
 const state = {
   data: null,
@@ -136,6 +137,7 @@ const state = {
   customerSafe: customerSafe.isCustomerSafe,
   viewMode: storage.get(STORAGE_KEYS.viewMode, initialDefaultMode) || 'today',
   persona: String(initialDefaultPersona) === 'manager' ? 'manager' : 'cse',
+  theme: String(initialTheme) === 'dark' ? 'dark' : 'light',
   density: storage.get(STORAGE_KEYS.density, 'default') || 'default',
   sidebarOpen: false,
   basePath: '',
@@ -187,6 +189,10 @@ const syncModeHash = () => {
 const applyDensity = () => {
   const density = ['compact', 'comfortable', 'default'].includes(state.density) ? state.density : 'default';
   document.documentElement.setAttribute('data-density', density);
+};
+
+const applyTheme = () => {
+  document.documentElement.setAttribute('data-theme', state.theme === 'dark' ? 'dark' : 'light');
 };
 
 const syncSidebarState = () => {
@@ -345,6 +351,14 @@ const setDensity = (value) => {
   state.density = ['compact', 'comfortable', 'default'].includes(next) ? next : 'default';
   storage.set(STORAGE_KEYS.density, state.density);
   applyDensity();
+  render();
+};
+
+const setTheme = (value) => {
+  const next = String(value || 'light').trim().toLowerCase() === 'dark' ? 'dark' : 'light';
+  state.theme = next;
+  storage.set(STORAGE_KEYS.theme, next);
+  applyTheme();
   render();
 };
 
@@ -1470,6 +1484,13 @@ const renderShellContext = () => {
     managerBadge.hidden = state.persona !== 'manager';
   }
 
+  const themeToggleButton = appRoot.querySelector('[data-toggle-theme]');
+  if (themeToggleButton) {
+    const next = state.theme === 'dark' ? 'Light' : 'Dark';
+    themeToggleButton.textContent = `Switch to ${next} mode`;
+    themeToggleButton.setAttribute('aria-label', `Switch to ${next} mode`);
+  }
+
   appRoot.querySelectorAll('[data-global-filter-engagement-type]').forEach((input) => {
     const value = String(input.getAttribute('data-global-filter-engagement-type') || '').toUpperCase();
     input.checked = Array.isArray(state.portfolioFilters.engagementTypes) && state.portfolioFilters.engagementTypes.includes(value);
@@ -2017,6 +2038,8 @@ const renderCurrentRoute = () => {
       onAddRiskTemplate,
       onAddProgramTemplate,
       onCreateSnapshot: onCreateMonthlySnapshot,
+      theme: state.theme,
+      onSetTheme: setTheme,
       density: state.density,
       onSetDensity: setDensity,
       defaultMode: storage.get(STORAGE_KEYS.defaultMode, state.viewMode) || 'today',
@@ -2236,6 +2259,16 @@ const bindGlobalEvents = () => {
       return;
     }
 
+    const toggleTheme = event.target.closest('[data-toggle-theme]');
+    if (toggleTheme) {
+      const nextTheme = state.theme === 'dark' ? 'light' : 'dark';
+      setTheme(nextTheme);
+      notify(`Theme switched to ${nextTheme}.`);
+      if (moreMenu) moreMenu.hidden = true;
+      moreButton?.setAttribute('aria-expanded', 'false');
+      return;
+    }
+
     const copySnapshot = event.target.closest('[data-copy-snapshot]');
     if (copySnapshot) {
       copyShareSnapshot();
@@ -2427,6 +2460,7 @@ const bindGlobalEvents = () => {
 };
 
 const init = async () => {
+  applyTheme();
   applyDensity();
   if (routeRoot) {
     routeRoot.innerHTML = '';

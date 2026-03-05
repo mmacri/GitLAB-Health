@@ -15,6 +15,8 @@ export const renderSettingsPage = (ctx) => {
     onAddRiskTemplate,
     onAddProgramTemplate,
     onCreateSnapshot,
+    theme = 'light',
+    onSetTheme,
     density,
     onSetDensity,
     defaultMode = 'today',
@@ -71,6 +73,20 @@ export const renderSettingsPage = (ctx) => {
           <button class="density-btn ${density === 'comfortable' ? 'active' : ''}" type="button" data-density-option="comfortable" aria-pressed="${density === 'comfortable'}">
             <span class="density-btn__preview" data-size="comfortable"></span>
             Comfortable
+          </button>
+        </div>
+      </fieldset>
+
+      <fieldset class="settings-group" style="margin-top:12px;">
+        <legend class="settings-group__label">Theme</legend>
+        <div class="density-control" role="group" aria-label="Theme">
+          <button class="density-btn ${theme === 'light' ? 'active' : ''}" type="button" data-theme-option="light" aria-pressed="${theme === 'light'}">
+            <span class="density-btn__preview" data-size="default"></span>
+            Light
+          </button>
+          <button class="density-btn ${theme === 'dark' ? 'active' : ''}" type="button" data-theme-option="dark" aria-pressed="${theme === 'dark'}">
+            <span class="density-btn__preview" data-size="compact"></span>
+            Dark
           </button>
         </div>
       </fieldset>
@@ -174,6 +190,14 @@ export const renderSettingsPage = (ctx) => {
     button.addEventListener('click', () => {
       const value = button.getAttribute('data-density-option');
       onSetDensity?.(value);
+    });
+  });
+
+  wrapper.querySelectorAll('[data-theme-option]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const value = button.getAttribute('data-theme-option');
+      onSetTheme?.(value);
+      notify?.(`Theme set to ${value}.`);
     });
   });
 

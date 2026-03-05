@@ -521,7 +521,7 @@ const renderWorkspaceTodayPage = (ctx) => {
       </div>
     </section>
 
-    <section class="grid-cards">
+    <section class="dashboard-row-2">
       <article class="card">
         <div class="metric-head">
           <h2>Health Distribution</h2>
@@ -552,7 +552,9 @@ const renderWorkspaceTodayPage = (ctx) => {
           ])}
         </div>
       </article>
+    </section>
 
+    <section class="dashboard-row-wide">
       <article class="card">
         <div class="metric-head">
           <h2>Engagement Recency Histogram</h2>
@@ -575,7 +577,7 @@ const renderWorkspaceTodayPage = (ctx) => {
         : ''
     }
 
-    <section class="card">
+    <section class="card dashboard-row-table">
       <div class="metric-head">
         <h2>Engagement Queue</h2>
       </div>
@@ -603,7 +605,7 @@ const renderWorkspaceTodayPage = (ctx) => {
         : ''
     }
 
-    <section class="card ${isManager ? 'is-hidden-mode' : ''}">
+    <section class="card dashboard-row-wide ${isManager ? 'is-hidden-mode' : ''}">
       <div class="metric-head">
         <h2>Next Best Actions</h2>
         ${statusChip({ label: `${actions.length} prioritized`, tone: actions.length ? 'warn' : 'good' })}

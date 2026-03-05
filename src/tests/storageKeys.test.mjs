@@ -11,6 +11,7 @@ test('storage keys use gh_* namespace for static dashboard state', () => {
   assert.equal(STORAGE_KEYS.gitlabProjectPath, 'gh_gitlab_project_path');
   assert.equal(STORAGE_KEYS.defaultMode, 'gh_default_mode_v1');
   assert.equal(STORAGE_KEYS.defaultPersona, 'gh_default_persona_v1');
+  assert.equal(STORAGE_KEYS.theme, 'gh_theme_v1');
 });
 
 test('legacy localStorage keys are read and migrated to canonical keys', () => {
