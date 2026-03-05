@@ -101,7 +101,7 @@ export const renderProgramDetailPage = (ctx) => {
             ${availableCustomers.map((customer) => `<option value="${customer.id}">${customer.name}</option>`).join('')}
           </select>
         </label>
-        <div class="page-actions" style="margin-top:10px;">
+        <div class="page-actions u-mt-3">
           <button class="ghost-btn" type="button" data-add-customer-submit>Add to cohort</button>
         </div>
       </article>

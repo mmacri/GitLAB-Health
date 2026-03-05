@@ -176,7 +176,7 @@ export const renderCustomersPage = (ctx) => {
           </select>
         </label>
       </div>
-      <div class="page-actions" style="margin-top:12px;">
+      <div class="page-actions u-mt-3">
         <button class="ghost-btn" type="button" data-bulk-program>Add selected to program</button>
         <button class="ghost-btn" type="button" data-bulk-engagement>Log engagement for selected</button>
         <button class="ghost-btn" type="button" data-bulk-export>Export selected CSV</button>

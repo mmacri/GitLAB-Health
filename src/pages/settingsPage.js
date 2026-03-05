@@ -51,7 +51,7 @@ export const renderSettingsPage = (ctx) => {
       <div class="page-actions">
         <button class="qa" type="button" data-load-sample>Load sample portfolio</button>
         <button class="ghost-btn" type="button" data-export-workspace>Export JSON</button>
-        <label class="ghost-btn" style="cursor:pointer;">
+        <label class="ghost-btn u-pointer">
           Import JSON
           <input type="file" accept="application/json" data-import-workspace hidden />
         </label>
@@ -59,7 +59,7 @@ export const renderSettingsPage = (ctx) => {
         <button class="ghost-btn" type="button" data-reset-workspace>Reset local state</button>
       </div>
       <p class="muted">Updated at: ${workspace?.updatedAt || 'n/a'}</p>
-      <fieldset class="settings-group" style="margin-top:12px;">
+      <fieldset class="settings-group u-mt-3">
         <legend class="settings-group__label">Row Density</legend>
         <div class="density-control" role="group" aria-label="Row density">
           <button class="density-btn ${density === 'compact' ? 'active' : ''}" type="button" data-density-option="compact" aria-pressed="${density === 'compact'}">
@@ -77,7 +77,7 @@ export const renderSettingsPage = (ctx) => {
         </div>
       </fieldset>
 
-      <fieldset class="settings-group" style="margin-top:12px;">
+      <fieldset class="settings-group u-mt-3">
         <legend class="settings-group__label">Theme</legend>
         <div class="density-control" role="group" aria-label="Theme">
           <button class="density-btn ${theme === 'light' ? 'active' : ''}" type="button" data-theme-option="light" aria-pressed="${theme === 'light'}">
@@ -91,7 +91,7 @@ export const renderSettingsPage = (ctx) => {
         </div>
       </fieldset>
 
-      <div class="form-grid" style="margin-top:12px;">
+      <div class="form-grid u-mt-3">
         <label>
           Default Mode on Launch
           <select data-default-mode>

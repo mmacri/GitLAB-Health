@@ -337,7 +337,7 @@ export const renderCustomerDetailPage = (ctx) => {
         </div>
         <div class="grid-cards">${renderStageGrid(customerId, adoption?.devsecopsStages || {})}</div>
 
-        <div class="metric-head" style="margin-top:16px;">
+        <div class="metric-head u-mt-4">
           <h2>Use Case Adoption</h2>
           ${statusChip({ label: `${USE_CASE_KEYS.length} tracked`, tone: 'neutral' })}
         </div>
@@ -354,7 +354,7 @@ export const renderCustomerDetailPage = (ctx) => {
               <tbody>${renderTimeToValueRows(adoption?.timeToValue || [])}</tbody>
             </table>
           </div>
-          <form class="form-grid" data-add-ttv style="margin-top:12px;">
+          <form class="form-grid u-mt-3" data-add-ttv>
             <label>
               Milestone
               <input name="milestone" required />
@@ -386,7 +386,7 @@ export const renderCustomerDetailPage = (ctx) => {
               <tbody>${renderOutcomeRows(successPlan?.outcomes || [])}</tbody>
             </table>
           </div>
-          <form class="form-grid" data-add-outcome style="margin-top:12px;">
+          <form class="form-grid u-mt-3" data-add-outcome>
             <label><span>Outcome statement</span><input name="statement" required /></label>
             <label><span>Metric</span><input name="metric" required /></label>
             <label><span>Target</span><input name="target" required /></label>
@@ -410,7 +410,7 @@ export const renderCustomerDetailPage = (ctx) => {
               <tbody>${renderMilestoneRows(successPlan?.milestones || [], successPlan?.outcomes || [])}</tbody>
             </table>
           </div>
-          <form class="form-grid" data-add-plan-milestone style="margin-top:12px;">
+          <form class="form-grid u-mt-3" data-add-plan-milestone>
             <label><span>Title</span><input name="title" required /></label>
             <label><span>Outcome</span>
               <select name="outcomeId">
@@ -435,7 +435,7 @@ export const renderCustomerDetailPage = (ctx) => {
         <section class="card compact-card">
           <div class="metric-head"><h2>Engagement Timeline</h2></div>
           <ul class="simple-list">${renderEngagementRows(engagements || [])}</ul>
-          <form class="form-grid" data-add-engagement style="margin-top:12px;">
+          <form class="form-grid u-mt-3" data-add-engagement>
             <label><span>Date</span><input name="date" type="date" required /></label>
             <label><span>Type</span>
               <select name="type">${engagementTypes.map((item) => `<option value="${item}">${item}</option>`).join('')}</select>
@@ -470,7 +470,7 @@ export const renderCustomerDetailPage = (ctx) => {
             </table>
           </div>
           <p class="muted">Active dismissals: ${(metrics?.dismissedSignals || []).length}</p>
-          <form class="form-grid" data-add-risk style="margin-top:12px;">
+          <form class="form-grid u-mt-3" data-add-risk>
             <label><span>Code</span><input name="code" required /></label>
             <label><span>Severity</span>
               <select name="severity">${riskSeverities.map((severity) => `<option value="${severity}">${severity}</option>`).join('')}</select>
@@ -483,7 +483,7 @@ export const renderCustomerDetailPage = (ctx) => {
         <section class="card compact-card">
           <div class="metric-head"><h2>Mitigation Playbook</h2></div>
           <ul class="simple-list">${renderPlaybookRows(customerId, risk?.playbook || [])}</ul>
-          <form class="form-grid" data-add-playbook style="margin-top:12px;">
+          <form class="form-grid u-mt-3" data-add-playbook>
             <label class="form-span"><span>Action</span><input name="action" required /></label>
             <label><span>Owner</span><input name="owner" value="CSE" /></label>
             <label><span>Due</span><input name="due" type="date" required /></label>
@@ -518,7 +518,7 @@ export const renderCustomerDetailPage = (ctx) => {
               <tbody>${renderVocRows(vocItems)}</tbody>
             </table>
           </div>
-          <form class="form-grid" data-add-voc style="margin-top:12px;">
+          <form class="form-grid u-mt-3" data-add-voc>
             <label><span>Area</span><input name="area" required /></label>
             <label><span>Status</span>
               <select name="status">${vocStatuses.map((status) => `<option>${status}</option>`).join('')}</select>

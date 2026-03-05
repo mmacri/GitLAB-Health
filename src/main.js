@@ -597,23 +597,23 @@ const renderLeftRail = () => {
         </span>
       </div>
       <button class="sidebar__item ${state.route.name === 'home' ? 'active' : ''}" type="button" data-nav-route="home">
-        <span class="sidebar__item-icon" aria-hidden="true">🏠</span>
+        <span class="sidebar__item-icon" aria-hidden="true">TD</span>
         <span>Today</span>
       </button>
       <button class="sidebar__item ${state.route.name === 'portfolio' ? 'active' : ''}" type="button" data-nav-route="portfolio">
-        <span class="sidebar__item-icon" aria-hidden="true">📊</span>
+        <span class="sidebar__item-icon" aria-hidden="true">PF</span>
         <span>Portfolio</span>
       </button>
       <button class="sidebar__item ${state.route.name === 'customers' || state.route.name === 'customer' ? 'active' : ''}" type="button" data-nav-route="customers">
-        <span class="sidebar__item-icon" aria-hidden="true">🏢</span>
+        <span class="sidebar__item-icon" aria-hidden="true">CU</span>
         <span>Customers</span>
       </button>
       <button class="sidebar__item ${state.route.name === 'programs' || state.route.name === 'program' ? 'active' : ''}" type="button" data-nav-route="programs">
-        <span class="sidebar__item-icon" aria-hidden="true">🎯</span>
+        <span class="sidebar__item-icon" aria-hidden="true">PG</span>
         <span>Programs</span>
       </button>
       <button class="sidebar__item ${state.route.name === 'manager' ? 'active' : ''}" type="button" data-nav-route="manager">
-        <span class="sidebar__item-icon" aria-hidden="true">👥</span>
+        <span class="sidebar__item-icon" aria-hidden="true">MG</span>
         <span>Manager</span>
       </button>
     </section>
@@ -621,12 +621,12 @@ const renderLeftRail = () => {
     <section class="sidebar__zone sidebar__zone--tools">
       <p class="sidebar__zone-label">${isAccountContext ? 'Jump To Section' : 'Tools'}</p>
       <button class="sidebar__item" type="button" data-open-filters aria-expanded="false">
-        <span class="sidebar__item-icon" aria-hidden="true">⚙️</span>
+        <span class="sidebar__item-icon" aria-hidden="true">FL</span>
         <span>Portfolio Filters</span>
         ${filterCount > 0 ? `<span class="sidebar__badge">${filterCount}</span>` : ''}
       </button>
       <button class="sidebar__item" type="button" data-go-playbooks>
-        <span class="sidebar__item-icon" aria-hidden="true">📖</span>
+        <span class="sidebar__item-icon" aria-hidden="true">PB</span>
         <span>Open Playbooks</span>
       </button>
       ${
@@ -635,11 +635,11 @@ const renderLeftRail = () => {
           : ''
       }
       <button class="sidebar__item" type="button" data-go-portfolio>
-        <span class="sidebar__item-icon" aria-hidden="true">🧭</span>
+        <span class="sidebar__item-icon" aria-hidden="true">PF</span>
         <span>Open Portfolio Filters</span>
       </button>
       <button class="sidebar__item" type="button" data-rail-open-current ${current ? '' : 'disabled'}>
-        <span class="sidebar__item-icon" aria-hidden="true">➡️</span>
+        <span class="sidebar__item-icon" aria-hidden="true">AC</span>
         <span>Open Current Account</span>
       </button>
       <div class="sidebar__field">
@@ -666,7 +666,7 @@ const renderLeftRail = () => {
               .map(
                 (customer) =>
                   `<button class="sidebar__item ${customer.id === state.selectedCustomerId ? 'active' : ''}" type="button" data-rail-customer="${customer.id}">
-                    <span class="sidebar__item-icon" aria-hidden="true">•</span>
+                    <span class="sidebar__item-icon" aria-hidden="true">${String(customer.name || '?').trim().charAt(0).toUpperCase()}</span>
                     <span>${state.customerSafe ? maskField('accountName', customer.name) || 'Your Organization' : customer.name}</span>
                   </button>`
               )
@@ -691,19 +691,19 @@ const renderLeftRail = () => {
         <select id="sidebar-account" data-global-account-select></select>
       </div>
       <button class="sidebar__item" type="button" data-copy-snapshot>
-        <span class="sidebar__item-icon" aria-hidden="true">🔗</span>
+        <span class="sidebar__item-icon" aria-hidden="true">LK</span>
         <span>Copy Snapshot Link</span>
       </button>
       <button class="sidebar__item" type="button" data-global-export>
-        <span class="sidebar__item-icon" aria-hidden="true">📤</span>
+        <span class="sidebar__item-icon" aria-hidden="true">EX</span>
         <span>Export</span>
       </button>
       <button class="sidebar__item" type="button" data-open-settings>
-        <span class="sidebar__item-icon" aria-hidden="true">⚙️</span>
+        <span class="sidebar__item-icon" aria-hidden="true">ST</span>
         <span>Settings</span>
       </button>
       <button class="sidebar__item" type="button" data-go-resources>
-        <span class="sidebar__item-icon" aria-hidden="true">📚</span>
+        <span class="sidebar__item-icon" aria-hidden="true">RS</span>
         <span>Resources</span>
       </button>
     </section>
@@ -1474,8 +1474,8 @@ const renderShellContext = () => {
     headerStatus.classList.toggle('status-pill--internal', !state.customerSafe);
     headerStatus.classList.toggle('status-pill--safe', state.customerSafe);
     headerStatus.innerHTML = state.customerSafe
-      ? '<span aria-hidden="true">🛡</span>Customer-Safe'
-      : '<span aria-hidden="true">🔒</span>Internal';
+      ? '<span class="status-pill__dot" aria-hidden="true"></span>Customer-Safe'
+      : '<span class="status-pill__dot" aria-hidden="true"></span>Internal';
   }
 
   const managerBadge = appRoot.querySelector('[data-manager-badge]');
