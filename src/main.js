@@ -522,6 +522,38 @@ const ROUTE_LABELS = {
   manager: 'Manager'
 };
 
+const SHELL_ICON_SVGS = {
+  today:
+    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="11" height="10" rx="2"></rect><path d="M5 2.5v2M11 2.5v2M2.5 6.5h11"></path></svg>',
+  portfolio:
+    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 13.5h11"></path><path d="M4.5 11V7.5M8 11V4.5M11.5 11V6"></path></svg>',
+  customers:
+    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5.5" r="2"></circle><path d="M2.8 12.8c.4-1.9 1.6-3 3.2-3s2.8 1.1 3.2 3"></path><circle cx="11.4" cy="6.5" r="1.4"></circle><path d="M10.2 12.6c.2-1.2.9-2 2-2 .7 0 1.3.3 1.7.9"></path></svg>',
+  programs:
+    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="4.8"></circle><circle cx="8" cy="8" r="2.4"></circle><circle cx="8" cy="8" r="0.9" fill="currentColor" stroke="none"></circle></svg>',
+  manager:
+    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 12.8c.4-1.7 1.5-2.8 3-2.8s2.6 1.1 3 2.8"></path><circle cx="5.8" cy="5.8" r="1.9"></circle><path d="M9.2 12.6c.3-1.4 1.3-2.2 2.7-2.2 1 0 1.8.4 2.3 1.2"></path><circle cx="12" cy="6.6" r="1.4"></circle></svg>',
+  filters:
+    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.2 3.5h11.6L9.6 8.4v3.1l-3.2 1V8.4z"></path></svg>',
+  playbooks:
+    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3.2h6.4a2.2 2.2 0 0 1 2.2 2.2v7.2H5.2A2.2 2.2 0 0 0 3 14.8z"></path><path d="M5.2 12.6h7.8"></path></svg>',
+  current:
+    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8h8.8"></path><path d="M8.8 5.3L11.5 8l-2.7 2.7"></path></svg>',
+  link:
+    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 9.4l2.8-2.8"></path><path d="M5.1 11a2.7 2.7 0 0 1 0-3.8L6.5 5.8a2.7 2.7 0 1 1 3.8 3.8l-1.4 1.4a2.7 2.7 0 0 1-3.8 0z"></path></svg>',
+  export:
+    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v7"></path><path d="M5.5 7.8L8 10.5l2.5-2.7"></path><path d="M3 12.5h10"></path></svg>',
+  settings:
+    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.1"></circle><path d="M8 2.6v1.4M8 12v1.4M3.9 3.9l1 1M11.1 11.1l1 1M2.6 8h1.4M12 8h1.4M3.9 12.1l1-1M11.1 4.9l1-1"></path></svg>',
+  resources:
+    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3.4h4.8a2 2 0 0 1 2 2v7.2H5a2 2 0 0 0-2 2z"></path><path d="M9.8 5.4h2.5c.9 0 1.7.7 1.7 1.7v7.5H8.8"></path></svg>',
+  dot:
+    '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="2.1" fill="currentColor"></circle></svg>'
+};
+
+const shellIcon = (name, extraClass = '') =>
+  `<span class="sidebar__item-icon${extraClass ? ` ${extraClass}` : ''}" aria-hidden="true">${SHELL_ICON_SVGS[name] || SHELL_ICON_SVGS.dot}</span>`;
+
 const focusAccountSection = (sectionId) => {
   if (!sectionId) return;
   const tabButton = routeRoot.querySelector(`[data-tab-target="${sectionId}"]`);
@@ -598,23 +630,23 @@ const renderLeftRail = () => {
         </span>
       </div>
       <button class="sidebar__item ${state.route.name === 'home' ? 'active' : ''}" type="button" data-nav-route="home">
-        <span class="sidebar__item-icon" aria-hidden="true">TD</span>
+        ${shellIcon('today')}
         <span>Today</span>
       </button>
       <button class="sidebar__item ${state.route.name === 'portfolio' ? 'active' : ''}" type="button" data-nav-route="portfolio">
-        <span class="sidebar__item-icon" aria-hidden="true">PF</span>
+        ${shellIcon('portfolio')}
         <span>Portfolio</span>
       </button>
       <button class="sidebar__item ${state.route.name === 'customers' || state.route.name === 'customer' ? 'active' : ''}" type="button" data-nav-route="customers">
-        <span class="sidebar__item-icon" aria-hidden="true">CU</span>
+        ${shellIcon('customers')}
         <span>Customers</span>
       </button>
       <button class="sidebar__item ${state.route.name === 'programs' || state.route.name === 'program' ? 'active' : ''}" type="button" data-nav-route="programs">
-        <span class="sidebar__item-icon" aria-hidden="true">PG</span>
+        ${shellIcon('programs')}
         <span>Programs</span>
       </button>
       <button class="sidebar__item ${state.route.name === 'manager' ? 'active' : ''}" type="button" data-nav-route="manager">
-        <span class="sidebar__item-icon" aria-hidden="true">MG</span>
+        ${shellIcon('manager')}
         <span>Manager</span>
       </button>
     </section>
@@ -622,12 +654,12 @@ const renderLeftRail = () => {
     <section class="sidebar__zone sidebar__zone--tools">
       <p class="sidebar__zone-label">${isAccountContext ? 'Jump To Section' : 'Tools'}</p>
       <button class="sidebar__item" type="button" data-open-filters aria-expanded="false">
-        <span class="sidebar__item-icon" aria-hidden="true">FL</span>
+        ${shellIcon('filters')}
         <span>Portfolio Filters</span>
         ${filterCount > 0 ? `<span class="sidebar__badge">${filterCount}</span>` : ''}
       </button>
       <button class="sidebar__item" type="button" data-go-playbooks>
-        <span class="sidebar__item-icon" aria-hidden="true">PB</span>
+        ${shellIcon('playbooks')}
         <span>Open Playbooks</span>
       </button>
       ${
@@ -636,11 +668,11 @@ const renderLeftRail = () => {
           : ''
       }
       <button class="sidebar__item" type="button" data-go-portfolio>
-        <span class="sidebar__item-icon" aria-hidden="true">PF</span>
+        ${shellIcon('filters')}
         <span>Open Portfolio Filters</span>
       </button>
       <button class="sidebar__item" type="button" data-rail-open-current ${current ? '' : 'disabled'}>
-        <span class="sidebar__item-icon" aria-hidden="true">AC</span>
+        ${shellIcon('current')}
         <span>Open Current Account</span>
       </button>
       <div class="sidebar__field">
@@ -653,7 +685,7 @@ const renderLeftRail = () => {
               .map(
                 (item) =>
                   `<button class="sidebar__item" type="button" data-rail-section="${item.id}">
-                    <span class="sidebar__item-icon" aria-hidden="true">•</span>
+                    ${shellIcon('dot')}
                     <span>${item.label}</span>
                   </button>`
               )
@@ -667,7 +699,7 @@ const renderLeftRail = () => {
               .map(
                 (customer) =>
                   `<button class="sidebar__item ${customer.id === state.selectedCustomerId ? 'active' : ''}" type="button" data-rail-customer="${customer.id}">
-                    <span class="sidebar__item-icon" aria-hidden="true">${String(customer.name || '?').trim().charAt(0).toUpperCase()}</span>
+                    <span class="sidebar__item-icon sidebar__item-icon--avatar" aria-hidden="true">${String(customer.name || '?').trim().charAt(0).toUpperCase()}</span>
                     <span>${state.customerSafe ? maskField('accountName', customer.name) || 'Your Organization' : customer.name}</span>
                   </button>`
               )
@@ -692,19 +724,19 @@ const renderLeftRail = () => {
         <select id="sidebar-account" data-global-account-select></select>
       </div>
       <button class="sidebar__item" type="button" data-copy-snapshot>
-        <span class="sidebar__item-icon" aria-hidden="true">LK</span>
+        ${shellIcon('link')}
         <span>Copy Snapshot Link</span>
       </button>
       <button class="sidebar__item" type="button" data-global-export>
-        <span class="sidebar__item-icon" aria-hidden="true">EX</span>
+        ${shellIcon('export')}
         <span>Export</span>
       </button>
       <button class="sidebar__item" type="button" data-open-settings>
-        <span class="sidebar__item-icon" aria-hidden="true">ST</span>
+        ${shellIcon('settings')}
         <span>Settings</span>
       </button>
       <button class="sidebar__item" type="button" data-go-resources>
-        <span class="sidebar__item-icon" aria-hidden="true">RS</span>
+        ${shellIcon('resources')}
         <span>Resources</span>
       </button>
     </section>

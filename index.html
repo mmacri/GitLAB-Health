@@ -8,6 +8,11 @@
       content="Pooled GitLab Customer Success Engineer On-Demand dashboard for triage, intake, adoption, and value outcomes."
     />
     <title>GitLab CSE On-Demand Dashboard</title>
+    <link rel="stylesheet" href="./src/styles/app.css" />
+    <link rel="stylesheet" href="./src/styles/tokens.css" />
+    <link rel="stylesheet" href="./src/styles/base.css" />
+    <link rel="stylesheet" href="./src/styles/components.css" />
+    <link rel="stylesheet" href="./src/styles/utilities.css" />
     <style>
       #app-loading {
         display: flex;
@@ -130,19 +135,6 @@
           base = '/' + parts[0];
         }
         window.__APP_BASE_PATH__ = base;
-        var stylesheets = [
-          '/src/styles/app.css',
-          '/src/styles/tokens.css',
-          '/src/styles/base.css',
-          '/src/styles/components.css',
-          '/src/styles/utilities.css'
-        ];
-        stylesheets.forEach(function (path) {
-          var link = document.createElement('link');
-          link.rel = 'stylesheet';
-          link.href = base + path;
-          document.head.appendChild(link);
-        });
       })();
     </script>
   </head>
@@ -185,18 +177,22 @@
           >
             <span></span><span></span><span></span>
           </button>
-          <span class="status-pill">GitLAB-Health</span>
+          <span class="app-header__product">GitLAB-Health</span>
           <span class="status-pill status-pill--internal" data-header-status>
             <span class="status-pill__dot" aria-hidden="true"></span>
             Internal
           </span>
           <span class="status-pill" data-safe-label>Today • CSE On-Demand</span>
-          <span class="status-pill status-pill--safe" data-manager-badge hidden>Manager</span>
         </div>
 
         <div class="app-header__right">
           <button class="search-trigger" type="button" data-open-palette>
-            <span class="search-trigger__icon" aria-hidden="true">⌕</span>
+            <span class="search-trigger__icon" aria-hidden="true">
+              <svg viewBox="0 0 16 16" focusable="false">
+                <circle cx="7" cy="7" r="4.25"></circle>
+                <path d="M10.3 10.3L13.4 13.4"></path>
+              </svg>
+            </span>
             <span>Search accounts, routes, and actions</span>
             <span class="search-trigger__kbd">Ctrl+K</span>
           </button>
@@ -208,7 +204,13 @@
           </label>
 
           <button class="header-btn header-btn--with-label" type="button" data-global-export>
-            <span aria-hidden="true">EX</span>
+            <span class="header-btn__icon" aria-hidden="true">
+              <svg viewBox="0 0 16 16" focusable="false">
+                <path d="M8 2.5v7"></path>
+                <path d="M5.5 7.8L8 10.5l2.5-2.7"></path>
+                <path d="M3 12.5h10"></path>
+              </svg>
+            </span>
             Export
           </button>
 
