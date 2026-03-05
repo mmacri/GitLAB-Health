@@ -1,0 +1,104 @@
+:root {
+  --color-brand-orange: #FC6D26;
+  --color-brand-orange-light: #fba672;
+  --color-brand-orange-dark: #e24329;
+  --color-brand-purple: #6b4fbb;
+
+  --color-success: #108548;
+  --color-success-bg: #dcf4e5;
+  --color-warning: #c17d10;
+  --color-warning-bg: #fdf2d0;
+  --color-danger: #dd2b0e;
+  --color-danger-bg: #fce8e4;
+  --color-info: #1068bf;
+  --color-info-bg: #ddeeff;
+  --color-neutral: #6b7280;
+  --color-neutral-bg: #f3f4f6;
+
+  --sidebar-bg: #1f1f1f;
+  --sidebar-bg-hover: #2c2c2c;
+  --sidebar-bg-active: #303030;
+  --sidebar-border: #3a3a3a;
+  --sidebar-text: #c6c6c6;
+  --sidebar-text-muted: #8a8a8a;
+  --sidebar-accent: #FC6D26;
+  --sidebar-width: 240px;
+  --sidebar-width-collapsed: 56px;
+
+  --surface-bg: #ffffff;
+  --surface-bg-subtle: #fafafa;
+  --surface-bg-hover: #f5f5f5;
+  --surface-bg-selected: #fff7f3;
+  --surface-border: #e5e7eb;
+  --surface-border-strong: #d1d5db;
+  --surface-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --surface-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --surface-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.14), 0 4px 10px rgba(0, 0, 0, 0.06);
+
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 22px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-loose: 1.75;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  --transition-fast: 100ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 350ms ease;
+
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-safe-banner: 600;
+
+  --row-padding-y: 10px;
+  --row-height: 52px;
+}
+
+[data-density='compact'] {
+  --row-padding-y: 6px;
+  --row-height: 38px;
+  --text-base: 12px;
+}
+
+[data-density='comfortable'] {
+  --row-padding-y: 14px;
+  --row-height: 64px;
+  --text-base: 14px;
+}
+
+.sidebar {
+  color-scheme: dark;
+}

@@ -51,6 +51,13 @@ const renderTableRows = (rows, selected, maskField) => {
   if (!rows.length) {
     return '<tr><td colspan="10">No customers match current filters.</td></tr>';
   }
+  const healthDotClass = (health) => {
+    const value = normalize(health);
+    if (value === 'green') return 'health-dot--green';
+    if (value === 'yellow') return 'health-dot--yellow';
+    if (value === 'red') return 'health-dot--red';
+    return 'health-dot--grey';
+  };
   return rows
     .map(
       (row) => `
@@ -59,7 +66,7 @@ const renderTableRows = (rows, selected, maskField) => {
         <td><a href="#" data-open-customer="${row.id}">${maskField?.('accountName', row.name) || row.name}</a></td>
         <td>${row.tier}</td>
         <td>${row.stage}</td>
-        <td>${statusChip({ label: row.health, tone: stageTone(row.health) })}</td>
+        <td><span class="inline-health"><span class="health-dot ${healthDotClass(row.health)}"></span><span>${row.health}</span></span></td>
         <td>${row.adoptionScore}</td>
         <td>${row.engagementScore}</td>
         <td>${row.riskScore}</td>

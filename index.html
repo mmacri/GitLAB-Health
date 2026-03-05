@@ -11,6 +11,107 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      #app-loading {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+        background: #f9fafb;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        transition: opacity 300ms ease;
+      }
+      #app-loading.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .skeleton-sidebar {
+        width: 240px;
+        background: #1f1f1f;
+        padding: 16px 12px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .skeleton-main {
+        flex: 1;
+        padding: 16px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .shimmer {
+        border-radius: 6px;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.06) 0%,
+          rgba(255, 255, 255, 0.14) 50%,
+          rgba(255, 255, 255, 0.06) 100%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.4s infinite;
+      }
+      .skeleton-sidebar .shimmer {
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.04) 0%,
+          rgba(255, 255, 255, 0.1) 50%,
+          rgba(255, 255, 255, 0.04) 100%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.4s infinite;
+      }
+      @keyframes shimmer {
+        0% {
+          background-position: -200% 0;
+        }
+        100% {
+          background-position: 200% 0;
+        }
+      }
+
+      .skeleton-logo {
+        height: 32px;
+        width: 120px;
+      }
+      .skeleton-nav-item {
+        height: 36px;
+        width: 100%;
+      }
+      .skeleton-nav-item.short {
+        width: 70%;
+      }
+      .skeleton-nav-divider {
+        height: 1px;
+        background: #3a3a3a;
+        margin: 4px 0;
+      }
+      .skeleton-header {
+        height: 52px;
+        width: 100%;
+        border-radius: 8px;
+      }
+      .skeleton-tabs {
+        display: flex;
+        gap: 8px;
+      }
+      .skeleton-tab {
+        height: 36px;
+        width: 120px;
+        border-radius: 6px;
+      }
+      .skeleton-row {
+        height: 52px;
+        width: 100%;
+        border-radius: 6px;
+      }
+      .skeleton-row.short {
+        width: 75%;
+      }
+    </style>
     <script>
       (function () {
         var known = ['today', 'portfolio', 'customers', 'customer', 'manager', 'simulator', 'toolkit', 'success-plans', 'account', 'journey', 'programs', 'program', 'playbooks', 'risks', 'expansion', 'voc', 'reports', 'settings', 'resources', 'cheatsheet', 'exports', 'intake'];
@@ -30,139 +131,142 @@
     </script>
   </head>
   <body>
+    <div id="app-loading" aria-hidden="true">
+      <div class="skeleton-sidebar">
+        <div class="skeleton-logo shimmer"></div>
+        <div class="skeleton-nav-item shimmer"></div>
+        <div class="skeleton-nav-item shimmer"></div>
+        <div class="skeleton-nav-item short shimmer"></div>
+        <div class="skeleton-nav-divider"></div>
+        <div class="skeleton-nav-item shimmer"></div>
+        <div class="skeleton-nav-item shimmer"></div>
+      </div>
+      <div class="skeleton-main">
+        <div class="skeleton-header shimmer"></div>
+        <div class="skeleton-tabs">
+          <div class="skeleton-tab shimmer"></div>
+          <div class="skeleton-tab shimmer"></div>
+          <div class="skeleton-tab shimmer"></div>
+        </div>
+        <div class="skeleton-row shimmer"></div>
+        <div class="skeleton-row shimmer"></div>
+        <div class="skeleton-row shimmer"></div>
+        <div class="skeleton-row short shimmer"></div>
+        <div class="skeleton-row shimmer"></div>
+      </div>
+    </div>
+
     <div class="app-root" data-app-root>
-      <header class="header app-header">
-        <div class="header__row">
-          <div class="header__brand">
-            <div class="brand-mark" aria-hidden="true"></div>
-            <div class="brand-text">
-              <span class="brand-title">GitLab CSE On-Demand</span>
-              <span class="brand-sub">Pooled Customer Success Engineering Operations</span>
-            </div>
-          </div>
-
-          <div class="header__controls">
-            <label class="control-field">
-              <span class="kicker">Account</span>
-              <select data-global-account-select></select>
-            </label>
-            <button class="nav-search" type="button" data-open-palette>Search (Ctrl+K)</button>
-            <button class="ghost-btn" type="button" data-global-export>Export</button>
-            <label class="safe-toggle global-safe">
-              <input type="checkbox" data-global-safe-toggle />
-              <span>Customer-safe</span>
-            </label>
-            <div class="control-menu">
-              <button class="ghost-btn" type="button" data-open-more>More</button>
-              <div class="control-menu__panel" data-more-menu hidden>
-                <button class="ghost-btn" type="button" data-open-settings>Settings</button>
-                <button class="ghost-btn" type="button" data-copy-snapshot>Copy snapshot link</button>
-                <button class="ghost-btn" type="button" data-go-resources>Resources</button>
-              </div>
-            </div>
-          </div>
+      <header class="app-header">
+        <div class="app-header__left">
+          <button class="header-hamburger" type="button" data-sidebar-toggle aria-label="Open navigation" aria-expanded="false">
+            <span></span><span></span><span></span>
+          </button>
+          <span class="status-pill status-pill--internal" data-header-status>
+            <span aria-hidden="true">🔒</span>
+            Internal
+          </span>
+          <span class="status-pill" data-safe-label>Internal • Today • CSE On-Demand</span>
+          <span class="status-pill status-pill--safe" data-manager-badge hidden>Manager</span>
         </div>
 
-        <div class="header__row header__row--secondary">
-          <div class="header__controls">
-            <label class="control-field">
-              <span class="kicker">Persona</span>
-              <select data-global-persona>
-                <option value="cse">CSE On-Demand</option>
-                <option value="manager">CSE Manager</option>
-              </select>
-            </label>
-            <div class="mode-picker">
-              <label class="mode-label" for="global-mode-select">Mode</label>
-              <select id="global-mode-select" data-global-mode>
-                <option value="today">Today</option>
-                <option value="review">Review</option>
-                <option value="deep">Deep Dive</option>
-              </select>
-            </div>
-            <label class="control-field">
-              <span class="kicker">Jump Section</span>
-              <select data-global-jump></select>
-            </label>
-            <button class="ghost-btn" type="button" data-open-filters>Filters</button>
-          </div>
-          <div class="header__controls">
-            <span class="status-chip status-chip--neutral" data-manager-badge hidden>Manager</span>
-            <p class="meta" data-safe-label>Internal mode • Today</p>
-          </div>
-        </div>
+        <div class="app-header__right">
+          <button class="search-trigger" type="button" data-open-palette>
+            <span aria-hidden="true">🔍</span>
+            <span>Search accounts, routes, and actions</span>
+            <span class="search-trigger__kbd">Ctrl+K</span>
+          </button>
 
-        <div class="header-panel" data-filters-panel hidden>
-          <div class="header-panel__inner">
-            <p class="meta">Advanced filters stay route-specific. Use these quick shortcuts to move into filter-heavy views.</p>
-            <div class="filter-row filter-row--panel">
-              <fieldset class="filter-multi">
-                <legend>Engagement Type</legend>
-                <label class="safe-toggle">
-                  <input type="checkbox" data-global-filter-engagement-type="WEBINAR" />
-                  <span>Webinar</span>
-                </label>
-                <label class="safe-toggle">
-                  <input type="checkbox" data-global-filter-engagement-type="OFFICE_HOURS" />
-                  <span>Office Hours</span>
-                </label>
-                <label class="safe-toggle">
-                  <input type="checkbox" data-global-filter-engagement-type="HANDS_ON_LAB" />
-                  <span>Hands-On Lab</span>
-                </label>
-                <label class="safe-toggle">
-                  <input type="checkbox" data-global-filter-engagement-type="ON_DEMAND" />
-                  <span>On-Demand</span>
-                </label>
-              </fieldset>
+          <label class="safe-toggle" data-safe-toggle-label>
+            <input class="safe-toggle__input" type="checkbox" data-global-safe-toggle />
+            <span class="toggle-switch" aria-hidden="true"></span>
+            <span>Customer-Safe</span>
+          </label>
 
-              <fieldset class="filter-multi">
-                <legend>Requested By</legend>
-                <label class="safe-toggle">
-                  <input type="checkbox" data-global-filter-requested-by="CSM" />
-                  <span>CSM</span>
-                </label>
-                <label class="safe-toggle">
-                  <input type="checkbox" data-global-filter-requested-by="AE" />
-                  <span>AE</span>
-                </label>
-                <label class="safe-toggle">
-                  <input type="checkbox" data-global-filter-requested-by="CUSTOMER" />
-                  <span>Customer</span>
-                </label>
-                <label class="safe-toggle">
-                  <input type="checkbox" data-global-filter-requested-by="RENEWAL_MANAGER" />
-                  <span>Renewal Manager</span>
-                </label>
-              </fieldset>
+          <button class="header-btn header-btn--with-label" type="button" data-global-export>
+            <span aria-hidden="true">📤</span>
+            Export
+          </button>
 
-              <fieldset class="filter-multi">
-                <legend>Engagement Status</legend>
-                <label class="safe-toggle">
-                  <input type="checkbox" data-global-filter-engagement-status="SCHEDULED" />
-                  <span>Scheduled</span>
-                </label>
-                <label class="safe-toggle">
-                  <input type="checkbox" data-global-filter-engagement-status="IN_PROGRESS" />
-                  <span>In Progress</span>
-                </label>
-                <label class="safe-toggle">
-                  <input type="checkbox" data-global-filter-engagement-status="COMPLETED" />
-                  <span>Completed</span>
-                </label>
-                <label class="safe-toggle">
-                  <input type="checkbox" data-global-filter-engagement-status="REQUESTED" />
-                  <span>Requested</span>
-                </label>
-              </fieldset>
-            </div>
-            <div class="header__controls">
-              <button class="ghost-btn" type="button" data-go-portfolio>Open Portfolio Filters</button>
-              <button class="ghost-btn" type="button" data-go-playbooks>Open Playbooks</button>
+          <div class="control-menu">
+            <button class="header-btn" type="button" data-open-more aria-haspopup="menu" aria-expanded="false" aria-label="Open more actions">⋯</button>
+            <div class="control-menu__panel" data-more-menu hidden>
+              <button class="ghost-btn" type="button" data-open-settings>Settings</button>
+              <button class="ghost-btn" type="button" data-copy-snapshot>Copy snapshot link</button>
+              <button class="ghost-btn" type="button" data-go-resources>Resources</button>
             </div>
           </div>
         </div>
       </header>
+
+      <div class="header-panel" data-filters-panel hidden>
+        <div class="header-panel__inner">
+          <p class="meta">Advanced filters apply to portfolio and queue views instantly.</p>
+          <div class="filter-row filter-row--panel">
+            <fieldset class="filter-multi">
+              <legend>Engagement Type</legend>
+              <label class="safe-toggle">
+                <input type="checkbox" data-global-filter-engagement-type="WEBINAR" />
+                <span>Webinar</span>
+              </label>
+              <label class="safe-toggle">
+                <input type="checkbox" data-global-filter-engagement-type="OFFICE_HOURS" />
+                <span>Office Hours</span>
+              </label>
+              <label class="safe-toggle">
+                <input type="checkbox" data-global-filter-engagement-type="HANDS_ON_LAB" />
+                <span>Hands-On Lab</span>
+              </label>
+              <label class="safe-toggle">
+                <input type="checkbox" data-global-filter-engagement-type="ON_DEMAND" />
+                <span>On-Demand</span>
+              </label>
+            </fieldset>
+
+            <fieldset class="filter-multi">
+              <legend>Requested By</legend>
+              <label class="safe-toggle">
+                <input type="checkbox" data-global-filter-requested-by="CSM" />
+                <span>CSM</span>
+              </label>
+              <label class="safe-toggle">
+                <input type="checkbox" data-global-filter-requested-by="AE" />
+                <span>AE</span>
+              </label>
+              <label class="safe-toggle">
+                <input type="checkbox" data-global-filter-requested-by="CUSTOMER" />
+                <span>Customer</span>
+              </label>
+              <label class="safe-toggle">
+                <input type="checkbox" data-global-filter-requested-by="RENEWAL_MANAGER" />
+                <span>Renewal Manager</span>
+              </label>
+            </fieldset>
+
+            <fieldset class="filter-multi">
+              <legend>Engagement Status</legend>
+              <label class="safe-toggle">
+                <input type="checkbox" data-global-filter-engagement-status="SCHEDULED" />
+                <span>Scheduled</span>
+              </label>
+              <label class="safe-toggle">
+                <input type="checkbox" data-global-filter-engagement-status="IN_PROGRESS" />
+                <span>In Progress</span>
+              </label>
+              <label class="safe-toggle">
+                <input type="checkbox" data-global-filter-engagement-status="COMPLETED" />
+                <span>Completed</span>
+              </label>
+              <label class="safe-toggle">
+                <input type="checkbox" data-global-filter-engagement-status="REQUESTED" />
+                <span>Requested</span>
+              </label>
+            </fieldset>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-overlay" data-sidebar-overlay></div>
 
       <main class="app-shell" aria-live="polite">
         <aside class="sidebar left-rail card" data-left-rail aria-label="Work queue navigation"></aside>
@@ -180,7 +284,7 @@
       </div>
     </div>
 
-    <div class="toast" data-toast role="status" aria-live="polite"></div>
+    <div data-toast-container-root></div>
 
     <div class="app-settings" data-settings aria-hidden="true">
       <div class="app-settings__backdrop" data-close-settings></div>

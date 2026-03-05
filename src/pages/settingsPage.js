@@ -15,6 +15,8 @@ export const renderSettingsPage = (ctx) => {
     onAddRiskTemplate,
     onAddProgramTemplate,
     onCreateSnapshot,
+    density,
+    onSetDensity,
     notify
   } = ctx;
 
@@ -51,6 +53,23 @@ export const renderSettingsPage = (ctx) => {
         <button class="ghost-btn" type="button" data-reset-workspace>Reset local state</button>
       </div>
       <p class="muted">Updated at: ${workspace?.updatedAt || 'n/a'}</p>
+      <fieldset class="settings-group" style="margin-top:12px;">
+        <legend class="settings-group__label">Row Density</legend>
+        <div class="density-control" role="group" aria-label="Row density">
+          <button class="density-btn ${density === 'compact' ? 'active' : ''}" type="button" data-density-option="compact" aria-pressed="${density === 'compact'}">
+            <span class="density-btn__preview" data-size="compact"></span>
+            Compact
+          </button>
+          <button class="density-btn ${density === 'default' ? 'active' : ''}" type="button" data-density-option="default" aria-pressed="${density === 'default'}">
+            <span class="density-btn__preview" data-size="default"></span>
+            Default
+          </button>
+          <button class="density-btn ${density === 'comfortable' ? 'active' : ''}" type="button" data-density-option="comfortable" aria-pressed="${density === 'comfortable'}">
+            <span class="density-btn__preview" data-size="comfortable"></span>
+            Comfortable
+          </button>
+        </div>
+      </fieldset>
     </section>
 
     <section class="grid-cards">
@@ -129,6 +148,12 @@ export const renderSettingsPage = (ctx) => {
   wrapper.querySelector('[data-export-workspace]')?.addEventListener('click', () => onExportWorkspace?.());
   wrapper.querySelector('[data-create-snapshot]')?.addEventListener('click', () => onCreateSnapshot?.());
   wrapper.querySelector('[data-reset-workspace]')?.addEventListener('click', () => onResetWorkspace?.());
+  wrapper.querySelectorAll('[data-density-option]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const value = button.getAttribute('data-density-option');
+      onSetDensity?.(value);
+    });
+  });
 
   wrapper.querySelector('[data-import-workspace]')?.addEventListener('change', async (event) => {
     const file = event.target.files?.[0];

@@ -2,6 +2,10 @@ import { createCommandPalette } from './components/commandPalette.js';
 import { createModal } from './components/modal.js';
 import { createCustomerSafeBanner } from './components/CustomerSafeBanner.js';
 import { createEngagementExportModal } from './components/EngagementExportModal.js';
+import { createModeTabs } from './components/ModeTabs.js';
+import { createActiveFilterChips } from './components/ActiveFilterChips.js';
+import { createEmptyState } from './components/EmptyState.js';
+import { mountToastContainer } from './components/ToastContainer.js';
 import { createRouter, detectBasePath, parseRoute, routePath } from './lib/router.js';
 import {
   loadDashboardData,
@@ -41,6 +45,7 @@ import { storage, STORAGE_KEYS } from './lib/storage.js';
 import { createDefaultWorkspace, ensureWorkspaceShape, validateWorkspace } from './lib/model.js';
 import { useCustomerSafe, setCustomerSafeMode } from './composables/useCustomerSafe.js';
 import { ENGAGEMENT_TYPES, normalizeEngagementType } from './config/engagementTypes.js';
+import { toastStore } from './stores/toastStore.js';
 import { renderAccountPage, accountCommandEntries } from './pages/accountPage.js';
 import { renderExportsPage, exportsCommandEntries } from './pages/exportsPage.js';
 import { renderIntakePage, intakeCommandEntries } from './pages/intakePage.js';
@@ -64,8 +69,8 @@ import { renderSettingsPage } from './pages/settingsPage.js';
 const appRoot = document.querySelector('[data-app-root]');
 const routeRoot = document.querySelector('[data-route-root]');
 const leftRailRoot = document.querySelector('[data-left-rail]');
-const toastRoot = document.querySelector('[data-toast]');
 const settingsRoot = document.querySelector('[data-settings]');
+const sidebarOverlay = document.querySelector('[data-sidebar-overlay]');
 let headerResizeObserver = null;
 let pendingSnapshotWorkspace = null;
 const customerSafe = useCustomerSafe();
@@ -128,6 +133,8 @@ const state = {
   customerSafe: customerSafe.isCustomerSafe,
   viewMode: storage.get(STORAGE_KEYS.viewMode, 'today') || 'today',
   persona: 'cse',
+  density: storage.get(STORAGE_KEYS.density, 'default') || 'default',
+  sidebarOpen: false,
   basePath: '',
   portfolioFilters: {
     segment: 'all',
@@ -151,12 +158,57 @@ const state = {
   actionCardCompletion: storage.get(STORAGE_KEYS.actionCards, {})
 };
 
-const notify = (message) => {
-  if (!toastRoot) return;
-  toastRoot.textContent = message;
-  toastRoot.classList.add('is-visible');
-  window.clearTimeout(notify.timer);
-  notify.timer = window.setTimeout(() => toastRoot.classList.remove('is-visible'), 1800);
+const VALID_MODES = new Set(['today', 'review', 'deep']);
+
+const normalizeMode = (value) => {
+  const mode = String(value || 'today').trim().toLowerCase();
+  return VALID_MODES.has(mode) ? mode : 'today';
+};
+
+const parseModeFromHash = () => {
+  const hash = String(window.location.hash || '').trim();
+  if (!hash.includes('?')) return null;
+  const query = hash.split('?')[1] || '';
+  const mode = new URLSearchParams(query).get('mode');
+  return VALID_MODES.has(String(mode || '')) ? String(mode) : null;
+};
+
+const syncModeHash = () => {
+  const path = routePath(state.route.name, state.route.params);
+  const mode = normalizeMode(state.viewMode);
+  const nextHash = mode === 'today' ? `#${path}` : `#${path}?mode=${mode}`;
+  if (window.location.hash === nextHash) return;
+  window.history.replaceState({}, '', `${window.location.pathname}${window.location.search}${nextHash}`);
+};
+
+const applyDensity = () => {
+  const density = ['compact', 'comfortable', 'default'].includes(state.density) ? state.density : 'default';
+  document.documentElement.setAttribute('data-density', density);
+};
+
+const syncSidebarState = () => {
+  const sidebar = leftRailRoot;
+  const toggle = appRoot.querySelector('[data-sidebar-toggle]');
+  const isOpen = Boolean(state.sidebarOpen);
+  sidebar?.classList.toggle('open', isOpen);
+  sidebarOverlay?.classList.toggle('visible', isOpen);
+  toggle?.classList.toggle('open', isOpen);
+  toggle?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+};
+
+const closeSidebar = () => {
+  if (!state.sidebarOpen) return;
+  state.sidebarOpen = false;
+  syncSidebarState();
+};
+
+const toggleSidebar = () => {
+  state.sidebarOpen = !state.sidebarOpen;
+  syncSidebarState();
+};
+
+const notify = (message, type = 'success') => {
+  toastStore.show({ message, type });
 };
 
 const copyText = async (text) => {
@@ -254,9 +306,19 @@ const setSafeMode = (value) => {
 
 const maskField = (fieldName, value) => customerSafe.maskField(fieldName, value);
 
-const setViewMode = (value) => {
-  state.viewMode = value || 'today';
+const setViewMode = (value, { syncHash = true } = {}) => {
+  state.viewMode = normalizeMode(value);
   storage.set(STORAGE_KEYS.viewMode, state.viewMode);
+  if (syncHash) syncModeHash();
+  closeSidebar();
+  render();
+};
+
+const setDensity = (value) => {
+  const next = String(value || 'default').trim().toLowerCase();
+  state.density = ['compact', 'comfortable', 'default'].includes(next) ? next : 'default';
+  storage.set(STORAGE_KEYS.density, state.density);
+  applyDensity();
   render();
 };
 
@@ -286,6 +348,26 @@ const countActivePortfolioFilters = (filters = {}) => {
   return count;
 };
 
+const activeFilterChipData = (filters = {}) => {
+  const chips = [];
+  if (filters.segment && filters.segment !== 'all') chips.push({ id: 'segment', label: `Segment: ${filters.segment}` });
+  if (filters.renewalWindow && filters.renewalWindow !== 'all') chips.push({ id: 'renewalWindow', label: `Renewal: ${filters.renewalWindow}` });
+  if (filters.health && filters.health !== 'all') chips.push({ id: 'health', label: `Health: ${filters.health}` });
+  if (filters.staleOnly) chips.push({ id: 'staleOnly', label: `Stale > ${filters.staleDays || 30}d` });
+  if (filters.belowThreeGreen) chips.push({ id: 'belowThreeGreen', label: 'Adoption < 3 green' });
+  if (Array.isArray(filters.engagementTypes) && filters.engagementTypes.length) {
+    chips.push({ id: 'engagementTypes', label: `Type: ${filters.engagementTypes.map((item) => item.replace(/_/g, ' ')).join(', ')}` });
+  }
+  if (Array.isArray(filters.requestedBy) && filters.requestedBy.length) {
+    chips.push({ id: 'requestedBy', label: `Requested by: ${filters.requestedBy.join(', ')}` });
+  }
+  if (Array.isArray(filters.engagementStatus) && filters.engagementStatus.length) {
+    chips.push({ id: 'engagementStatus', label: `Status: ${filters.engagementStatus.map((item) => item.replace(/_/g, ' ')).join(', ')}` });
+  }
+  if (filters.hasOpenRequest) chips.push({ id: 'hasOpenRequest', label: 'Open requests only' });
+  return chips;
+};
+
 const setActionCardCompletion = (accountId, actionId, complete) => {
   if (!accountId || !actionId) return;
   const current = state.actionCardCompletion && typeof state.actionCardCompletion === 'object' ? state.actionCardCompletion : {};
@@ -304,9 +386,19 @@ const applyQueryOverrides = () => {
   const route = search.get('route');
   const audience = search.get('audience');
   const snapshot = search.get('ws');
+  const modeFromSearch = normalizeMode(search.get('mode') || '');
+  const modeFromHash = parseModeFromHash();
 
   if (audience === 'customer') {
     state.customerSafe = setCustomerSafeMode(true);
+  }
+
+  if (search.has('mode')) {
+    state.viewMode = modeFromSearch;
+    storage.set(STORAGE_KEYS.viewMode, state.viewMode);
+  } else if (modeFromHash) {
+    state.viewMode = modeFromHash;
+    storage.set(STORAGE_KEYS.viewMode, state.viewMode);
   }
 
   if (snapshot) {
@@ -407,15 +499,14 @@ const setActiveNav = () => {
   navItems().forEach((link) => {
     const route = link.getAttribute('data-nav-route');
     const active = route === activeRoute;
+    link.classList.toggle('active', active);
     link.classList.toggle('is-active', active);
   });
 };
 
 const renderLeftRail = () => {
   if (!leftRailRoot) return;
-  const accounts = state.data?.accounts || [];
   const workspace = currentWorkspace();
-  const workspacePortfolio = buildWorkspacePortfolio(workspace);
   const customers = workspace.customers || [];
   const loadErrors = Array.isArray(state.data?.loadErrors) ? state.data.loadErrors : [];
   const accountLoadError = loadErrors.some((item) => item.file === 'accounts.json');
@@ -432,9 +523,15 @@ const renderLeftRail = () => {
           { id: 'voc', label: 'VOC' }
         ]
       : ACCOUNT_SECTION_LINKS;
-  const redCount = (workspacePortfolio.rows || []).filter((row) => String(row.health || '').toLowerCase() === 'red').length;
-  const renewalWindowCount = (workspacePortfolio.rows || []).filter((row) => Number(row.renewalDays ?? 999) <= 90).length;
-  const staleCount = (workspacePortfolio.rows || []).filter((row) => Number(row.engagementDays ?? 999) > 30).length;
+  const filterCount = countActivePortfolioFilters(state.portfolioFilters);
+  const lastPlaybook = (() => {
+    try {
+      const stored = window.localStorage.getItem('lastPlaybook');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  })();
   const recentCustomers = [...customers]
     .sort((left, right) => {
       if (left.id === state.selectedCustomerId) return -1;
@@ -444,73 +541,142 @@ const renderLeftRail = () => {
     .slice(0, 8);
 
   leftRailRoot.innerHTML = `
-    <div class="rail-group">
-      <p class="rail-label">Primary Navigation</p>
-      <div class="rail-list">
-        ${PRIMARY_NAV_ITEMS.map(
-          (item) =>
-            `<button class="rail-link rail-nav-link" type="button" data-nav-route="${item.route}"><span class="rail-nav-icon">${item.icon}</span><span>${item.label}</span></button>`
-        ).join('')}
+    <div class="sidebar__brand">
+      <div class="sidebar__brand-icon" aria-hidden="true">GL</div>
+      <div class="sidebar__brand-text">
+        <span class="sidebar__brand-name">GitLab CSE</span>
+        <span class="sidebar__brand-sub">On-Demand Console</span>
       </div>
     </div>
 
-    <div class="rail-group">
-      <p class="rail-label">${isAccountContext ? 'Jump To Section' : 'Daily Focus'}</p>
+    <section class="sidebar__zone sidebar__zone--nav">
+      <button class="sidebar__item ${state.viewMode === 'today' ? 'active' : ''}" type="button" data-set-mode="today">
+        <span class="sidebar__item-icon" aria-hidden="true">📅</span>
+        <span>Today</span>
+      </button>
+      <button class="sidebar__item ${state.viewMode === 'review' ? 'active' : ''}" type="button" data-set-mode="review">
+        <span class="sidebar__item-icon" aria-hidden="true">🔍</span>
+        <span>Review</span>
+      </button>
+      <button class="sidebar__item ${state.viewMode === 'deep' ? 'active' : ''}" type="button" data-set-mode="deep">
+        <span class="sidebar__item-icon" aria-hidden="true">🔬</span>
+        <span>Deep Dive</span>
+      </button>
+      <button class="sidebar__item ${state.route.name === 'portfolio' ? 'active' : ''}" type="button" data-nav-route="portfolio">
+        <span class="sidebar__item-icon" aria-hidden="true">📊</span>
+        <span>Portfolio</span>
+      </button>
+      <button class="sidebar__item ${state.route.name === 'customers' || state.route.name === 'customer' ? 'active' : ''}" type="button" data-nav-route="customers">
+        <span class="sidebar__item-icon" aria-hidden="true">🏢</span>
+        <span>Customers</span>
+      </button>
+      <button class="sidebar__item ${state.route.name === 'programs' || state.route.name === 'program' ? 'active' : ''}" type="button" data-nav-route="programs">
+        <span class="sidebar__item-icon" aria-hidden="true">🎯</span>
+        <span>Programs</span>
+      </button>
+      <button class="sidebar__item ${state.route.name === 'manager' ? 'active' : ''}" type="button" data-nav-route="manager">
+        <span class="sidebar__item-icon" aria-hidden="true">👥</span>
+        <span>Manager</span>
+      </button>
+    </section>
+
+    <section class="sidebar__zone sidebar__zone--tools">
+      <p class="sidebar__zone-label">${isAccountContext ? 'Jump To Section' : 'Tools'}</p>
+      <button class="sidebar__item" type="button" data-open-filters aria-expanded="false">
+        <span class="sidebar__item-icon" aria-hidden="true">⚙️</span>
+        <span>Portfolio Filters</span>
+        ${filterCount > 0 ? `<span class="sidebar__badge">${filterCount}</span>` : ''}
+      </button>
+      <button class="sidebar__item" type="button" data-go-playbooks>
+        <span class="sidebar__item-icon" aria-hidden="true">📖</span>
+        <span>Open Playbooks</span>
+      </button>
+      ${
+        lastPlaybook?.name
+          ? `<span class="sidebar__subtitle">${lastPlaybook.name}</span>`
+          : ''
+      }
+      <button class="sidebar__item" type="button" data-go-portfolio>
+        <span class="sidebar__item-icon" aria-hidden="true">🧭</span>
+        <span>Open Portfolio Filters</span>
+      </button>
+      <button class="sidebar__item" type="button" data-rail-open-current ${current ? '' : 'disabled'}>
+        <span class="sidebar__item-icon" aria-hidden="true">➡️</span>
+        <span>Open Current Account</span>
+      </button>
+      <div class="sidebar__field">
+        <label for="sidebar-jump">Jump to section</label>
+        <select id="sidebar-jump" data-global-jump></select>
+      </div>
       ${
         isAccountContext
-          ? sectionLinks.map(
-              (item) =>
-                `<button class="rail-link" type="button" data-rail-section="${item.id}">${item.label}</button>`
-            ).join('')
-          : `<ul class="rail-shortcuts">
-               <li>Customers loaded: ${customers.length}</li>
-               <li>Red health: ${redCount}</li>
-               <li>Renewal < 90 days: ${renewalWindowCount}</li>
-               <li>Engagement stale > 30d: ${staleCount}</li>
-             </ul>`
+          ? sectionLinks
+              .map(
+                (item) =>
+                  `<button class="sidebar__item" type="button" data-rail-section="${item.id}">
+                    <span class="sidebar__item-icon" aria-hidden="true">•</span>
+                    <span>${item.label}</span>
+                  </button>`
+              )
+              .join('')
+          : ''
       }
-      <button class="rail-link" type="button" data-rail-open-current ${current ? '' : 'disabled'}>Open Current Customer</button>
-    </div>
+      <p class="sidebar__zone-label">Recent Customers</p>
+      ${
+        recentCustomers.length
+          ? recentCustomers
+              .map(
+                (customer) =>
+                  `<button class="sidebar__item ${customer.id === state.selectedCustomerId ? 'active' : ''}" type="button" data-rail-customer="${customer.id}">
+                    <span class="sidebar__item-icon" aria-hidden="true">•</span>
+                    <span>${state.customerSafe ? maskField('accountName', customer.name) || 'Your Organization' : customer.name}</span>
+                  </button>`
+              )
+              .join('')
+          : accountLoadError
+            ? '<p class="empty-text">Customer data failed to load.</p>'
+            : '<p class="empty-text">No customers loaded.</p>'
+      }
+    </section>
 
-    <div class="rail-group">
-      <p class="rail-label">Recent Customers</p>
-      <div class="rail-list">
-        ${
-          recentCustomers.length
-            ? recentCustomers
-                .map(
-                  (customer) =>
-                    `<button class="rail-link ${customer.id === state.selectedCustomerId ? 'is-active' : ''}" type="button" data-rail-customer="${customer.id}">${
-                      state.customerSafe ? maskField('accountName', customer.name) || 'Your Organization' : customer.name
-                    }</button>`
-                )
-                .join('')
-            : accountLoadError
-              ? '<p class="empty-text">Customer data failed to load.</p>'
-              : '<p class="empty-text">No customers loaded.</p>'
-        }
+    <section class="sidebar__zone sidebar__zone--utils">
+      <p class="sidebar__zone-label">Workspace</p>
+      <div class="sidebar__field">
+        <label for="sidebar-persona">Persona</label>
+        <select id="sidebar-persona" data-global-persona>
+          <option value="cse">CSE On-Demand</option>
+          <option value="manager">CSE Manager</option>
+        </select>
       </div>
-    </div>
-
-    <div class="rail-group">
-      <p class="rail-label">${isAccountContext ? 'Usage Guidance' : 'CSE Loop'}</p>
-      <ul class="rail-shortcuts">
-        ${
-          isAccountContext
-            ? '<li>Use tabs for workflow details and section-level actions.</li><li>Use customer-safe mode before sharing artifacts.</li><li>Use Exports tab for PDF/CSV and copy templates.</li>'
-            : '<li>1. Triage queue in Today</li><li>2. Execute program or workshop motion</li><li>3. Log engagement and update outcomes</li><li>4. Export customer-safe summary</li>'
-        }
-      </ul>
-    </div>
-
-    <div class="rail-group">
-      <p class="rail-label">Shortcuts</p>
-      <ul class="rail-shortcuts">
-        <li><kbd>Ctrl</kbd> + <kbd>K</kbd> command palette</li>
-        <li>Toggle customer-safe before sharing exports</li>
-      </ul>
-    </div>
+      <div class="sidebar__field">
+        <label for="sidebar-account">Account</label>
+        <select id="sidebar-account" data-global-account-select></select>
+      </div>
+      <button class="sidebar__item" type="button" data-copy-snapshot>
+        <span class="sidebar__item-icon" aria-hidden="true">🔗</span>
+        <span>Copy Snapshot Link</span>
+      </button>
+      <button class="sidebar__item" type="button" data-global-export>
+        <span class="sidebar__item-icon" aria-hidden="true">📤</span>
+        <span>Export</span>
+      </button>
+      <button class="sidebar__item" type="button" data-open-settings>
+        <span class="sidebar__item-icon" aria-hidden="true">⚙️</span>
+        <span>Settings</span>
+      </button>
+      <button class="sidebar__item" type="button" data-go-resources>
+        <span class="sidebar__item-icon" aria-hidden="true">📚</span>
+        <span>Resources</span>
+      </button>
+    </section>
   `;
+
+  leftRailRoot.querySelectorAll('[data-set-mode]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const mode = button.getAttribute('data-set-mode');
+      setViewMode(mode);
+    });
+  });
 
   leftRailRoot.querySelector('[data-rail-open-current]')?.addEventListener('click', () => {
     const customerContext = ['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'settings'].includes(
@@ -521,18 +687,21 @@ const renderLeftRail = () => {
       if (!targetId) return;
       setSelectedCustomer(targetId);
       router.navigate('customer', { id: targetId });
+      closeSidebar();
       return;
     }
     const targetId = currentAccount()?.id || state.data.accounts?.[0]?.id || '';
     if (!targetId) return;
     setSelectedAccount(targetId);
     router.navigate('account', { id: targetId });
+    closeSidebar();
   });
 
   leftRailRoot.querySelectorAll('[data-rail-section]').forEach((button) => {
     button.addEventListener('click', () => {
       const sectionId = button.getAttribute('data-rail-section');
       focusAccountSection(sectionId);
+      closeSidebar();
     });
   });
 
@@ -541,6 +710,7 @@ const renderLeftRail = () => {
       const customerId = button.getAttribute('data-rail-customer');
       setSelectedCustomer(customerId);
       router.navigate('customer', { id: customerId });
+      closeSidebar();
     });
   });
 };
@@ -1200,9 +1370,8 @@ const renderShellContext = () => {
 
   const safeToggle = appRoot.querySelector('[data-global-safe-toggle]');
   if (safeToggle) safeToggle.checked = state.customerSafe;
-
-  const modeSelect = appRoot.querySelector('[data-global-mode]');
-  if (modeSelect) modeSelect.value = state.viewMode;
+  const safeToggleLabel = appRoot.querySelector('[data-safe-toggle-label]');
+  if (safeToggleLabel) safeToggleLabel.classList.toggle('active', state.customerSafe);
 
   const accountSelect = appRoot.querySelector('[data-global-account-select]');
   if (accountSelect) {
@@ -1241,9 +1410,14 @@ const renderShellContext = () => {
         : ACCOUNT_SECTION_LINKS;
     const options = [{ value: '', label: isAccountContext ? 'Jump to account section' : 'Open account workspace' }];
     if (activeAccount || state.data?.accounts?.length || customers.length) {
+      const accountLabel = activeAccount
+        ? state.customerSafe
+          ? maskField('accountName', activeAccount.name) || 'Your Organization'
+          : activeAccount.name
+        : 'Account';
       options.push({
         value: activeAccount ? `account:${activeAccount.id}` : 'account',
-        label: activeAccount ? `${inCustomerModel ? 'Customer' : 'Account'}: ${activeAccount.name}` : 'Account'
+        label: activeAccount ? `${inCustomerModel ? 'Customer' : 'Account'}: ${accountLabel}` : 'Account'
       });
     }
     if (isAccountContext) {
@@ -1262,9 +1436,16 @@ const renderShellContext = () => {
   if (safeLabel) {
     const routeLabel = ROUTE_LABELS[state.route.name] || 'Today';
     const modeLabel = state.viewMode === 'deep' ? 'Deep Dive' : state.viewMode === 'review' ? 'Review' : 'Today';
-    safeLabel.textContent = state.customerSafe
-      ? `Customer-safe mode • ${routeLabel} • ${modeLabel} • ${state.persona === 'manager' ? 'Manager' : 'CSE On-Demand'}`
-      : `Internal mode • ${routeLabel} • ${modeLabel} • ${state.persona === 'manager' ? 'Manager' : 'CSE On-Demand'}`;
+    safeLabel.textContent = `${routeLabel} • ${modeLabel} • ${state.persona === 'manager' ? 'Manager' : 'CSE On-Demand'}`;
+  }
+
+  const headerStatus = appRoot.querySelector('[data-header-status]');
+  if (headerStatus) {
+    headerStatus.classList.toggle('status-pill--internal', !state.customerSafe);
+    headerStatus.classList.toggle('status-pill--safe', state.customerSafe);
+    headerStatus.innerHTML = state.customerSafe
+      ? '<span aria-hidden="true">🛡</span>Customer-Safe'
+      : '<span aria-hidden="true">🔒</span>Internal';
   }
 
   const managerBadge = appRoot.querySelector('[data-manager-badge]');
@@ -1287,11 +1468,6 @@ const renderShellContext = () => {
     input.checked = Array.isArray(state.portfolioFilters.engagementStatus) && state.portfolioFilters.engagementStatus.includes(value);
   });
 
-  const filtersShortcut = appRoot.querySelector('.header-panel [data-go-portfolio]');
-  if (filtersShortcut) {
-    const activeCount = countActivePortfolioFilters(state.portfolioFilters);
-    filtersShortcut.textContent = `Open Portfolio Filters${activeCount ? ` (${activeCount} active)` : ''}`;
-  }
 };
 
 const copyShareSnapshot = async () => {
@@ -1526,6 +1702,7 @@ const renderCurrentRoute = () => {
     customerSafe: state.customerSafe,
     maskField,
     persona: state.persona,
+    setMode: (mode) => setViewMode(mode),
     navigate: (name, params) => {
       if (name === 'account' && params?.id) setSelectedAccount(params.id);
       if (name === 'account' && !params?.id) params = { id: currentAccount()?.id || state.data.accounts?.[0]?.id || '' };
@@ -1823,6 +2000,8 @@ const renderCurrentRoute = () => {
       onAddRiskTemplate,
       onAddProgramTemplate,
       onCreateSnapshot: onCreateMonthlySnapshot,
+      density: state.density,
+      onSetDensity: setDensity,
       notify,
       ...common
     });
@@ -1847,6 +2026,50 @@ const renderCurrentRoute = () => {
   }
 
   routeRoot.innerHTML = '';
+  const modeCounts = {
+    today:
+      state.route.name === 'home'
+        ? Number(workspacePortfolio.rows?.length || portfolio?.todayQueue?.length || 0)
+        : undefined
+  };
+  const modeTabs = createModeTabs({
+    currentMode: state.viewMode,
+    counts: modeCounts,
+    onSelect: (mode) => setViewMode(mode)
+  });
+  routeRoot.appendChild(modeTabs);
+
+  const chips = createActiveFilterChips({
+    filters: activeFilterChipData(state.portfolioFilters),
+    onRemove: (chipId) => {
+      if (!chipId) return;
+      const reset = {};
+      if (chipId === 'segment') reset.segment = 'all';
+      if (chipId === 'renewalWindow') reset.renewalWindow = 'all';
+      if (chipId === 'health') reset.health = 'all';
+      if (chipId === 'staleOnly') reset.staleOnly = false;
+      if (chipId === 'belowThreeGreen') reset.belowThreeGreen = false;
+      if (chipId === 'engagementTypes') reset.engagementTypes = [];
+      if (chipId === 'requestedBy') reset.requestedBy = [];
+      if (chipId === 'engagementStatus') reset.engagementStatus = [];
+      if (chipId === 'hasOpenRequest') reset.hasOpenRequest = false;
+      setPortfolioFilters(reset);
+    },
+    onClear: () =>
+      setPortfolioFilters({
+        segment: 'all',
+        renewalWindow: 'all',
+        health: 'all',
+        staleOnly: false,
+        hasOpenRequest: false,
+        belowThreeGreen: false,
+        engagementTypes: [],
+        requestedBy: [],
+        engagementStatus: []
+      })
+  });
+  if (chips) routeRoot.appendChild(chips);
+
   normalizeRouteLayout(view);
   if (state.customerSafe) {
     view.prepend(createCustomerSafeBanner());
@@ -1858,10 +2081,12 @@ const renderCurrentRoute = () => {
 };
 
 const render = () => {
-  renderShellContext();
   renderLeftRail();
+  renderShellContext();
   renderCurrentRoute();
   setActiveNav();
+  syncModeHash();
+  syncSidebarState();
   syncHeaderOffset();
 };
 
@@ -1870,7 +2095,189 @@ applyQueryOverrides();
 const router = createRouter(state.basePath);
 
 const bindGlobalEvents = () => {
+  const syncGlobalMultiFilters = () => {
+    const engagementTypes = [...appRoot.querySelectorAll('[data-global-filter-engagement-type]:checked')].map((input) =>
+      String(input.getAttribute('data-global-filter-engagement-type') || '').toUpperCase()
+    );
+    const requestedBy = [...appRoot.querySelectorAll('[data-global-filter-requested-by]:checked')].map((input) =>
+      String(input.getAttribute('data-global-filter-requested-by') || '').toUpperCase()
+    );
+    const engagementStatus = [...appRoot.querySelectorAll('[data-global-filter-engagement-status]:checked')].map((input) =>
+      String(input.getAttribute('data-global-filter-engagement-status') || '').toUpperCase()
+    );
+    setPortfolioFilters({
+      engagementTypes,
+      requestedBy,
+      engagementStatus
+    });
+  };
+
+  const handleJumpSelection = (rawValue, select) => {
+    const value = String(rawValue || '').trim();
+    if (!value) return;
+    const customerRouteContext = ['customer', 'customers', 'program', 'risks', 'expansion', 'voc', 'reports', 'settings'].includes(
+      state.route.name
+    );
+    if (value.startsWith('section:')) {
+      const sectionId = value.split(':')[1] || '';
+      const accountId = customerRouteContext
+        ? state.selectedCustomerId || state.data.workspace?.customers?.[0]?.id || ''
+        : state.selectedAccountId || state.data.accounts?.[0]?.id || '';
+      if (!accountId || !sectionId) return;
+      const applyFocus = () => focusAccountSection(sectionId);
+      if (state.route.name === 'account' || state.route.name === 'journey' || state.route.name === 'customer') {
+        applyFocus();
+      } else {
+        if (customerRouteContext) {
+          setSelectedCustomer(accountId);
+          router.navigate('customer', { id: accountId });
+        } else {
+          setSelectedAccount(accountId);
+          router.navigate('account', { id: accountId });
+        }
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => applyFocus());
+        });
+      }
+      if (select) select.value = '';
+      return;
+    }
+    if (value.startsWith('account:')) {
+      const accountId = value.split(':')[1] || state.selectedCustomerId || state.selectedAccountId || state.data.accounts?.[0]?.id || '';
+      if (!accountId) return;
+      if (workspaceCustomerById(accountId)) {
+        setSelectedCustomer(accountId);
+        router.navigate('customer', { id: accountId });
+      } else {
+        setSelectedAccount(accountId);
+        router.navigate('account', { id: accountId });
+      }
+      if (select) select.value = '';
+      return;
+    }
+    if (value === 'account') {
+      const accountId = customerRouteContext
+        ? state.selectedCustomerId || state.data.workspace?.customers?.[0]?.id || ''
+        : state.selectedAccountId || state.data.accounts?.[0]?.id || '';
+      if (!accountId) return;
+      if (customerRouteContext) {
+        setSelectedCustomer(accountId);
+        router.navigate('customer', { id: accountId });
+      } else {
+        setSelectedAccount(accountId);
+        router.navigate('account', { id: accountId });
+      }
+      if (select) select.value = '';
+      return;
+    }
+    if (select) select.value = '';
+  };
+
+  const moreButton = appRoot.querySelector('[data-open-more]');
+  const moreMenu = appRoot.querySelector('[data-more-menu]');
+  const filtersPanel = appRoot.querySelector('[data-filters-panel]');
+  const getFiltersButton = () => appRoot.querySelector('[data-open-filters]');
+
+  moreButton?.setAttribute('aria-expanded', 'false');
+
   appRoot.addEventListener('click', (event) => {
+    const sidebarToggle = event.target.closest('[data-sidebar-toggle]');
+    if (sidebarToggle) {
+      event.preventDefault();
+      toggleSidebar();
+      return;
+    }
+
+    const exportButton = event.target.closest('[data-global-export]');
+    if (exportButton) {
+      const modal = createEngagementExportModal({
+        workspace: currentWorkspace(),
+        customerSafe: state.customerSafe,
+        maskField,
+        notify,
+        onClose: () => {}
+      });
+      document.body.appendChild(modal);
+      closeSidebar();
+      return;
+    }
+
+    const openSettings = event.target.closest('[data-open-settings]');
+    if (openSettings) {
+      router.navigate('settings');
+      closeSidebar();
+      if (moreMenu) moreMenu.hidden = true;
+      moreButton?.setAttribute('aria-expanded', 'false');
+      return;
+    }
+
+    const copySnapshot = event.target.closest('[data-copy-snapshot]');
+    if (copySnapshot) {
+      copyShareSnapshot();
+      closeSidebar();
+      if (moreMenu) moreMenu.hidden = true;
+      moreButton?.setAttribute('aria-expanded', 'false');
+      return;
+    }
+
+    const openResources = event.target.closest('[data-go-resources]');
+    if (openResources) {
+      router.navigate('resources');
+      closeSidebar();
+      if (moreMenu) moreMenu.hidden = true;
+      moreButton?.setAttribute('aria-expanded', 'false');
+      return;
+    }
+
+    const openPortfolio = event.target.closest('[data-go-portfolio]');
+    if (openPortfolio) {
+      router.navigate('portfolio');
+      closeSidebar();
+      return;
+    }
+
+    const openPlaybooks = event.target.closest('[data-go-playbooks]');
+    if (openPlaybooks) {
+      router.navigate('playbooks');
+      closeSidebar();
+      return;
+    }
+
+    const toggleMore = event.target.closest('[data-open-more]');
+    if (toggleMore) {
+      event.stopPropagation();
+      if (!moreMenu) return;
+      const filtersButton = getFiltersButton();
+      if (filtersPanel && !filtersPanel.hasAttribute('hidden')) {
+        filtersPanel.setAttribute('hidden', 'hidden');
+        filtersButton?.setAttribute('aria-expanded', 'false');
+      }
+      const expanded = moreButton?.getAttribute('aria-expanded') === 'true';
+      moreMenu.hidden = Boolean(expanded);
+      moreButton?.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+      syncHeaderOffset();
+      return;
+    }
+
+    const toggleFilters = event.target.closest('[data-open-filters]');
+    if (toggleFilters) {
+      if (!filtersPanel) return;
+      if (moreMenu && !moreMenu.hidden) {
+        moreMenu.hidden = true;
+        moreButton?.setAttribute('aria-expanded', 'false');
+      }
+      const hidden = filtersPanel.hasAttribute('hidden');
+      if (hidden) {
+        filtersPanel.removeAttribute('hidden');
+        toggleFilters.setAttribute('aria-expanded', 'true');
+      } else {
+        filtersPanel.setAttribute('hidden', 'hidden');
+        toggleFilters.setAttribute('aria-expanded', 'false');
+      }
+      syncHeaderOffset();
+      return;
+    }
+
     const link = event.target.closest('[data-nav-route]');
     if (!link) return;
     event.preventDefault();
@@ -1901,160 +2308,61 @@ const bindGlobalEvents = () => {
       return;
     }
     router.navigate(name);
+    closeSidebar();
   });
 
-  appRoot.querySelector('[data-global-account-select]')?.addEventListener('change', (event) => {
-    const accountId = event.target.value;
-    if (!accountId) return;
-    if (['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'settings'].includes(state.route.name)) {
-      setSelectedCustomer(accountId);
-      router.navigate('customer', { id: accountId });
-      return;
-    }
-    setSelectedAccount(accountId);
-    router.navigate('account', { id: accountId });
-  });
+  appRoot.addEventListener('change', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
 
-  const syncGlobalMultiFilters = () => {
-    const engagementTypes = [...appRoot.querySelectorAll('[data-global-filter-engagement-type]:checked')].map((input) =>
-      String(input.getAttribute('data-global-filter-engagement-type') || '').toUpperCase()
-    );
-    const requestedBy = [...appRoot.querySelectorAll('[data-global-filter-requested-by]:checked')].map((input) =>
-      String(input.getAttribute('data-global-filter-requested-by') || '').toUpperCase()
-    );
-    const engagementStatus = [...appRoot.querySelectorAll('[data-global-filter-engagement-status]:checked')].map((input) =>
-      String(input.getAttribute('data-global-filter-engagement-status') || '').toUpperCase()
-    );
-    setPortfolioFilters({
-      engagementTypes,
-      requestedBy,
-      engagementStatus
-    });
-  };
-
-  appRoot.querySelector('[data-global-export]')?.addEventListener('click', () => {
-    const modal = createEngagementExportModal({
-      workspace: currentWorkspace(),
-      customerSafe: state.customerSafe,
-      maskField,
-      notify,
-      onClose: () => {}
-    });
-    document.body.appendChild(modal);
-  });
-
-  appRoot.querySelector('[data-global-persona]')?.addEventListener('change', (event) => {
-    const persona = event.target.value;
-    state.persona = persona === 'manager' ? 'manager' : 'cse';
-    if (state.route.name === 'manager' && state.persona !== 'manager') {
-      router.navigate('home');
-      return;
-    }
-    render();
-  });
-
-  appRoot.querySelector('[data-global-jump]')?.addEventListener('change', (event) => {
-    const value = String(event.target.value || '').trim();
-    if (!value) return;
-    const customerRouteContext = ['customer', 'customers', 'program', 'risks', 'expansion', 'voc', 'reports', 'settings'].includes(
-      state.route.name
-    );
-    if (value.startsWith('section:')) {
-      const sectionId = value.split(':')[1] || '';
-      const accountId = customerRouteContext
-        ? state.selectedCustomerId || state.data.workspace?.customers?.[0]?.id || ''
-        : state.selectedAccountId || state.data.accounts?.[0]?.id || '';
-      if (!accountId || !sectionId) return;
-      const applyFocus = () => focusAccountSection(sectionId);
-      if (state.route.name === 'account' || state.route.name === 'journey' || state.route.name === 'customer') {
-        applyFocus();
-      } else {
-        if (customerRouteContext) {
-          setSelectedCustomer(accountId);
-          router.navigate('customer', { id: accountId });
-        } else {
-          setSelectedAccount(accountId);
-          router.navigate('account', { id: accountId });
-        }
-        window.requestAnimationFrame(() => {
-          window.requestAnimationFrame(() => applyFocus());
-        });
-      }
-      event.target.value = '';
-      return;
-    }
-    if (value.startsWith('account:')) {
-      const accountId = value.split(':')[1] || state.selectedCustomerId || state.selectedAccountId || state.data.accounts?.[0]?.id || '';
+    if (target.matches('[data-global-account-select]')) {
+      const accountId = target.value;
       if (!accountId) return;
-      if (workspaceCustomerById(accountId)) {
+      if (['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'settings'].includes(state.route.name)) {
         setSelectedCustomer(accountId);
         router.navigate('customer', { id: accountId });
       } else {
         setSelectedAccount(accountId);
         router.navigate('account', { id: accountId });
       }
-      event.target.value = '';
+      closeSidebar();
       return;
     }
-    if (value === 'account') {
-      const accountId = customerRouteContext
-        ? state.selectedCustomerId || state.data.workspace?.customers?.[0]?.id || ''
-        : state.selectedAccountId || state.data.accounts?.[0]?.id || '';
-      if (!accountId) return;
-      if (customerRouteContext) {
-        setSelectedCustomer(accountId);
-        router.navigate('customer', { id: accountId });
+
+    if (target.matches('[data-global-persona]')) {
+      const persona = target.value;
+      state.persona = persona === 'manager' ? 'manager' : 'cse';
+      if (state.route.name === 'manager' && state.persona !== 'manager') {
+        router.navigate('home');
       } else {
-        setSelectedAccount(accountId);
-        router.navigate('account', { id: accountId });
+        render();
       }
-      event.target.value = '';
       return;
     }
-    event.target.value = '';
-  });
 
-  appRoot.querySelector('[data-global-safe-toggle]')?.addEventListener('change', (event) => {
-    setSafeMode(Boolean(event.target.checked));
-  });
-
-  appRoot.querySelector('[data-global-mode]')?.addEventListener('change', (event) => {
-    setViewMode(event.target.value);
-  });
-
-  appRoot.querySelectorAll('[data-global-filter-engagement-type]').forEach((input) => {
-    input.addEventListener('change', syncGlobalMultiFilters);
-  });
-  appRoot.querySelectorAll('[data-global-filter-requested-by]').forEach((input) => {
-    input.addEventListener('change', syncGlobalMultiFilters);
-  });
-  appRoot.querySelectorAll('[data-global-filter-engagement-status]').forEach((input) => {
-    input.addEventListener('change', syncGlobalMultiFilters);
-  });
-
-  appRoot.querySelector('[data-open-settings]')?.addEventListener('click', () => {
-    router.navigate('settings');
-  });
-
-  const moreButton = appRoot.querySelector('[data-open-more]');
-  const moreMenu = appRoot.querySelector('[data-more-menu]');
-  const filtersButton = appRoot.querySelector('[data-open-filters]');
-  const filtersPanel = appRoot.querySelector('[data-filters-panel]');
-
-  moreButton?.setAttribute('aria-expanded', 'false');
-  filtersButton?.setAttribute('aria-expanded', 'false');
-
-  moreButton?.addEventListener('click', (event) => {
-    event.stopPropagation();
-    if (!moreMenu) return;
-    if (filtersPanel && !filtersPanel.hasAttribute('hidden')) {
-      filtersPanel.setAttribute('hidden', 'hidden');
-      filtersButton?.setAttribute('aria-expanded', 'false');
+    if (target.matches('[data-global-jump]')) {
+      handleJumpSelection(target.value, target);
+      closeSidebar();
+      return;
     }
-    const expanded = moreButton.getAttribute('aria-expanded') === 'true';
-    moreMenu.hidden = expanded;
-    moreButton.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-    syncHeaderOffset();
+
+    if (target.matches('[data-global-safe-toggle]')) {
+      setSafeMode(Boolean(target.checked));
+      return;
+    }
+
+    if (target.matches('[data-global-mode]')) {
+      setViewMode(target.value);
+      return;
+    }
+
+    if (
+      target.matches('[data-global-filter-engagement-type]') ||
+      target.matches('[data-global-filter-requested-by]') ||
+      target.matches('[data-global-filter-engagement-status]')
+    ) {
+      syncGlobalMultiFilters();
+    }
   });
 
   document.addEventListener('click', (event) => {
@@ -2063,6 +2371,7 @@ const bindGlobalEvents = () => {
       moreMenu.hidden = true;
       moreButton?.setAttribute('aria-expanded', 'false');
     }
+    const filtersButton = getFiltersButton();
     const insideFilters = event.target.closest('[data-filters-panel]') || event.target.closest('[data-open-filters]');
     if (filtersPanel && !filtersPanel.hasAttribute('hidden') && !insideFilters) {
       filtersPanel.setAttribute('hidden', 'hidden');
@@ -2072,48 +2381,14 @@ const bindGlobalEvents = () => {
   });
 
   document.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape') return;
-    closeHeaderMenus();
-    syncHeaderOffset();
-  });
-
-  appRoot.querySelector('[data-copy-snapshot]')?.addEventListener('click', async () => {
-    await copyShareSnapshot();
-    if (moreMenu) moreMenu.hidden = true;
-    moreButton?.setAttribute('aria-expanded', 'false');
-    syncHeaderOffset();
-  });
-
-  appRoot.querySelector('[data-go-resources]')?.addEventListener('click', () => {
-    router.navigate('resources');
-    if (moreMenu) moreMenu.hidden = true;
-    moreButton?.setAttribute('aria-expanded', 'false');
-    syncHeaderOffset();
-  });
-
-  filtersButton?.addEventListener('click', () => {
-    if (!filtersPanel) return;
-    if (moreMenu && !moreMenu.hidden) {
-      moreMenu.hidden = true;
-      moreButton?.setAttribute('aria-expanded', 'false');
+    if (event.key === 'Escape') {
+      closeHeaderMenus();
+      closeSidebar();
+      syncHeaderOffset();
     }
-    const hidden = filtersPanel.hasAttribute('hidden');
-    if (hidden) {
-      filtersPanel.removeAttribute('hidden');
-      filtersButton.setAttribute('aria-expanded', 'true');
-    } else {
-      filtersPanel.setAttribute('hidden', 'hidden');
-      filtersButton.setAttribute('aria-expanded', 'false');
-    }
-    syncHeaderOffset();
   });
 
-  appRoot.querySelector('[data-go-portfolio]')?.addEventListener('click', () => {
-    router.navigate('portfolio');
-  });
-  appRoot.querySelector('[data-go-playbooks]')?.addEventListener('click', () => {
-    router.navigate('playbooks');
-  });
+  sidebarOverlay?.addEventListener('click', closeSidebar);
 
   settingsRoot?.querySelectorAll('[data-close-settings]').forEach((item) => {
     item.addEventListener('click', () => {
@@ -2133,6 +2408,19 @@ const bindGlobalEvents = () => {
 };
 
 const init = async () => {
+  applyDensity();
+  if (routeRoot) {
+    routeRoot.innerHTML = '';
+    routeRoot.appendChild(
+      createEmptyState({
+        variant: 'loading',
+        title: 'Loading your portfolio...',
+        body: 'Fetching accounts and engagements.'
+      })
+    );
+  }
+
+  mountToastContainer();
   state.data = await loadDashboardData();
   if (pendingSnapshotWorkspace) {
     state.data.workspace = ensureWorkspaceShape(
@@ -2182,11 +2470,22 @@ const init = async () => {
 
   router.subscribe((route) => {
     state.route = route;
+    const hashMode = parseModeFromHash();
+    if (hashMode) {
+      state.viewMode = hashMode;
+      storage.set(STORAGE_KEYS.viewMode, state.viewMode);
+    }
     closeHeaderMenus();
+    closeSidebar();
     render();
   });
 
   router.start();
+  const loader = document.getElementById('app-loading');
+  if (loader) {
+    loader.classList.add('hidden');
+    window.setTimeout(() => loader.remove(), 350);
+  }
 };
 
 init().catch((error) => {
@@ -2197,4 +2496,9 @@ init().catch((error) => {
       <p class="muted">${error.message}</p>
     </section>
   `;
+  const loader = document.getElementById('app-loading');
+  if (loader) {
+    loader.classList.add('hidden');
+    window.setTimeout(() => loader.remove(), 350);
+  }
 });

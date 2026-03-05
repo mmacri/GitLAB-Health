@@ -17,6 +17,7 @@ const LEGACY_KEY_ALIASES = {
   gh_engagement_log_v1: ['engagement_log_v1'],
   gh_toolkit_launch: ['glh-toolkit-launch'],
   gh_action_cards_v1: ['glh-action-cards'],
+  gh_density_v1: [],
   gh_workspace_v3: []
 };
 
@@ -100,5 +101,6 @@ export const STORAGE_KEYS = {
   engagementLog: 'gh_engagement_log_v1',
   toolkitLaunch: 'gh_toolkit_launch',
   actionCards: 'gh_action_cards_v1',
+  density: 'gh_density_v1',
   workspace: 'gh_workspace_v3'
 };

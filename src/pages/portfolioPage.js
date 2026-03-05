@@ -3,6 +3,7 @@ import { metricTile } from '../components/metricTile.js';
 import { statusChip, statusToneFromHealth } from '../components/statusChip.js';
 import { createAdoptionStageWidget, compactAdoptionDots } from '../components/adoption/AdoptionStageWidget.js';
 import { createManagerOverviewPanel } from '../components/manager/ManagerOverviewPanel.js';
+import { createEmptyState } from '../components/EmptyState.js';
 import { barChartSvg, donutChartSvg } from '../lib/charts.js';
 import { formatDate, parseDate } from '../lib/date.js';
 import { loadEngagementLog } from '../lib/engagementLog.js';
@@ -469,6 +470,7 @@ const renderWorkspaceTodayPage = (ctx) => {
     customerSafe,
     maskField,
     navigate,
+    setMode,
     onExportPortfolio,
     onCopyShare,
     onQuickLogEngagement
@@ -586,12 +588,13 @@ const renderWorkspaceTodayPage = (ctx) => {
           )
           .join('')}
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" data-engagement-table-wrap>
         <table class="data-table">
           <thead><tr><th>Customer</th><th>Engagement Type</th><th>Status</th><th>Date</th><th>Adoption</th><th>Action</th></tr></thead>
           <tbody data-engagement-queue></tbody>
         </table>
       </div>
+      <div data-engagement-empty></div>
     </section>
 
     ${
@@ -639,27 +642,77 @@ const renderWorkspaceTodayPage = (ctx) => {
 
   const renderQueue = () => {
     const tbody = wrapper.querySelector('[data-engagement-queue]');
+    const tableWrap = wrapper.querySelector('[data-engagement-table-wrap]');
+    const emptyHost = wrapper.querySelector('[data-engagement-empty]');
     if (!tbody) return;
     const filteredRows = rows.filter((row) => selectedType === 'ALL' || normalizeEngagementType(row.engagementType) === selectedType);
-    tbody.innerHTML = filteredRows.length
-      ? filteredRows
-          .map((row) => {
-            const customerName = maskField?.('accountName', row.customer.name) || row.customer.name;
-            const typeKey = normalizeEngagementType(row.engagementType);
-            const typeMeta = ENGAGEMENT_TYPES[typeKey] || ENGAGEMENT_TYPES.ON_DEMAND;
-            return `
-              <tr>
-                <td><a href="#" data-open-customer="${row.customer.id}">${customerName}</a></td>
-                <td><span class="status-chip" style="background:${typeMeta.color};color:#fff;">${typeMeta.label}</span></td>
-                <td>${String(row.engagementStatus || 'REQUESTED').replace(/_/g, ' ')}</td>
-                <td>${formatDate(row.engagementDate)}</td>
-                <td><div class="adoption-dot-row">${compactAdoptionDots(row.customer.adoptionProfile || {})}</div></td>
-                <td><button class="ghost-btn" type="button" data-quick-log="${row.customer.id}">Log engagement</button></td>
-              </tr>
-            `;
-          })
-          .join('')
-      : '<tr><td colspan="6">No engagements in this type.</td></tr>';
+    if (!filteredRows.length) {
+      if (tableWrap) tableWrap.style.display = 'none';
+      if (emptyHost) {
+        emptyHost.innerHTML = '';
+        const empty = selectedType !== 'ALL'
+          ? createEmptyState({
+              variant: 'filtered',
+              title: 'No accounts match your filters',
+              body: 'Try adjusting or removing some filters to see more engagement items.',
+              actions: [
+                {
+                  label: 'Clear engagement filter',
+                  className: 'qa',
+                  onClick: () => {
+                    selectedType = 'ALL';
+                    wrapper.querySelectorAll('[data-type-tab]').forEach((node) =>
+                      node.classList.toggle('is-active', node.getAttribute('data-type-tab') === 'ALL')
+                    );
+                    renderQueue();
+                  }
+                }
+              ]
+            })
+          : createEmptyState({
+              variant: 'clear',
+              title: "You're all caught up for today",
+              body: 'No scheduled engagements or pending requests. Check Review mode to plan ahead.',
+              actions: [
+                {
+                  label: 'Go to Review',
+                  className: 'ghost-btn',
+                  onClick: () => setMode?.('review')
+                }
+              ]
+            });
+        emptyHost.appendChild(empty);
+      }
+      return;
+    }
+
+    if (tableWrap) tableWrap.style.display = '';
+    if (emptyHost) emptyHost.innerHTML = '';
+    tbody.innerHTML = filteredRows
+      .map((row) => {
+        const customerName = maskField?.('accountName', row.customer.name) || row.customer.name;
+        const typeKey = normalizeEngagementType(row.engagementType);
+        const typeMeta = ENGAGEMENT_TYPES[typeKey] || ENGAGEMENT_TYPES.ON_DEMAND;
+        const toneClass =
+          typeKey === 'WEBINAR'
+            ? 'tag--purple'
+            : typeKey === 'OFFICE_HOURS'
+              ? 'tag--cyan'
+              : typeKey === 'HANDS_ON_LAB'
+                ? 'tag--orange'
+                : 'tag--green';
+        return `
+          <tr>
+            <td><a href="#" data-open-customer="${row.customer.id}">${customerName}</a></td>
+            <td><span class="tag ${toneClass}">${typeMeta.label}</span></td>
+            <td>${String(row.engagementStatus || 'REQUESTED').replace(/_/g, ' ')}</td>
+            <td>${formatDate(row.engagementDate)}</td>
+            <td><div class="adoption-dot-row">${compactAdoptionDots(row.customer.adoptionProfile || {})}</div></td>
+            <td><button class="ghost-btn" type="button" data-quick-log="${row.customer.id}">Log engagement</button></td>
+          </tr>
+        `;
+      })
+      .join('');
   };
 
   renderQueue();

@@ -92,6 +92,21 @@ const downloadText = (filename, text) => {
   URL.revokeObjectURL(url);
 };
 
+const rememberPlaybook = (name) => {
+  if (!name) return;
+  try {
+    window.localStorage.setItem(
+      'lastPlaybook',
+      JSON.stringify({
+        name,
+        accessedAt: new Date().toISOString()
+      })
+    );
+  } catch {
+    // Ignore storage failures and continue playbook flow.
+  }
+};
+
 const workflowDiagram = () => `
   <section class="card">
     <div class="metric-head">
@@ -379,6 +394,8 @@ export const renderPlaybooksPage = (ctx) => {
       const playbookId = copyPlaybook.getAttribute('data-copy-playbook');
       const markdown = markdownById(playbookId);
       if (!markdown) return;
+      const selected = visiblePlaybooks.find((item) => item.id === playbookId);
+      rememberPlaybook(selected?.title || '');
       await copyText(markdown);
       notify('Playbook markdown copied.');
       return;
@@ -389,6 +406,7 @@ export const renderPlaybooksPage = (ctx) => {
       const playbookId = copyIssue.getAttribute('data-copy-issue');
       const playbook = visiblePlaybooks.find((item) => item.id === playbookId);
       if (!playbook) return;
+      rememberPlaybook(playbook.title);
       await copyText(toIssueTemplate(playbook));
       notify('GitLab issue template copied.');
       return;
@@ -399,6 +417,7 @@ export const renderPlaybooksPage = (ctx) => {
       const playbookId = download.getAttribute('data-download-playbook');
       const playbook = visiblePlaybooks.find((item) => item.id === playbookId);
       if (!playbook) return;
+      rememberPlaybook(playbook.title);
       const filename = `${playbook.id}.md`;
       downloadText(filename, markdownById(playbookId));
       notify(`Downloaded ${filename}.`);
@@ -411,6 +430,7 @@ export const renderPlaybooksPage = (ctx) => {
       const playbook = visiblePlaybooks.find((item) => item.id === playbookId);
       const artifact = playbook?.artifacts_generated?.[Number(indexText)];
       if (!artifact) return;
+      rememberPlaybook(playbook?.title || '');
       await copyText(artifact.template || '');
       notify(`${artifact.name} template copied.`);
       return;
@@ -418,6 +438,9 @@ export const renderPlaybooksPage = (ctx) => {
 
     const openProgram = event.target.closest('[data-open-program]');
     if (openProgram) {
+      const playbookId = openProgram.getAttribute('data-open-program');
+      const playbook = visiblePlaybooks.find((item) => item.id === playbookId);
+      rememberPlaybook(playbook?.title || '');
       navigate('programs');
     }
   });
