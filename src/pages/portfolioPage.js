@@ -471,8 +471,6 @@ const renderWorkspaceTodayPage = (ctx) => {
     maskField,
     navigate,
     setMode,
-    onExportPortfolio,
-    onCopyShare,
     onQuickLogEngagement
   } = ctx;
   const rows = sortByEngagementDate(workspacePortfolio?.rows || []);
@@ -492,7 +490,7 @@ const renderWorkspaceTodayPage = (ctx) => {
   );
 
   const wrapper = document.createElement('section');
-  wrapper.className = 'route-page page-shell section-stack';
+  wrapper.className = 'route-page page-shell section-stack today-dashboard';
   wrapper.setAttribute('data-page', 'today');
   wrapper.innerHTML = `
     <header class="page-head page-intro">
@@ -506,8 +504,6 @@ const renderWorkspaceTodayPage = (ctx) => {
         ${isManager ? '<span class="status-chip tone-info">Manager</span>' : ''}
         <button class="ghost-btn" type="button" data-go-portfolio>Open Portfolio Filters</button>
         <button class="ghost-btn" type="button" data-go-playbooks>Open Playbooks</button>
-        <button class="ghost-btn" type="button" data-export-portfolio>Export Portfolio CSV</button>
-        <button class="ghost-btn" type="button" data-share-snapshot>Copy snapshot link</button>
       </div>
     </header>
 
@@ -520,6 +516,12 @@ const renderWorkspaceTodayPage = (ctx) => {
         ${metricTile({ label: 'Engagement coverage 30d', value: `${engagementCoveragePercent}%`, tone: engagementCoveragePercent >= 70 ? 'good' : 'warn' })}
       </div>
     </section>
+
+    ${
+      isManager
+        ? `<section class="manager-mount" data-manager-overview-mount></section>`
+        : ''
+    }
 
     <section class="dashboard-row-2">
       <article class="card">
@@ -553,57 +555,6 @@ const renderWorkspaceTodayPage = (ctx) => {
         </div>
       </article>
     </section>
-
-    <section class="dashboard-row-wide">
-      <article class="card">
-        <div class="metric-head">
-          <h2>Engagement Recency Histogram</h2>
-          ${statusChip({ label: '0-30 / 31-60 / 61-90 / 90+', tone: 'neutral' })}
-        </div>
-        <div class="chart-wrap">
-          ${barChartSvg([
-            { label: '0-30', value: Number(engagementCoverage.in30 || 0), color: 'var(--gl-success)' },
-            { label: '31-60', value: Number(engagementCoverage.in60 || 0), color: 'var(--gl-info)' },
-            { label: '61-90', value: Number(engagementCoverage.in90 || 0), color: 'var(--gl-warning)' },
-            { label: '90+', value: Number(engagementCoverage.over90 || 0), color: 'var(--gl-danger)' }
-          ])}
-        </div>
-      </article>
-    </section>
-
-    ${
-      isManager
-        ? `<section class="manager-mount" data-manager-overview-mount></section>`
-        : ''
-    }
-
-    <section class="card dashboard-row-table">
-      <div class="metric-head">
-        <h2>Engagement Queue</h2>
-      </div>
-      <div class="engagement-tabbar" role="tablist" aria-label="Engagement type filter">
-        <button type="button" class="ghost-btn is-active" data-type-tab="ALL">All (${rows.length})</button>
-        ${Object.entries(ENGAGEMENT_TYPES)
-          .map(
-            ([type, meta]) =>
-              `<button type="button" class="ghost-btn" data-type-tab="${type}">${meta.label} (${counts[type] || 0})</button>`
-          )
-          .join('')}
-      </div>
-      <div class="table-wrap" data-engagement-table-wrap>
-        <table class="data-table">
-          <thead><tr><th>Customer</th><th>Engagement Type</th><th>Status</th><th>Date</th><th>Adoption</th><th>Action</th></tr></thead>
-          <tbody data-engagement-queue></tbody>
-        </table>
-      </div>
-      <div data-engagement-empty></div>
-    </section>
-
-    ${
-      mode === 'review' || mode === 'deep'
-        ? `<section class="card"><div data-adoption-widget-mount></div></section>`
-        : ''
-    }
 
     <section class="card dashboard-row-wide ${isManager ? 'is-hidden-mode' : ''}">
       <div class="metric-head">
@@ -640,6 +591,51 @@ const renderWorkspaceTodayPage = (ctx) => {
         </table>
       </div>
     </section>
+
+    <section class="dashboard-row-wide">
+      <article class="card">
+        <div class="metric-head">
+          <h2>Engagement Recency Histogram</h2>
+          ${statusChip({ label: '0-30 / 31-60 / 61-90 / 90+', tone: 'neutral' })}
+        </div>
+        <div class="chart-wrap">
+          ${barChartSvg([
+            { label: '0-30', value: Number(engagementCoverage.in30 || 0), color: 'var(--gl-success)' },
+            { label: '31-60', value: Number(engagementCoverage.in60 || 0), color: 'var(--gl-info)' },
+            { label: '61-90', value: Number(engagementCoverage.in90 || 0), color: 'var(--gl-warning)' },
+            { label: '90+', value: Number(engagementCoverage.over90 || 0), color: 'var(--gl-danger)' }
+          ])}
+        </div>
+      </article>
+    </section>
+
+    <section class="card dashboard-row-table">
+      <div class="metric-head">
+        <h2>Engagement Queue</h2>
+      </div>
+      <div class="engagement-tabbar" role="tablist" aria-label="Engagement type filter">
+        <button type="button" class="ghost-btn is-active" data-type-tab="ALL">All (${rows.length})</button>
+        ${Object.entries(ENGAGEMENT_TYPES)
+          .map(
+            ([type, meta]) =>
+              `<button type="button" class="ghost-btn" data-type-tab="${type}">${meta.label} (${counts[type] || 0})</button>`
+          )
+          .join('')}
+      </div>
+      <div class="table-wrap" data-engagement-table-wrap>
+        <table class="data-table">
+          <thead><tr><th>Customer</th><th>Engagement Type</th><th>Status</th><th>Date</th><th>Adoption</th><th>Action</th></tr></thead>
+          <tbody data-engagement-queue></tbody>
+        </table>
+      </div>
+      <div data-engagement-empty></div>
+    </section>
+
+    ${
+      mode === 'review' || mode === 'deep'
+        ? `<section class="card"><div data-adoption-widget-mount></div></section>`
+        : ''
+    }
   `;
 
   const renderQueue = () => {
@@ -769,8 +765,6 @@ const renderWorkspaceTodayPage = (ctx) => {
 
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
   wrapper.querySelector('[data-go-playbooks]')?.addEventListener('click', () => navigate('playbooks'));
-  wrapper.querySelector('[data-export-portfolio]')?.addEventListener('click', () => onExportPortfolio?.());
-  wrapper.querySelector('[data-share-snapshot]')?.addEventListener('click', () => onCopyShare?.());
 
   wrapper.addEventListener('click', (event) => {
     const customerLink = event.target.closest('[data-open-customer]');

@@ -412,3 +412,135 @@
   }
 }
 
+/* Professional polish */
+.app-header {
+  background: color-mix(in srgb, var(--gl-surface) 90%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+}
+
+.app-header [data-safe-label] {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-trigger {
+  min-width: 280px;
+  max-width: 460px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gl-surface-2) 78%, var(--gl-surface));
+}
+
+.search-trigger__kbd {
+  border: 1px solid color-mix(in srgb, var(--gl-border) 80%, transparent);
+}
+
+.today-dashboard.section-stack > * + * {
+  margin-top: var(--gl-space-5);
+}
+
+.today-dashboard .page-intro {
+  margin-bottom: 0;
+}
+
+.today-dashboard .page-actions .ghost-btn,
+.today-dashboard .page-actions .qa {
+  white-space: nowrap;
+}
+
+.today-dashboard .hero-lede {
+  max-width: 72ch;
+}
+
+.today-dashboard .metric-grid.kpi-5 {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.today-dashboard .dashboard-row-2 {
+  align-items: stretch;
+}
+
+.today-dashboard .dashboard-row-wide,
+.today-dashboard .dashboard-row-table {
+  gap: var(--gl-space-3);
+}
+
+.today-dashboard .metric-head h2 {
+  margin: 0;
+  font-size: clamp(1.03rem, 1.2vw, 1.16rem);
+}
+
+.today-dashboard .table-wrap {
+  border-radius: var(--gl-radius-2);
+}
+
+.today-dashboard .data-table thead th {
+  background: color-mix(in srgb, var(--gl-surface-2) 88%, var(--gl-surface));
+}
+
+.today-dashboard .data-table tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--gl-surface-2) 50%, transparent);
+}
+
+.today-dashboard .data-table tbody tr:hover {
+  background: color-mix(in srgb, var(--gl-brand-purple) 8%, var(--gl-surface));
+}
+
+.today-dashboard .data-table td .page-actions {
+  gap: var(--gl-space-1);
+}
+
+.today-dashboard .data-table td .ghost-btn {
+  min-height: 30px;
+  padding: 5px 10px;
+  font-size: var(--text-xs);
+}
+
+.today-dashboard .engagement-tabbar {
+  margin-bottom: var(--gl-space-3);
+  gap: var(--gl-space-2);
+}
+
+.today-dashboard .engagement-tabbar .ghost-btn {
+  border-radius: 999px;
+  background: var(--gl-surface-2);
+  border-color: color-mix(in srgb, var(--gl-border) 78%, transparent);
+}
+
+.today-dashboard .engagement-tabbar .ghost-btn.is-active {
+  color: var(--gl-brand-purple);
+  background: color-mix(in srgb, var(--gl-brand-purple) 12%, var(--gl-surface));
+  border-color: color-mix(in srgb, var(--gl-brand-purple) 28%, var(--gl-border));
+}
+
+.today-dashboard .manager-mount .manager-overview-panel {
+  margin: 0;
+}
+
+.today-dashboard .manager-overview-grid > .card {
+  background: var(--gl-surface);
+}
+
+@media (max-width: 1024px) {
+  .today-dashboard .data-table td .page-actions {
+    display: grid;
+    gap: var(--gl-space-1);
+  }
+}
+
+@media (max-width: 768px) {
+  .app-header [data-safe-label] {
+    display: none;
+  }
+
+  .search-trigger {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .today-dashboard .page-actions {
+    width: 100%;
+  }
+}

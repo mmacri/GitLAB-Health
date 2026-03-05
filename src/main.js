@@ -1466,8 +1466,7 @@ const renderShellContext = () => {
   const safeLabel = appRoot.querySelector('[data-safe-label]');
   if (safeLabel) {
     const routeLabel = ROUTE_LABELS[state.route.name] || 'Today';
-    const modeLabel = state.viewMode === 'deep' ? 'Deep Dive' : state.viewMode === 'review' ? 'Review' : 'Today';
-    safeLabel.textContent = `${routeLabel} • ${modeLabel} • ${state.persona === 'manager' ? 'Manager' : 'CSE On-Demand'}`;
+    safeLabel.textContent = `${routeLabel} • ${state.persona === 'manager' ? 'CSE Manager' : 'CSE On-Demand'}`;
   }
 
   const headerStatus = appRoot.querySelector('[data-header-status]');
