@@ -126,8 +126,6 @@ Node built-in test runner:
 npm test
 ```
 
-The test script uses `--experimental-test-isolation=none` for cross-environment compatibility (GitLab Alpine Node 20 and restricted local Windows environments).
-
 Integrity check:
 
 ```powershell
