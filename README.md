@@ -123,10 +123,10 @@ Open: `http://localhost:8000/#/today`
 Node built-in test runner:
 
 ```powershell
-node --test --test-isolation=none src/tests/*.mjs
+npm test
 ```
 
-`--test-isolation=none` is used because some Windows environments block child process spawn in isolated mode.
+The test script uses `--experimental-test-isolation=none` for cross-environment compatibility (GitLab Alpine Node 20 and restricted local Windows environments).
 
 Integrity check:
 

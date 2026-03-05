@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test --test-isolation=none src/tests/*.mjs",
-    "check": "node --test --test-isolation=none src/tests/*.mjs",
+    "test": "node --test --experimental-test-isolation=none src/tests/*.mjs",
+    "check": "node --test --experimental-test-isolation=none src/tests/*.mjs",
     "integrity": "node scripts/integrity-check.mjs"
   }
 }
