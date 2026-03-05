@@ -4,7 +4,7 @@ export const metricTile = ({ label, value, meta = '', tone = 'neutral', tooltip 
   const safeMeta = String(meta || '').trim();
   const tip = tooltip ? `<span class="metric-tip" title="${String(tooltip).replace(/"/g, '&quot;')}">i</span>` : '';
   return `
-    <article class="metric-tile metric-tile--${tone}">
+    <article class="metric-tile gl-card metric-tile--${tone}">
       <header>
         <span class="metric-label">${safeLabel}</span>
         ${tip}

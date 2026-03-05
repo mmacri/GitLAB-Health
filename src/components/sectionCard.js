@@ -1,3 +1,5 @@
+import { card } from './ui/Card.js';
+
 export const sectionCard = ({
   title = '',
   subtitle = '',
@@ -5,18 +7,12 @@ export const sectionCard = ({
   bodyHtml = '',
   actionsHtml = '',
   compact = false
-}) => `
-  <article class="card${compact ? ' compact-card' : ''}">
-    ${
-      title
-        ? `<div class="metric-head">
-             <h2>${title}</h2>
-             ${chipHtml || ''}
-           </div>`
-        : ''
-    }
-    ${subtitle ? `<p class="muted">${subtitle}</p>` : ''}
-    ${bodyHtml || ''}
-    ${actionsHtml ? `<div class="page-actions">${actionsHtml}</div>` : ''}
-  </article>
-`;
+}) =>
+  card({
+    title,
+    subtitle,
+    badge: chipHtml,
+    body: bodyHtml,
+    actions: actionsHtml,
+    className: compact ? 'compact-card' : ''
+  });

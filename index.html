@@ -123,10 +123,19 @@
           base = '/' + parts[0];
         }
         window.__APP_BASE_PATH__ = base;
-        var link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = base + '/src/styles/app.css';
-        document.head.appendChild(link);
+        var stylesheets = [
+          '/src/styles/app.css',
+          '/src/styles/tokens.css',
+          '/src/styles/base.css',
+          '/src/styles/components.css',
+          '/src/styles/utilities.css'
+        ];
+        stylesheets.forEach(function (path) {
+          var link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = base + path;
+          document.head.appendChild(link);
+        });
       })();
     </script>
   </head>
@@ -162,6 +171,7 @@
           <button class="header-hamburger" type="button" data-sidebar-toggle aria-label="Open navigation" aria-expanded="false">
             <span></span><span></span><span></span>
           </button>
+          <span class="status-pill">GitLAB-Health</span>
           <span class="status-pill status-pill--internal" data-header-status>
             <span aria-hidden="true">🔒</span>
             Internal
@@ -191,6 +201,7 @@
           <div class="control-menu">
             <button class="header-btn" type="button" data-open-more aria-haspopup="menu" aria-expanded="false" aria-label="Open more actions">⋯</button>
             <div class="control-menu__panel" data-more-menu hidden>
+              <button class="ghost-btn" type="button" data-toggle-theme>Toggle theme</button>
               <button class="ghost-btn" type="button" data-open-settings>Settings</button>
               <button class="ghost-btn" type="button" data-copy-snapshot>Copy snapshot link</button>
               <button class="ghost-btn" type="button" data-go-resources>Resources</button>

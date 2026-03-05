@@ -1,0 +1,147 @@
+:root {
+  /* Pajamas-inspired product tokens */
+  --gl-font-sans: 'GitLab Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', Ubuntu, Cantarell,
+    'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --gl-font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+
+  --gl-bg: #f7f8fa;
+  --gl-surface: #ffffff;
+  --gl-surface-2: #f4f5f8;
+  --gl-border: #d8dce6;
+  --gl-text: #1f2430;
+  --gl-text-muted: #5d6473;
+  --gl-link: #1f75cb;
+  --gl-focus: #1f75cb;
+  --gl-shadow: 0 1px 2px rgba(27, 31, 35, 0.08), 0 4px 10px rgba(27, 31, 35, 0.06);
+  --gl-shadow-1: 0 1px 2px rgba(27, 31, 35, 0.08), 0 3px 8px rgba(27, 31, 35, 0.06);
+  --gl-shadow-2: 0 8px 24px rgba(27, 31, 35, 0.2), 0 2px 6px rgba(27, 31, 35, 0.14);
+
+  --gl-brand-orange: #FC6D26;
+  --gl-brand-purple: #554488;
+  --gl-brand-teal: #1f9d8a;
+  --gl-brand-cinnabar: #E24329;
+
+  --gl-danger: #cc2f2f;
+  --gl-warning: #a66d00;
+  --gl-success: #1a7f49;
+  --gl-info: #1f75cb;
+  --gl-neutral: #5d6473;
+
+  --gl-space-1: 4px;
+  --gl-space-2: 8px;
+  --gl-space-3: 12px;
+  --gl-space-4: 16px;
+  --gl-space-5: 24px;
+  --gl-space-6: 32px;
+  --gl-space-7: 40px;
+  --gl-space-8: 48px;
+
+  --gl-radius-1: 6px;
+  --gl-radius-2: 10px;
+  --gl-radius-3: 14px;
+  --gl-border-width: 1px;
+
+  --gl-transition-fast: 120ms ease;
+  --gl-transition-normal: 160ms ease;
+
+  /* Legacy compatibility mapping used by current modules */
+  --font-body: var(--gl-font-sans);
+  --font-mono: var(--gl-font-mono);
+
+  --space-1: var(--gl-space-1);
+  --space-2: var(--gl-space-2);
+  --space-3: var(--gl-space-3);
+  --space-4: var(--gl-space-4);
+  --space-5: var(--gl-space-5);
+  --space-6: var(--gl-space-6);
+  --space-8: var(--gl-space-7);
+  --space-10: var(--gl-space-8);
+  --space-12: 56px;
+
+  --radius-sm: var(--gl-radius-1);
+  --radius-md: var(--gl-radius-1);
+  --radius-lg: var(--gl-radius-2);
+  --radius-xl: var(--gl-radius-3);
+  --radius-full: 9999px;
+
+  --surface-bg: var(--gl-surface);
+  --surface-bg-subtle: var(--gl-bg);
+  --surface-bg-hover: #f0f2f7;
+  --surface-bg-selected: #fff3ec;
+  --surface-border: var(--gl-border);
+  --surface-border-strong: #c2c9d6;
+  --surface-shadow-sm: var(--gl-shadow-1);
+  --surface-shadow-md: var(--gl-shadow-1);
+  --surface-shadow-lg: var(--gl-shadow-2);
+
+  --color-brand-orange: var(--gl-brand-orange);
+  --color-brand-orange-light: #ffad78;
+  --color-brand-orange-dark: var(--gl-brand-cinnabar);
+  --color-brand-purple: var(--gl-brand-purple);
+
+  --color-success: var(--gl-success);
+  --color-success-bg: #e9f6ef;
+  --color-warning: var(--gl-warning);
+  --color-warning-bg: #fff6df;
+  --color-danger: var(--gl-danger);
+  --color-danger-bg: #fdebea;
+  --color-info: var(--gl-info);
+  --color-info-bg: #e9f2fd;
+  --color-neutral: var(--gl-neutral);
+  --color-neutral-bg: #eef1f6;
+
+  --sidebar-bg: #1f2330;
+  --sidebar-bg-hover: #2b3042;
+  --sidebar-bg-active: #333a50;
+  --sidebar-border: #3f465e;
+  --sidebar-text: #e2e7f2;
+  --sidebar-text-muted: #a8b1c7;
+  --sidebar-accent: var(--gl-brand-orange);
+
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-loose: 1.7;
+}
+
+html[data-theme='dark'] {
+  --gl-bg: #171a22;
+  --gl-surface: #202635;
+  --gl-surface-2: #252d3f;
+  --gl-border: #3c455c;
+  --gl-text: #f5f7fb;
+  --gl-text-muted: #c2cadc;
+  --gl-link: #78b0ff;
+  --gl-focus: #78b0ff;
+  --gl-shadow: 0 1px 2px rgba(0, 0, 0, 0.22), 0 4px 12px rgba(0, 0, 0, 0.16);
+  --gl-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.24), 0 3px 10px rgba(0, 0, 0, 0.2);
+  --gl-shadow-2: 0 12px 30px rgba(0, 0, 0, 0.38), 0 4px 12px rgba(0, 0, 0, 0.24);
+
+  --surface-bg-hover: #2d3650;
+  --surface-bg-selected: #3a2d2a;
+
+  --color-success-bg: #153426;
+  --color-warning-bg: #3e3115;
+  --color-danger-bg: #452221;
+  --color-info-bg: #1a304f;
+  --color-neutral-bg: #2f374d;
+
+  --sidebar-bg: #101520;
+  --sidebar-bg-hover: #1c2435;
+  --sidebar-bg-active: #25314a;
+  --sidebar-border: #38435d;
+  --sidebar-text: #e7ecf8;
+  --sidebar-text-muted: #afbad2;
+}
+

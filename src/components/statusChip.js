@@ -1,3 +1,5 @@
+import { badge } from './ui/Badge.js';
+
 const ICONS = {
   good: '●',
   warn: '●',
@@ -28,6 +30,15 @@ export const statusToneFromHealth = (health) => {
 export const statusChip = ({ label, tone, icon = true }) => {
   const safeLabel = String(label || '').trim() || 'Unknown';
   const normalized = normalizeTone(tone);
-  const glyph = icon ? `<span class="chip-icon" aria-hidden="true">${ICONS[normalized] || ICONS.neutral}</span>` : '';
-  return `<span class="status-chip status-chip--${normalized}">${glyph}<span>${safeLabel}</span></span>`;
+  const badgeTone =
+    normalized === 'good'
+      ? 'success'
+      : normalized === 'warn'
+        ? 'warning'
+        : normalized === 'risk'
+          ? 'danger'
+          : normalized === 'stale' || normalized === 'missing'
+            ? 'neutral'
+            : 'neutral';
+  return badge({ label: safeLabel, tone: badgeTone, icon: icon ? ICONS[normalized] || ICONS.neutral : '' });
 };

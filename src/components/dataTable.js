@@ -11,7 +11,7 @@ const sortRows = (rows, key, direction) => {
   });
 };
 
-export const createDataTable = ({ columns, rows, defaultSort = null, rowRenderer }) => {
+export const createDataTable = ({ columns, rows, defaultSort = null, rowRenderer, ariaLabel = 'Data table' }) => {
   const state = {
     sortBy: defaultSort?.key || null,
     direction: defaultSort?.direction || 'asc',
@@ -20,16 +20,16 @@ export const createDataTable = ({ columns, rows, defaultSort = null, rowRenderer
   };
 
   const wrapper = document.createElement('div');
-  wrapper.className = 'data-table-shell';
+  wrapper.className = 'data-table-shell gl-table';
   wrapper.innerHTML = `
     <div class="table-wrap">
-      <table class="data-table">
+      <table class="data-table" aria-label="${ariaLabel}">
         <thead>
           <tr>
             ${columns
               .map((column) => {
                 const sortable = column.sortable !== false;
-                return `<th>${sortable ? `<button type="button" class="table-sort" data-sort="${column.key}">${column.label}</button>` : column.label}</th>`;
+                return `<th>${sortable ? `<button type="button" class="table-sort" data-sort="${column.key}" aria-label="Sort by ${column.label}">${column.label}</button>` : column.label}</th>`;
               })
               .join('')}
           </tr>
