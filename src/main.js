@@ -203,6 +203,7 @@ const syncSidebarState = () => {
   sidebarOverlay?.classList.toggle('visible', isOpen);
   toggle?.classList.toggle('open', isOpen);
   toggle?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  toggle?.setAttribute('aria-label', isOpen ? 'Close navigation' : 'Open navigation');
 };
 
 const closeSidebar = () => {

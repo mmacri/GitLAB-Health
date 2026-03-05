@@ -175,7 +175,14 @@
     <div class="app-root" data-app-root>
       <header class="app-header">
         <div class="app-header__left">
-          <button class="header-hamburger" type="button" data-sidebar-toggle aria-label="Open navigation" aria-expanded="false">
+          <button
+            class="header-hamburger"
+            type="button"
+            data-sidebar-toggle
+            aria-label="Open navigation"
+            aria-expanded="false"
+            aria-controls="app-left-rail"
+          >
             <span></span><span></span><span></span>
           </button>
           <span class="status-pill">GitLAB-Health</span>
@@ -287,7 +294,7 @@
       <div class="sidebar-overlay" data-sidebar-overlay></div>
 
       <main class="app-shell" aria-live="polite">
-        <aside class="sidebar left-rail card" data-left-rail aria-label="Work queue navigation"></aside>
+        <aside class="sidebar left-rail card" id="app-left-rail" data-left-rail aria-label="Work queue navigation"></aside>
         <section class="main route-stage" data-route-root></section>
       </main>
     </div>

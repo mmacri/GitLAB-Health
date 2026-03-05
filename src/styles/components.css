@@ -596,6 +596,23 @@
   background: color-mix(in srgb, var(--gl-brand-purple) 7%, var(--gl-surface));
 }
 
+.data-table a {
+  color: var(--gl-link);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.data-table a:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.data-table a:focus-visible {
+  outline: 2px solid var(--gl-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 .status-pill {
   gap: var(--gl-space-2);
 }
