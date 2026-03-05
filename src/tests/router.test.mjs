@@ -42,15 +42,34 @@ test('route path builder produces account href', () => {
 });
 
 test('router supports playbooks and exports routes', () => {
+  assert.equal(parseRoute('/customers').name, 'customers');
+  assert.equal(parseRoute('/customer').name, 'customer');
+  assert.equal(parseRoute('/customer/cust_acme').name, 'customer');
+  assert.equal(parseRoute('/customer/cust_acme').params.id, 'cust_acme');
   assert.equal(parseRoute('/manager').name, 'manager');
   assert.equal(parseRoute('/simulator').name, 'simulator');
   assert.equal(parseRoute('/toolkit').name, 'toolkit');
   assert.equal(parseRoute('/success-plans').name, 'toolkit');
   assert.equal(parseRoute('/playbooks').name, 'playbooks');
+  assert.equal(parseRoute('/program').name, 'program');
+  assert.equal(parseRoute('/program/prog_cicd_lab_q2').name, 'program');
+  assert.equal(parseRoute('/risks').name, 'risks');
+  assert.equal(parseRoute('/expansion').name, 'expansion');
+  assert.equal(parseRoute('/voc').name, 'voc');
+  assert.equal(parseRoute('/reports').name, 'reports');
+  assert.equal(parseRoute('/settings').name, 'settings');
   assert.equal(parseRoute('/cheatsheet').name, 'cheatsheet');
   assert.equal(parseRoute('/exports').name, 'exports');
   assert.equal(parseRoute('/journey').name, 'journey');
   assert.equal(parseRoute('/journey/northwind-industries').name, 'journey');
+  assert.equal(routePath('customers'), '/customers');
+  assert.equal(routePath('customer', { id: 'cust_acme' }), '/customer/cust_acme');
+  assert.equal(routePath('program', { id: 'prog_cicd_lab_q2' }), '/program/prog_cicd_lab_q2');
+  assert.equal(routePath('risks'), '/risks');
+  assert.equal(routePath('expansion'), '/expansion');
+  assert.equal(routePath('voc'), '/voc');
+  assert.equal(routePath('reports'), '/reports');
+  assert.equal(routePath('settings'), '/settings');
   assert.equal(routePath('toolkit'), '/toolkit');
   assert.equal(routePath('success-plans'), '/success-plans');
   assert.equal(routePath('playbooks'), '/playbooks');

@@ -7,7 +7,7 @@ test:
   image: alpine:3.20
   script:
     - apk add --no-cache nodejs npm
-    - node --test src/tests/*.test.mjs
+    - node --test --test-isolation=none src/tests/*.mjs
 
 pages:
   stage: deploy
@@ -19,11 +19,14 @@ pages:
     - mkdir -p public
     - cp -R assets data print src public/
     - cp index.html 404.html cheatsheet.html .nojekyll README.md public/
-    - mkdir -p public/today public/portfolio public/toolkit public/programs public/resources public/cheatsheet public/playbooks public/exports public/intake public/journey public/account
+    - mkdir -p public/today public/portfolio public/customers public/customer public/toolkit public/programs public/program public/resources public/cheatsheet public/playbooks public/exports public/intake public/journey public/account public/manager public/simulator public/risks public/expansion public/voc public/reports public/settings
     - cp index.html public/today/index.html
     - cp index.html public/portfolio/index.html
+    - cp index.html public/customers/index.html
+    - cp index.html public/customer/index.html
     - cp index.html public/toolkit/index.html
     - cp index.html public/programs/index.html
+    - cp index.html public/program/index.html
     - cp index.html public/resources/index.html
     - cp index.html public/cheatsheet/index.html
     - cp index.html public/playbooks/index.html
@@ -31,7 +34,15 @@ pages:
     - cp index.html public/intake/index.html
     - cp index.html public/journey/index.html
     - cp index.html public/account/index.html
+    - cp index.html public/manager/index.html
+    - cp index.html public/simulator/index.html
+    - cp index.html public/risks/index.html
+    - cp index.html public/expansion/index.html
+    - cp index.html public/voc/index.html
+    - cp index.html public/reports/index.html
+    - cp index.html public/settings/index.html
     - node -e "const fs=require('fs');const path=require('path');const raw=JSON.parse(fs.readFileSync('data/accounts.json','utf8'));const accounts=Array.isArray(raw.accounts)?raw.accounts:[];for(const a of accounts){const id=String(a.id||'').trim();if(!id)continue;const accountDir=path.join('public','account',id);const journeyDir=path.join('public','journey',id);fs.mkdirSync(accountDir,{recursive:true});fs.mkdirSync(journeyDir,{recursive:true});fs.copyFileSync('index.html',path.join(accountDir,'index.html'));fs.copyFileSync('index.html',path.join(journeyDir,'index.html'));}"
+    - node -e "const fs=require('fs');const path=require('path');const raw=JSON.parse(fs.readFileSync('data/workspace.sample.json','utf8'));const workspace=raw.workspace||raw;const customers=Array.isArray(workspace.customers)?workspace.customers:[];const programs=Array.isArray(workspace.programs)?workspace.programs:[];for(const c of customers){const id=String(c.id||'').trim();if(!id)continue;const customerDir=path.join('public','customer',id);fs.mkdirSync(customerDir,{recursive:true});fs.copyFileSync('index.html',path.join(customerDir,'index.html'));}for(const p of programs){const id=String(p.id||'').trim();if(!id)continue;const programDir=path.join('public','program',id);fs.mkdirSync(programDir,{recursive:true});fs.copyFileSync('index.html',path.join(programDir,'index.html'));}"
   artifacts:
     paths:
       - public

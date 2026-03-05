@@ -27,6 +27,7 @@ const programCard = (item, accounts) => `
       </select>
     </label>
     <div class="page-actions">
+      <button class="ghost-btn" type="button" data-open-program="${item.program_id}">Open program</button>
       <button class="ghost-btn" type="button" data-invite-account="${item.program_id}">Invite Account</button>
       <button class="ghost-btn" type="button" data-copy-invite="${item.program_id}">Copy invite blurb</button>
       <button class="ghost-btn" type="button" data-log-attendance="${item.program_id}">Log attendance</button>
@@ -63,7 +64,7 @@ const programMixVisual = (sets) => {
 };
 
 export const renderProgramsPage = (ctx) => {
-  const { programs, accounts, mode, navigate, onCopyInvite, onLogAttendance, onAddRegistration, onInviteAccount, notify } = ctx;
+  const { programs, accounts, mode, navigate, onCopyInvite, onLogAttendance, onAddRegistration, onInviteAccount, onOpenProgram, notify } = ctx;
 
   const sets = grouped([...(programs || [])].sort((a, b) => new Date(a.date) - new Date(b.date)));
   const wrapper = document.createElement('section');
@@ -132,6 +133,13 @@ export const renderProgramsPage = (ctx) => {
   };
 
   wrapper.addEventListener('click', (event) => {
+    const openProgram = event.target.closest('[data-open-program]');
+    if (openProgram) {
+      const programId = openProgram.getAttribute('data-open-program');
+      onOpenProgram?.(programId);
+      return;
+    }
+
     const inviteAccount = event.target.closest('[data-invite-account]');
     if (inviteAccount) {
       const programId = inviteAccount.getAttribute('data-invite-account');
@@ -171,6 +179,6 @@ export const programsCommandEntries = (programs = []) => [
     id: `program-${program.program_id}`,
     label: `Program: ${program.title}`,
     meta: `${program.type}`,
-    action: { route: 'programs' }
+    action: { route: 'program', params: { id: program.program_id } }
   }))
 ];

@@ -1,0 +1,110 @@
+import { pageHeader } from '../components/pageHeader.js';
+import { statusChip } from '../components/statusChip.js';
+
+const SIGNAL_CODES = ['LOW_ENGAGEMENT', 'RENEWAL_SOON', 'LOW_SECURITY_ADOPTION', 'LOW_CICD_ADOPTION', 'NO_TIME_TO_VALUE'];
+
+const normalize = (value) => String(value || '').trim().toUpperCase();
+
+const cellForSignal = (present) =>
+  present
+    ? `<span class="status-chip status-chip--risk"><span class="chip-icon" aria-hidden="true">●</span><span>Active</span></span>`
+    : `<span class="status-chip status-chip--neutral"><span class="chip-icon" aria-hidden="true">●</span><span>Clear</span></span>`;
+
+export const renderRisksPage = (ctx) => {
+  const { workspace, portfolioRows, navigate } = ctx;
+  const rows = (portfolioRows || []).map((row) => ({
+    id: row.customer.id,
+    name: row.customer.name,
+    health: row.health,
+    signals: row.riskSignals || [],
+    nextAction: row.riskSignals?.[0]?.code
+      ? `Address ${row.riskSignals[0].code} with mitigation owner and due date`
+      : 'Maintain engagement and monitor adoption movement'
+  }));
+
+  const playbookTemplates = workspace?.settings?.riskPlaybookTemplates || [];
+
+  const wrapper = document.createElement('section');
+  wrapper.className = 'route-page page-shell section-stack';
+  wrapper.setAttribute('data-page', 'risks');
+  wrapper.innerHTML = `
+    ${pageHeader({
+      eyebrow: 'Risks',
+      title: 'Risk Detection + Playbooks',
+      subtitle: 'Deterministic risk signals across the portfolio with reusable mitigation playbooks.',
+      actionsHtml: `<button class="ghost-btn" type="button" data-go-manager>Open manager dashboard</button>`
+    })}
+
+    <section class="card">
+      <div class="metric-head">
+        <h2>Risk Heatmap</h2>
+        ${statusChip({ label: `${rows.filter((item) => item.signals.length > 0).length} at risk`, tone: 'warn' })}
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Health</th>
+              ${SIGNAL_CODES.map((code) => `<th>${code}</th>`).join('')}
+              <th>Next Best Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${
+              rows.length
+                ? rows
+                    .map((row) => {
+                      const active = new Set((row.signals || []).map((signal) => normalize(signal.code)));
+                      return `
+                        <tr>
+                          <td><a href="#" data-open-customer="${row.id}">${row.name}</a></td>
+                          <td>${statusChip({ label: row.health, tone: String(row.health).toLowerCase() === 'red' ? 'risk' : String(row.health).toLowerCase() === 'yellow' ? 'warn' : 'good' })}</td>
+                          ${SIGNAL_CODES.map((code) => `<td>${cellForSignal(active.has(code))}</td>`).join('')}
+                          <td>${row.nextAction}</td>
+                        </tr>
+                      `;
+                    })
+                    .join('')
+                : '<tr><td colspan="8">No customers available.</td></tr>'
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="metric-head">
+        <h2>Playbook Templates</h2>
+        ${statusChip({ label: `${playbookTemplates.length} templates`, tone: 'neutral' })}
+      </div>
+      <ul class="simple-list">
+        ${
+          playbookTemplates.length
+            ? playbookTemplates
+                .map(
+                  (template) =>
+                    `<li><strong>${template.name}</strong> - ${template.action} (owner: ${template.owner}, due in ${template.daysToDue} days)</li>`
+                )
+                .join('')
+            : '<li>No risk playbook templates configured in settings.</li>'
+        }
+      </ul>
+      <div class="page-actions">
+        <button class="ghost-btn" type="button" data-go-settings>Manage templates</button>
+      </div>
+    </section>
+  `;
+
+  wrapper.querySelector('[data-go-manager]')?.addEventListener('click', () => navigate('manager'));
+  wrapper.querySelector('[data-go-settings]')?.addEventListener('click', () => navigate('settings'));
+
+  wrapper.addEventListener('click', (event) => {
+    const link = event.target.closest('[data-open-customer]');
+    if (!link) return;
+    event.preventDefault();
+    navigate('customer', { id: link.getAttribute('data-open-customer') });
+  });
+
+  return wrapper;
+};

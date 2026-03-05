@@ -1,6 +1,8 @@
 const KNOWN_TOP_LEVEL = new Set([
   'today',
   'portfolio',
+  'customers',
+  'customer',
   'manager',
   'simulator',
   'toolkit',
@@ -8,7 +10,13 @@ const KNOWN_TOP_LEVEL = new Set([
   'account',
   'journey',
   'programs',
+  'program',
   'playbooks',
+  'risks',
+  'expansion',
+  'voc',
+  'reports',
+  'settings',
   'resources',
   'cheatsheet',
   'exports',
@@ -82,6 +90,12 @@ export const parseRoute = (pathname, basePath = '') => {
   if (normalized === '/portfolio') {
     return { name: 'portfolio', params: {}, path: normalized };
   }
+  if (normalized === '/customers') {
+    return { name: 'customers', params: {}, path: normalized };
+  }
+  if (normalized === '/customer') {
+    return { name: 'customer', params: { id: '' }, path: normalized };
+  }
   if (normalized === '/manager') {
     return { name: 'manager', params: {}, path: normalized };
   }
@@ -100,8 +114,26 @@ export const parseRoute = (pathname, basePath = '') => {
   if (normalized === '/programs') {
     return { name: 'programs', params: {}, path: normalized };
   }
+  if (normalized === '/program') {
+    return { name: 'program', params: { id: '' }, path: normalized };
+  }
   if (normalized === '/playbooks') {
     return { name: 'playbooks', params: {}, path: normalized };
+  }
+  if (normalized === '/risks') {
+    return { name: 'risks', params: {}, path: normalized };
+  }
+  if (normalized === '/expansion') {
+    return { name: 'expansion', params: {}, path: normalized };
+  }
+  if (normalized === '/voc') {
+    return { name: 'voc', params: {}, path: normalized };
+  }
+  if (normalized === '/reports') {
+    return { name: 'reports', params: {}, path: normalized };
+  }
+  if (normalized === '/settings') {
+    return { name: 'settings', params: {}, path: normalized };
   }
   if (normalized === '/resources') {
     return { name: 'resources', params: {}, path: normalized };
@@ -137,12 +169,34 @@ export const parseRoute = (pathname, basePath = '') => {
     };
   }
 
+  const customerMatch = normalized.match(/^\/customer\/([^/]+)$/);
+  if (customerMatch) {
+    return {
+      name: 'customer',
+      params: { id: decodeURIComponent(customerMatch[1]) },
+      path: normalized
+    };
+  }
+
+  const programMatch = normalized.match(/^\/program\/([^/]+)$/);
+  if (programMatch) {
+    return {
+      name: 'program',
+      params: { id: decodeURIComponent(programMatch[1]) },
+      path: normalized
+    };
+  }
+
   return { name: 'home', params: {}, path: '/' };
 };
 
 export const routePath = (routeName, params = {}) => {
   if (routeName === 'home') return '/today';
   if (routeName === 'portfolio') return '/portfolio';
+  if (routeName === 'customers') return '/customers';
+  if (routeName === 'customer') {
+    return params.id ? `/customer/${encodeURIComponent(params.id || '')}` : '/customer';
+  }
   if (routeName === 'manager') return '/manager';
   if (routeName === 'simulator') return '/simulator';
   if (routeName === 'toolkit') return '/toolkit';
@@ -154,7 +208,15 @@ export const routePath = (routeName, params = {}) => {
     return params.id ? `/journey/${encodeURIComponent(params.id || '')}` : '/journey';
   }
   if (routeName === 'programs') return '/programs';
+  if (routeName === 'program') {
+    return params.id ? `/program/${encodeURIComponent(params.id || '')}` : '/program';
+  }
   if (routeName === 'playbooks') return '/playbooks';
+  if (routeName === 'risks') return '/risks';
+  if (routeName === 'expansion') return '/expansion';
+  if (routeName === 'voc') return '/voc';
+  if (routeName === 'reports') return '/reports';
+  if (routeName === 'settings') return '/settings';
   if (routeName === 'resources') return '/resources';
   if (routeName === 'cheatsheet') return '/cheatsheet';
   if (routeName === 'exports') return '/exports';

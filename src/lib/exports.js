@@ -1,5 +1,6 @@
 import { formatDate, toIsoDate } from './date.js';
 import { redactAccountForCustomer } from './redaction.js';
+import { buildManagerDashboard, buildWorkspacePortfolio } from './scoring.js';
 
 const csvEscape = (value) => {
   const text = value === null || value === undefined ? '' : String(value);
@@ -8,6 +9,37 @@ const csvEscape = (value) => {
   }
   return text;
 };
+
+const toBase64 = (text) => {
+  if (typeof btoa === 'function') return btoa(text);
+  if (typeof Buffer !== 'undefined') return Buffer.from(text, 'utf8').toString('base64');
+  return '';
+};
+
+const fromBase64 = (text) => {
+  if (typeof atob === 'function') return atob(text);
+  if (typeof Buffer !== 'undefined') return Buffer.from(text, 'base64').toString('utf8');
+  return '';
+};
+
+const toBase64Url = (text) => toBase64(text).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+const fromBase64Url = (text) => {
+  const normalized = String(text || '')
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+  const pad = normalized.length % 4;
+  const padded = pad ? `${normalized}${'='.repeat(4 - pad)}` : normalized;
+  return fromBase64(padded);
+};
+
+const normalizeDateOnly = (value) => {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  return text.slice(0, 10);
+};
+
+const workspaceCustomerById = (workspace, customerId) =>
+  (workspace?.customers || []).find((item) => item.id === customerId) || null;
 
 export const toCsv = (rows, columns) => {
   const header = columns.map((column) => csvEscape(column.label)).join(',');
@@ -37,7 +69,7 @@ export const buildPortfolioRows = (accounts, requests) =>
     };
   });
 
-export const buildPortfolioCsv = (accounts, requests) => {
+export const buildLegacyPortfolioCsv = (accounts, requests) => {
   const rows = buildPortfolioRows(accounts, requests);
   const columns = [
     { label: 'account_id', value: (row) => row.account_id },
@@ -52,6 +84,91 @@ export const buildPortfolioCsv = (accounts, requests) => {
     { label: 'next_touch_date', value: (row) => row.next_touch_date }
   ];
   return toCsv(rows, columns);
+};
+
+export const buildWorkspacePortfolioCsv = (workspace) => {
+  const rows = (buildWorkspacePortfolio(workspace)?.rows || []).map((item) => ({
+    customerId: item.customer.id,
+    name: item.customer.name,
+    tier: item.customer.tier,
+    renewalDate: item.customer.renewalDate || '',
+    health: item.health,
+    adoptionScore: item.adoptionScore,
+    engagementScore: item.engagementScore,
+    riskScore: item.riskScore,
+    cicdPercent: item.cicdPercent,
+    securityPercent: item.securityPercent,
+    lastEngagementDate: normalizeDateOnly(item.lastEngagementDate),
+    openExpansionCount: item.openExpansionCount
+  }));
+
+  return toCsv(rows, [
+    { label: 'customerId', value: (row) => row.customerId },
+    { label: 'name', value: (row) => row.name },
+    { label: 'tier', value: (row) => row.tier },
+    { label: 'renewalDate', value: (row) => row.renewalDate },
+    { label: 'health', value: (row) => row.health },
+    { label: 'adoptionScore', value: (row) => row.adoptionScore },
+    { label: 'engagementScore', value: (row) => row.engagementScore },
+    { label: 'riskScore', value: (row) => row.riskScore },
+    { label: 'cicdPercent', value: (row) => row.cicdPercent },
+    { label: 'securityPercent', value: (row) => row.securityPercent },
+    { label: 'lastEngagementDate', value: (row) => row.lastEngagementDate },
+    { label: 'openExpansionCount', value: (row) => row.openExpansionCount }
+  ]);
+};
+
+export const buildProgramsCsv = (workspace) => {
+  const rows = (workspace?.programs || []).map((program) => ({
+    id: program.id,
+    name: program.name,
+    type: program.type,
+    startDate: program.startDate,
+    endDate: program.endDate,
+    invited: Number(program?.funnel?.invited || 0),
+    attended: Number(program?.funnel?.attended || 0),
+    completed: Number(program?.funnel?.completed || 0),
+    cohortSize: (program?.cohortCustomerIds || []).length
+  }));
+
+  return toCsv(rows, [
+    { label: 'id', value: (row) => row.id },
+    { label: 'name', value: (row) => row.name },
+    { label: 'type', value: (row) => row.type },
+    { label: 'startDate', value: (row) => row.startDate },
+    { label: 'endDate', value: (row) => row.endDate },
+    { label: 'invited', value: (row) => row.invited },
+    { label: 'attended', value: (row) => row.attended },
+    { label: 'completed', value: (row) => row.completed },
+    { label: 'cohortSize', value: (row) => row.cohortSize }
+  ]);
+};
+
+export const buildVocCsv = (workspace) => {
+  const customerLookup = (workspace?.customers || []).reduce((acc, customer) => {
+    acc[customer.id] = customer.name;
+    return acc;
+  }, {});
+  const rows = (workspace?.voc || []).map((entry) => ({
+    id: entry.id,
+    customerId: entry.customerId,
+    customerName: customerLookup[entry.customerId] || entry.customerId,
+    area: entry.area,
+    request: entry.request,
+    impact: entry.impact,
+    status: entry.status,
+    createdAt: normalizeDateOnly(entry.createdAt)
+  }));
+  return toCsv(rows, [
+    { label: 'id', value: (row) => row.id },
+    { label: 'customerId', value: (row) => row.customerId },
+    { label: 'customerName', value: (row) => row.customerName },
+    { label: 'area', value: (row) => row.area },
+    { label: 'request', value: (row) => row.request },
+    { label: 'impact', value: (row) => row.impact },
+    { label: 'status', value: (row) => row.status },
+    { label: 'createdAt', value: (row) => row.createdAt }
+  ]);
 };
 
 export const buildAccountExportModel = (account, options = {}) => {
@@ -74,6 +191,30 @@ export const buildAccountExportModel = (account, options = {}) => {
   }
 
   return model;
+};
+
+const buildWorkspaceAccountModel = (workspace, customerId, options = {}) => {
+  const customer = workspaceCustomerById(workspace, customerId);
+  if (!customer) return null;
+  const portfolio = buildWorkspacePortfolio(workspace);
+  const scored = (portfolio.rows || []).find((item) => item.customer.id === customerId);
+  const adoption = workspace?.adoption?.[customerId] || {};
+  const successPlan = workspace?.successPlans?.[customerId] || { outcomes: [], milestones: [] };
+  const risk = workspace?.risk?.[customerId] || { signals: [], playbook: [], overrideHealth: null };
+  const expansion = workspace?.expansion?.[customerId] || [];
+  const engagements = workspace?.engagements?.[customerId] || [];
+  const voc = (workspace?.voc || []).filter((item) => item.customerId === customerId);
+  return {
+    customer,
+    scored,
+    adoption,
+    successPlan,
+    risk,
+    expansion,
+    engagements,
+    voc,
+    customerSafe: Boolean(options.customerSafe)
+  };
 };
 
 export const buildAccountCsv = (account, options = {}) => {
@@ -102,6 +243,34 @@ export const buildAccountCsv = (account, options = {}) => {
 
   const columns = Object.keys(rows[0]).map((key) => ({ label: key, value: (row) => row[key] }));
   return toCsv(rows, columns);
+};
+
+export const buildWorkspaceAccountCsv = (workspace, customerId, options = {}) => {
+  const model = buildWorkspaceAccountModel(workspace, customerId, options);
+  if (!model) return '';
+  const useCases = model.adoption?.useCases || {};
+  const rows = [
+    {
+      customerId: model.customer.id,
+      name: model.customer.name,
+      tier: model.customer.tier,
+      renewalDate: model.customer.renewalDate,
+      lifecycleStage: model.customer.stage,
+      health: model.scored?.health || 'Yellow',
+      adoptionScore: model.scored?.adoptionScore || 0,
+      engagementScore: model.scored?.engagementScore || 0,
+      riskScore: model.scored?.riskScore || 0,
+      scmPercent: useCases.SCM?.percent || 0,
+      cicdPercent: useCases.CICD?.percent || 0,
+      securityPercent: useCases.Security?.percent || 0,
+      compliancePercent: useCases.Compliance?.percent || 0,
+      releaseAutomationPercent: useCases.ReleaseAutomation?.percent || 0,
+      observabilityPercent: useCases.Observability?.percent || 0,
+      openRiskSignals: (model.risk?.signals || []).length,
+      openExpansion: (model.expansion || []).filter((item) => !['won', 'closed'].includes(String(item.status || '').toLowerCase())).length
+    }
+  ];
+  return toCsv(rows, Object.keys(rows[0]).map((key) => ({ label: key, value: (row) => row[key] })));
 };
 
 export const buildAccountSummaryHtml = (account, options = {}) => {
@@ -182,6 +351,204 @@ export const buildAccountSummaryHtml = (account, options = {}) => {
 </html>`;
 };
 
+export const buildWorkspaceAccountSummaryHtml = (workspace, customerId, options = {}) => {
+  const model = buildWorkspaceAccountModel(workspace, customerId, options);
+  if (!model) return '<html><body><p>Customer not found.</p></body></html>';
+  const generatedAt = options.generatedAt || toIsoDate(new Date());
+  const useCases = model.adoption?.useCases || {};
+  const stages = model.adoption?.devsecopsStages || {};
+  const milestones = model.adoption?.timeToValue || [];
+  const outcomes = model.successPlan?.outcomes || [];
+  const outcomeMilestones = model.successPlan?.milestones || [];
+  const riskSignals = model.risk?.signals || [];
+  const playbook = model.risk?.playbook || [];
+  const expansion = model.expansion || [];
+  const voc = model.voc || [];
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>${model.customer.name} CSE Summary</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 30px; color: #111827; }
+      h1, h2, h3 { margin: 0 0 8px; }
+      h2 { margin-top: 18px; font-size: 17px; }
+      h3 { margin-top: 12px; font-size: 14px; }
+      p, li { font-size: 12px; line-height: 1.5; }
+      .meta { color: #475569; margin-bottom: 12px; }
+      .grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px 16px; }
+      .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 10px; margin-bottom: 10px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+      th, td { border-bottom: 1px solid #e5e7eb; text-align: left; padding: 6px; font-size: 12px; vertical-align: top; }
+      th { color: #475569; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+    </style>
+  </head>
+  <body>
+    <h1>${model.customer.name}</h1>
+    <p class="meta">
+      Generated ${generatedAt} • Mode: ${model.customerSafe ? 'Customer-safe' : 'Internal'} • Tier: ${model.customer.tier} • Stage: ${model.customer.stage} • Renewal: ${formatDate(model.customer.renewalDate)}
+    </p>
+
+    <section class="card">
+      <h2>Portfolio Scores</h2>
+      <div class="grid">
+        <p><strong>Health:</strong> ${model.scored?.health || 'Yellow'}</p>
+        <p><strong>Adoption Score:</strong> ${model.scored?.adoptionScore || 0}</p>
+        <p><strong>Engagement Score:</strong> ${model.scored?.engagementScore || 0}</p>
+        <p><strong>Risk Score:</strong> ${model.scored?.riskScore || 0}</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>DevSecOps Stage Adoption</h2>
+      <table>
+        <thead><tr><th>Stage</th><th>Status</th></tr></thead>
+        <tbody>
+          ${Object.entries(stages)
+            .map(([stage, status]) => `<tr><td>${stage}</td><td>${status}</td></tr>`)
+            .join('')}
+        </tbody>
+      </table>
+      <h3>Use Case Adoption</h3>
+      <table>
+        <thead><tr><th>Use Case</th><th>Percent</th><th>Evidence</th></tr></thead>
+        <tbody>
+          ${Object.entries(useCases)
+            .map(([key, value]) => `<tr><td>${key}</td><td>${value?.percent || 0}%</td><td>${value?.evidence || ''}</td></tr>`)
+            .join('')}
+        </tbody>
+      </table>
+      <h3>Time-to-Value Milestones</h3>
+      <ul>
+        ${milestones.length ? milestones.map((item) => `<li>${item.milestone}: ${formatDate(item.date)} (${item.status})</li>`).join('') : '<li>No milestones captured</li>'}
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Success Plan</h2>
+      <h3>Outcomes</h3>
+      <ul>
+        ${outcomes.length
+          ? outcomes.map((item) => `<li>${item.statement} • ${item.metric} • target ${item.target} • due ${formatDate(item.due)} • ${item.status}</li>`).join('')
+          : '<li>No outcomes defined.</li>'}
+      </ul>
+      <h3>Milestones</h3>
+      <ul>
+        ${outcomeMilestones.length
+          ? outcomeMilestones.map((item) => `<li>${item.title} • owner ${item.owner} • due ${formatDate(item.due)} • ${item.status}</li>`).join('')
+          : '<li>No milestones defined.</li>'}
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Risk + Expansion</h2>
+      <h3>Risk Signals</h3>
+      <ul>
+        ${riskSignals.length
+          ? riskSignals.map((signal) => `<li>${signal.code} (${signal.severity}) - ${signal.detail}</li>`).join('')
+          : '<li>No active risk signals.</li>'}
+      </ul>
+      <h3>Mitigation Playbook</h3>
+      <ul>
+        ${playbook.length ? playbook.map((item) => `<li>${item.action} • owner ${item.owner} • due ${formatDate(item.due)} • ${item.status}</li>`).join('') : '<li>No mitigation actions.</li>'}
+      </ul>
+      <h3>Expansion Opportunities</h3>
+      <ul>
+        ${expansion.length
+          ? expansion.map((item) => `<li>${item.title} (${item.status}) - ${item.rationale}</li>`).join('')
+          : '<li>No expansion opportunities.</li>'}
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Voice of Customer</h2>
+      <ul>
+        ${voc.length ? voc.map((item) => `<li>${item.area}: ${item.request} (${item.status})</li>`).join('') : '<li>No VOC entries.</li>'}
+      </ul>
+    </section>
+  </body>
+</html>`;
+};
+
+export const buildManagerSummaryHtml = (workspace, options = {}) => {
+  const manager = buildManagerDashboard(workspace);
+  const generatedAt = options.generatedAt || toIsoDate(new Date());
+  const health = manager.portfolio.healthDistribution || {};
+  const adoption = manager.portfolio.adoptionCoverage || {};
+  const engagement = manager.portfolio.engagementCoverage || {};
+  const atRisk = manager.portfolio.atRisk || [];
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Manager Summary</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 32px; color: #111827; }
+      h1, h2 { margin: 0 0 8px; }
+      h2 { margin-top: 20px; font-size: 18px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+      th, td { border-bottom: 1px solid #e5e7eb; text-align: left; padding: 6px; font-size: 12px; }
+      th { font-size: 11px; text-transform: uppercase; color: #475569; }
+      .meta { color: #475569; margin-bottom: 12px; }
+      .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 20px; }
+    </style>
+  </head>
+  <body>
+    <h1>CSE Manager Summary</h1>
+    <p class="meta">Generated ${generatedAt} • Customers: ${(manager.portfolio.rows || []).length}</p>
+
+    <h2>Portfolio KPI</h2>
+    <div class="grid">
+      <p><strong>Health Green:</strong> ${health.green || 0}</p>
+      <p><strong>Health Yellow:</strong> ${health.yellow || 0}</p>
+      <p><strong>Health Red:</strong> ${health.red || 0}</p>
+      <p><strong>Average Adoption:</strong> ${adoption.avgAdoption || 0}</p>
+      <p><strong>Average CI/CD:</strong> ${adoption.avgCicd || 0}%</p>
+      <p><strong>Average Security:</strong> ${adoption.avgSecurity || 0}%</p>
+      <p><strong>Engagement 0-30d:</strong> ${engagement.in30 || 0}</p>
+      <p><strong>Engagement 31-60d:</strong> ${engagement.in60 || 0}</p>
+      <p><strong>Engagement 61-90d:</strong> ${engagement.in90 || 0}</p>
+      <p><strong>Engagement 90d+:</strong> ${engagement.over90 || 0}</p>
+    </div>
+
+    <h2>Top 10 At-Risk Customers</h2>
+    <table>
+      <thead><tr><th>Customer</th><th>Health</th><th>Risk Score</th><th>Primary Signal</th><th>Renewal</th></tr></thead>
+      <tbody>
+        ${
+          atRisk.length
+            ? atRisk
+                .slice(0, 10)
+                .map(
+                  (item) => `<tr><td>${item.customer.name}</td><td>${item.health}</td><td>${item.riskScore}</td><td>${item.riskSignals?.[0]?.code || 'None'}</td><td>${formatDate(item.customer.renewalDate)}</td></tr>`
+                )
+                .join('')
+            : '<tr><td colspan="5">No at-risk customers.</td></tr>'
+        }
+      </tbody>
+    </table>
+
+    <h2>Programs Overview</h2>
+    <table>
+      <thead><tr><th>Program</th><th>Type</th><th>Invited</th><th>Attended</th><th>Completed</th><th>Conversion</th></tr></thead>
+      <tbody>
+        ${
+          (manager.programs || []).length
+            ? manager.programs
+                .map(
+                  (program) => `<tr><td>${program.name}</td><td>${program.type}</td><td>${program.invited}</td><td>${program.attended}</td><td>${program.completed}</td><td>${program.conversionRate}%</td></tr>`
+                )
+                .join('')
+            : '<tr><td colspan="6">No program data available.</td></tr>'
+        }
+      </tbody>
+    </table>
+  </body>
+</html>`;
+};
+
 export const triggerDownload = (filename, text, mime = 'text/plain;charset=utf-8') => {
   const blob = new Blob([text], { type: mime });
   const url = URL.createObjectURL(blob);
@@ -194,33 +561,129 @@ export const triggerDownload = (filename, text, mime = 'text/plain;charset=utf-8
   URL.revokeObjectURL(url);
 };
 
-export const exportPortfolioCsv = (accounts, requests) => {
-  const csv = buildPortfolioCsv(accounts, requests);
+export const buildPortfolioCsv = (source, requests = []) => {
+  if (source && typeof source === 'object' && !Array.isArray(source) && Array.isArray(source.customers)) {
+    return buildWorkspacePortfolioCsv(source);
+  }
+  return buildLegacyPortfolioCsv(Array.isArray(source) ? source : [], requests);
+};
+
+export const exportPortfolioCsv = (source, requests = []) => {
+  const csv = buildPortfolioCsv(source, requests);
   triggerDownload(`portfolio-${toIsoDate(new Date())}.csv`, csv, 'text/csv;charset=utf-8');
 };
 
-export const exportAccountCsv = (account, options = {}) => {
-  const csv = buildAccountCsv(account, options);
-  const suffix = options.customerSafe ? 'customer-safe' : 'internal';
-  triggerDownload(`${account.id}-${suffix}.csv`, csv, 'text/csv;charset=utf-8');
+export const exportProgramsCsv = (workspace) => {
+  const csv = buildProgramsCsv(workspace);
+  triggerDownload(`programs-${toIsoDate(new Date())}.csv`, csv, 'text/csv;charset=utf-8');
 };
 
-export const exportAccountSummaryPdf = (account, options = {}) => {
-  const html = buildAccountSummaryHtml(account, options);
+export const exportVocCsv = (workspace) => {
+  const csv = buildVocCsv(workspace);
+  triggerDownload(`voc-${toIsoDate(new Date())}.csv`, csv, 'text/csv;charset=utf-8');
+};
+
+export const exportAccountCsv = (source, options = {}) => {
+  if (source && typeof source === 'object' && !Array.isArray(source) && Array.isArray(source.customers)) {
+    const customerId = options.customerId || '';
+    const csv = buildWorkspaceAccountCsv(source, customerId, options);
+    if (!csv) return;
+    const suffix = options.customerSafe ? 'customer-safe' : 'internal';
+    triggerDownload(`${customerId || 'customer'}-${suffix}.csv`, csv, 'text/csv;charset=utf-8');
+    return;
+  }
+  const csv = buildAccountCsv(source, options);
+  const suffix = options.customerSafe ? 'customer-safe' : 'internal';
+  triggerDownload(`${source.id}-${suffix}.csv`, csv, 'text/csv;charset=utf-8');
+};
+
+export const exportAccountSummaryPdf = (source, options = {}) => {
+  const html =
+    source && typeof source === 'object' && !Array.isArray(source) && Array.isArray(source.customers)
+      ? buildWorkspaceAccountSummaryHtml(source, options.customerId, options)
+      : buildAccountSummaryHtml(source, options);
   const win = window.open('', '_blank', 'noopener,noreferrer,width=960,height=720');
   if (!win) return;
   win.document.open();
   win.document.write(html);
   win.document.close();
   win.focus();
-  // Browser print dialog allows "Save as PDF" and works in static environments.
   win.print();
 };
 
-export const buildShareSnapshotUrl = ({ origin = window.location.origin, basePath = '', route = '/', customerSafe = true }) => {
+export const exportManagerSummaryPdf = (workspace, options = {}) => {
+  const html = buildManagerSummaryHtml(workspace, options);
+  const win = window.open('', '_blank', 'noopener,noreferrer,width=980,height=760');
+  if (!win) return;
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
+};
+
+const compactSnapshot = (workspace) => {
+  const portfolio = buildWorkspacePortfolio(workspace);
+  return {
+    version: workspace?.version || '3.0.0',
+    updatedAt: workspace?.updatedAt || new Date().toISOString(),
+    portfolio: workspace?.portfolio || {},
+    customers: (workspace?.customers || []).map((customer) => ({
+      id: customer.id,
+      name: customer.name,
+      tier: customer.tier,
+      renewalDate: customer.renewalDate,
+      stage: customer.stage,
+      primaryUseCase: customer.primaryUseCase
+    })),
+    scores: (portfolio.rows || []).map((row) => ({
+      id: row.customer.id,
+      health: row.health,
+      adoption: row.adoptionScore,
+      engagement: row.engagementScore,
+      risk: row.riskScore,
+      cicd: row.cicdPercent,
+      security: row.securityPercent
+    })),
+    programs: (workspace?.programs || []).map((program) => ({
+      id: program.id,
+      name: program.name,
+      type: program.type,
+      invited: Number(program?.funnel?.invited || 0),
+      attended: Number(program?.funnel?.attended || 0),
+      completed: Number(program?.funnel?.completed || 0)
+    }))
+  };
+};
+
+export const encodeWorkspaceSnapshot = (workspace) => {
+  const payload = compactSnapshot(workspace);
+  return toBase64Url(encodeURIComponent(JSON.stringify(payload)));
+};
+
+export const decodeWorkspaceSnapshot = (encoded) => {
+  if (!encoded) return null;
+  try {
+    const json = decodeURIComponent(fromBase64Url(String(encoded)));
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+};
+
+export const buildShareSnapshotUrl = ({
+  origin = typeof window !== 'undefined' ? window.location.origin : '',
+  basePath = '',
+  route = '/',
+  customerSafe = true,
+  workspace = null
+}) => {
   const base = `${origin}${String(basePath || '').replace(/\/+$/, '')}/`;
   const query = new URLSearchParams();
   query.set('route', route);
   query.set('audience', customerSafe ? 'customer' : 'internal');
+  if (workspace) {
+    query.set('ws', encodeWorkspaceSnapshot(workspace));
+  }
   return `${base}?${query.toString()}`;
 };

@@ -1,73 +1,53 @@
-# GitLab CSE On-Demand Dashboard
+# GitLab CSE Operating Console (Static)
 
-Static GitLab Pages-compatible operating dashboard for pooled Customer Success Engineering delivery.
+Static GitLab Pages-compatible Customer Success Engineering operating console aligned to the pooled CSE model (Align -> Enable -> Expand).
 
-## What this app provides
-- Portfolio-first information architecture with grouped primary navigation:
-  - Sidebar-first primary navigation for workflow routing (top bar reserved for utilities)
-  - Today
-  - Portfolio
-  - Manager
-  - Simulator
-  - Accounts
-  - Success Plans
-  - Playbooks
-  - Resources
-  - Cheatsheet
-- Default pooled command view on `/#/today` (and `/` auto-canonicalized) with:
-  - Work Queue
-  - Outliers with reasons
-  - Program cards with invite/attendance actions
-  - Pinned right-side Action Drawer
-- Detailed portfolio table on `/portfolio` with working filters:
-  - segment
-  - renewal window
-  - health color
-  - stale data
-  - lowest use-case
-  - has open request
-  - manager dashboard snapshot (health distribution, average adoption, renewal/engagement coverage, focus accounts)
-- Account workspace on `/account/:id` with:
-  - above-the-fold snapshot bar
-  - tabbed dashboard grids (Snapshot, Adoption, Health & Risk, Outcomes, Engagement, Journey, Resources, Cheatsheet)
-  - DevOps adoption journey map (Plan -> Secure) in Adoption tab
-  - adoption maturity radar visual in Adoption tab
-  - legacy section anchor IDs retained inside tabs
-  - missing-data chips with inline edit modal (localStorage-backed)
-  - pinned right-side Action Drawer
-- Programs page (`/programs`) for webinars/labs/office-hours with attendance + registration logging.
-- Playbooks page (`/playbooks`) with execution-ready CSE library, checklist persistence, and markdown artifact actions.
-- Resources page (`/resources`) with customer-safe filtering.
-- Export center (`/exports`) for portfolio/account export actions and share snapshot URL.
-- Intake workflow (`/intake`) kept as a tools route for request capture + artifact generation.
-- Operating Model Engine (rules-driven) that generates account-level next-best actions, risk alerts, executive triggers, and copy-ready issue templates.
-- Simulator page (`/simulator`) for deterministic scenario modeling:
-  - capability toggles + presets
-  - lifecycle map + journey stage computation
-  - next-best actions + impact forecast
-  - copy/download markdown artifacts (success plan, executive summary, workshop plan, issue body)
+## Core capabilities
+- Portfolio command center on `/#/today`
+- Portfolio triage table on `/#/portfolio`
+- Customer directory + drill-in workspace with technical adoption, success plans, risk, expansion, and VOC
+- Programs and cohort funnel tracking
+- Deterministic risk + expansion signal engine (no AI, no backend)
+- Manager dashboard with adoption/health/program trends
+- Report center + CSV/PDF exports
+- Settings for sample load, import/export, reset, scoring weights, template management
 
 ## Routes
-Hash-style routes are canonical for GitLab/GitHub Pages reliability:
-- `/#/today` -> Today console (default)
-- `/#/portfolio` -> Portfolio operating table
-- `/#/manager` -> Team-level manager dashboard
-- `/#/simulator` -> Adoption simulator
-- `/#/account/:id` -> Account workspace
-- `/#/account` -> redirects to selected/default account
-- `/#/toolkit` -> Success Plans workspace (generators + visuals)
-- `/#/success-plans` -> alias route to Success Plans workspace
-- `/#/programs` -> 1:many enablement programs
-- `/#/playbooks` -> Response plans + checklist execution
-- `/#/resources` -> Curated handbook resources
-- `/#/exports` -> Export center
-- `/#/intake` -> Engagement request intake
-
-Path-style links are still accepted and auto-canonicalized to hash routes.
-`404.html` redirects deep links to the matching hash route.
+- `/#/today`
+- `/#/portfolio`
+- `/#/customers`
+- `/#/customer/:id`
+- `/#/programs`
+- `/#/program/:id`
+- `/#/risks`
+- `/#/expansion`
+- `/#/voc`
+- `/#/manager`
+- `/#/reports`
+- `/#/settings`
+- Existing legacy routes are still supported: `/#/account/:id`, `/#/journey/:id`, `/#/toolkit`, `/#/playbooks`, `/#/resources`, `/#/simulator`, `/#/exports`, `/#/intake`.
 
 ## Data model
-Canonical app data lives under `data/`:
+Primary persisted model: `workspace` (`version: 3.0.0`) in localStorage key `gh_workspace_v3`.
+
+Workspace shape (high-level):
+- `portfolio`
+- `customers[]`
+- `adoption[customerId]` (DevSecOps stages + use-case % + time-to-value milestones)
+- `successPlans[customerId]` (outcomes + milestones)
+- `programs[]` (cohort + funnel + impact + sessions)
+- `engagements[customerId][]`
+- `risk[customerId]` (signals + playbook + override)
+- `expansion[customerId][]`
+- `voc[]`
+- `team`
+- `snapshots[]`
+- `settings` (templates + scoring weights)
+
+Seed file:
+- `data/workspace.sample.json`
+
+Legacy static datasets are still loaded and supported:
 - `data/accounts.json`
 - `data/requests.json`
 - `data/programs.json`
@@ -76,58 +56,75 @@ Canonical app data lives under `data/`:
 - `data/rules.json`
 - `data/simulator_capabilities.json`
 - `data/simulator_rules.json`
-- `data/schema.md` (field definitions + customer-safe policy)
 
-## Local state keys
-The app persists interactive state with canonical `gh_*` keys and auto-migrates legacy `glh-*` keys:
+## LocalStorage keys
+- `gh_workspace_v3`
 - `gh_customer_safe_mode`
 - `gh_engagement_log_v1`
 - `gh_user_overrides_v1`
+- `gh_requests_v1`
+- `gh_program_attendance_v1`
+- `gh_playbook_checklist_v1`
+- `gh_action_cards_v1`
+- `gh_selected_account_id`
 - `gh_gitlab_base_url`
 - `gh_gitlab_project_path`
 
-Current seeded sample size:
-- `accounts.json`: 12 realistic accounts (varied health/adoption/renewal states)
-- `programs.json`: 8 programs (webinars, hands-on labs, office hours)
-- `requests.json`: 18 requests
-- `playbooks.json`: 7 category-aligned CSE playbooks with trigger signals, execution agendas, and generated artifacts
+## Scoring model
+Computed in `src/lib/scoring.js`:
+- `adoptionScore` (use-case average + DevSecOps stage completion)
+- `engagementScore` (recency + frequency)
+- `riskScore` (deterministic signals + playbook burden)
+- `health` (Green/Yellow/Red) with optional customer override
 
-## Local run
-Run a static server from repo root:
+Auto-derived risk signals:
+- `LOW_ENGAGEMENT`
+- `RENEWAL_SOON`
+- `LOW_SECURITY_ADOPTION`
+- `LOW_CICD_ADOPTION`
+- `NO_TIME_TO_VALUE`
 
+## Exports
+- Portfolio CSV (workspace model columns)
+- Customer CSV (workspace and legacy account variants)
+- Customer summary PDF (workspace and legacy account variants; browser print-to-PDF)
+- Manager summary PDF
+- Programs CSV
+- VOC CSV
+
+Share URL:
+- `buildShareSnapshotUrl(...)` supports encoded workspace snapshot payload (`ws` query param).
+
+## Settings workflows
+Route: `/#/settings`
+- Load sample portfolio
+- Import workspace JSON
+- Export workspace JSON
+- Reset local state
+- Update scoring weights
+- Add risk playbook templates
+- Add program templates
+- Create monthly snapshot
+
+## Run locally
 ```powershell
 python -m http.server 8000
 ```
 
-Open `http://localhost:8000/`.
+Open: `http://localhost:8000/#/today`
 
 ## Tests
-Run test suite (Node built-in test runner):
+Node built-in test runner:
 
 ```powershell
-node --test src/tests/*.test.mjs
+node --test --test-isolation=none src/tests/*.mjs
 ```
 
-Coverage includes:
-- customer-safe export redaction denylist enforcement
-- portfolio CSV shape and key values
-- intake artifact generation requirements
-- routing behavior for `/account/:id`, `/playbooks`, and `/exports`
+`--test-isolation=none` is used because some Windows environments block child process spawn in isolated mode.
 
-Note:
-- In restricted local Windows environments where node test subprocess spawning is blocked, run:
+## GitLab Pages
+The app is static and hash-routed for deep-link compatibility on GitLab Pages.
 
-```powershell
-node --test --test-isolation=none src/tests/*.test.mjs
-```
-
-## GitLab Pages deployment
-`.gitlab-ci.yml` now has:
-- `test` stage: installs Node in Alpine and runs `node --test src/tests/*.test.mjs`
-- `pages` stage: publishes static app on default branch
-
-Published artifact includes:
-- `index.html`, `404.html`, `.nojekyll`
-- `assets/`, `src/`, `data/`, `print/`
-
-In GitLab, open **Deploy -> Pages** after pipeline success to access the live site URL.
+Deploy flow:
+- run tests in CI
+- publish static files (`index.html`, `404.html`, `src/`, `data/`, `assets/`, `print/`)

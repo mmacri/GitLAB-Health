@@ -1,5 +1,9 @@
 {
   "name": "gitlab-health",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-isolation=none src/tests/*.mjs",
+    "check": "node --test --test-isolation=none src/tests/*.mjs"
+  }
 }

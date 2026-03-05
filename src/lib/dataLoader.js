@@ -1,5 +1,7 @@
 import { storage, STORAGE_KEYS } from './storage.js';
 import { detectBasePath } from './router.js';
+import { loadEngagementLog } from './engagementLog.js';
+import { buildWorkspaceFromLegacy, createDefaultWorkspace, ensureWorkspaceShape, validateWorkspace } from './model.js';
 
 const resolveDataUrl = (filename) => {
   if (typeof window === 'undefined') return `data/${filename}`;
@@ -201,13 +203,55 @@ export const resetLocalState = () => {
     STORAGE_KEYS.gitlabProjectPath,
     STORAGE_KEYS.engagementLog,
     STORAGE_KEYS.toolkitLaunch,
-    STORAGE_KEYS.actionCards
+    STORAGE_KEYS.actionCards,
+    STORAGE_KEYS.workspace
   ].forEach((key) => storage.remove(key));
 };
 
 export const loadPlaybookChecklist = () => storage.get(STORAGE_KEYS.playbookChecklist, {});
 
 export const persistPlaybookChecklist = (checklistState) => storage.set(STORAGE_KEYS.playbookChecklist, checklistState);
+
+export const persistWorkspace = (workspace) => {
+  const normalized = ensureWorkspaceShape(workspace, createDefaultWorkspace());
+  normalized.updatedAt = new Date().toISOString();
+  storage.set(STORAGE_KEYS.workspace, normalized);
+  return normalized;
+};
+
+const hydrateWorkspaceFromEngagementLog = (workspace) => {
+  const model = ensureWorkspaceShape(workspace, createDefaultWorkspace());
+  const entries = loadEngagementLog();
+  if (!entries.length) return model;
+
+  const byCustomer = model.customers.reduce((acc, customer) => {
+    acc[customer.id] = customer;
+    return acc;
+  }, {});
+
+  entries.forEach((entry) => {
+    const normalizedAccount = String(entry.account_id || '').trim();
+    if (!normalizedAccount) return;
+    const customer =
+      byCustomer[normalizedAccount] ||
+      model.customers.find((item) => String(item.id || '').includes(normalizedAccount) || normalizedAccount.includes(String(item.id || '')));
+    if (!customer) return;
+    if (!Array.isArray(model.engagements[customer.id])) model.engagements[customer.id] = [];
+    const alreadyExists = model.engagements[customer.id].some((item) => item.id === entry.id);
+    if (alreadyExists) return;
+    model.engagements[customer.id].unshift({
+      id: entry.id || `eng_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      ts: entry.date ? `${entry.date}T12:00:00.000Z` : new Date().toISOString(),
+      type: entry.type || '1:1',
+      summary: entry.notes_customer_safe || 'Engagement logged',
+      tags: [entry.type || 'cadence'],
+      nextSteps: [],
+      owner: 'CSE'
+    });
+  });
+
+  return model;
+};
 
 export const loadDashboardData = async () => {
   const loadErrors = [];
@@ -221,7 +265,8 @@ export const loadDashboardData = async () => {
     cheatsheetDoc,
     rulesDoc,
     simulatorCapabilitiesDoc,
-    simulatorRulesDoc
+    simulatorRulesDoc,
+    workspaceSampleDoc
   ] = await Promise.all([
     fetchJson('accounts.json', { accounts: [] }, loadErrors),
     fetchJson('requests.json', { requests: [] }, loadErrors),
@@ -232,7 +277,8 @@ export const loadDashboardData = async () => {
     fetchJson('cheatsheet.json', {}, loadErrors),
     fetchJson('rules.json', { rules: [] }, loadErrors),
     fetchJson('simulator_capabilities.json', { capabilities: [] }, loadErrors),
-    fetchJson('simulator_rules.json', { rules: [] }, loadErrors)
+    fetchJson('simulator_rules.json', { rules: [] }, loadErrors),
+    fetchJson('workspace.sample.json', { workspace: null }, loadErrors)
   ]);
 
   const accounts = normalizeDuplicateAccountContent(mergeAccounts(Array.isArray(accountsDoc.accounts) ? accountsDoc.accounts : []));
@@ -248,6 +294,27 @@ export const loadDashboardData = async () => {
     : [];
   const simulatorRules = Array.isArray(simulatorRulesDoc.rules) ? simulatorRulesDoc.rules : [];
 
+  const legacyWorkspace = buildWorkspaceFromLegacy({
+    accounts,
+    programs,
+    requests
+  });
+  const sampleWorkspaceInput =
+    workspaceSampleDoc && typeof workspaceSampleDoc === 'object'
+      ? workspaceSampleDoc.workspace || workspaceSampleDoc
+      : null;
+  const sampleWorkspace = ensureWorkspaceShape(sampleWorkspaceInput || legacyWorkspace, legacyWorkspace);
+
+  const storedWorkspace = storage.get(STORAGE_KEYS.workspace, null);
+  const workspace = hydrateWorkspaceFromEngagementLog(
+    ensureWorkspaceShape(storedWorkspace || legacyWorkspace, sampleWorkspace)
+  );
+  const workspaceErrors = validateWorkspace(workspace);
+
+  if (!storedWorkspace) {
+    storage.set(STORAGE_KEYS.workspace, workspace);
+  }
+
   return {
     accounts,
     requests,
@@ -260,6 +327,9 @@ export const loadDashboardData = async () => {
     categories,
     templates,
     cheatsheet: cheatsheetDoc && typeof cheatsheetDoc === 'object' ? cheatsheetDoc : {},
+    workspace,
+    sampleWorkspace,
+    workspaceErrors,
     loadErrors,
     updated_on: accountsDoc.updated_on || requestsDoc.updated_on || programsDoc.updated_on || resourcesDoc.updated_on || null
   };

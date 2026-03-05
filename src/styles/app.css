@@ -1506,6 +1506,19 @@ textarea.artifact,
   background: linear-gradient(90deg, var(--info), var(--primary));
 }
 
+.chart-wrap {
+  overflow: auto;
+}
+
+.chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+}
+
 .timeline-item {
   display: grid;
   grid-template-columns: 140px minmax(0, 1fr) auto;

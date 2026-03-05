@@ -16,7 +16,8 @@ const LEGACY_KEY_ALIASES = {
   gh_gitlab_project_path: [],
   gh_engagement_log_v1: ['engagement_log_v1'],
   gh_toolkit_launch: ['glh-toolkit-launch'],
-  gh_action_cards_v1: ['glh-action-cards']
+  gh_action_cards_v1: ['glh-action-cards'],
+  gh_workspace_v3: []
 };
 
 const aliasesFor = (key) => LEGACY_KEY_ALIASES[String(key || '')] || [];
@@ -98,5 +99,6 @@ export const STORAGE_KEYS = {
   gitlabProjectPath: 'gh_gitlab_project_path',
   engagementLog: 'gh_engagement_log_v1',
   toolkitLaunch: 'gh_toolkit_launch',
-  actionCards: 'gh_action_cards_v1'
+  actionCards: 'gh_action_cards_v1',
+  workspace: 'gh_workspace_v3'
 };

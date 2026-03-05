@@ -52,6 +52,26 @@ test('loadDashboardData resolves project base path for deep routes', async () =>
     if (text.endsWith('/data/simulator_rules.json')) {
       return buildResponse({ rules: [{ id: 'sim-rule-1' }] });
     }
+    if (text.endsWith('/data/workspace.sample.json')) {
+      return buildResponse({
+        workspace: {
+          version: '3.0.0',
+          updatedAt: '2026-03-04T00:00:00.000Z',
+          portfolio: { name: 'Sample' },
+          customers: [{ id: 'cust-1', name: 'Northwind', tier: 'Premium', renewalDate: '2026-10-10', stage: 'Enable' }],
+          adoption: {},
+          successPlans: {},
+          programs: [],
+          engagements: {},
+          risk: {},
+          expansion: {},
+          voc: [],
+          team: { cseMembers: [] },
+          snapshots: [],
+          settings: { scoringWeights: { adoption: 45, engagement: 30, risk: 25 } }
+        }
+      });
+    }
 
     throw new Error(`Unexpected fetch URL: ${text}`);
   };
@@ -59,7 +79,7 @@ test('loadDashboardData resolves project base path for deep routes', async () =>
   try {
     const loaded = await loadDashboardData();
 
-    assert.equal(urls.length, 10);
+    assert.equal(urls.length, 11);
     assert.ok(urls.every((url) => url.startsWith('/GitLAB-Health/data/')));
     assert.equal(loaded.accounts.length, 1);
     assert.equal(loaded.requests.length, 1);
@@ -72,6 +92,7 @@ test('loadDashboardData resolves project base path for deep routes', async () =>
     assert.equal(loaded.rules.length, 1);
     assert.equal(loaded.simulatorCapabilities.length, 1);
     assert.equal(loaded.simulatorRules.length, 1);
+    assert.ok(Array.isArray(loaded.workspace?.customers));
   } finally {
     globalThis.window = originalWindow;
     globalThis.fetch = originalFetch;

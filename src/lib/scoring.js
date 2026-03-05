@@ -309,3 +309,327 @@ export const buildAccountWorkspace = (data, accountId, now = new Date()) => {
     }
   };
 };
+
+const WORKSPACE_STAGE_ORDER = ['Align', 'Onboard', 'Adopt', 'Enable', 'Expand', 'Renew'];
+const RISK_WEIGHTS = { Low: 10, Medium: 20, High: 35, Critical: 45 };
+
+const ensureWorkspaceCustomer = (workspace, customerId) =>
+  (workspace?.customers || []).find((customer) => customer.id === customerId) || null;
+
+const latestEngagementTs = (workspace, customerId) => {
+  const entries = (workspace?.engagements?.[customerId] || []).slice();
+  entries.sort((left, right) => new Date(right.ts || 0).getTime() - new Date(left.ts || 0).getTime());
+  return entries[0]?.ts || null;
+};
+
+const countEngagementsSince = (workspace, customerId, days, now = new Date()) => {
+  const cutoff = now.getTime() - days * 24 * 60 * 60 * 1000;
+  return (workspace?.engagements?.[customerId] || []).filter((entry) => new Date(entry.ts || 0).getTime() >= cutoff).length;
+};
+
+export const computeAdoptionScore = (workspace, customerId) => {
+  const adoption = workspace?.adoption?.[customerId];
+  if (!adoption) return 0;
+  const useCases = Object.values(adoption.useCases || {});
+  const useCaseAverage = useCases.length
+    ? useCases.reduce((sum, item) => sum + Number(item?.percent || 0), 0) / useCases.length
+    : 0;
+  const stages = Object.values(adoption.devsecopsStages || {});
+  const stageScore = stages.length
+    ? (stages.filter((status) => String(status) === 'Adopted').length / stages.length) * 100
+    : 0;
+  return Math.round(useCaseAverage * 0.7 + stageScore * 0.3);
+};
+
+export const computeEngagementScore = (workspace, customerId, now = new Date()) => {
+  const lastTouch = latestEngagementTs(workspace, customerId);
+  if (!lastTouch) return 20;
+  const days = diffInDays(lastTouch.slice(0, 10), now) ?? 120;
+  const recencyScore = Math.max(0, 100 - days * 1.8);
+  const freq30 = countEngagementsSince(workspace, customerId, 30, now);
+  const freq90 = countEngagementsSince(workspace, customerId, 90, now);
+  const cadenceBonus = Math.min(25, freq30 * 6 + Math.floor(freq90 / 2));
+  return Math.round(Math.min(100, recencyScore * 0.75 + cadenceBonus));
+};
+
+export const deriveRiskSignals = (workspace, customerId, now = new Date()) => {
+  const customer = ensureWorkspaceCustomer(workspace, customerId);
+  if (!customer) return [];
+  const adoption = workspace?.adoption?.[customerId] || {};
+  const useCases = adoption.useCases || {};
+  const timeToValue = Array.isArray(adoption.timeToValue) ? adoption.timeToValue : [];
+  const signals = [];
+
+  const lastTouch = latestEngagementTs(workspace, customerId);
+  const touchDays = lastTouch ? diffInDays(String(lastTouch).slice(0, 10), now) : 999;
+  if ((touchDays ?? 999) > 60) {
+    signals.push({
+      code: 'LOW_ENGAGEMENT',
+      severity: 'Medium',
+      detectedAt: now.toISOString(),
+      detail: `No engagement recorded in ${touchDays} days`,
+      source: 'derived'
+    });
+  }
+
+  const renewalDays = daysUntil(customer.renewalDate, now);
+  if (renewalDays !== null && renewalDays <= 90) {
+    signals.push({
+      code: 'RENEWAL_SOON',
+      severity: renewalDays <= 45 ? 'High' : 'Medium',
+      detectedAt: now.toISOString(),
+      detail: `Renewal in ${renewalDays} days`,
+      source: 'derived'
+    });
+  }
+
+  if (Number(useCases.Security?.percent || 0) < 30) {
+    signals.push({
+      code: 'LOW_SECURITY_ADOPTION',
+      severity: 'Medium',
+      detectedAt: now.toISOString(),
+      detail: 'Security use-case adoption is below 30%',
+      source: 'derived'
+    });
+  }
+
+  if (Number(useCases.CICD?.percent || 0) < 40) {
+    signals.push({
+      code: 'LOW_CICD_ADOPTION',
+      severity: 'Medium',
+      detectedAt: now.toISOString(),
+      detail: 'CI/CD use-case adoption is below 40%',
+      source: 'derived'
+    });
+  }
+
+  const firstPipeline = timeToValue.find((item) => String(item.milestone || '').toLowerCase().includes('pipeline'));
+  if (!firstPipeline || String(firstPipeline.status || '').toLowerCase() !== 'done') {
+    signals.push({
+      code: 'NO_TIME_TO_VALUE',
+      severity: 'High',
+      detectedAt: now.toISOString(),
+      detail: 'First pipeline run milestone is missing or not complete',
+      source: 'derived'
+    });
+  }
+
+  const manualSignals = (workspace?.risk?.[customerId]?.signals || []).filter((signal) => signal.source !== 'derived');
+  const dedupe = new Map();
+  [...signals, ...manualSignals].forEach((signal) => {
+    if (!signal?.code) return;
+    dedupe.set(signal.code, signal);
+  });
+  return [...dedupe.values()];
+};
+
+export const computeRiskScore = (workspace, customerId, now = new Date()) => {
+  const risk = workspace?.risk?.[customerId] || {};
+  const signals = deriveRiskSignals(workspace, customerId, now);
+  const weight = signals.reduce((sum, signal) => sum + (RISK_WEIGHTS[signal.severity] || 15), 0);
+  const playbookPenalty = (risk.playbook || []).filter((item) => String(item.status || '').toLowerCase() !== 'complete').length * 4;
+  return Math.max(0, Math.min(100, Math.round(weight + playbookPenalty)));
+};
+
+const healthFromScores = ({ adoptionScore, engagementScore, riskScore }) => {
+  const total = adoptionScore * 0.45 + engagementScore * 0.3 + (100 - riskScore) * 0.25;
+  if (total >= 75) return 'Green';
+  if (total >= 55) return 'Yellow';
+  return 'Red';
+};
+
+export const scoreBreakdown = (workspace, customerId, now = new Date()) => {
+  const adoptionScore = computeAdoptionScore(workspace, customerId);
+  const engagementScore = computeEngagementScore(workspace, customerId, now);
+  const riskScore = computeRiskScore(workspace, customerId, now);
+  const customer = ensureWorkspaceCustomer(workspace, customerId);
+  const signals = deriveRiskSignals(workspace, customerId, now);
+  const healthOverride = workspace?.risk?.[customerId]?.overrideHealth || null;
+  const health = healthOverride || healthFromScores({ adoptionScore, engagementScore, riskScore });
+  const engagementDays = diffInDays(String(latestEngagementTs(workspace, customerId) || '').slice(0, 10), now) ?? 999;
+
+  return {
+    customer,
+    adoptionScore,
+    engagementScore,
+    riskScore,
+    health,
+    riskSignals: signals,
+    lastEngagementDate: latestEngagementTs(workspace, customerId),
+    engagementDays,
+    renewalDays: daysUntil(customer?.renewalDate, now),
+    why: [
+      `Adoption ${adoptionScore} contributes ${(adoptionScore * 0.45).toFixed(1)} points`,
+      `Engagement ${engagementScore} contributes ${(engagementScore * 0.3).toFixed(1)} points`,
+      `Risk burden ${riskScore} subtracts ${(riskScore * 0.25).toFixed(1)} points`,
+      `Engagement recency: ${engagementDays === 999 ? 'no touch logged' : `${engagementDays} days since last touch`}`,
+      signals.length ? `${signals.length} active risk signal(s): ${signals.map((item) => item.code).join(', ')}` : 'No active risk signals'
+    ]
+  };
+};
+
+export const deriveExpansionSuggestions = (workspace, customerId) => {
+  const adoption = workspace?.adoption?.[customerId] || {};
+  const useCases = adoption.useCases || {};
+  const suggestions = [];
+  const addSuggestion = (id, title, rationale, estImpact) => {
+    suggestions.push({ id, type: 'UseCaseAdd', title, rationale, estImpact, status: 'Open', auto: true });
+  };
+  if (Number(useCases.Security?.percent || 0) < 35) {
+    addSuggestion(
+      `auto_${customerId}_security`,
+      'Enable secure pipeline baseline',
+      'Security adoption is below 35%',
+      'Improve vulnerability response cycle and governance confidence'
+    );
+  }
+  if (Number(useCases.Compliance?.percent || 0) < 40) {
+    addSuggestion(
+      `auto_${customerId}_compliance`,
+      'Introduce policy-as-code compliance controls',
+      'Compliance adoption is below 40%',
+      'Reduce audit preparation overhead and policy drift'
+    );
+  }
+  if (Number(useCases.Observability?.percent || 0) < 30) {
+    addSuggestion(
+      `auto_${customerId}_observability`,
+      'Operationalize DORA scorecard and monitoring',
+      'Observability adoption is below 30%',
+      'Strengthen value narrative with measurable outcomes'
+    );
+  }
+  const existing = workspace?.expansion?.[customerId] || [];
+  const dedupe = new Map();
+  [...suggestions, ...existing].forEach((item) => {
+    if (!item?.id) return;
+    dedupe.set(item.id, item);
+  });
+  return [...dedupe.values()];
+};
+
+export const buildWorkspacePortfolio = (workspace, now = new Date()) => {
+  const rows = (workspace?.customers || []).map((customer) => {
+    const metrics = scoreBreakdown(workspace, customer.id, now);
+    const useCases = workspace?.adoption?.[customer.id]?.useCases || {};
+    const stageStatuses = workspace?.adoption?.[customer.id]?.devsecopsStages || {};
+    const stageAdopted = Object.values(stageStatuses).filter((value) => String(value) === 'Adopted').length;
+    const openExpansionCount = deriveExpansionSuggestions(workspace, customer.id).filter(
+      (item) => String(item.status || '').toLowerCase() !== 'won' && String(item.status || '').toLowerCase() !== 'closed'
+    ).length;
+    return {
+      customer,
+      ...metrics,
+      cicdPercent: Number(useCases.CICD?.percent || 0),
+      securityPercent: Number(useCases.Security?.percent || 0),
+      stageCoverage: stageAdopted,
+      stageTotal: Object.keys(stageStatuses).length || 8,
+      openExpansionCount
+    };
+  });
+
+  const healthDistribution = rows.reduce(
+    (acc, row) => {
+      const key = String(row.health || 'Yellow').toLowerCase();
+      if (!acc[key]) acc[key] = 0;
+      acc[key] += 1;
+      return acc;
+    },
+    { green: 0, yellow: 0, red: 0 }
+  );
+  const adoptionCoverage = {
+    avgAdoption: rows.length ? Math.round(rows.reduce((sum, row) => sum + row.adoptionScore, 0) / rows.length) : 0,
+    avgCicd: rows.length ? Math.round(rows.reduce((sum, row) => sum + row.cicdPercent, 0) / rows.length) : 0,
+    avgSecurity: rows.length ? Math.round(rows.reduce((sum, row) => sum + row.securityPercent, 0) / rows.length) : 0
+  };
+  const engagementCoverage = {
+    in30: rows.filter((row) => Number(row.engagementDays ?? 999) <= 30).length,
+    in60: rows.filter((row) => Number(row.engagementDays ?? 999) > 30 && Number(row.engagementDays ?? 999) <= 60).length,
+    in90: rows.filter((row) => Number(row.engagementDays ?? 999) > 60 && Number(row.engagementDays ?? 999) <= 90).length,
+    over90: rows.filter((row) => Number(row.engagementDays ?? 999) > 90).length
+  };
+  const atRisk = rows
+    .filter((row) => String(row.health).toLowerCase() !== 'green')
+    .sort((left, right) => Number(right.riskScore || 0) - Number(left.riskScore || 0))
+    .slice(0, 10);
+
+  return {
+    rows,
+    healthDistribution,
+    adoptionCoverage,
+    engagementCoverage,
+    atRisk
+  };
+};
+
+export const buildProgramMetrics = (workspace) => {
+  const programs = workspace?.programs || [];
+  return programs.map((program) => {
+    const invited = Number(program?.funnel?.invited || 0);
+    const attended = Number(program?.funnel?.attended || 0);
+    const completed = Number(program?.funnel?.completed || 0);
+    const conversionRate = invited > 0 ? Math.round((completed / invited) * 100) : 0;
+    return {
+      ...program,
+      invited,
+      attended,
+      completed,
+      conversionRate
+    };
+  });
+};
+
+export const buildManagerDashboard = (workspace, now = new Date()) => {
+  const portfolio = buildWorkspacePortfolio(workspace, now);
+  const programs = buildProgramMetrics(workspace);
+  const members = workspace?.team?.cseMembers || [];
+  const workload = members.map((member) => ({
+    ...member,
+    customerCount: (member.accounts || []).length,
+    atRiskCount: portfolio.rows.filter(
+      (row) => (member.accounts || []).includes(row.customer.id) && String(row.health).toLowerCase() !== 'green'
+    ).length
+  }));
+  const programFunnel = programs.reduce(
+    (acc, program) => {
+      acc.invited += program.invited;
+      acc.attended += program.attended;
+      acc.completed += program.completed;
+      return acc;
+    },
+    { invited: 0, attended: 0, completed: 0 }
+  );
+  const snapshots = workspace?.snapshots || [];
+  return {
+    portfolio,
+    workload,
+    programs,
+    programFunnel,
+    snapshots,
+    topActions: portfolio.atRisk.map((item) => ({
+      customerId: item.customer.id,
+      customerName: item.customer.name,
+      action: item.riskSignals[0]?.code
+        ? `Address ${item.riskSignals[0].code} and confirm owner/date`
+        : 'Review adoption and engagement plan',
+      due: item.customer.renewalDate || now.toISOString().slice(0, 10)
+    }))
+  };
+};
+
+export const createMonthlySnapshot = (workspace, now = new Date()) => {
+  const month = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+  const dashboard = buildManagerDashboard(workspace, now);
+  const entry = {
+    month,
+    adoptionAvg: dashboard.portfolio.adoptionCoverage.avgAdoption,
+    healthDistribution: dashboard.portfolio.healthDistribution,
+    engagementCoverage: dashboard.portfolio.rows.length
+      ? Math.round((dashboard.portfolio.engagementCoverage.in30 / dashboard.portfolio.rows.length) * 100)
+      : 0
+  };
+  const snapshots = (workspace?.snapshots || []).filter((item) => item.month !== month);
+  snapshots.push(entry);
+  snapshots.sort((left, right) => String(left.month).localeCompare(String(right.month)));
+  return snapshots;
+};

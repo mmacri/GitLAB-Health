@@ -2,63 +2,48 @@ import { metricTile } from '../components/metricTile.js';
 import { pageHeader } from '../components/pageHeader.js';
 import { sectionCard } from '../components/sectionCard.js';
 import { statusChip } from '../components/statusChip.js';
+import { barChartSvg, donutChartSvg, funnelChartSvg, lineChartSvg } from '../lib/charts.js';
+import { formatDate } from '../lib/date.js';
 
-const clamp = (value) => Math.max(0, Math.min(100, Number(value || 0)));
-
-const healthDistribution = (signals = []) => {
-  const counts = { green: 0, yellow: 0, red: 0 };
-  (signals || []).forEach((signal) => {
-    const health = String(signal.account?.health?.overall || '').toLowerCase();
-    if (health === 'green') counts.green += 1;
-    else if (health === 'yellow') counts.yellow += 1;
-    else counts.red += 1;
-  });
-  return counts;
-};
-
-const adoptionDistribution = (signals = []) => {
-  const bins = {
-    low: 0,
-    medium: 0,
-    high: 0
-  };
-  (signals || []).forEach((signal) => {
-    const score = Number(signal.account?.adoption?.platform_adoption_score || 0);
-    if (score >= 75) bins.high += 1;
-    else if (score >= 55) bins.medium += 1;
-    else bins.low += 1;
-  });
-  return bins;
-};
-
-const barRow = (label, value, total, tone = 'neutral') => {
-  const percent = total > 0 ? clamp((value / total) * 100) : 0;
-  return `
-    <div class="mix-row">
-      <span>${label}</span>
-      <div class="mix-bar"><i style="width:${percent}%;${tone === 'good' ? 'background:linear-gradient(90deg,#1AAA55,#1AAA55);' : tone === 'warn' ? 'background:linear-gradient(90deg,#FCA121,#FCA121);' : tone === 'risk' ? 'background:linear-gradient(90deg,#E24329,#E24329);' : ''}"></i></div>
-      <strong>${value}</strong>
-    </div>
-  `;
-};
+const fallbackManager = (portfolio) => ({
+  portfolio: {
+    rows: portfolio?.signals || [],
+    healthDistribution: {
+      green: (portfolio?.signals || []).filter((signal) => String(signal.account?.health?.overall || '').toLowerCase() === 'green').length,
+      yellow: (portfolio?.signals || []).filter((signal) => String(signal.account?.health?.overall || '').toLowerCase() === 'yellow').length,
+      red: (portfolio?.signals || []).filter((signal) => String(signal.account?.health?.overall || '').toLowerCase() === 'red').length
+    },
+    adoptionCoverage: {
+      avgAdoption: (portfolio?.signals || []).length
+        ? Math.round(
+            (portfolio?.signals || []).reduce((sum, signal) => sum + Number(signal.account?.adoption?.platform_adoption_score || 0), 0) /
+              (portfolio?.signals || []).length
+          )
+        : 0,
+      avgCicd: 0,
+      avgSecurity: 0
+    },
+    engagementCoverage: { in30: 0, in60: 0, in90: 0, over90: 0 },
+    atRisk: []
+  },
+  workload: [],
+  programs: [],
+  programFunnel: { invited: 0, attended: 0, completed: 0 },
+  snapshots: [],
+  topActions: []
+});
 
 export const renderManagerPage = (ctx) => {
-  const { portfolio, navigate } = ctx;
-  const signals = portfolio?.signals || [];
-  const total = signals.length || 1;
-  const health = healthDistribution(signals);
-  const adoption = adoptionDistribution(signals);
-  const renewal90 = signals.filter((signal) => Number(signal.renewalDays ?? 999) <= 90).length;
-  const noEngagement30 = signals.filter((signal) => Number(signal.touchStaleDays ?? 999) > 30).length;
-  const noUpcomingTouch = signals.filter((signal) => !signal.account?.engagement?.next_touch_date).length;
-  const avgAdoption = signals.length
-    ? Math.round(
-        signals.reduce((sum, signal) => sum + Number(signal.account?.adoption?.platform_adoption_score || 0), 0) / signals.length
-      )
-    : 0;
-  const topRisks = [...signals]
-    .sort((left, right) => Number(right.outlierScore || 0) - Number(left.outlierScore || 0))
-    .slice(0, 8);
+  const { portfolio, manager, navigate } = ctx;
+  const dashboard = manager || fallbackManager(portfolio);
+  const health = dashboard.portfolio.healthDistribution || { green: 0, yellow: 0, red: 0 };
+  const adoption = dashboard.portfolio.adoptionCoverage || { avgAdoption: 0, avgCicd: 0, avgSecurity: 0 };
+  const engagement = dashboard.portfolio.engagementCoverage || { in30: 0, in60: 0, in90: 0, over90: 0 };
+  const rows = dashboard.portfolio.rows || [];
+  const atRisk = dashboard.portfolio.atRisk || [];
+  const workload = dashboard.workload || [];
+  const snapshots = dashboard.snapshots || [];
+  const programFunnel = dashboard.programFunnel || { invited: 0, attended: 0, completed: 0 };
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
@@ -67,96 +52,154 @@ export const renderManagerPage = (ctx) => {
     ${pageHeader({
       eyebrow: 'Manager',
       title: 'CSE Manager Dashboard',
-      subtitle: 'Team-level portfolio oversight for health distribution, adoption coverage, renewal risk, and engagement gaps.',
-      actionsHtml: '<button class="ghost-btn" type="button" data-go-portfolio>Back to Portfolio</button>'
+      subtitle:
+        'Team-level operating view for coverage, portfolio risk, adoption improvement, and program performance.',
+      actionsHtml: `
+        <button class="ghost-btn" type="button" data-go-portfolio>Back to Portfolio</button>
+        <button class="ghost-btn" type="button" data-go-reports>Open Reports</button>
+      `
     })}
 
     ${sectionCard({
       bodyHtml: `
       <div class="kpi-grid kpi-4">
-        ${metricTile({ label: 'Total accounts', value: signals.length, tone: 'neutral' })}
-        ${metricTile({ label: 'Average adoption', value: avgAdoption, tone: avgAdoption >= 70 ? 'good' : 'warn' })}
-        ${metricTile({ label: 'Renewals < 90d', value: renewal90, tone: renewal90 > 0 ? 'warn' : 'good' })}
-        ${metricTile({ label: 'No engagement > 30d', value: noEngagement30, tone: noEngagement30 > 0 ? 'risk' : 'good' })}
-      </div>
-      <div class="kpi-grid kpi-3" style="margin-top:16px;">
-        ${metricTile({ label: 'Healthy', value: health.green, tone: 'good' })}
-        ${metricTile({ label: 'Attention', value: health.yellow, tone: 'warn' })}
-        ${metricTile({ label: 'Risk', value: health.red, tone: 'risk' })}
+        ${metricTile({ label: 'Total customers', value: rows.length, tone: 'neutral' })}
+        ${metricTile({ label: 'Average adoption', value: adoption.avgAdoption || 0, tone: (adoption.avgAdoption || 0) >= 70 ? 'good' : 'warn' })}
+        ${metricTile({ label: 'At-risk customers', value: atRisk.length, tone: atRisk.length ? 'risk' : 'good' })}
+        ${metricTile({ label: 'Engagement in 30d', value: engagement.in30 || 0, tone: (engagement.in30 || 0) > 0 ? 'good' : 'warn' })}
       </div>
       `
     })}
 
-    <section class="dashboard-grid">
-      <div class="main-col">
-        ${sectionCard({
-          title: 'Portfolio Health Distribution',
-          chipHtml: statusChip({ label: `${signals.length} accounts`, tone: 'neutral' }),
-          bodyHtml: `
-            <div class="mix-chart">
-              ${barRow('Healthy', health.green, total, 'good')}
-              ${barRow('Attention', health.yellow, total, 'warn')}
-              ${barRow('Risk', health.red, total, 'risk')}
-            </div>
-          `
-        })}
+    <section class="grid-cards">
+      <article class="card">
+        <div class="metric-head">
+          <h2>Portfolio Health Distribution</h2>
+          ${statusChip({ label: `${rows.length} customers`, tone: 'neutral' })}
+        </div>
+        <div class="chart-wrap">
+          ${donutChartSvg([
+            { label: 'Green', value: health.green || 0, color: '#16A34A' },
+            { label: 'Yellow', value: health.yellow || 0, color: '#D97706' },
+            { label: 'Red', value: health.red || 0, color: '#DC2626' }
+          ])}
+        </div>
+      </article>
 
-        ${sectionCard({
-          title: 'Use Case Adoption Distribution',
-          chipHtml: statusChip({ label: 'Platform score bands', tone: 'neutral' }),
-          bodyHtml: `
-            <div class="mix-chart">
-              ${barRow('High (75+)', adoption.high, total, 'good')}
-              ${barRow('Medium (55-74)', adoption.medium, total, 'warn')}
-              ${barRow('Low (<55)', adoption.low, total, 'risk')}
-            </div>
-          `
-        })}
-      </div>
+      <article class="card">
+        <div class="metric-head">
+          <h2>Use Case Adoption Distribution</h2>
+          ${statusChip({ label: 'Averages', tone: 'neutral' })}
+        </div>
+        <div class="chart-wrap">
+          ${barChartSvg([
+            { label: 'Overall', value: adoption.avgAdoption || 0, color: '#6E49CB' },
+            { label: 'CI/CD', value: adoption.avgCicd || 0, color: '#0284C7' },
+            { label: 'Security', value: adoption.avgSecurity || 0, color: '#16A34A' }
+          ])}
+        </div>
+      </article>
 
-      <div class="mid-col">
-        ${sectionCard({
-          title: 'Renewal Risk Map',
-          chipHtml: statusChip({ label: `${renewal90} in 90d`, tone: renewal90 > 0 ? 'warn' : 'good' }),
-          bodyHtml: `
-            <ul class="simple-list">
-              ${
-                topRisks.length
-                  ? topRisks
-                      .map(
-                        (signal) =>
-                          `<li><a href="#" data-open-account="${signal.account.id}">${signal.account.name}</a> - renewal ${signal.renewalDays ?? 'n/a'}d - ${signal.reasons[0] || 'review required'}</li>`
-                      )
-                      .join('')
-                  : '<li>No risk accounts detected.</li>'
-              }
-            </ul>
-          `
-        })}
-      </div>
+      <article class="card">
+        <div class="metric-head">
+          <h2>Renewal Risk Map</h2>
+          ${statusChip({ label: `${atRisk.length} accounts`, tone: atRisk.length ? 'warn' : 'good' })}
+        </div>
+        <ul class="simple-list">
+          ${
+            atRisk.length
+              ? atRisk
+                  .slice(0, 8)
+                  .map(
+                    (item) =>
+                      `<li><a href="#" data-open-customer="${item.customer.id}">${item.customer.name}</a> - ${item.riskSignals?.[0]?.detail || 'Review risk signals'}</li>`
+                  )
+                  .join('')
+              : '<li>No renewal risk accounts identified.</li>'
+          }
+        </ul>
+      </article>
 
-      <div class="right-col">
-        ${sectionCard({
-          title: 'Manager Actions',
-          chipHtml: statusChip({ label: 'Coverage', tone: 'neutral' }),
-          bodyHtml: `
-            <ul class="drawer-list">
-              <li>Assign immediate support to red health accounts.</li>
-              <li>Review no-engagement accounts with no upcoming touch (${noUpcomingTouch}).</li>
-              <li>Prioritize renewal accounts with adoption below 3 green use cases.</li>
-            </ul>
-          `
-        })}
-      </div>
+      <article class="card">
+        <div class="metric-head">
+          <h2>Program Funnel Metrics</h2>
+          ${statusChip({ label: `${(dashboard.programs || []).length} programs`, tone: 'neutral' })}
+        </div>
+        <div class="chart-wrap">
+          ${funnelChartSvg([
+            { label: 'Invited', value: Number(programFunnel.invited || 0), color: '#6E49CB' },
+            { label: 'Attended', value: Number(programFunnel.attended || 0), color: '#0284C7' },
+            { label: 'Completed', value: Number(programFunnel.completed || 0), color: '#16A34A' }
+          ])}
+        </div>
+      </article>
+    </section>
+
+    <section class="grid-cards">
+      <article class="card">
+        <div class="metric-head">
+          <h2>Adoption Improvement Trend</h2>
+          ${statusChip({ label: `${snapshots.length} snapshots`, tone: 'neutral' })}
+        </div>
+        <div class="chart-wrap">
+          ${
+            snapshots.length
+              ? lineChartSvg(snapshots.map((item) => ({ label: item.month, value: item.adoptionAvg })))
+              : '<p class="muted">No snapshots yet. Capture snapshots from Settings.</p>'
+          }
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="metric-head">
+          <h2>Team Workload</h2>
+          ${statusChip({ label: `${workload.length} CSE members`, tone: 'neutral' })}
+        </div>
+        <ul class="simple-list">
+          ${
+            workload.length
+              ? workload
+                  .map(
+                    (member) =>
+                      `<li><strong>${member.name}</strong> - ${member.customerCount} customers, ${member.atRiskCount} at-risk coverage</li>`
+                  )
+                  .join('')
+              : '<li>No team roster configured.</li>'
+          }
+        </ul>
+      </article>
+
+      <article class="card">
+        <div class="metric-head">
+          <h2>Manager Actions</h2>
+          ${statusChip({ label: `${(dashboard.topActions || []).length} actions`, tone: 'neutral' })}
+        </div>
+        <ul class="simple-list">
+          ${
+            (dashboard.topActions || []).length
+              ? (dashboard.topActions || [])
+                  .slice(0, 8)
+                  .map(
+                    (action) =>
+                      `<li><a href="#" data-open-customer="${action.customerId}">${action.customerName}</a> - ${action.action} (due ${formatDate(
+                        action.due
+                      )})</li>`
+                  )
+                  .join('')
+              : '<li>No manager actions currently generated.</li>'
+          }
+        </ul>
+      </article>
     </section>
   `;
 
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
+  wrapper.querySelector('[data-go-reports]')?.addEventListener('click', () => navigate('reports'));
   wrapper.addEventListener('click', (event) => {
-    const link = event.target.closest('[data-open-account]');
+    const link = event.target.closest('[data-open-customer]');
     if (!link) return;
     event.preventDefault();
-    navigate('account', { id: link.getAttribute('data-open-account') });
+    navigate('customer', { id: link.getAttribute('data-open-customer') });
   });
 
   return wrapper;

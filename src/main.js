@@ -7,25 +7,55 @@ import {
   persistAccountField,
   persistPlaybookChecklist,
   persistProgram,
+  persistWorkspace,
   persistRequests,
   resetLocalState
 } from './lib/dataLoader.js';
-import { buildShareSnapshotUrl, exportAccountCsv, exportAccountSummaryPdf, exportPortfolioCsv } from './lib/exports.js';
+import {
+  buildShareSnapshotUrl,
+  decodeWorkspaceSnapshot,
+  exportAccountCsv,
+  exportAccountSummaryPdf,
+  exportManagerSummaryPdf,
+  exportPortfolioCsv,
+  exportProgramsCsv,
+  exportVocCsv,
+  toCsv,
+  triggerDownload
+} from './lib/exports.js';
 import { formatDateTime, toIsoDate } from './lib/date.js';
 import { addEngagementLogEntry } from './lib/engagementLog.js';
-import { buildAccountWorkspace, buildPortfolioView } from './lib/scoring.js';
+import {
+  buildAccountWorkspace,
+  buildManagerDashboard,
+  buildPortfolioView,
+  buildWorkspacePortfolio,
+  createMonthlySnapshot,
+  deriveExpansionSuggestions,
+  deriveRiskSignals,
+  scoreBreakdown
+} from './lib/scoring.js';
 import { storage, STORAGE_KEYS } from './lib/storage.js';
+import { createDefaultWorkspace, ensureWorkspaceShape, validateWorkspace } from './lib/model.js';
 import { renderAccountPage, accountCommandEntries } from './pages/accountPage.js';
 import { renderExportsPage, exportsCommandEntries } from './pages/exportsPage.js';
 import { renderIntakePage, intakeCommandEntries } from './pages/intakePage.js';
 import { renderPlaybooksPage, playbooksCommandEntries } from './pages/playbooksPage.js';
 import { renderPortfolioHomePage, renderPortfolioPage, portfolioCommandEntries } from './pages/portfolioPage.js';
 import { renderProgramsPage, programsCommandEntries } from './pages/programsPage.js';
+import { renderProgramDetailPage } from './pages/programDetailPage.js';
 import { renderResourcesPage, resourcesCommandEntries } from './pages/resourcesPage.js';
 import { renderToolkitPage, toolkitCommandEntries } from './pages/toolkitPage.js';
 import { renderCheatsheetPage, cheatsheetCommandEntries } from './pages/cheatsheetPage.js';
 import { renderSimulatorPage, simulatorCommandEntries } from './pages/simulatorPage.js';
 import { renderManagerPage, managerCommandEntries } from './pages/managerPage.js';
+import { renderCustomersPage, customersCommandEntries } from './pages/customersPage.js';
+import { renderCustomerDetailPage, customerDetailCommandEntries } from './pages/customerDetailPage.js';
+import { renderRisksPage } from './pages/risksPage.js';
+import { renderExpansionPage } from './pages/expansionPage.js';
+import { renderVocPage } from './pages/vocPage.js';
+import { renderReportsPage } from './pages/reportsPage.js';
+import { renderSettingsPage } from './pages/settingsPage.js';
 
 const appRoot = document.querySelector('[data-app-root]');
 const routeRoot = document.querySelector('[data-route-root]');
@@ -33,6 +63,7 @@ const leftRailRoot = document.querySelector('[data-left-rail]');
 const toastRoot = document.querySelector('[data-toast]');
 const settingsRoot = document.querySelector('[data-settings]');
 let headerResizeObserver = null;
+let pendingSnapshotWorkspace = null;
 
 const syncHeaderOffset = () => {
   const header = document.querySelector('.app-header');
@@ -105,6 +136,7 @@ const state = {
   },
   checklistState: {},
   selectedAccountId: storage.get(STORAGE_KEYS.selectedAccountId, ''),
+  selectedCustomerId: storage.get(STORAGE_KEYS.selectedAccountId, ''),
   actionCardCompletion: storage.get(STORAGE_KEYS.actionCards, {})
 };
 
@@ -158,6 +190,51 @@ const setSelectedAccount = (accountId) => {
   storage.set(STORAGE_KEYS.selectedAccountId, accountId);
 };
 
+const currentWorkspace = () => ensureWorkspaceShape(state.data?.workspace || createDefaultWorkspace(), state.data?.sampleWorkspace || null);
+
+const workspaceCustomerById = (customerId) =>
+  (currentWorkspace().customers || []).find((customer) => customer.id === customerId) || null;
+
+const currentCustomer = () => {
+  const workspace = currentWorkspace();
+  const target = state.selectedCustomerId || workspace.customers?.[0]?.id || '';
+  return workspace.customers.find((customer) => customer.id === target) || workspace.customers[0] || null;
+};
+
+const setSelectedCustomer = (customerId) => {
+  state.selectedCustomerId = customerId;
+  storage.set(STORAGE_KEYS.selectedAccountId, customerId);
+};
+
+const ensureWorkspaceDerived = (workspace) => {
+  const model = ensureWorkspaceShape(workspace, state.data?.sampleWorkspace || createDefaultWorkspace());
+  (model.customers || []).forEach((customer) => {
+    const customerId = customer.id;
+    if (!model.risk[customerId]) model.risk[customerId] = { signals: [], playbook: [], overrideHealth: null };
+    const manualSignals = (model.risk[customerId].signals || []).filter((signal) => signal.source !== 'derived');
+    const derivedSignals = deriveRiskSignals(model, customerId, new Date()).filter((signal) => signal.source === 'derived');
+    model.risk[customerId].signals = [...manualSignals, ...derivedSignals];
+    model.expansion[customerId] = deriveExpansionSuggestions(model, customerId);
+  });
+  model.updatedAt = new Date().toISOString();
+  return model;
+};
+
+const setWorkspace = (workspace) => {
+  const normalized = ensureWorkspaceDerived(workspace);
+  const errors = validateWorkspace(normalized);
+  state.data.workspaceErrors = errors;
+  state.data.workspace = persistWorkspace(normalized);
+};
+
+const updateWorkspace = (updater) => {
+  const source = currentWorkspace();
+  const draft = JSON.parse(JSON.stringify(source));
+  updater?.(draft);
+  setWorkspace(draft);
+  render();
+};
+
 const setSafeMode = (value) => {
   state.customerSafe = Boolean(value);
   storage.set(STORAGE_KEYS.safeMode, state.customerSafe);
@@ -195,10 +272,18 @@ const applyQueryOverrides = () => {
   const search = new URLSearchParams(window.location.search);
   const route = search.get('route');
   const audience = search.get('audience');
+  const snapshot = search.get('ws');
 
   if (audience === 'customer') {
     state.customerSafe = true;
     storage.set(STORAGE_KEYS.safeMode, true);
+  }
+
+  if (snapshot) {
+    const decoded = decodeWorkspaceSnapshot(snapshot);
+    if (decoded && typeof decoded === 'object') {
+      pendingSnapshotWorkspace = decoded;
+    }
   }
 
   const normalizeRouteForHash = (value) => {
@@ -238,22 +323,34 @@ const ACCOUNT_SECTION_LINKS = [
 const PRIMARY_NAV_ITEMS = [
   { route: 'home', label: 'Today', icon: 'T' },
   { route: 'portfolio', label: 'Portfolio', icon: 'P' },
-  { route: 'account', label: 'Accounts', icon: 'A' },
+  { route: 'customers', label: 'Customers', icon: 'C' },
+  { route: 'programs', label: 'Programs', icon: 'PG' },
   { route: 'toolkit', label: 'Success Plans', icon: 'SP' },
+  { route: 'risks', label: 'Risks', icon: 'R' },
+  { route: 'expansion', label: 'Expansion', icon: 'EX' },
+  { route: 'voc', label: 'VOC', icon: 'V' },
   { route: 'simulator', label: 'Simulator', icon: 'S' },
-  { route: 'playbooks', label: 'Playbooks', icon: 'PB' },
-  { route: 'resources', label: 'Resources', icon: 'R' },
-  { route: 'cheatsheet', label: 'Cheatsheet', icon: 'C' },
-  { route: 'manager', label: 'Manager', icon: 'M' }
+  { route: 'manager', label: 'Manager', icon: 'M' },
+  { route: 'reports', label: 'Reports', icon: 'RP' },
+  { route: 'settings', label: 'Settings', icon: 'ST' },
+  { route: 'resources', label: 'Resources', icon: 'RS' }
 ];
 const ROUTE_LABELS = {
   home: 'Today',
   portfolio: 'Portfolio',
+  customers: 'Customers',
+  customer: 'Customer',
   account: 'Account',
   journey: 'Journey',
   toolkit: 'Success Plans',
   simulator: 'Simulator',
   programs: 'Programs',
+  program: 'Program',
+  risks: 'Risks',
+  expansion: 'Expansion',
+  voc: 'Voice of Customer',
+  reports: 'Reports',
+  settings: 'Settings',
   playbooks: 'Playbooks',
   resources: 'Resources',
   cheatsheet: 'Cheatsheet',
@@ -271,9 +368,15 @@ const focusAccountSection = (sectionId) => {
 };
 
 const setActiveNav = () => {
+  const activeRoute =
+    state.route.name === 'customer'
+      ? 'customers'
+      : state.route.name === 'program'
+        ? 'programs'
+        : state.route.name;
   navItems().forEach((link) => {
     const route = link.getAttribute('data-nav-route');
-    const active = route === state.route.name;
+    const active = route === activeRoute;
     link.classList.toggle('is-active', active);
   });
 };
@@ -281,24 +384,31 @@ const setActiveNav = () => {
 const renderLeftRail = () => {
   if (!leftRailRoot) return;
   const accounts = state.data?.accounts || [];
+  const workspace = currentWorkspace();
+  const workspacePortfolio = buildWorkspacePortfolio(workspace);
+  const customers = workspace.customers || [];
   const loadErrors = Array.isArray(state.data?.loadErrors) ? state.data.loadErrors : [];
   const accountLoadError = loadErrors.some((item) => item.file === 'accounts.json');
-  const current = currentAccount();
-  const isAccountContext = state.route.name === 'account' || state.route.name === 'journey';
-  const redCount = accounts.filter((account) => String(account.health?.overall || '').toLowerCase() === 'red').length;
-  const renewalWindowCount = accounts.filter((account) => {
-    const target = account.renewal_date ? new Date(account.renewal_date).getTime() : Number.POSITIVE_INFINITY;
-    return Number.isFinite(target) && Math.floor((target - Date.now()) / (1000 * 60 * 60 * 24)) <= 90;
-  }).length;
-  const staleCount = accounts.filter((account) => {
-    const lastUpdated = account.health?.last_updated ? new Date(account.health.last_updated).getTime() : null;
-    if (!lastUpdated) return true;
-    return Math.floor((Date.now() - lastUpdated) / (1000 * 60 * 60 * 24)) > 30;
-  }).length;
-  const recentAccounts = [...accounts]
+  const current = currentCustomer() || currentAccount();
+  const isAccountContext = ['account', 'journey', 'customer'].includes(state.route.name);
+  const sectionLinks =
+    state.route.name === 'customer'
+      ? [
+          { id: 'adoption', label: 'Adoption' },
+          { id: 'success-plan', label: 'Success Plan' },
+          { id: 'engagement', label: 'Engagement' },
+          { id: 'risk', label: 'Risk' },
+          { id: 'expansion', label: 'Expansion' },
+          { id: 'voc', label: 'VOC' }
+        ]
+      : ACCOUNT_SECTION_LINKS;
+  const redCount = (workspacePortfolio.rows || []).filter((row) => String(row.health || '').toLowerCase() === 'red').length;
+  const renewalWindowCount = (workspacePortfolio.rows || []).filter((row) => Number(row.renewalDays ?? 999) <= 90).length;
+  const staleCount = (workspacePortfolio.rows || []).filter((row) => Number(row.engagementDays ?? 999) > 30).length;
+  const recentCustomers = [...customers]
     .sort((left, right) => {
-      if (left.id === state.selectedAccountId) return -1;
-      if (right.id === state.selectedAccountId) return 1;
+      if (left.id === state.selectedCustomerId) return -1;
+      if (right.id === state.selectedCustomerId) return 1;
       return String(left.name || '').localeCompare(String(right.name || ''));
     })
     .slice(0, 8);
@@ -318,34 +428,34 @@ const renderLeftRail = () => {
       <p class="rail-label">${isAccountContext ? 'Jump To Section' : 'Daily Focus'}</p>
       ${
         isAccountContext
-          ? ACCOUNT_SECTION_LINKS.map(
+          ? sectionLinks.map(
               (item) =>
                 `<button class="rail-link" type="button" data-rail-section="${item.id}">${item.label}</button>`
             ).join('')
           : `<ul class="rail-shortcuts">
-               <li>Accounts loaded: ${accounts.length}</li>
+               <li>Customers loaded: ${customers.length}</li>
                <li>Red health: ${redCount}</li>
                <li>Renewal < 90 days: ${renewalWindowCount}</li>
-               <li>Stale health > 30d: ${staleCount}</li>
+               <li>Engagement stale > 30d: ${staleCount}</li>
              </ul>`
       }
-      <button class="rail-link" type="button" data-rail-open-current ${current ? '' : 'disabled'}>Open Current Account</button>
+      <button class="rail-link" type="button" data-rail-open-current ${current ? '' : 'disabled'}>Open Current Customer</button>
     </div>
 
     <div class="rail-group">
-      <p class="rail-label">Recent Accounts</p>
+      <p class="rail-label">Recent Customers</p>
       <div class="rail-list">
         ${
-          recentAccounts.length
-            ? recentAccounts
+          recentCustomers.length
+            ? recentCustomers
                 .map(
-                  (account) =>
-                    `<button class="rail-link ${account.id === state.selectedAccountId ? 'is-active' : ''}" type="button" data-rail-account="${account.id}">${account.name}</button>`
+                  (customer) =>
+                    `<button class="rail-link ${customer.id === state.selectedCustomerId ? 'is-active' : ''}" type="button" data-rail-customer="${customer.id}">${customer.name}</button>`
                 )
                 .join('')
             : accountLoadError
-              ? '<p class="empty-text">Account data failed to load.</p>'
-              : '<p class="empty-text">No accounts loaded.</p>'
+              ? '<p class="empty-text">Customer data failed to load.</p>'
+              : '<p class="empty-text">No customers loaded.</p>'
         }
       </div>
     </div>
@@ -371,6 +481,16 @@ const renderLeftRail = () => {
   `;
 
   leftRailRoot.querySelector('[data-rail-open-current]')?.addEventListener('click', () => {
+    const customerContext = ['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'settings'].includes(
+      state.route.name
+    );
+    if (customerContext) {
+      const targetId = currentCustomer()?.id || state.data.workspace?.customers?.[0]?.id || '';
+      if (!targetId) return;
+      setSelectedCustomer(targetId);
+      router.navigate('customer', { id: targetId });
+      return;
+    }
     const targetId = currentAccount()?.id || state.data.accounts?.[0]?.id || '';
     if (!targetId) return;
     setSelectedAccount(targetId);
@@ -384,11 +504,11 @@ const renderLeftRail = () => {
     });
   });
 
-  leftRailRoot.querySelectorAll('[data-rail-account]').forEach((button) => {
+  leftRailRoot.querySelectorAll('[data-rail-customer]').forEach((button) => {
     button.addEventListener('click', () => {
-      const accountId = button.getAttribute('data-rail-account');
-      setSelectedAccount(accountId);
-      router.navigate('account', { id: accountId });
+      const customerId = button.getAttribute('data-rail-customer');
+      setSelectedCustomer(customerId);
+      router.navigate('customer', { id: customerId });
     });
   });
 };
@@ -510,6 +630,390 @@ const onLogEngagement = (accountId, summary = 'Engagement touchpoint logged.') =
   render();
 };
 
+const createWorkspaceId = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+
+const withWorkspaceCustomer = (customerId, callback) => {
+  updateWorkspace((workspace) => {
+    const customer = (workspace.customers || []).find((item) => item.id === customerId);
+    if (!customer) return;
+    callback(workspace, customer);
+  });
+};
+
+const onCreateCustomer = () => {
+  updateWorkspace((workspace) => {
+    const nextNumber = (workspace.customers || []).length + 1;
+    const customerId = createWorkspaceId('cust');
+    const customer = {
+      id: customerId,
+      name: `Customer ${nextNumber}`,
+      tier: 'Standard',
+      renewalDate: '',
+      arrBand: '$50K-$100K',
+      stage: 'Align',
+      primaryUseCase: 'CI/CD',
+      contacts: [],
+      notes: '',
+      tags: []
+    };
+    workspace.customers.push(customer);
+    workspace.adoption[customerId] = workspace.adoption[customerId] || {
+      devsecopsStages: {
+        Plan: 'Not Started',
+        Create: 'Not Started',
+        Verify: 'Not Started',
+        Package: 'Not Started',
+        Secure: 'Not Started',
+        Release: 'Not Started',
+        Configure: 'Not Started',
+        Monitor: 'Not Started'
+      },
+      useCases: {
+        SCM: { percent: 0, evidence: 'Not started' },
+        CICD: { percent: 0, evidence: 'Not started' },
+        Security: { percent: 0, evidence: 'Not started' },
+        Compliance: { percent: 0, evidence: 'Not started' },
+        ReleaseAutomation: { percent: 0, evidence: 'Not started' },
+        Observability: { percent: 0, evidence: 'Not started' }
+      },
+      timeToValue: []
+    };
+    workspace.successPlans[customerId] = workspace.successPlans[customerId] || { outcomes: [], milestones: [] };
+    workspace.engagements[customerId] = workspace.engagements[customerId] || [];
+    workspace.risk[customerId] = workspace.risk[customerId] || { signals: [], playbook: [], overrideHealth: null };
+    workspace.expansion[customerId] = workspace.expansion[customerId] || [];
+    setSelectedCustomer(customerId);
+    notify(`Created ${customer.name}.`);
+    router.navigate('customer', { id: customerId });
+  });
+};
+
+const onBulkAddCustomersToProgram = (customerIds, programId) => {
+  updateWorkspace((workspace) => {
+    const program = (workspace.programs || []).find((item) => item.id === programId);
+    if (!program) return;
+    const existing = new Set(program.cohortCustomerIds || []);
+    (customerIds || []).forEach((customerId) => existing.add(customerId));
+    program.cohortCustomerIds = [...existing];
+    program.funnel = {
+      ...(program.funnel || {}),
+      invited: Math.max(Number(program.funnel?.invited || 0), existing.size * 2)
+    };
+    notify(`${customerIds.length} customer(s) added to ${program.name}.`);
+  });
+};
+
+const onBulkLogWorkspaceEngagement = (customerIds = []) => {
+  const date = new Date().toISOString();
+  updateWorkspace((workspace) => {
+    customerIds.forEach((customerId) => {
+      if (!Array.isArray(workspace.engagements[customerId])) workspace.engagements[customerId] = [];
+      workspace.engagements[customerId].unshift({
+        id: createWorkspaceId('eng'),
+        ts: date,
+        type: '1:many',
+        summary: 'Bulk engagement touchpoint logged from customer table.',
+        tags: ['bulk', 'coverage'],
+        nextSteps: ['Follow up with account-specific plan update'],
+        owner: 'CSE'
+      });
+    });
+    notify(`${customerIds.length} engagement touchpoint(s) logged.`);
+  });
+};
+
+const onWorkspaceUpdateStageStatus = (customerId, stage, status) => {
+  withWorkspaceCustomer(customerId, (workspace) => {
+    workspace.adoption[customerId].devsecopsStages[stage] = status;
+  });
+};
+
+const onWorkspaceUpdateUseCasePercent = (customerId, useCase, percent) => {
+  withWorkspaceCustomer(customerId, (workspace) => {
+    workspace.adoption[customerId].useCases[useCase] = {
+      ...(workspace.adoption[customerId].useCases[useCase] || {}),
+      percent: Math.max(0, Math.min(100, Number(percent || 0)))
+    };
+  });
+};
+
+const onWorkspaceUpdateUseCaseEvidence = (customerId, useCase, evidence) => {
+  withWorkspaceCustomer(customerId, (workspace) => {
+    workspace.adoption[customerId].useCases[useCase] = {
+      ...(workspace.adoption[customerId].useCases[useCase] || {}),
+      evidence: evidence || 'Not started'
+    };
+  });
+};
+
+const onWorkspaceAddTimeToValue = (customerId, milestone) => {
+  withWorkspaceCustomer(customerId, (workspace) => {
+    workspace.adoption[customerId].timeToValue.unshift(milestone);
+    notify('Time-to-value milestone added.');
+  });
+};
+
+const onWorkspaceAddOutcome = (customerId, outcome) => {
+  withWorkspaceCustomer(customerId, (workspace) => {
+    workspace.successPlans[customerId].outcomes.push({
+      id: createWorkspaceId('out'),
+      ...outcome
+    });
+    notify('Success outcome added.');
+  });
+};
+
+const onWorkspaceAddMilestone = (customerId, milestone) => {
+  withWorkspaceCustomer(customerId, (workspace) => {
+    workspace.successPlans[customerId].milestones.push({
+      id: createWorkspaceId('ms'),
+      ...milestone
+    });
+    notify('Success milestone added.');
+  });
+};
+
+const onWorkspaceAddEngagement = (customerId, payload) => {
+  withWorkspaceCustomer(customerId, (workspace, customer) => {
+    if (!Array.isArray(workspace.engagements[customerId])) workspace.engagements[customerId] = [];
+    workspace.engagements[customerId].unshift({
+      id: createWorkspaceId('eng'),
+      ts: `${payload.date || toIsoDate(new Date())}T12:00:00.000Z`,
+      type: payload.type || '1:1',
+      summary: payload.summary || 'Engagement logged',
+      tags: payload.tags || [],
+      nextSteps: payload.nextSteps || [],
+      owner: payload.owner || 'CSE'
+    });
+    addEngagementLogEntry({
+      account_id: customerId,
+      account_name: customer.name,
+      date: payload.date || toIsoDate(new Date()),
+      type: payload.type || '1:1',
+      notes_customer_safe: payload.summary || 'Engagement logged',
+      notes_internal: `Tags: ${(payload.tags || []).join(', ')}`
+    });
+    notify('Engagement entry logged.');
+  });
+};
+
+const onWorkspaceSetRiskOverride = (customerId, value) => {
+  withWorkspaceCustomer(customerId, (workspace) => {
+    workspace.risk[customerId].overrideHealth = value || null;
+    notify('Risk health override updated.');
+  });
+};
+
+const onWorkspaceAddRiskSignal = (customerId, payload) => {
+  withWorkspaceCustomer(customerId, (workspace) => {
+    const signal = {
+      code: payload.code,
+      severity: payload.severity,
+      detectedAt: new Date().toISOString(),
+      detail: payload.detail,
+      source: 'manual'
+    };
+    workspace.risk[customerId].signals = [...(workspace.risk[customerId].signals || []), signal];
+    notify('Manual risk signal added.');
+  });
+};
+
+const onWorkspaceAddPlaybookAction = (customerId, payload) => {
+  withWorkspaceCustomer(customerId, (workspace) => {
+    workspace.risk[customerId].playbook = [...(workspace.risk[customerId].playbook || []), payload];
+    notify('Mitigation action added.');
+  });
+};
+
+const onWorkspaceTogglePlaybookStatus = (customerId, index, complete) => {
+  withWorkspaceCustomer(customerId, (workspace) => {
+    const list = workspace.risk[customerId].playbook || [];
+    if (!list[index]) return;
+    list[index].status = complete ? 'Complete' : 'Planned';
+    workspace.risk[customerId].playbook = list;
+  });
+};
+
+const onWorkspaceAddExpansion = (customerId, payload) => {
+  withWorkspaceCustomer(customerId, (workspace) => {
+    const row = {
+      id: createWorkspaceId('exp'),
+      ...payload
+    };
+    workspace.expansion[customerId] = [...(workspace.expansion[customerId] || []), row];
+    notify('Expansion opportunity added.');
+  });
+};
+
+const onWorkspaceSetExpansionStatus = (customerId, opportunityId, status) => {
+  withWorkspaceCustomer(customerId, (workspace) => {
+    workspace.expansion[customerId] = (workspace.expansion[customerId] || []).map((item) =>
+      item.id === opportunityId ? { ...item, status } : item
+    );
+  });
+};
+
+const onWorkspaceAddVoc = (payload) => {
+  updateWorkspace((workspace) => {
+    workspace.voc.unshift({
+      id: createWorkspaceId('voc'),
+      customerId: payload.customerId,
+      area: payload.area,
+      request: payload.request,
+      impact: payload.impact,
+      createdAt: new Date().toISOString(),
+      status: payload.status || 'Captured'
+    });
+    notify('VOC entry captured.');
+  });
+};
+
+const onWorkspaceAddCustomerToProgram = (programId, customerId) => {
+  updateWorkspace((workspace) => {
+    const program = (workspace.programs || []).find((item) => item.id === programId);
+    if (!program) return;
+    const cohort = new Set(program.cohortCustomerIds || []);
+    cohort.add(customerId);
+    program.cohortCustomerIds = [...cohort];
+    notify('Customer added to program cohort.');
+  });
+};
+
+const onWorkspaceUpdateProgramFunnel = (programId, funnel) => {
+  updateWorkspace((workspace) => {
+    workspace.programs = (workspace.programs || []).map((program) =>
+      program.id === programId
+        ? {
+            ...program,
+            funnel: {
+              invited: Math.max(0, Number(funnel.invited || 0)),
+              attended: Math.max(0, Number(funnel.attended || 0)),
+              completed: Math.max(0, Number(funnel.completed || 0))
+            }
+          }
+        : program
+    );
+    notify('Program funnel updated.');
+  });
+};
+
+const onWorkspaceExportSelectedCustomers = (rows = []) => {
+  const csv = toCsv(rows, Object.keys(rows[0] || {}).map((key) => ({ label: key, value: (row) => row[key] })));
+  if (!csv.trim()) return;
+  triggerDownload(`customers-selected-${toIsoDate(new Date())}.csv`, csv, 'text/csv;charset=utf-8');
+  notify('Selected customer CSV exported.');
+};
+
+const onExportWorkspace = () => {
+  triggerDownload(
+    `workspace-${toIsoDate(new Date())}.json`,
+    JSON.stringify(currentWorkspace(), null, 2),
+    'application/json;charset=utf-8'
+  );
+  notify('Workspace JSON exported.');
+};
+
+const onImportWorkspace = (payload) => {
+  const candidate = payload?.workspace || payload;
+  if (!candidate || typeof candidate !== 'object') {
+    notify('Invalid workspace payload.');
+    return;
+  }
+  setWorkspace(candidate);
+  const first = currentWorkspace().customers?.[0]?.id || '';
+  if (first) setSelectedCustomer(first);
+  render();
+  notify('Workspace imported.');
+};
+
+const onLoadSampleWorkspace = () => {
+  if (!state.data?.sampleWorkspace) return;
+  setWorkspace(state.data.sampleWorkspace);
+  const first = currentWorkspace().customers?.[0]?.id || '';
+  if (first) setSelectedCustomer(first);
+  render();
+  notify('Sample portfolio loaded.');
+};
+
+const onResetWorkspace = async () => {
+  resetLocalState();
+  await reloadData();
+  notify('Local workspace reset.');
+};
+
+const onUpdateScoringWeights = (weights) => {
+  updateWorkspace((workspace) => {
+    workspace.settings = workspace.settings || {};
+    workspace.settings.scoringWeights = {
+      adoption: Math.max(0, Number(weights.adoption || 0)),
+      engagement: Math.max(0, Number(weights.engagement || 0)),
+      risk: Math.max(0, Number(weights.risk || 0))
+    };
+    notify('Scoring weights updated.');
+  });
+};
+
+const onAddRiskTemplate = (template) => {
+  updateWorkspace((workspace) => {
+    workspace.settings = workspace.settings || {};
+    workspace.settings.riskPlaybookTemplates = workspace.settings.riskPlaybookTemplates || [];
+    workspace.settings.riskPlaybookTemplates.push({
+      id: createWorkspaceId('tpl'),
+      ...template
+    });
+    notify('Risk template added.');
+  });
+};
+
+const onAddProgramTemplate = (template) => {
+  updateWorkspace((workspace) => {
+    workspace.settings = workspace.settings || {};
+    workspace.settings.programTemplates = workspace.settings.programTemplates || [];
+    workspace.settings.programTemplates.push({
+      id: createWorkspaceId('prog_tpl'),
+      ...template
+    });
+    notify('Program template added.');
+  });
+};
+
+const onCreateMonthlySnapshot = () => {
+  updateWorkspace((workspace) => {
+    workspace.snapshots = createMonthlySnapshot(workspace, new Date());
+    notify('Monthly snapshot captured.');
+  });
+};
+
+const onExportProgramFollowupList = (programId) => {
+  const workspace = currentWorkspace();
+  const program = (workspace.programs || []).find((item) => item.id === programId);
+  if (!program) return;
+  const customers = workspace.customers || [];
+  const rows = (program.cohortCustomerIds || [])
+    .map((customerId) => customers.find((customer) => customer.id === customerId))
+    .filter(Boolean)
+    .flatMap((customer) =>
+      (customer.contacts || []).map((contact) => ({
+        customerId: customer.id,
+        customerName: customer.name,
+        contactName: contact.name || '',
+        role: contact.role || '',
+        email: contact.email || '',
+        program: program.name
+      }))
+    );
+  const csv = toCsv(rows, [
+    { label: 'customerId', value: (row) => row.customerId },
+    { label: 'customerName', value: (row) => row.customerName },
+    { label: 'contactName', value: (row) => row.contactName },
+    { label: 'role', value: (row) => row.role },
+    { label: 'email', value: (row) => row.email },
+    { label: 'program', value: (row) => row.program }
+  ]);
+  triggerDownload(`program-followup-${programId}-${toIsoDate(new Date())}.csv`, csv, 'text/csv;charset=utf-8');
+  notify('Program follow-up list exported.');
+};
+
 const onInviteAccountToProgram = async (programId, accountId) => {
   const program = findProgram(programId);
   const account = getAccountById(accountId);
@@ -594,8 +1098,17 @@ const openMissingEditor = ({ accountId, path, label, type = 'text' }) => {
 
 const renderShellContext = () => {
   const accounts = state.data?.accounts || [];
-  const activeAccountId = state.selectedAccountId || accounts[0]?.id || '';
-  const activeAccount = accounts.find((account) => account.id === activeAccountId) || accounts[0] || null;
+  const workspace = currentWorkspace();
+  const customers = workspace.customers || [];
+  const inCustomerModel = ['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'settings'].includes(
+    state.route.name
+  );
+  const activeAccountId = inCustomerModel
+    ? state.selectedCustomerId || customers[0]?.id || ''
+    : state.selectedAccountId || accounts[0]?.id || '';
+  const activeAccount = inCustomerModel
+    ? customers.find((customer) => customer.id === activeAccountId) || customers[0] || null
+    : accounts.find((account) => account.id === activeAccountId) || accounts[0] || null;
 
   const safeToggle = appRoot.querySelector('[data-global-safe-toggle]');
   if (safeToggle) safeToggle.checked = state.customerSafe;
@@ -605,8 +1118,9 @@ const renderShellContext = () => {
 
   const accountSelect = appRoot.querySelector('[data-global-account-select]');
   if (accountSelect) {
-    accountSelect.innerHTML = accounts.length
-      ? accounts
+    const options = inCustomerModel ? customers : accounts;
+    accountSelect.innerHTML = options.length
+      ? options
           .map(
             (account) =>
               `<option value="${account.id}" ${account.id === activeAccountId ? 'selected' : ''}>${account.name}</option>`
@@ -623,17 +1137,28 @@ const renderShellContext = () => {
 
   const jumpSelect = appRoot.querySelector('[data-global-jump]');
   if (jumpSelect) {
-    const isAccountContext = state.route.name === 'account' || state.route.name === 'journey';
+    const isAccountContext = state.route.name === 'account' || state.route.name === 'journey' || state.route.name === 'customer';
+    const sectionLinks =
+      state.route.name === 'customer'
+        ? [
+            { id: 'adoption', label: 'Adoption' },
+            { id: 'success-plan', label: 'Success Plan' },
+            { id: 'engagement', label: 'Engagement' },
+            { id: 'risk', label: 'Risk' },
+            { id: 'expansion', label: 'Expansion' },
+            { id: 'voc', label: 'VOC' }
+          ]
+        : ACCOUNT_SECTION_LINKS;
     const options = [{ value: '', label: isAccountContext ? 'Jump to account section' : 'Open account workspace' }];
-    if (activeAccount || state.data?.accounts?.length) {
+    if (activeAccount || state.data?.accounts?.length || customers.length) {
       options.push({
         value: activeAccount ? `account:${activeAccount.id}` : 'account',
-        label: activeAccount ? `Account: ${activeAccount.name}` : 'Account'
+        label: activeAccount ? `${inCustomerModel ? 'Customer' : 'Account'}: ${activeAccount.name}` : 'Account'
       });
     }
     if (isAccountContext) {
       options.push(
-        ...ACCOUNT_SECTION_LINKS.map((item) => ({
+        ...sectionLinks.map((item) => ({
           value: `section:${item.id}`,
           label: item.label
         }))
@@ -658,7 +1183,8 @@ const copyShareSnapshot = async () => {
   const url = buildShareSnapshotUrl({
     basePath: state.basePath,
     route,
-    customerSafe: state.customerSafe
+    customerSafe: state.customerSafe,
+    workspace: currentWorkspace()
   });
   await copyText(url);
   notify('Share snapshot URL copied.');
@@ -695,7 +1221,13 @@ const commandEntries = (workspace) => {
   return [
     { id: 'cmd-home', label: 'Open Today Console', meta: 'Today', action: { route: 'home' } },
     { id: 'cmd-portfolio', label: 'Open Portfolio Table', meta: 'Portfolio', action: { route: 'portfolio' } },
+    { id: 'cmd-customers', label: 'Open Customer Directory', meta: 'Customers', action: { route: 'customers' } },
+    { id: 'cmd-risks', label: 'Open Risk Signals', meta: 'Risks', action: { route: 'risks' } },
+    { id: 'cmd-expansion', label: 'Open Expansion Board', meta: 'Expansion', action: { route: 'expansion' } },
+    { id: 'cmd-voc', label: 'Open VOC Registry', meta: 'VOC', action: { route: 'voc' } },
     { id: 'cmd-manager', label: 'Open Manager Dashboard', meta: 'Manager', action: { route: 'manager' } },
+    { id: 'cmd-reports', label: 'Open Reports Center', meta: 'Reports', action: { route: 'reports' } },
+    { id: 'cmd-settings', label: 'Open Settings', meta: 'Settings', action: { route: 'settings' } },
     { id: 'cmd-simulator', label: 'Open Adoption Simulator', meta: 'Simulator', action: { route: 'simulator' } },
     { id: 'cmd-account', label: 'Open Accounts Workspace', meta: 'Accounts', action: { route: 'account' } },
     { id: 'cmd-toolkit', label: 'Open Success Plans', meta: 'Success Plans', action: { route: 'toolkit' } },
@@ -725,15 +1257,22 @@ const commandEntries = (workspace) => {
     ...exportsCommandEntries(),
     ...intakeCommandEntries(state.data.accounts),
     ...accountSectionCommands,
-    ...accountCommandEntries(workspace)
+    ...accountCommandEntries(workspace),
+    ...customersCommandEntries(state.data.workspace),
+    ...customerDetailCommandEntries(state.data.workspace)
   ];
 };
 
 const reloadData = async () => {
   state.data = await loadDashboardData();
+  state.data.workspace = ensureWorkspaceDerived(currentWorkspace());
+  persistWorkspace(state.data.workspace);
   state.actionCardCompletion = storage.get(STORAGE_KEYS.actionCards, {});
   if (!state.selectedAccountId && state.data.accounts?.length) {
     setSelectedAccount(state.data.accounts[0].id);
+  }
+  if (!state.selectedCustomerId && state.data.workspace?.customers?.length) {
+    setSelectedCustomer(state.data.workspace.customers[0].id);
   }
   render();
 };
@@ -774,6 +1313,9 @@ const normalizeRouteLayout = (view) => {
 const renderCurrentRoute = () => {
   const route = state.route;
   const portfolio = buildPortfolioView(state.data);
+  const workspaceModel = currentWorkspace();
+  const workspacePortfolio = buildWorkspacePortfolio(workspaceModel);
+  const manager = buildManagerDashboard(workspaceModel);
   const loadErrors = Array.isArray(state.data?.loadErrors) ? state.data.loadErrors : [];
   const accountLoadError = loadErrors.some((item) => item.file === 'accounts.json');
 
@@ -792,14 +1334,66 @@ const renderCurrentRoute = () => {
       return;
     }
   }
+  if (route.name === 'customer') {
+    if (route.params.id) setSelectedCustomer(route.params.id);
+    const selectedId = route.params.id || state.selectedCustomerId || workspaceModel.customers?.[0]?.id || '';
+    if (!route.params.id && selectedId) {
+      router.navigate('customer', { id: selectedId }, { replace: true });
+      return;
+    }
+  }
+  if (route.name === 'program') {
+    const programId = route.params.id || workspaceModel.programs?.[0]?.id || '';
+    if (!route.params.id && programId) {
+      router.navigate('program', { id: programId }, { replace: true });
+      return;
+    }
+  }
 
   let view = null;
   const workspace = buildAccountWorkspace(state.data, state.selectedAccountId || route.params.id);
+  const selectedCustomerId = route.params.id || state.selectedCustomerId || workspaceModel.customers?.[0]?.id || '';
+  const selectedCustomer = workspaceCustomerById(selectedCustomerId);
+  const customerMetrics = selectedCustomer ? scoreBreakdown(workspaceModel, selectedCustomer.id, new Date()) : null;
+  const programDetail =
+    route.name === 'program'
+      ? (() => {
+          const targetId = route.params.id || workspaceModel.programs?.[0]?.id || '';
+          const workspaceProgram = (workspaceModel.programs || []).find((item) => item.id === targetId);
+          if (workspaceProgram) return workspaceProgram;
+          const legacyProgram = (state.data.programs || []).find((item) => item.program_id === targetId);
+          if (!legacyProgram) return null;
+          return {
+            id: legacyProgram.program_id,
+            name: legacyProgram.title,
+            type: legacyProgram.type,
+            startDate: String(legacyProgram.date || '').slice(0, 10),
+            endDate: String(legacyProgram.date || '').slice(0, 10),
+            objective: legacyProgram.invite_blurb || 'Program objective',
+            cohortCustomerIds: [],
+            funnel: {
+              invited: Number(legacyProgram.registration_count || 0),
+              attended: Number(legacyProgram.attendance_count || 0),
+              completed: Math.max(0, Math.floor(Number(legacyProgram.attendance_count || 0) * 0.7))
+            },
+            adoptionImpact: {},
+            sessions: [
+              {
+                date: String(legacyProgram.date || '').slice(0, 10),
+                title: legacyProgram.title,
+                artifact: ''
+              }
+            ]
+          };
+        })()
+      : null;
 
   const common = {
     navigate: (name, params) => {
       if (name === 'account' && params?.id) setSelectedAccount(params.id);
       if (name === 'account' && !params?.id) params = { id: currentAccount()?.id || state.data.accounts?.[0]?.id || '' };
+      if (name === 'customer' && params?.id) setSelectedCustomer(params.id);
+      if (name === 'customer' && !params?.id) params = { id: currentCustomer()?.id || workspaceModel.customers?.[0]?.id || '' };
       router.navigate(name, params);
     }
   };
@@ -815,7 +1409,7 @@ const renderCurrentRoute = () => {
       onRetryData: reloadData,
       onCopyInvite,
       onLogAttendance,
-      onExportPortfolio: () => exportPortfolioCsv(state.data.accounts, state.data.requests),
+      onExportPortfolio: () => exportPortfolioCsv(workspaceModel),
       onCopyShare: copyShareSnapshot,
       ...common
     });
@@ -829,7 +1423,7 @@ const renderCurrentRoute = () => {
       updatedOn: state.data.updated_on,
       accountLoadError,
       onRetryData: reloadData,
-      onExportPortfolio: () => exportPortfolioCsv(state.data.accounts, state.data.requests),
+      onExportPortfolio: () => exportPortfolioCsv(workspaceModel),
       ...common
     });
   }
@@ -837,7 +1431,60 @@ const renderCurrentRoute = () => {
   if (route.name === 'manager') {
     view = renderManagerPage({
       portfolio,
+      manager,
       mode: state.viewMode,
+      ...common
+    });
+  }
+
+  if (route.name === 'customers') {
+    view = renderCustomersPage({
+      workspace: workspaceModel,
+      portfolioRows: workspacePortfolio.rows,
+      onCreateCustomer,
+      onBulkAddToProgram: onBulkAddCustomersToProgram,
+      onBulkExport: onWorkspaceExportSelectedCustomers,
+      onBulkLogEngagement: onBulkLogWorkspaceEngagement,
+      notify,
+      ...common
+    });
+  }
+
+  if (route.name === 'customer' && selectedCustomer) {
+    view = renderCustomerDetailPage({
+      customer: selectedCustomer,
+      metrics: customerMetrics,
+      adoption: workspaceModel.adoption?.[selectedCustomer.id],
+      successPlan: workspaceModel.successPlans?.[selectedCustomer.id],
+      engagements: workspaceModel.engagements?.[selectedCustomer.id],
+      risk: workspaceModel.risk?.[selectedCustomer.id],
+      expansion: workspaceModel.expansion?.[selectedCustomer.id],
+      voc: (workspaceModel.voc || []).filter((item) => item.customerId === selectedCustomer.id),
+      customerSafe: state.customerSafe,
+      onUpdateStageStatus: onWorkspaceUpdateStageStatus,
+      onUpdateUseCasePercent: onWorkspaceUpdateUseCasePercent,
+      onUpdateUseCaseEvidence: onWorkspaceUpdateUseCaseEvidence,
+      onAddTimeToValueMilestone: onWorkspaceAddTimeToValue,
+      onAddOutcome: onWorkspaceAddOutcome,
+      onAddMilestone: onWorkspaceAddMilestone,
+      onAddEngagement: onWorkspaceAddEngagement,
+      onSetRiskOverride: onWorkspaceSetRiskOverride,
+      onAddRiskSignal: onWorkspaceAddRiskSignal,
+      onAddPlaybookAction: onWorkspaceAddPlaybookAction,
+      onTogglePlaybookStatus: onWorkspaceTogglePlaybookStatus,
+      onAddExpansion: onWorkspaceAddExpansion,
+      onSetExpansionStatus: onWorkspaceSetExpansionStatus,
+      onAddVoc: onWorkspaceAddVoc,
+      onExportCustomerPdf: (customerId) =>
+        exportAccountSummaryPdf(workspaceModel, {
+          customerId,
+          customerSafe: state.customerSafe
+        }),
+      onExportCustomerCsv: (customerId) =>
+        exportAccountCsv(workspaceModel, {
+          customerId,
+          customerSafe: state.customerSafe
+        }),
       ...common
     });
   }
@@ -916,6 +1563,19 @@ const renderCurrentRoute = () => {
       onLogAttendance,
       onAddRegistration,
       onInviteAccount: onInviteAccountToProgram,
+      onOpenProgram: (programId) => router.navigate('program', { id: programId }),
+      notify,
+      ...common
+    });
+  }
+
+  if (route.name === 'program' && programDetail) {
+    view = renderProgramDetailPage({
+      workspace: workspaceModel,
+      program: programDetail,
+      onAddCustomerToProgram: onWorkspaceAddCustomerToProgram,
+      onUpdateProgramFunnel: onWorkspaceUpdateProgramFunnel,
+      onExportFollowUpList: onExportProgramFollowupList,
       notify,
       ...common
     });
@@ -963,10 +1623,64 @@ const renderCurrentRoute = () => {
       account: currentAccount(),
       customerSafe: state.customerSafe,
       mode: state.viewMode,
-      onExportPortfolio: () => exportPortfolioCsv(state.data.accounts, state.data.requests),
+      onExportPortfolio: () => exportPortfolioCsv(workspaceModel),
       onExportAccountCsv: (account, options) => exportAccountCsv(account, options),
       onExportAccountPdf: (account, options) => exportAccountSummaryPdf(account, options),
       onCopyShare: copyShareSnapshot,
+      ...common
+    });
+  }
+
+  if (route.name === 'risks') {
+    view = renderRisksPage({
+      workspace: workspaceModel,
+      portfolioRows: workspacePortfolio.rows,
+      ...common
+    });
+  }
+
+  if (route.name === 'expansion') {
+    view = renderExpansionPage({
+      workspace: workspaceModel,
+      onAddExpansion: onWorkspaceAddExpansion,
+      onSetExpansionStatus: onWorkspaceSetExpansionStatus,
+      notify,
+      ...common
+    });
+  }
+
+  if (route.name === 'voc') {
+    view = renderVocPage({
+      workspace: workspaceModel,
+      onAddVoc: onWorkspaceAddVoc,
+      onExportVocCsv: () => exportVocCsv(workspaceModel),
+      notify,
+      ...common
+    });
+  }
+
+  if (route.name === 'reports') {
+    view = renderReportsPage({
+      manager,
+      onExportManagerSummary: () => exportManagerSummaryPdf(workspaceModel),
+      onExportPortfolioCsv: () => exportPortfolioCsv(workspaceModel),
+      onExportProgramsCsv: () => exportProgramsCsv(workspaceModel),
+      ...common
+    });
+  }
+
+  if (route.name === 'settings') {
+    view = renderSettingsPage({
+      workspace: workspaceModel,
+      onLoadSamplePortfolio: onLoadSampleWorkspace,
+      onImportWorkspace,
+      onExportWorkspace,
+      onResetWorkspace,
+      onUpdateScoringWeights,
+      onAddRiskTemplate,
+      onAddProgramTemplate,
+      onCreateSnapshot: onCreateMonthlySnapshot,
+      notify,
       ...common
     });
   }
@@ -1027,12 +1741,30 @@ const bindGlobalEvents = () => {
       router.navigate('journey', { id: targetId });
       return;
     }
+    if (name === 'customers') {
+      const targetId = currentCustomer()?.id || state.data.workspace?.customers?.[0]?.id || '';
+      if (targetId) setSelectedCustomer(targetId);
+      router.navigate('customers');
+      return;
+    }
+    if (name === 'customer') {
+      const targetId = currentCustomer()?.id || state.data.workspace?.customers?.[0]?.id || '';
+      if (!targetId) return;
+      setSelectedCustomer(targetId);
+      router.navigate('customer', { id: targetId });
+      return;
+    }
     router.navigate(name);
   });
 
   appRoot.querySelector('[data-global-account-select]')?.addEventListener('change', (event) => {
     const accountId = event.target.value;
     if (!accountId) return;
+    if (['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'settings'].includes(state.route.name)) {
+      setSelectedCustomer(accountId);
+      router.navigate('customer', { id: accountId });
+      return;
+    }
     setSelectedAccount(accountId);
     router.navigate('account', { id: accountId });
   });
@@ -1053,16 +1785,26 @@ const bindGlobalEvents = () => {
   appRoot.querySelector('[data-global-jump]')?.addEventListener('change', (event) => {
     const value = String(event.target.value || '').trim();
     if (!value) return;
+    const customerRouteContext = ['customer', 'customers', 'program', 'risks', 'expansion', 'voc', 'reports', 'settings'].includes(
+      state.route.name
+    );
     if (value.startsWith('section:')) {
       const sectionId = value.split(':')[1] || '';
-      const accountId = state.selectedAccountId || state.data.accounts?.[0]?.id || '';
+      const accountId = customerRouteContext
+        ? state.selectedCustomerId || state.data.workspace?.customers?.[0]?.id || ''
+        : state.selectedAccountId || state.data.accounts?.[0]?.id || '';
       if (!accountId || !sectionId) return;
       const applyFocus = () => focusAccountSection(sectionId);
-      if (state.route.name === 'account' || state.route.name === 'journey') {
+      if (state.route.name === 'account' || state.route.name === 'journey' || state.route.name === 'customer') {
         applyFocus();
       } else {
-        setSelectedAccount(accountId);
-        router.navigate('account', { id: accountId });
+        if (customerRouteContext) {
+          setSelectedCustomer(accountId);
+          router.navigate('customer', { id: accountId });
+        } else {
+          setSelectedAccount(accountId);
+          router.navigate('account', { id: accountId });
+        }
         window.requestAnimationFrame(() => {
           window.requestAnimationFrame(() => applyFocus());
         });
@@ -1071,18 +1813,30 @@ const bindGlobalEvents = () => {
       return;
     }
     if (value.startsWith('account:')) {
-      const accountId = value.split(':')[1] || state.selectedAccountId || state.data.accounts?.[0]?.id || '';
+      const accountId = value.split(':')[1] || state.selectedCustomerId || state.selectedAccountId || state.data.accounts?.[0]?.id || '';
       if (!accountId) return;
-      setSelectedAccount(accountId);
-      router.navigate('account', { id: accountId });
+      if (workspaceCustomerById(accountId)) {
+        setSelectedCustomer(accountId);
+        router.navigate('customer', { id: accountId });
+      } else {
+        setSelectedAccount(accountId);
+        router.navigate('account', { id: accountId });
+      }
       event.target.value = '';
       return;
     }
     if (value === 'account') {
-      const accountId = state.selectedAccountId || state.data.accounts?.[0]?.id || '';
+      const accountId = customerRouteContext
+        ? state.selectedCustomerId || state.data.workspace?.customers?.[0]?.id || ''
+        : state.selectedAccountId || state.data.accounts?.[0]?.id || '';
       if (!accountId) return;
-      setSelectedAccount(accountId);
-      router.navigate('account', { id: accountId });
+      if (customerRouteContext) {
+        setSelectedCustomer(accountId);
+        router.navigate('customer', { id: accountId });
+      } else {
+        setSelectedAccount(accountId);
+        router.navigate('account', { id: accountId });
+      }
       event.target.value = '';
       return;
     }
@@ -1098,8 +1852,7 @@ const bindGlobalEvents = () => {
   });
 
   appRoot.querySelector('[data-open-settings]')?.addEventListener('click', () => {
-    settingsRoot?.classList.add('is-open');
-    settingsRoot?.setAttribute('aria-hidden', 'false');
+    router.navigate('settings');
   });
 
   const moreButton = appRoot.querySelector('[data-open-more]');
@@ -1200,10 +1953,31 @@ const bindGlobalEvents = () => {
 
 const init = async () => {
   state.data = await loadDashboardData();
+  if (pendingSnapshotWorkspace) {
+    state.data.workspace = ensureWorkspaceShape(
+      {
+        ...state.data.workspace,
+        portfolio: {
+          ...(state.data.workspace?.portfolio || {}),
+          ...(pendingSnapshotWorkspace.portfolio || {})
+        },
+        customers: Array.isArray(pendingSnapshotWorkspace.customers)
+          ? pendingSnapshotWorkspace.customers
+          : state.data.workspace?.customers
+      },
+      state.data.sampleWorkspace
+    );
+    pendingSnapshotWorkspace = null;
+  }
+  state.data.workspace = ensureWorkspaceDerived(currentWorkspace());
+  persistWorkspace(state.data.workspace);
   state.checklistState = loadPlaybookChecklist();
 
   if (!state.selectedAccountId && state.data.accounts?.length) {
     setSelectedAccount(state.data.accounts[0].id);
+  }
+  if (!state.selectedCustomerId && state.data.workspace?.customers?.length) {
+    setSelectedCustomer(state.data.workspace.customers[0].id);
   }
 
   bindGlobalEvents();

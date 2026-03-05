@@ -1,0 +1,870 @@
+{
+  "workspace": {
+    "version": "3.0.0",
+    "updatedAt": "2026-03-04T12:00:00.000Z",
+    "portfolio": {
+      "name": "AMER CSE Portfolio",
+      "region": "AMER",
+      "segment": "Commercial",
+      "owner": "Mike Macri"
+    },
+    "customers": [
+      {
+        "id": "cust_acme",
+        "name": "Acme Corp",
+        "tier": "Premium",
+        "renewalDate": "2026-10-15",
+        "arrBand": "$100K-$250K",
+        "stage": "Adopt",
+        "primaryUseCase": "CI/CD",
+        "contacts": [
+          {
+            "name": "Avery Chen",
+            "role": "Director of Platform Engineering",
+            "email": "avery.chen@acme.example"
+          },
+          {
+            "name": "Jordan Patel",
+            "role": "DevSecOps Lead",
+            "email": "jordan.patel@acme.example"
+          }
+        ],
+        "notes": "Executive team expects measurable lead-time improvement before Q4 planning.",
+        "tags": [
+          "CI",
+          "Security"
+        ]
+      },
+      {
+        "id": "cust_northwind",
+        "name": "Northwind Industries",
+        "tier": "Premium",
+        "renewalDate": "2026-06-30",
+        "arrBand": "$250K-$500K",
+        "stage": "Enable",
+        "primaryUseCase": "CI/CD",
+        "contacts": [
+          {
+            "name": "Morgan Reed",
+            "role": "VP Engineering",
+            "email": "morgan.reed@northwind.example"
+          }
+        ],
+        "notes": "Strong CI footprint; security controls need to scale to all product lines.",
+        "tags": [
+          "Enterprise",
+          "Renewal"
+        ]
+      },
+      {
+        "id": "cust_contoso",
+        "name": "Contoso Financial Services",
+        "tier": "Premium",
+        "renewalDate": "2026-04-20",
+        "arrBand": "$500K-$1M",
+        "stage": "Renew",
+        "primaryUseCase": "Security",
+        "contacts": [
+          {
+            "name": "Samira Khan",
+            "role": "CISO",
+            "email": "samira.khan@contoso.example"
+          }
+        ],
+        "notes": "Renewal committee requires evidence of security automation rollout.",
+        "tags": [
+          "Regulated",
+          "High Risk"
+        ]
+      },
+      {
+        "id": "cust_tailspin",
+        "name": "Tailspin Commerce",
+        "tier": "Standard",
+        "renewalDate": "2027-01-12",
+        "arrBand": "$50K-$100K",
+        "stage": "Enable",
+        "primaryUseCase": "SCM",
+        "contacts": [
+          {
+            "name": "Nina Alvarez",
+            "role": "Engineering Manager",
+            "email": "nina.alvarez@tailspin.example"
+          }
+        ],
+        "notes": "Adoption momentum is positive after onboarding lab participation.",
+        "tags": [
+          "Growth"
+        ]
+      },
+      {
+        "id": "cust_fabrikam",
+        "name": "Fabrikam Health",
+        "tier": "Premium",
+        "renewalDate": "2026-08-05",
+        "arrBand": "$100K-$250K",
+        "stage": "Expand",
+        "primaryUseCase": "Compliance",
+        "contacts": [
+          {
+            "name": "Elena Garcia",
+            "role": "Head of Engineering Enablement",
+            "email": "elena.garcia@fabrikam.example"
+          }
+        ],
+        "notes": "Program completion is strong; expansion case tied to compliance automation.",
+        "tags": [
+          "Healthcare",
+          "Compliance"
+        ]
+      }
+    ],
+    "adoption": {
+      "cust_acme": {
+        "devsecopsStages": {
+          "Plan": "Adopted",
+          "Create": "Adopted",
+          "Verify": "In Progress",
+          "Package": "Planned",
+          "Secure": "Not Started",
+          "Release": "Planned",
+          "Configure": "Not Started",
+          "Monitor": "Not Started"
+        },
+        "useCases": {
+          "SCM": {
+            "percent": 95,
+            "evidence": "All product repos migrated with protected branch policy."
+          },
+          "CICD": {
+            "percent": 70,
+            "evidence": "Pipelines active on 9 of 14 core services."
+          },
+          "Security": {
+            "percent": 25,
+            "evidence": "SAST piloted in one shared template."
+          },
+          "Compliance": {
+            "percent": 10,
+            "evidence": "Compliance workshop scheduled for April."
+          },
+          "ReleaseAutomation": {
+            "percent": 38,
+            "evidence": "Release orchestration in progress with deployment approvals."
+          },
+          "Observability": {
+            "percent": 20,
+            "evidence": "Initial DORA instrumentation underway."
+          }
+        },
+        "timeToValue": [
+          {
+            "milestone": "First repo created",
+            "date": "2026-01-20",
+            "status": "Done"
+          },
+          {
+            "milestone": "First pipeline run",
+            "date": "2026-02-05",
+            "status": "Done"
+          },
+          {
+            "milestone": "First security scan",
+            "date": "2026-03-10",
+            "status": "Planned"
+          }
+        ]
+      },
+      "cust_northwind": {
+        "devsecopsStages": {
+          "Plan": "Adopted",
+          "Create": "Adopted",
+          "Verify": "Adopted",
+          "Package": "In Progress",
+          "Secure": "In Progress",
+          "Release": "In Progress",
+          "Configure": "Planned",
+          "Monitor": "Planned"
+        },
+        "useCases": {
+          "SCM": {
+            "percent": 92,
+            "evidence": "Unified SCM workflow across all teams."
+          },
+          "CICD": {
+            "percent": 84,
+            "evidence": "Runner autoscaling implemented and standardized."
+          },
+          "Security": {
+            "percent": 62,
+            "evidence": "SAST and dependency scanning enabled on top products."
+          },
+          "Compliance": {
+            "percent": 40,
+            "evidence": "Policy controls piloted in regulated product line."
+          },
+          "ReleaseAutomation": {
+            "percent": 70,
+            "evidence": "Canary rollout templates adopted."
+          },
+          "Observability": {
+            "percent": 55,
+            "evidence": "Value Stream analytics adopted by release team."
+          }
+        },
+        "timeToValue": [
+          {
+            "milestone": "First repo created",
+            "date": "2025-11-12",
+            "status": "Done"
+          },
+          {
+            "milestone": "First pipeline run",
+            "date": "2025-11-20",
+            "status": "Done"
+          },
+          {
+            "milestone": "First security scan",
+            "date": "2026-01-15",
+            "status": "Done"
+          }
+        ]
+      },
+      "cust_contoso": {
+        "devsecopsStages": {
+          "Plan": "Adopted",
+          "Create": "Adopted",
+          "Verify": "In Progress",
+          "Package": "Planned",
+          "Secure": "In Progress",
+          "Release": "Planned",
+          "Configure": "Not Started",
+          "Monitor": "Not Started"
+        },
+        "useCases": {
+          "SCM": {
+            "percent": 86,
+            "evidence": "Repository strategy completed for core banking products."
+          },
+          "CICD": {
+            "percent": 43,
+            "evidence": "Pipeline adoption below target for critical apps."
+          },
+          "Security": {
+            "percent": 28,
+            "evidence": "SAST enabled for one business unit only."
+          },
+          "Compliance": {
+            "percent": 31,
+            "evidence": "Policy workflow design in progress."
+          },
+          "ReleaseAutomation": {
+            "percent": 24,
+            "evidence": "Release approvals still manual."
+          },
+          "Observability": {
+            "percent": 16,
+            "evidence": "DORA visibility not operationalized."
+          }
+        },
+        "timeToValue": [
+          {
+            "milestone": "First repo created",
+            "date": "2025-10-12",
+            "status": "Done"
+          },
+          {
+            "milestone": "First pipeline run",
+            "date": "2025-12-01",
+            "status": "Done"
+          },
+          {
+            "milestone": "First security scan",
+            "date": "2026-03-25",
+            "status": "Planned"
+          }
+        ]
+      },
+      "cust_tailspin": {
+        "devsecopsStages": {
+          "Plan": "Adopted",
+          "Create": "Adopted",
+          "Verify": "In Progress",
+          "Package": "Planned",
+          "Secure": "Planned",
+          "Release": "Planned",
+          "Configure": "Not Started",
+          "Monitor": "Not Started"
+        },
+        "useCases": {
+          "SCM": {
+            "percent": 88,
+            "evidence": "Merge request adoption above 80% in active teams."
+          },
+          "CICD": {
+            "percent": 54,
+            "evidence": "Pipeline templates rolled out to half of projects."
+          },
+          "Security": {
+            "percent": 22,
+            "evidence": "Security controls not yet in default templates."
+          },
+          "Compliance": {
+            "percent": 14,
+            "evidence": "Compliance journey in planning."
+          },
+          "ReleaseAutomation": {
+            "percent": 35,
+            "evidence": "Release pipeline prototype completed."
+          },
+          "Observability": {
+            "percent": 18,
+            "evidence": "Operational metrics not yet standardized."
+          }
+        },
+        "timeToValue": [
+          {
+            "milestone": "First repo created",
+            "date": "2026-01-08",
+            "status": "Done"
+          },
+          {
+            "milestone": "First pipeline run",
+            "date": "2026-02-01",
+            "status": "Done"
+          },
+          {
+            "milestone": "First security scan",
+            "date": "2026-04-15",
+            "status": "Planned"
+          }
+        ]
+      },
+      "cust_fabrikam": {
+        "devsecopsStages": {
+          "Plan": "Adopted",
+          "Create": "Adopted",
+          "Verify": "Adopted",
+          "Package": "In Progress",
+          "Secure": "Adopted",
+          "Release": "In Progress",
+          "Configure": "In Progress",
+          "Monitor": "Planned"
+        },
+        "useCases": {
+          "SCM": {
+            "percent": 90,
+            "evidence": "Consolidated SCM governance policy operational."
+          },
+          "CICD": {
+            "percent": 78,
+            "evidence": "Pipeline standards adopted by all product squads."
+          },
+          "Security": {
+            "percent": 72,
+            "evidence": "SAST, dependency, and container scanning in baseline pipeline."
+          },
+          "Compliance": {
+            "percent": 67,
+            "evidence": "Audit evidence automation integrated in release process."
+          },
+          "ReleaseAutomation": {
+            "percent": 74,
+            "evidence": "Release orchestration and approvals integrated."
+          },
+          "Observability": {
+            "percent": 61,
+            "evidence": "DORA scorecard used in monthly governance review."
+          }
+        },
+        "timeToValue": [
+          {
+            "milestone": "First repo created",
+            "date": "2025-12-02",
+            "status": "Done"
+          },
+          {
+            "milestone": "First pipeline run",
+            "date": "2025-12-10",
+            "status": "Done"
+          },
+          {
+            "milestone": "First security scan",
+            "date": "2026-01-05",
+            "status": "Done"
+          }
+        ]
+      }
+    },
+    "successPlans": {
+      "cust_acme": {
+        "outcomes": [
+          {
+            "id": "out_acme_1",
+            "statement": "Reduce lead time to production by 30%",
+            "metric": "Lead time",
+            "target": "-30%",
+            "due": "2026-06-30",
+            "status": "On Track"
+          }
+        ],
+        "milestones": [
+          {
+            "id": "ms_acme_1",
+            "outcomeId": "out_acme_1",
+            "title": "Standardize runners and templates",
+            "owner": "CSE",
+            "due": "2026-04-30",
+            "status": "In Progress"
+          }
+        ]
+      },
+      "cust_northwind": {
+        "outcomes": [
+          {
+            "id": "out_nw_1",
+            "statement": "Increase release frequency by 20%",
+            "metric": "Deployment frequency",
+            "target": "+20%",
+            "due": "2026-07-15",
+            "status": "On Track"
+          }
+        ],
+        "milestones": [
+          {
+            "id": "ms_nw_1",
+            "outcomeId": "out_nw_1",
+            "title": "Expand secure scanning templates",
+            "owner": "CSE",
+            "due": "2026-05-05",
+            "status": "In Progress"
+          }
+        ]
+      },
+      "cust_contoso": {
+        "outcomes": [
+          {
+            "id": "out_contoso_1",
+            "statement": "Establish regulated security pipeline baseline",
+            "metric": "Security adoption",
+            "target": ">=60%",
+            "due": "2026-05-31",
+            "status": "At Risk"
+          }
+        ],
+        "milestones": [
+          {
+            "id": "ms_contoso_1",
+            "outcomeId": "out_contoso_1",
+            "title": "Launch security enablement sprint",
+            "owner": "CSE",
+            "due": "2026-03-28",
+            "status": "Planned"
+          }
+        ]
+      },
+      "cust_tailspin": {
+        "outcomes": [
+          {
+            "id": "out_tailspin_1",
+            "statement": "Reach 3+ green use cases by Q3",
+            "metric": "Use case coverage",
+            "target": "3 green",
+            "due": "2026-09-15",
+            "status": "On Track"
+          }
+        ],
+        "milestones": [
+          {
+            "id": "ms_tailspin_1",
+            "outcomeId": "out_tailspin_1",
+            "title": "Run CI optimization workshop",
+            "owner": "CSE",
+            "due": "2026-04-10",
+            "status": "Planned"
+          }
+        ]
+      },
+      "cust_fabrikam": {
+        "outcomes": [
+          {
+            "id": "out_fabrikam_1",
+            "statement": "Expand compliance automation to all regulated products",
+            "metric": "Compliance adoption",
+            "target": ">=80%",
+            "due": "2026-09-30",
+            "status": "On Track"
+          }
+        ],
+        "milestones": [
+          {
+            "id": "ms_fabrikam_1",
+            "outcomeId": "out_fabrikam_1",
+            "title": "Policy-as-code governance rollout",
+            "owner": "Customer",
+            "due": "2026-07-30",
+            "status": "In Progress"
+          }
+        ]
+      }
+    },
+    "programs": [
+      {
+        "id": "prog_cicd_lab_q2",
+        "name": "CI/CD Adoption Lab - Q2",
+        "type": "Lab",
+        "startDate": "2026-04-01",
+        "endDate": "2026-06-30",
+        "objective": "Increase CI adoption and template consistency",
+        "cohortCustomerIds": [
+          "cust_acme",
+          "cust_tailspin",
+          "cust_northwind"
+        ],
+        "funnel": {
+          "invited": 40,
+          "attended": 28,
+          "completed": 20
+        },
+        "adoptionImpact": {
+          "CICD": 12,
+          "Security": 3
+        },
+        "sessions": [
+          {
+            "date": "2026-04-08",
+            "title": "Pipeline fundamentals",
+            "artifact": "slides/cicd-fundamentals.pdf"
+          },
+          {
+            "date": "2026-04-22",
+            "title": "Template standardization",
+            "artifact": "slides/cicd-templates.pdf"
+          }
+        ]
+      },
+      {
+        "id": "prog_secure_bootcamp_q2",
+        "name": "Secure Enablement Bootcamp",
+        "type": "Webinar",
+        "startDate": "2026-04-10",
+        "endDate": "2026-06-20",
+        "objective": "Improve security scanning adoption in regulated environments",
+        "cohortCustomerIds": [
+          "cust_contoso",
+          "cust_fabrikam",
+          "cust_acme"
+        ],
+        "funnel": {
+          "invited": 32,
+          "attended": 23,
+          "completed": 17
+        },
+        "adoptionImpact": {
+          "Security": 14,
+          "Compliance": 8
+        },
+        "sessions": [
+          {
+            "date": "2026-04-17",
+            "title": "Secure controls baseline",
+            "artifact": "slides/secure-baseline.pdf"
+          }
+        ]
+      }
+    ],
+    "engagements": {
+      "cust_acme": [
+        {
+          "id": "eng_acme_1",
+          "ts": "2026-03-01T18:00:00.000Z",
+          "type": "Workshop",
+          "summary": "CI template review and ownership alignment",
+          "tags": [
+            "CICD",
+            "Template"
+          ],
+          "nextSteps": [
+            "Publish shared template MR",
+            "Schedule security baseline session"
+          ],
+          "owner": "CSE"
+        }
+      ],
+      "cust_northwind": [
+        {
+          "id": "eng_northwind_1",
+          "ts": "2026-03-02T16:00:00.000Z",
+          "type": "Office Hours",
+          "summary": "Secure policy controls walkthrough",
+          "tags": [
+            "Security",
+            "Compliance"
+          ],
+          "nextSteps": [
+            "Expand policy templates to remaining teams"
+          ],
+          "owner": "CSE"
+        }
+      ],
+      "cust_contoso": [
+        {
+          "id": "eng_contoso_1",
+          "ts": "2026-02-20T18:30:00.000Z",
+          "type": "1:1",
+          "summary": "Renewal risk review with security leadership",
+          "tags": [
+            "Renewal",
+            "Risk"
+          ],
+          "nextSteps": [
+            "Publish executive-ready risk remediation summary"
+          ],
+          "owner": "CSE"
+        }
+      ],
+      "cust_tailspin": [
+        {
+          "id": "eng_tailspin_1",
+          "ts": "2026-03-03T19:00:00.000Z",
+          "type": "Webinar",
+          "summary": "CI pipeline optimization cohort session",
+          "tags": [
+            "CICD",
+            "1:many"
+          ],
+          "nextSteps": [
+            "Enroll engineering leads in lab follow-up"
+          ],
+          "owner": "CSE"
+        }
+      ],
+      "cust_fabrikam": [
+        {
+          "id": "eng_fabrikam_1",
+          "ts": "2026-03-01T17:30:00.000Z",
+          "type": "Executive Briefing",
+          "summary": "Compliance value realization review",
+          "tags": [
+            "Compliance",
+            "Executive"
+          ],
+          "nextSteps": [
+            "Align expansion proposal with annual planning cycle"
+          ],
+          "owner": "CSM"
+        }
+      ]
+    },
+    "risk": {
+      "cust_acme": {
+        "signals": [
+          {
+            "code": "LOW_SECURITY_ADOPTION",
+            "severity": "Medium",
+            "detectedAt": "2026-03-04T00:00:00.000Z",
+            "detail": "Security use case is below 30%",
+            "source": "derived"
+          }
+        ],
+        "playbook": [
+          {
+            "action": "Run security enablement workshop",
+            "owner": "CSE",
+            "due": "2026-03-25",
+            "status": "Planned"
+          }
+        ],
+        "overrideHealth": null
+      },
+      "cust_northwind": {
+        "signals": [],
+        "playbook": [],
+        "overrideHealth": null
+      },
+      "cust_contoso": {
+        "signals": [
+          {
+            "code": "RENEWAL_SOON",
+            "severity": "High",
+            "detectedAt": "2026-03-04T00:00:00.000Z",
+            "detail": "Renewal within 90 days",
+            "source": "derived"
+          },
+          {
+            "code": "LOW_CICD_ADOPTION",
+            "severity": "Medium",
+            "detectedAt": "2026-03-04T00:00:00.000Z",
+            "detail": "CICD adoption remains below 40%",
+            "source": "derived"
+          }
+        ],
+        "playbook": [
+          {
+            "action": "Schedule renewal readiness technical review",
+            "owner": "CSE",
+            "due": "2026-03-21",
+            "status": "Planned"
+          }
+        ],
+        "overrideHealth": "Red"
+      },
+      "cust_tailspin": {
+        "signals": [],
+        "playbook": [],
+        "overrideHealth": null
+      },
+      "cust_fabrikam": {
+        "signals": [],
+        "playbook": [],
+        "overrideHealth": null
+      }
+    },
+    "expansion": {
+      "cust_acme": [
+        {
+          "id": "exp_acme_1",
+          "type": "UseCaseAdd",
+          "title": "Enable SAST in default pipeline",
+          "rationale": "Security adoption below target threshold",
+          "estImpact": "Shorten vulnerability response cycle",
+          "status": "Open"
+        }
+      ],
+      "cust_northwind": [
+        {
+          "id": "exp_northwind_1",
+          "type": "Optimization",
+          "title": "Scale compliance controls across product portfolio",
+          "rationale": "Strong CI/CD baseline enables compliance expansion",
+          "estImpact": "Increase governance confidence before renewal",
+          "status": "Validating"
+        }
+      ],
+      "cust_contoso": [
+        {
+          "id": "exp_contoso_1",
+          "type": "UseCaseAdd",
+          "title": "Adopt release automation for regulated workflows",
+          "rationale": "Manual release process creates renewal risk",
+          "estImpact": "Improve release traceability and predictability",
+          "status": "Open"
+        }
+      ],
+      "cust_tailspin": [],
+      "cust_fabrikam": [
+        {
+          "id": "exp_fabrikam_1",
+          "type": "Expansion",
+          "title": "Expand compliance automation licenses",
+          "rationale": "Compliance adoption trajectory is strong",
+          "estImpact": "Increase platform footprint across clinical teams",
+          "status": "Proposed"
+        }
+      ]
+    },
+    "voc": [
+      {
+        "id": "voc_1",
+        "customerId": "cust_acme",
+        "area": "CI/CD",
+        "request": "Need clearer monorepo pipeline visibility",
+        "impact": "Engineering teams spend extra time diagnosing bottlenecks",
+        "createdAt": "2026-03-03T10:00:00.000Z",
+        "status": "Captured"
+      },
+      {
+        "id": "voc_2",
+        "customerId": "cust_contoso",
+        "area": "Security",
+        "request": "Need secure policy templates for regulated workloads",
+        "impact": "Security onboarding is delayed for two business units",
+        "createdAt": "2026-03-02T09:15:00.000Z",
+        "status": "In Review"
+      }
+    ],
+    "team": {
+      "cseMembers": [
+        {
+          "id": "cse_mike",
+          "name": "Mike Macri",
+          "region": "AMER",
+          "accounts": [
+            "cust_acme",
+            "cust_northwind",
+            "cust_contoso",
+            "cust_tailspin",
+            "cust_fabrikam"
+          ]
+        }
+      ]
+    },
+    "snapshots": [
+      {
+        "month": "2026-01",
+        "adoptionAvg": 54,
+        "healthDistribution": {
+          "green": 1,
+          "yellow": 3,
+          "red": 1
+        },
+        "engagementCoverage": 64
+      },
+      {
+        "month": "2026-02",
+        "adoptionAvg": 58,
+        "healthDistribution": {
+          "green": 2,
+          "yellow": 2,
+          "red": 1
+        },
+        "engagementCoverage": 70
+      },
+      {
+        "month": "2026-03",
+        "adoptionAvg": 63,
+        "healthDistribution": {
+          "green": 2,
+          "yellow": 2,
+          "red": 1
+        },
+        "engagementCoverage": 76
+      }
+    ],
+    "settings": {
+      "riskPlaybookTemplates": [
+        {
+          "id": "tpl_recovery",
+          "name": "Recovery Motion",
+          "action": "Run technical recovery workshop",
+          "owner": "CSE",
+          "daysToDue": 14
+        },
+        {
+          "id": "tpl_renewal",
+          "name": "Renewal Readiness",
+          "action": "Prepare renewal evidence summary",
+          "owner": "CSM",
+          "daysToDue": 21
+        }
+      ],
+      "programTemplates": [
+        {
+          "id": "tpl_lab",
+          "name": "Adoption Lab",
+          "type": "Lab"
+        },
+        {
+          "id": "tpl_webinar",
+          "name": "Executive Webinar",
+          "type": "Webinar"
+        }
+      ],
+      "scoringWeights": {
+        "adoption": 45,
+        "engagement": 30,
+        "risk": 25
+      }
+    }
+  }
+}
