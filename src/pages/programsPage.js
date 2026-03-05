@@ -70,7 +70,7 @@ export const renderProgramsPage = (ctx) => {
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
   wrapper.innerHTML = `
-    <header class="page-head">
+    <header class="page-head page-intro">
       <div>
         <p class="eyebrow">Programs</p>
         <h1>Enablement Motions</h1>

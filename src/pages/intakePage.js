@@ -79,7 +79,7 @@ export const renderIntakePage = (ctx) => {
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
   wrapper.innerHTML = `
-    <header class="page-head">
+    <header class="page-head page-intro">
       <div>
         <p class="eyebrow">Intake</p>
         <h1>Engagement Request Form</h1>
