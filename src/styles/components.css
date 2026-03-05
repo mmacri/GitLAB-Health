@@ -296,24 +296,6 @@
   font-size: 10px;
 }
 
-/* Tabs */
-.mode-tabs {
-  background: var(--gl-surface);
-  border-bottom: 1px solid var(--gl-border);
-  padding: 0 var(--gl-space-4);
-  gap: var(--gl-space-1);
-}
-
-.mode-tab {
-  padding: var(--gl-space-3) var(--gl-space-3);
-  color: var(--gl-text-muted);
-}
-
-.mode-tab.active {
-  color: var(--gl-brand-purple);
-  border-bottom-color: var(--gl-brand-purple);
-}
-
 /* Tables */
 .table-wrap {
   overflow: auto;

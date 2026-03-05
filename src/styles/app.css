@@ -226,8 +226,6 @@ p {
   color: var(--color-neutral);
 }
 
-.ghost-btn,
-.qa,
 button {
   border: 1px solid var(--surface-border);
   background: var(--surface-bg);
@@ -242,24 +240,18 @@ button {
 
 .ghost-btn,
 .qa {
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  letter-spacing: 0.2px;
+  font-family: inherit;
+  cursor: pointer;
   text-decoration: none;
 }
 
-.ghost-btn:hover,
 button:hover {
   border-color: rgba(63, 60, 168, 0.35);
   color: var(--primary-strong);
-}
-
-.qa {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-}
-
-.qa:hover {
-  background: var(--primary-strong);
-  color: #fff;
 }
 
 .safe-toggle {
@@ -271,10 +263,6 @@ button:hover {
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   cursor: pointer;
-  border: 1px solid var(--surface-border);
-  background: var(--surface-bg);
-  transition: all var(--transition-normal);
-  color: var(--color-neutral);
   white-space: nowrap;
 }
 
@@ -337,24 +325,14 @@ button:hover {
   width: 34px;
   height: 34px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--surface-border);
-  background: var(--surface-bg);
-  color: #4b5563;
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
   font-size: var(--text-sm);
-}
-
-.header-btn:hover {
-  background: var(--surface-bg-hover);
-  color: #1f2937;
 }
 
 .header-btn--with-label {
   width: auto;
   padding: 0 var(--space-3);
   gap: var(--space-2);
-  font-weight: var(--weight-medium);
 }
 
 .header-hamburger {
