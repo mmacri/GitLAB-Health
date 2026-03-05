@@ -2,10 +2,10 @@ import { toastStore } from '../stores/toastStore.js';
 
 const typeIcon = (type) => {
   const normalized = String(type || 'success').toLowerCase();
-  if (normalized === 'error') return '⛔';
-  if (normalized === 'warning') return '⚠️';
-  if (normalized === 'info') return 'ℹ️';
-  return '✅';
+  if (normalized === 'error') return '×';
+  if (normalized === 'warning') return '!';
+  if (normalized === 'info') return 'i';
+  return '✓';
 };
 
 export const mountToastContainer = () => {

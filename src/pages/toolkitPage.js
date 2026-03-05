@@ -817,10 +817,14 @@ const openEngagementLoggerModal = ({ accounts, defaultAccountId, copyText, notif
       Customer-safe notes
       <textarea name="safe_notes"></textarea>
     </label>
-    <label class="form-span" ${customerSafe ? 'style="display:none;"' : ''}>
+    ${
+      customerSafe
+        ? ''
+        : `<label class="form-span">
       Internal notes
       <textarea name="internal_notes"></textarea>
-    </label>
+    </label>`
+    }
     <div class="form-actions form-span">
       <button class="qa" type="button" data-save>Log Engagement</button>
       <button class="ghost-btn" type="button" data-export-json>Export JSON</button>

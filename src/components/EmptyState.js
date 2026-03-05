@@ -1,8 +1,8 @@
 const defaultIcon = (variant) => {
-  if (variant === 'loading') return '⏳';
-  if (variant === 'filtered') return '🔍';
-  if (variant === 'error') return '⚠️';
-  return '✅';
+  if (variant === 'loading') return '○';
+  if (variant === 'filtered') return '⌕';
+  if (variant === 'error') return '!';
+  return '✓';
 };
 
 export const createEmptyState = ({

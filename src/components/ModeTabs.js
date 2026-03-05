@@ -1,7 +1,7 @@
 const DEFAULT_MODES = [
-  { id: 'today', label: 'Today', icon: '📅' },
-  { id: 'review', label: 'Review', icon: '🔎' },
-  { id: 'deep', label: 'Deep Dive', icon: '🧭' }
+  { id: 'today', label: 'Today', icon: 'T' },
+  { id: 'review', label: 'Review', icon: 'R' },
+  { id: 'deep', label: 'Deep Dive', icon: 'D' }
 ];
 
 const normalizeMode = (value) => {
