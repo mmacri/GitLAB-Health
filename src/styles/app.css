@@ -1155,34 +1155,10 @@ hr {
   gap: var(--card-gap);
 }
 
-.metric-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-3);
-  margin-bottom: var(--s-3);
-}
-
-.metric-head h2 {
-  font-size: 22px;
-}
-
-.metric-head h3 {
-  font-size: 16px;
-}
-
 .metric-grid,
 .kpi-grid {
   display: grid;
   gap: var(--card-gap);
-}
-
-.kpi-4 {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
-.kpi-5 {
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .kpi-3 {
@@ -1366,94 +1342,6 @@ hr {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.status-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border-radius: 999px;
-  padding: 5px 10px;
-  font-size: 11px;
-  letter-spacing: 0.7px;
-  text-transform: uppercase;
-  border: 1px solid transparent;
-}
-
-.chip-icon {
-  font-size: 10px;
-  line-height: 1;
-}
-
-.status-chip--good {
-  color: var(--success);
-  background: rgba(21, 128, 61, 0.12);
-  border-color: rgba(21, 128, 61, 0.3);
-}
-
-.status-chip--warn {
-  color: var(--warning);
-  background: rgba(180, 83, 9, 0.13);
-  border-color: rgba(180, 83, 9, 0.3);
-}
-
-.status-chip--risk {
-  color: var(--danger);
-  background: rgba(185, 28, 28, 0.12);
-  border-color: rgba(185, 28, 28, 0.3);
-}
-
-.status-chip--neutral {
-  color: var(--neutral);
-  background: rgba(71, 85, 105, 0.12);
-  border-color: rgba(71, 85, 105, 0.25);
-}
-
-.status-chip--stale {
-  color: #64748b;
-  background: rgba(148, 163, 184, 0.16);
-  border-color: rgba(148, 163, 184, 0.4);
-}
-
-.status-chip--missing {
-  color: #6b7280;
-  background: rgba(156, 163, 175, 0.17);
-  border-color: rgba(156, 163, 175, 0.42);
-}
-
-.metric-tile {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  background: var(--surface);
-  display: grid;
-  gap: 4px;
-}
-
-.metric-tile header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-}
-
-.metric-label {
-  text-transform: uppercase;
-  font-size: 11px;
-  letter-spacing: 0.9px;
-  color: var(--ink-soft);
-}
-
-.metric-value {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.metric-meta {
-  margin: 0;
-  font-size: 13px;
-  color: var(--ink-muted);
-}
-
 .metric-tip {
   width: 18px;
   height: 18px;
@@ -1464,21 +1352,6 @@ hr {
   justify-content: center;
   font-size: 10px;
   color: var(--ink-muted);
-}
-
-.metric-tile--good {
-  border-color: rgba(21, 128, 61, 0.3);
-  background: rgba(21, 128, 61, 0.05);
-}
-
-.metric-tile--warn {
-  border-color: rgba(180, 83, 9, 0.3);
-  background: rgba(180, 83, 9, 0.04);
-}
-
-.metric-tile--risk {
-  border-color: rgba(185, 28, 28, 0.32);
-  background: rgba(185, 28, 28, 0.05);
 }
 
 .filter-row {
