@@ -138,7 +138,7 @@ p {
 
 .app-header {
   height: 52px;
-  background: var(--surface-bg);
+  background: color-mix(in srgb, var(--gl-surface) 90%, transparent);
   border-bottom: 1px solid var(--surface-border);
   display: flex;
   align-items: center;
@@ -148,6 +148,8 @@ p {
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
 }
 
 .app-header__left {
@@ -166,10 +168,17 @@ p {
   flex-wrap: nowrap;
 }
 
+.app-header [data-safe-label] {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   padding: 3px var(--space-2);
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
@@ -195,15 +204,22 @@ p {
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
-  background: var(--surface-bg-subtle);
+  background: color-mix(in srgb, var(--gl-surface-2) 78%, var(--gl-surface));
   border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md);
+  border-radius: 999px;
   cursor: pointer;
-  min-width: 240px;
-  max-width: 380px;
+  min-width: clamp(180px, 32vw, 280px);
+  max-width: 440px;
+  flex: 1 1 280px;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   font-size: var(--text-base);
   color: var(--color-neutral);
+}
+
+.search-trigger__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .search-trigger:hover {
@@ -220,6 +236,7 @@ p {
   margin-left: auto;
   font-size: var(--text-xs);
   background: var(--surface-border);
+  border: 1px solid color-mix(in srgb, var(--gl-border) 80%, transparent);
   border-radius: var(--radius-sm);
   padding: 1px 5px;
   font-family: var(--font-mono);
@@ -418,7 +435,7 @@ button:hover {
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   gap: var(--space-6);
   align-items: start;
-  max-width: var(--page-max);
+  max-width: 1440px;
   margin: 0 auto;
   padding: var(--space-5) var(--page-pad) var(--s-8);
 }
@@ -433,6 +450,7 @@ button:hover {
   background: var(--sidebar-bg);
   border: 1px solid var(--sidebar-border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--gl-shadow-1);
   color: var(--sidebar-text);
   display: flex;
   flex-direction: column;
@@ -460,6 +478,8 @@ button:hover {
 }
 
 .route-stage {
+  display: grid;
+  gap: var(--space-5);
   min-width: 0;
   padding-bottom: var(--space-10);
 }
@@ -546,6 +566,12 @@ button:hover {
   padding: var(--space-2) var(--space-3) var(--space-1);
 }
 
+.sidebar__mode-pill {
+  border-color: var(--gl-brand-orange);
+  color: var(--gl-brand-orange);
+  background: color-mix(in srgb, var(--gl-brand-orange) 14%, transparent);
+}
+
 .sidebar__item {
   display: flex;
   align-items: center;
@@ -556,7 +582,7 @@ button:hover {
   font-size: var(--text-base);
   font-weight: var(--weight-medium);
   cursor: pointer;
-  transition: background var(--transition-normal), color var(--transition-normal);
+  transition: background var(--transition-fast), color var(--transition-fast);
   margin: 1px var(--space-1);
   text-decoration: none;
   white-space: nowrap;
@@ -741,12 +767,18 @@ hr {
 }
 
 .mode-tab__icon {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--gl-border) 75%, transparent);
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 9px;
+  font-weight: var(--weight-semibold);
+  background: color-mix(in srgb, var(--gl-surface-2) 86%, var(--gl-surface));
+  color: var(--gl-text-muted);
 }
 
 .mode-tab__count {
@@ -2223,7 +2255,16 @@ textarea.artifact,
 }
 
 .toast__icon {
-  font-size: 16px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #fff 28%, transparent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  line-height: 1;
 }
 
 .toast__message {
