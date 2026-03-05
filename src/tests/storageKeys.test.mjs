@@ -9,6 +9,8 @@ test('storage keys use gh_* namespace for static dashboard state', () => {
   assert.equal(STORAGE_KEYS.accountOverrides, 'gh_user_overrides_v1');
   assert.equal(STORAGE_KEYS.gitlabBaseUrl, 'gh_gitlab_base_url');
   assert.equal(STORAGE_KEYS.gitlabProjectPath, 'gh_gitlab_project_path');
+  assert.equal(STORAGE_KEYS.defaultMode, 'gh_default_mode_v1');
+  assert.equal(STORAGE_KEYS.defaultPersona, 'gh_default_persona_v1');
 });
 
 test('legacy localStorage keys are read and migrated to canonical keys', () => {
@@ -44,4 +46,3 @@ test('legacy localStorage keys are read and migrated to canonical keys', () => {
     }
   }
 });
-

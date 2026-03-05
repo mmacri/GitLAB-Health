@@ -16,4 +16,5 @@ test('global navigation is defined once and account jump nav is contextual', () 
   assert.ok(mainSource.includes("route: 'toolkit'"), 'primary navigation should include Success Plans');
   assert.ok(mainSource.includes("route: 'manager'"), 'primary navigation should include Manager');
   assert.ok(mainSource.includes('Jump To Section'), 'account contextual section jump should exist');
+  assert.ok(!mainSource.includes('data-set-mode='), 'mode switching should be handled by top mode tabs, not sidebar buttons');
 });

@@ -127,12 +127,15 @@ if (!appRoot || !routeRoot || !leftRailRoot) {
   throw new Error('App shell is missing required mount points.');
 }
 
+const initialDefaultMode = storage.get(STORAGE_KEYS.defaultMode, 'today') || 'today';
+const initialDefaultPersona = storage.get(STORAGE_KEYS.defaultPersona, 'cse') || 'cse';
+
 const state = {
   data: null,
   route: { name: 'home', params: {}, path: '/' },
   customerSafe: customerSafe.isCustomerSafe,
-  viewMode: storage.get(STORAGE_KEYS.viewMode, 'today') || 'today',
-  persona: 'cse',
+  viewMode: storage.get(STORAGE_KEYS.viewMode, initialDefaultMode) || 'today',
+  persona: String(initialDefaultPersona) === 'manager' ? 'manager' : 'cse',
   density: storage.get(STORAGE_KEYS.density, 'default') || 'default',
   sidebarOpen: false,
   basePath: '',
@@ -312,6 +315,29 @@ const setViewMode = (value, { syncHash = true } = {}) => {
   if (syncHash) syncModeHash();
   closeSidebar();
   render();
+};
+
+const setDefaultMode = (value) => {
+  const normalized = normalizeMode(value);
+  storage.set(STORAGE_KEYS.defaultMode, normalized);
+};
+
+const setPersona = (value, { persistDefault = false } = {}) => {
+  const next = String(value || '').trim().toLowerCase() === 'manager' ? 'manager' : 'cse';
+  state.persona = next;
+  if (persistDefault) {
+    storage.set(STORAGE_KEYS.defaultPersona, next);
+  }
+  if (state.route.name === 'manager' && next !== 'manager') {
+    router.navigate('home');
+    return;
+  }
+  render();
+};
+
+const setDefaultPersona = (value) => {
+  const normalized = String(value || '').trim().toLowerCase() === 'manager' ? 'manager' : 'cse';
+  storage.set(STORAGE_KEYS.defaultPersona, normalized);
 };
 
 const setDensity = (value) => {
@@ -550,17 +576,15 @@ const renderLeftRail = () => {
     </div>
 
     <section class="sidebar__zone sidebar__zone--nav">
-      <button class="sidebar__item ${state.viewMode === 'today' ? 'active' : ''}" type="button" data-set-mode="today">
-        <span class="sidebar__item-icon" aria-hidden="true">📅</span>
+      <p class="sidebar__zone-label">Mode</p>
+      <div class="sidebar__mode-echo">
+        <span class="sidebar__mode-pill">
+          ${state.viewMode === 'deep' ? 'Deep Dive' : state.viewMode === 'review' ? 'Review' : 'Today'}
+        </span>
+      </div>
+      <button class="sidebar__item ${state.route.name === 'home' ? 'active' : ''}" type="button" data-nav-route="home">
+        <span class="sidebar__item-icon" aria-hidden="true">🏠</span>
         <span>Today</span>
-      </button>
-      <button class="sidebar__item ${state.viewMode === 'review' ? 'active' : ''}" type="button" data-set-mode="review">
-        <span class="sidebar__item-icon" aria-hidden="true">🔍</span>
-        <span>Review</span>
-      </button>
-      <button class="sidebar__item ${state.viewMode === 'deep' ? 'active' : ''}" type="button" data-set-mode="deep">
-        <span class="sidebar__item-icon" aria-hidden="true">🔬</span>
-        <span>Deep Dive</span>
       </button>
       <button class="sidebar__item ${state.route.name === 'portfolio' ? 'active' : ''}" type="button" data-nav-route="portfolio">
         <span class="sidebar__item-icon" aria-hidden="true">📊</span>
@@ -670,13 +694,6 @@ const renderLeftRail = () => {
       </button>
     </section>
   `;
-
-  leftRailRoot.querySelectorAll('[data-set-mode]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const mode = button.getAttribute('data-set-mode');
-      setViewMode(mode);
-    });
-  });
 
   leftRailRoot.querySelector('[data-rail-open-current]')?.addEventListener('click', () => {
     const customerContext = ['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'settings'].includes(
@@ -2002,6 +2019,10 @@ const renderCurrentRoute = () => {
       onCreateSnapshot: onCreateMonthlySnapshot,
       density: state.density,
       onSetDensity: setDensity,
+      defaultMode: storage.get(STORAGE_KEYS.defaultMode, state.viewMode) || 'today',
+      defaultPersona: storage.get(STORAGE_KEYS.defaultPersona, state.persona) || 'cse',
+      onSetDefaultMode: setDefaultMode,
+      onSetDefaultPersona: setDefaultPersona,
       notify,
       ...common
     });
@@ -2072,7 +2093,11 @@ const renderCurrentRoute = () => {
 
   normalizeRouteLayout(view);
   if (state.customerSafe) {
-    view.prepend(createCustomerSafeBanner());
+    view.prepend(
+      createCustomerSafeBanner({
+        onDisable: () => setSafeMode(false)
+      })
+    );
   }
   routeRoot.appendChild(view);
 
@@ -2330,13 +2355,7 @@ const bindGlobalEvents = () => {
     }
 
     if (target.matches('[data-global-persona]')) {
-      const persona = target.value;
-      state.persona = persona === 'manager' ? 'manager' : 'cse';
-      if (state.route.name === 'manager' && state.persona !== 'manager') {
-        router.navigate('home');
-      } else {
-        render();
-      }
+      setPersona(target.value);
       return;
     }
 

@@ -18,7 +18,9 @@ const LEGACY_KEY_ALIASES = {
   gh_toolkit_launch: ['glh-toolkit-launch'],
   gh_action_cards_v1: ['glh-action-cards'],
   gh_density_v1: [],
-  gh_workspace_v3: []
+  gh_workspace_v3: [],
+  gh_default_mode_v1: [],
+  gh_default_persona_v1: []
 };
 
 const aliasesFor = (key) => LEGACY_KEY_ALIASES[String(key || '')] || [];
@@ -102,5 +104,7 @@ export const STORAGE_KEYS = {
   toolkitLaunch: 'gh_toolkit_launch',
   actionCards: 'gh_action_cards_v1',
   density: 'gh_density_v1',
-  workspace: 'gh_workspace_v3'
+  workspace: 'gh_workspace_v3',
+  defaultMode: 'gh_default_mode_v1',
+  defaultPersona: 'gh_default_persona_v1'
 };

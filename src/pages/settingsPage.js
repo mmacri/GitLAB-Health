@@ -17,6 +17,10 @@ export const renderSettingsPage = (ctx) => {
     onCreateSnapshot,
     density,
     onSetDensity,
+    defaultMode = 'today',
+    defaultPersona = 'cse',
+    onSetDefaultMode,
+    onSetDefaultPersona,
     notify
   } = ctx;
 
@@ -70,6 +74,24 @@ export const renderSettingsPage = (ctx) => {
           </button>
         </div>
       </fieldset>
+
+      <div class="form-grid" style="margin-top:12px;">
+        <label>
+          Default Mode on Launch
+          <select data-default-mode>
+            <option value="today" ${defaultMode === 'today' ? 'selected' : ''}>Today</option>
+            <option value="review" ${defaultMode === 'review' ? 'selected' : ''}>Review</option>
+            <option value="deep" ${defaultMode === 'deep' ? 'selected' : ''}>Deep Dive</option>
+          </select>
+        </label>
+        <label>
+          Default Persona on Launch
+          <select data-default-persona>
+            <option value="cse" ${defaultPersona === 'cse' ? 'selected' : ''}>CSE On-Demand</option>
+            <option value="manager" ${defaultPersona === 'manager' ? 'selected' : ''}>CSE Manager</option>
+          </select>
+        </label>
+      </div>
     </section>
 
     <section class="grid-cards">
@@ -153,6 +175,18 @@ export const renderSettingsPage = (ctx) => {
       const value = button.getAttribute('data-density-option');
       onSetDensity?.(value);
     });
+  });
+
+  wrapper.querySelector('[data-default-mode]')?.addEventListener('change', (event) => {
+    const value = String(event.target.value || 'today').trim().toLowerCase();
+    onSetDefaultMode?.(value);
+    notify?.(`Default mode set to ${value === 'deep' ? 'Deep Dive' : value}.`);
+  });
+
+  wrapper.querySelector('[data-default-persona]')?.addEventListener('change', (event) => {
+    const value = String(event.target.value || 'cse').trim().toLowerCase();
+    onSetDefaultPersona?.(value);
+    notify?.(`Default persona set to ${value === 'manager' ? 'CSE Manager' : 'CSE On-Demand'}.`);
   });
 
   wrapper.querySelector('[data-import-workspace]')?.addEventListener('change', async (event) => {

@@ -8,7 +8,7 @@ const hiddenSummary = () => {
   return `${hiddenLabels.slice(0, 3).join(', ')}, and ${hiddenLabels.length - 3} other internal fields are hidden.`;
 };
 
-export const createCustomerSafeBanner = () => {
+export const createCustomerSafeBanner = ({ onDisable } = {}) => {
   const section = document.createElement('section');
   section.className = 'customer-safe-banner';
   section.setAttribute('role', 'status');
@@ -27,6 +27,12 @@ export const createCustomerSafeBanner = () => {
         ${hiddenLabels.map((label) => `<li>${label}</li>`).join('')}
       </ul>
     </details>
+    <div class="customer-safe-banner__actions">
+      <button class="ghost-btn" type="button" data-disable-safe>Disable</button>
+    </div>
   `;
+  section.querySelector('[data-disable-safe]')?.addEventListener('click', () => {
+    onDisable?.();
+  });
   return section;
 };
