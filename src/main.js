@@ -667,10 +667,6 @@ const renderLeftRail = () => {
           ? `<span class="sidebar__subtitle">${lastPlaybook.name}</span>`
           : ''
       }
-      <button class="sidebar__item" type="button" data-go-portfolio>
-        ${shellIcon('filters')}
-        <span>Open Portfolio Filters</span>
-      </button>
       <button class="sidebar__item" type="button" data-rail-open-current ${current ? '' : 'disabled'}>
         ${shellIcon('current')}
         <span>Open Current Account</span>
@@ -1509,11 +1505,6 @@ const renderShellContext = () => {
     headerStatus.innerHTML = state.customerSafe
       ? '<span class="status-pill__dot" aria-hidden="true"></span>Customer-Safe'
       : '<span class="status-pill__dot" aria-hidden="true"></span>Internal';
-  }
-
-  const managerBadge = appRoot.querySelector('[data-manager-badge]');
-  if (managerBadge) {
-    managerBadge.hidden = state.persona !== 'manager';
   }
 
   const themeToggleButton = appRoot.querySelector('[data-toggle-theme]');
