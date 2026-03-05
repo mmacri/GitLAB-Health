@@ -2606,13 +2606,17 @@ textarea.artifact,
 
 @media (max-width: 1024px) {
   .app-shell {
-    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-columns: 1fr;
     gap: var(--space-4);
     padding: var(--space-4) var(--space-4) var(--s-8);
   }
 
   .sidebar {
-    width: 220px;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    position: static;
+    top: auto;
   }
 
   .kpi-5,
