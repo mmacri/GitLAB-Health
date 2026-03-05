@@ -580,7 +580,12 @@ export const buildWorkspacePortfolio = (workspace, now = new Date()) => {
       securityPercent: Number(useCases.Security?.percent || 0),
       stageCoverage: stageAdopted,
       stageTotal: Object.keys(stageStatuses).length || 8,
-      openExpansionCount
+      openExpansionCount,
+      engagementType: String(customer.engagementType || 'ON_DEMAND').toUpperCase(),
+      engagementStatus: String(customer.engagementStatus || 'REQUESTED').toUpperCase(),
+      engagementDate: customer.engagementDate || '',
+      requestedBy: String(customer.requestedBy || 'CSM').toUpperCase(),
+      adoptionProfile: customer.adoptionProfile || {}
     };
   });
 

@@ -339,6 +339,10 @@ button:hover {
   padding: var(--s-3) var(--page-pad);
 }
 
+.filter-row--panel {
+  margin-top: var(--s-3);
+}
+
 /* App shell */
 .app-shell {
   position: relative;
@@ -510,6 +514,64 @@ hr {
 
 .section-stack > * + * {
   margin-top: var(--section-gap);
+}
+
+.customer-safe-banner {
+  position: sticky;
+  top: calc(var(--header-offset) + 8px);
+  z-index: 35;
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgba(21, 128, 61, 0.35);
+  border-radius: 12px;
+  background: rgba(21, 128, 61, 0.09);
+  padding: 14px 16px;
+}
+
+.customer-safe-banner__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.customer-safe-banner__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #15803d;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.customer-safe-banner__content strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.customer-safe-banner__content p {
+  margin: 0;
+  font-size: 13px;
+  color: #166534;
+}
+
+.customer-safe-banner__details summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: #166534;
+}
+
+.customer-safe-banner__details ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  color: #14532d;
+  font-size: 12px;
 }
 
 .section {
@@ -1034,6 +1096,23 @@ hr {
   display: grid;
   gap: 8px;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.filter-multi {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+  background: var(--surface-muted);
+}
+
+.filter-multi legend {
+  padding: 0 4px;
+  font-size: 11px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
 }
 
 .filter-row label,
@@ -1634,6 +1713,24 @@ textarea.artifact,
   gap: 4px;
 }
 
+.command-group {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.command-group + .command-group {
+  margin-top: 10px;
+}
+
+.command-group-heading {
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding: 6px 10px 2px;
+}
+
 .command-item,
 .command-empty {
   padding: 10px;
@@ -1644,6 +1741,26 @@ textarea.artifact,
   display: grid;
   gap: 2px;
   cursor: pointer;
+}
+
+.command-item-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.command-item-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #64748b;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .command-item span {
@@ -1727,6 +1844,72 @@ textarea.artifact,
   color: var(--ink-soft);
   margin: 0;
   font-size: 13px;
+}
+
+.engagement-tabbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.engagement-tabbar .ghost-btn.is-active {
+  color: var(--primary);
+  border-color: rgba(119, 89, 194, 0.35);
+  background: rgba(119, 89, 194, 0.1);
+}
+
+.adoption-dot-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.adoption-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  display: inline-block;
+}
+
+.adoption-recommendation {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--surface-muted);
+}
+
+.adoption-trend {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
+}
+
+.adoption-trend h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.inline-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.manager-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--card-gap);
 }
 
 .is-hidden-mode {

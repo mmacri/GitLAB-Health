@@ -1,4 +1,6 @@
 import { toIsoDate } from './date.js';
+import { maturityForPercent } from '../data/adoptionStages.js';
+import { normalizeEngagementType } from '../config/engagementTypes.js';
 
 export const WORKSPACE_VERSION = '3.0.0';
 
@@ -168,6 +170,7 @@ const mapLegacyCustomer = (account) => ({
   tier: account.segment === 'Strategic' ? 'Premium' : account.segment === 'Enterprise' ? 'Premium' : 'Standard',
   renewalDate: pick(account.renewal_date, ''),
   arrBand: account.segment === 'Strategic' ? '$250K-$500K' : account.segment === 'Enterprise' ? '$100K-$250K' : '$50K-$100K',
+  arr: account.segment === 'Strategic' ? 420000 : account.segment === 'Enterprise' ? 180000 : 80000,
   stage: mapLegacyLifecycle(account.lifecycle_stage || account?.health?.lifecycle_stage),
   primaryUseCase: Number(account?.adoption?.use_case_scores?.CI || 0) >= Number(account?.adoption?.use_case_scores?.Secure || 0) ? 'CI/CD' : 'Security',
   contacts: [
@@ -178,7 +181,28 @@ const mapLegacyCustomer = (account) => ({
     }
   ],
   notes: account?.outcomes?.executive_summary || '',
-  tags: ensureArray(account?.adoption ? ['SCM', 'CI', 'Security'] : [])
+  internalNotes: account?.internal_only?.sentiment_notes || '',
+  tags: ensureArray(account?.adoption ? ['SCM', 'CI', 'Security'] : []),
+  contractEndDate: pick(account.renewal_date, ''),
+  renewalRisk: String(account?.health?.overall || '').toLowerCase() === 'red' ? 'High' : 'Moderate',
+  churnProbability: String(account?.health?.overall || '').toLowerCase() === 'red' ? 62 : 28,
+  healthRawScore: Number(account?.adoption?.platform_adoption_score || 0),
+  licenseCount: account.segment === 'Strategic' ? 420 : account.segment === 'Enterprise' ? 210 : 90,
+  npsScore: String(account?.health?.overall || '').toLowerCase() === 'green' ? 48 : 27,
+  escalationFlag: ensureArray(account?.internal_only?.escalations).length > 0,
+  ownerEmail: `${String(account?.name || 'owner').toLowerCase().replace(/[^a-z0-9]/g, '')}.owner@example.com`,
+  cseName: 'Assigned GitLab CSE',
+  engagementType: normalizeEngagementType(Number(account?.engagement?.program_attendance?.labs || 0) > 0 ? 'HANDS_ON_LAB' : 'ON_DEMAND'),
+  engagementStatus: 'SCHEDULED',
+  engagementDate: pick(account?.engagement?.next_touch_date, toIsoDate(new Date())),
+  requestedBy: 'CSM',
+  adoptionProfile: {
+    SCM: maturityForPercent(account?.adoption?.use_case_scores?.SCM || 0),
+    CI: maturityForPercent(account?.adoption?.use_case_scores?.CI || 0),
+    CD: maturityForPercent(account?.adoption?.use_case_scores?.CD || 0),
+    DevSecOps: maturityForPercent(account?.adoption?.use_case_scores?.Secure || 0),
+    'Agile Planning': maturityForPercent(Math.max(0, Number(account?.adoption?.platform_adoption_score || 0) - 20))
+  }
 });
 
 const mapLegacyAdoption = (account) => {
@@ -371,11 +395,33 @@ export const ensureWorkspaceShape = (workspace, fallback = null) => {
       tier: pick(customer.tier, 'Standard'),
       renewalDate: pick(customer.renewalDate, ''),
       arrBand: pick(customer.arrBand, '$50K-$100K'),
+      arr: Number(pick(customer.arr, 0)),
       stage: LIFECYCLE_STAGES.includes(String(customer.stage || '')) ? customer.stage : 'Enable',
       primaryUseCase: pick(customer.primaryUseCase, 'CI/CD'),
       contacts: ensureArray(customer.contacts),
       notes: pick(customer.notes, ''),
-      tags: ensureArray(customer.tags)
+      internalNotes: pick(customer.internalNotes, ''),
+      tags: ensureArray(customer.tags),
+      contractEndDate: pick(customer.contractEndDate, pick(customer.renewalDate, '')),
+      renewalRisk: pick(customer.renewalRisk, 'Moderate'),
+      churnProbability: Number(pick(customer.churnProbability, 0)),
+      healthRawScore: Number(pick(customer.healthRawScore, 0)),
+      licenseCount: Number(pick(customer.licenseCount, 0)),
+      npsScore: Number(pick(customer.npsScore, 0)),
+      escalationFlag: Boolean(customer.escalationFlag),
+      ownerEmail: pick(customer.ownerEmail, ''),
+      cseName: pick(customer.cseName, 'Assigned GitLab CSE'),
+      engagementType: normalizeEngagementType(pick(customer.engagementType, 'ON_DEMAND')),
+      engagementStatus: String(pick(customer.engagementStatus, 'REQUESTED')).toUpperCase(),
+      engagementDate: pick(customer.engagementDate, ''),
+      requestedBy: String(pick(customer.requestedBy, 'CSM')).toUpperCase(),
+      adoptionProfile: {
+        SCM: String(customer?.adoptionProfile?.SCM || 'NOT_STARTED').toUpperCase(),
+        CI: String(customer?.adoptionProfile?.CI || 'NOT_STARTED').toUpperCase(),
+        CD: String(customer?.adoptionProfile?.CD || 'NOT_STARTED').toUpperCase(),
+        DevSecOps: String(customer?.adoptionProfile?.DevSecOps || 'NOT_STARTED').toUpperCase(),
+        'Agile Planning': String(customer?.adoptionProfile?.['Agile Planning'] || 'NOT_STARTED').toUpperCase()
+      }
     })),
     adoption: ensureObject(base.adoption),
     successPlans: ensureObject(base.successPlans),

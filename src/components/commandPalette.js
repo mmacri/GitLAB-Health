@@ -1,3 +1,5 @@
+import { ENGAGEMENT_TYPES, normalizeEngagementType } from '../config/engagementTypes.js';
+
 const escapeHtml = (value = '') =>
   String(value)
     .replace(/&/g, '&amp;')
@@ -5,6 +7,70 @@ const escapeHtml = (value = '') =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+
+const ICON_GLYPHS = {
+  video: 'V',
+  clock: 'OH',
+  terminal: 'L',
+  zap: 'OD'
+};
+
+const parseQuery = (raw = '') => {
+  const tokens = String(raw || '').trim().split(/\s+/).filter(Boolean);
+  let type = null;
+  const textTokens = [];
+
+  tokens.forEach((token) => {
+    const lower = token.toLowerCase();
+    if (!lower.startsWith('type:')) {
+      textTokens.push(token);
+      return;
+    }
+    const value = lower.slice(5).trim();
+    if (!value) return;
+    if (value === 'webinar' || value === 'webinars') type = 'WEBINAR';
+    else if (value === 'office' || value === 'officehours' || value === 'office-hours' || value === 'hours') type = 'OFFICE_HOURS';
+    else if (value === 'lab' || value === 'labs' || value === 'hands-on-lab' || value === 'handsonlab') type = 'HANDS_ON_LAB';
+    else if (value === 'ondemand' || value === 'on-demand' || value === 'request') type = 'ON_DEMAND';
+    else type = normalizeEngagementType(value);
+  });
+
+  return {
+    text: textTokens.join(' ').toLowerCase(),
+    type
+  };
+};
+
+const buildGroups = (filtered, activeTypeFilter) => {
+  const indexed = filtered.map((entry, index) => ({ entry, index }));
+  if (activeTypeFilter) {
+    return [{ heading: null, items: indexed }];
+  }
+
+  const engagementGroups = Object.keys(ENGAGEMENT_TYPES).reduce((acc, key) => {
+    acc[key] = [];
+    return acc;
+  }, {});
+  const general = [];
+
+  indexed.forEach((item) => {
+    const key = item.entry.engagementType ? normalizeEngagementType(item.entry.engagementType) : null;
+    if (key && engagementGroups[key]) {
+      engagementGroups[key].push(item);
+      return;
+    }
+    general.push(item);
+  });
+
+  const groups = [];
+  if (general.length) groups.push({ heading: 'General', items: general });
+  Object.entries(ENGAGEMENT_TYPES).forEach(([key, meta]) => {
+    const items = engagementGroups[key] || [];
+    if (!items.length) return;
+    groups.push({ heading: `${meta.label}s (${items.length})`, items });
+  });
+  return groups;
+};
 
 export const createCommandPalette = ({ onSelect }) => {
   const root = document.querySelector('[data-command-palette]');
@@ -16,6 +82,7 @@ export const createCommandPalette = ({ onSelect }) => {
   let entries = [];
   let filtered = [];
   let activeIndex = 0;
+  let activeTypeFilter = null;
 
   const render = () => {
     if (!list) return;
@@ -28,21 +95,49 @@ export const createCommandPalette = ({ onSelect }) => {
       return;
     }
 
-    filtered.forEach((entry, index) => {
-      const item = document.createElement('li');
-      item.className = `command-item${index === activeIndex ? ' is-active' : ''}`;
-      item.innerHTML = `<strong>${escapeHtml(entry.label)}</strong><span>${escapeHtml(entry.meta || '')}</span>`;
-      item.addEventListener('click', () => {
-        onSelect(entry);
-        close();
+    const groups = buildGroups(filtered, activeTypeFilter);
+    groups.forEach((group) => {
+      if (group.heading) {
+        const heading = document.createElement('li');
+        heading.className = 'command-group-heading';
+        heading.textContent = group.heading;
+        list.appendChild(heading);
+      }
+      group.items.forEach(({ entry, index }) => {
+        const item = document.createElement('li');
+        item.className = `command-item${index === activeIndex ? ' is-active' : ''}`;
+        const typeKey = entry.engagementType ? normalizeEngagementType(entry.engagementType) : null;
+        const typeMeta = typeKey ? ENGAGEMENT_TYPES[typeKey] : null;
+        const icon = entry.engagementIcon || typeMeta?.icon || '';
+        const glyph = ICON_GLYPHS[icon] || '•';
+        const iconStyle = typeMeta ? ` style="background:${typeMeta.color};"` : '';
+        item.innerHTML = `
+          <div class="command-item-row">
+            <span class="command-item-icon"${iconStyle}>${escapeHtml(glyph)}</span>
+            <span>
+              <strong>${escapeHtml(entry.label)}</strong>
+              <span>${escapeHtml(entry.meta || '')}</span>
+            </span>
+          </div>
+        `;
+        item.addEventListener('click', () => {
+          onSelect(entry);
+          close();
+        });
+        list.appendChild(item);
       });
-      list.appendChild(item);
     });
   };
 
   const applyFilter = () => {
-    const query = input?.value?.trim().toLowerCase() || '';
+    const parsed = parseQuery(input?.value || '');
+    const query = parsed.text;
+    activeTypeFilter = parsed.type || null;
     filtered = entries.filter((entry) => {
+      if (activeTypeFilter) {
+        const key = entry.engagementType ? normalizeEngagementType(entry.engagementType) : null;
+        if (key !== activeTypeFilter) return false;
+      }
       const haystack = `${entry.label} ${entry.meta || ''}`.toLowerCase();
       return haystack.includes(query);
     });

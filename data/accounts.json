@@ -138,7 +138,18 @@
           "category": "Outcomes",
           "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
         }
-      ]
+      ],
+      "adoptionProfile": {
+        "SCM": "OPTIMIZING",
+        "CI": "ACTIVE",
+        "CD": "ACTIVE",
+        "DevSecOps": "GROWING",
+        "Agile Planning": "GROWING"
+      },
+      "engagementType": "WEBINAR",
+      "engagementStatus": "SCHEDULED",
+      "engagementDate": "2026-03-07",
+      "requestedBy": "CSM"
     },
     {
       "id": "contoso-financial-services",
@@ -276,7 +287,18 @@
           "category": "Outcomes",
           "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
         }
-      ]
+      ],
+      "adoptionProfile": {
+        "SCM": "OPTIMIZING",
+        "CI": "GROWING",
+        "CD": "GROWING",
+        "DevSecOps": "GROWING",
+        "Agile Planning": "GROWING"
+      },
+      "engagementType": "WEBINAR",
+      "engagementStatus": "SCHEDULED",
+      "engagementDate": "2026-03-08",
+      "requestedBy": "RENEWAL_MANAGER"
     },
     {
       "id": "fabrikam-retail-group",
@@ -414,7 +436,18 @@
           "category": "Outcomes",
           "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
         }
-      ]
+      ],
+      "adoptionProfile": {
+        "SCM": "OPTIMIZING",
+        "CI": "ACTIVE",
+        "CD": "ACTIVE",
+        "DevSecOps": "GROWING",
+        "Agile Planning": "GROWING"
+      },
+      "engagementType": "WEBINAR",
+      "engagementStatus": "SCHEDULED",
+      "engagementDate": "2026-03-09",
+      "requestedBy": "CSM"
     },
     {
       "id": "adatum-energy",
@@ -552,7 +585,18 @@
           "category": "Outcomes",
           "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
         }
-      ]
+      ],
+      "adoptionProfile": {
+        "SCM": "ACTIVE",
+        "CI": "ACTIVE",
+        "CD": "ACTIVE",
+        "DevSecOps": "GROWING",
+        "Agile Planning": "GROWING"
+      },
+      "engagementType": "OFFICE_HOURS",
+      "engagementStatus": "SCHEDULED",
+      "engagementDate": "2026-03-10",
+      "requestedBy": "CSM"
     },
     {
       "id": "tailspin-health",
@@ -690,7 +734,18 @@
           "category": "Outcomes",
           "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
         }
-      ]
+      ],
+      "adoptionProfile": {
+        "SCM": "ACTIVE",
+        "CI": "GROWING",
+        "CD": "ACTIVE",
+        "DevSecOps": "GROWING",
+        "Agile Planning": "GROWING"
+      },
+      "engagementType": "WEBINAR",
+      "engagementStatus": "SCHEDULED",
+      "engagementDate": "2026-03-11",
+      "requestedBy": "RENEWAL_MANAGER"
     },
     {
       "id": "litware-aerospace",
@@ -828,7 +883,18 @@
           "category": "Outcomes",
           "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
         }
-      ]
+      ],
+      "adoptionProfile": {
+        "SCM": "ACTIVE",
+        "CI": "ACTIVE",
+        "CD": "GROWING",
+        "DevSecOps": "GROWING",
+        "Agile Planning": "GROWING"
+      },
+      "engagementType": "WEBINAR",
+      "engagementStatus": "SCHEDULED",
+      "engagementDate": "2026-03-12",
+      "requestedBy": "AE"
     },
     {
       "id": "wingtip-manufacturing",
@@ -966,7 +1032,18 @@
           "category": "Outcomes",
           "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
         }
-      ]
+      ],
+      "adoptionProfile": {
+        "SCM": "ACTIVE",
+        "CI": "GROWING",
+        "CD": "GROWING",
+        "DevSecOps": "EXPLORING",
+        "Agile Planning": "EXPLORING"
+      },
+      "engagementType": "WEBINAR",
+      "engagementStatus": "SCHEDULED",
+      "engagementDate": "2026-03-13",
+      "requestedBy": "RENEWAL_MANAGER"
     },
     {
       "id": "woodgrove-bank",
@@ -1104,7 +1181,18 @@
           "category": "Outcomes",
           "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
         }
-      ]
+      ],
+      "adoptionProfile": {
+        "SCM": "ACTIVE",
+        "CI": "GROWING",
+        "CD": "GROWING",
+        "DevSecOps": "GROWING",
+        "Agile Planning": "GROWING"
+      },
+      "engagementType": "WEBINAR",
+      "engagementStatus": "SCHEDULED",
+      "engagementDate": "2026-03-14",
+      "requestedBy": "AE"
     },
     {
       "id": "blue-yonder-logistics",
@@ -1242,7 +1330,18 @@
           "category": "Outcomes",
           "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
         }
-      ]
+      ],
+      "adoptionProfile": {
+        "SCM": "ACTIVE",
+        "CI": "GROWING",
+        "CD": "GROWING",
+        "DevSecOps": "GROWING",
+        "Agile Planning": "EXPLORING"
+      },
+      "engagementType": "WEBINAR",
+      "engagementStatus": "SCHEDULED",
+      "engagementDate": "2026-03-15",
+      "requestedBy": "CSM"
     },
     {
       "id": "proseware-telecom",
@@ -1380,7 +1479,18 @@
           "category": "Outcomes",
           "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
         }
-      ]
+      ],
+      "adoptionProfile": {
+        "SCM": "GROWING",
+        "CI": "GROWING",
+        "CD": "GROWING",
+        "DevSecOps": "GROWING",
+        "Agile Planning": "GROWING"
+      },
+      "engagementType": "OFFICE_HOURS",
+      "engagementStatus": "SCHEDULED",
+      "engagementDate": "2026-03-16",
+      "requestedBy": "CUSTOMER"
     },
     {
       "id": "a-datum-public-sector",
@@ -1518,7 +1628,18 @@
           "category": "Outcomes",
           "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
         }
-      ]
+      ],
+      "adoptionProfile": {
+        "SCM": "GROWING",
+        "CI": "GROWING",
+        "CD": "GROWING",
+        "DevSecOps": "EXPLORING",
+        "Agile Planning": "EXPLORING"
+      },
+      "engagementType": "WEBINAR",
+      "engagementStatus": "COMPLETED",
+      "engagementDate": "2026-04-05",
+      "requestedBy": "RENEWAL_MANAGER"
     },
     {
       "id": "consolidated-healthcare",
@@ -1656,7 +1777,18 @@
           "category": "Outcomes",
           "summary": "Validated progress on outcome: Increase CI reliability and reduce failed pipelines."
         }
-      ]
+      ],
+      "adoptionProfile": {
+        "SCM": "GROWING",
+        "CI": "EXPLORING",
+        "CD": "EXPLORING",
+        "DevSecOps": "EXPLORING",
+        "Agile Planning": "EXPLORING"
+      },
+      "engagementType": "WEBINAR",
+      "engagementStatus": "SCHEDULED",
+      "engagementDate": "2026-03-08",
+      "requestedBy": "RENEWAL_MANAGER"
     }
   ]
 }

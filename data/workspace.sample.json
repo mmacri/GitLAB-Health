@@ -33,7 +33,29 @@
         "tags": [
           "CI",
           "Security"
-        ]
+        ],
+        "arr": 320000,
+        "internalNotes": "Executive team expects measurable lead-time improvement before Q4 planning.",
+        "contractEndDate": "2026-10-15",
+        "renewalRisk": "Moderate",
+        "churnProbability": 35,
+        "healthRawScore": 43,
+        "licenseCount": 240,
+        "npsScore": 24,
+        "escalationFlag": false,
+        "ownerEmail": "avery.chen@acme.example",
+        "cseName": "Mike Macri",
+        "engagementType": "ON_DEMAND",
+        "engagementStatus": "COMPLETED",
+        "engagementDate": "2026-03-01",
+        "requestedBy": "CSM",
+        "adoptionProfile": {
+          "SCM": "OPTIMIZING",
+          "CI": "GROWING",
+          "CD": "EXPLORING",
+          "DevSecOps": "EXPLORING",
+          "Agile Planning": "EXPLORING"
+        }
       },
       {
         "id": "cust_northwind",
@@ -54,7 +76,29 @@
         "tags": [
           "Enterprise",
           "Renewal"
-        ]
+        ],
+        "arr": 650000,
+        "internalNotes": "Strong CI footprint; security controls need to scale to all product lines.",
+        "contractEndDate": "2026-06-30",
+        "renewalRisk": "Moderate",
+        "churnProbability": 35,
+        "healthRawScore": 67,
+        "licenseCount": 420,
+        "npsScore": 34,
+        "escalationFlag": false,
+        "ownerEmail": "morgan.reed@northwind.example",
+        "cseName": "Mike Macri",
+        "engagementType": "OFFICE_HOURS",
+        "engagementStatus": "COMPLETED",
+        "engagementDate": "2026-03-02",
+        "requestedBy": "CSM",
+        "adoptionProfile": {
+          "SCM": "OPTIMIZING",
+          "CI": "ACTIVE",
+          "CD": "GROWING",
+          "DevSecOps": "GROWING",
+          "Agile Planning": "EXPLORING"
+        }
       },
       {
         "id": "cust_contoso",
@@ -75,7 +119,29 @@
         "tags": [
           "Regulated",
           "High Risk"
-        ]
+        ],
+        "arr": 650000,
+        "internalNotes": "Renewal committee requires evidence of security automation rollout.",
+        "contractEndDate": "2026-04-20",
+        "renewalRisk": "High",
+        "churnProbability": 58,
+        "healthRawScore": 38,
+        "licenseCount": 420,
+        "npsScore": 24,
+        "escalationFlag": true,
+        "ownerEmail": "samira.khan@contoso.example",
+        "cseName": "Mike Macri",
+        "engagementType": "ON_DEMAND",
+        "engagementStatus": "COMPLETED",
+        "engagementDate": "2026-02-20",
+        "requestedBy": "RENEWAL_MANAGER",
+        "adoptionProfile": {
+          "SCM": "ACTIVE",
+          "CI": "EXPLORING",
+          "CD": "EXPLORING",
+          "DevSecOps": "EXPLORING",
+          "Agile Planning": "EXPLORING"
+        }
       },
       {
         "id": "cust_tailspin",
@@ -95,7 +161,29 @@
         "notes": "Adoption momentum is positive after onboarding lab participation.",
         "tags": [
           "Growth"
-        ]
+        ],
+        "arr": 160000,
+        "internalNotes": "Adoption momentum is positive after onboarding lab participation.",
+        "contractEndDate": "2027-01-12",
+        "renewalRisk": "Moderate",
+        "churnProbability": 35,
+        "healthRawScore": 39,
+        "licenseCount": 140,
+        "npsScore": 24,
+        "escalationFlag": false,
+        "ownerEmail": "nina.alvarez@tailspin.example",
+        "cseName": "Erin Walters",
+        "engagementType": "WEBINAR",
+        "engagementStatus": "COMPLETED",
+        "engagementDate": "2026-03-03",
+        "requestedBy": "CSM",
+        "adoptionProfile": {
+          "SCM": "ACTIVE",
+          "CI": "GROWING",
+          "CD": "EXPLORING",
+          "DevSecOps": "EXPLORING",
+          "Agile Planning": "EXPLORING"
+        }
       },
       {
         "id": "cust_fabrikam",
@@ -116,7 +204,29 @@
         "tags": [
           "Healthcare",
           "Compliance"
-        ]
+        ],
+        "arr": 320000,
+        "internalNotes": "Program completion is strong; expansion case tied to compliance automation.",
+        "contractEndDate": "2026-08-05",
+        "renewalRisk": "Low",
+        "churnProbability": 18,
+        "healthRawScore": 74,
+        "licenseCount": 240,
+        "npsScore": 34,
+        "escalationFlag": false,
+        "ownerEmail": "elena.garcia@fabrikam.example",
+        "cseName": "Erin Walters",
+        "engagementType": "ON_DEMAND",
+        "engagementStatus": "COMPLETED",
+        "engagementDate": "2026-03-01",
+        "requestedBy": "CSM",
+        "adoptionProfile": {
+          "SCM": "OPTIMIZING",
+          "CI": "ACTIVE",
+          "CD": "GROWING",
+          "DevSecOps": "GROWING",
+          "Agile Planning": "GROWING"
+        }
       },
       {
         "id": "cust_woodgrove",
@@ -142,7 +252,29 @@
         "tags": [
           "Manufacturing",
           "Release"
-        ]
+        ],
+        "arr": 650000,
+        "internalNotes": "Transitioning from manual release gates to GitLab release orchestration.",
+        "contractEndDate": "2026-11-28",
+        "renewalRisk": "Moderate",
+        "churnProbability": 35,
+        "healthRawScore": 55,
+        "licenseCount": 420,
+        "npsScore": 34,
+        "escalationFlag": false,
+        "ownerEmail": "priya.menon@woodgrove.example",
+        "cseName": "Erin Walters",
+        "engagementType": "ON_DEMAND",
+        "engagementStatus": "COMPLETED",
+        "engagementDate": "2026-03-01",
+        "requestedBy": "CSM",
+        "adoptionProfile": {
+          "SCM": "ACTIVE",
+          "CI": "GROWING",
+          "CD": "GROWING",
+          "DevSecOps": "EXPLORING",
+          "Agile Planning": "EXPLORING"
+        }
       },
       {
         "id": "cust_adventureworks",
@@ -163,7 +295,29 @@
         "tags": [
           "Retail",
           "SCM"
-        ]
+        ],
+        "arr": 160000,
+        "internalNotes": "Strong SCM adoption, now targeting CI/CD standardization for ecommerce services.",
+        "contractEndDate": "2026-09-10",
+        "renewalRisk": "High",
+        "churnProbability": 58,
+        "healthRawScore": 31,
+        "licenseCount": 140,
+        "npsScore": 24,
+        "escalationFlag": true,
+        "ownerEmail": "rafael.ortiz@adventureworks.example",
+        "cseName": "Erin Walters",
+        "engagementType": "OFFICE_HOURS",
+        "engagementStatus": "COMPLETED",
+        "engagementDate": "2026-02-19",
+        "requestedBy": "RENEWAL_MANAGER",
+        "adoptionProfile": {
+          "SCM": "OPTIMIZING",
+          "CI": "EXPLORING",
+          "CD": "EXPLORING",
+          "DevSecOps": "EXPLORING",
+          "Agile Planning": "EXPLORING"
+        }
       },
       {
         "id": "cust_humongous",
@@ -185,7 +339,29 @@
           "Insurance",
           "Compliance",
           "Renewal"
-        ]
+        ],
+        "arr": 650000,
+        "internalNotes": "Renewal depends on proving compliance controls and audit evidence automation.",
+        "contractEndDate": "2026-05-18",
+        "renewalRisk": "High",
+        "churnProbability": 58,
+        "healthRawScore": 39,
+        "licenseCount": 420,
+        "npsScore": 24,
+        "escalationFlag": true,
+        "ownerEmail": "mina.ibrahim@humongous.example",
+        "cseName": "Mike Macri",
+        "engagementType": "ON_DEMAND",
+        "engagementStatus": "COMPLETED",
+        "engagementDate": "2026-02-15",
+        "requestedBy": "RENEWAL_MANAGER",
+        "adoptionProfile": {
+          "SCM": "ACTIVE",
+          "CI": "EXPLORING",
+          "CD": "EXPLORING",
+          "DevSecOps": "EXPLORING",
+          "Agile Planning": "EXPLORING"
+        }
       },
       {
         "id": "cust_proseware",
@@ -206,7 +382,29 @@
         "tags": [
           "Onboarding",
           "Logistics"
-        ]
+        ],
+        "arr": 160000,
+        "internalNotes": "Early onboarding phase with migration planning in progress.",
+        "contractEndDate": "2027-02-14",
+        "renewalRisk": "High",
+        "churnProbability": 58,
+        "healthRawScore": 15,
+        "licenseCount": 140,
+        "npsScore": 24,
+        "escalationFlag": true,
+        "ownerEmail": "daniel.wu@proseware.example",
+        "cseName": "Erin Walters",
+        "engagementType": "ON_DEMAND",
+        "engagementStatus": "COMPLETED",
+        "engagementDate": "2026-03-03",
+        "requestedBy": "RENEWAL_MANAGER",
+        "adoptionProfile": {
+          "SCM": "EXPLORING",
+          "CI": "EXPLORING",
+          "CD": "EXPLORING",
+          "DevSecOps": "EXPLORING",
+          "Agile Planning": "EXPLORING"
+        }
       },
       {
         "id": "cust_blueyonder",
@@ -227,7 +425,29 @@
         "tags": [
           "Energy",
           "Observability"
-        ]
+        ],
+        "arr": 650000,
+        "internalNotes": "Mature CI/CD and secure baseline; now focused on value stream observability.",
+        "contractEndDate": "2026-12-06",
+        "renewalRisk": "Low",
+        "churnProbability": 18,
+        "healthRawScore": 71,
+        "licenseCount": 420,
+        "npsScore": 34,
+        "escalationFlag": false,
+        "ownerEmail": "sara.goldberg@blueyonder.example",
+        "cseName": "Mike Macri",
+        "engagementType": "ON_DEMAND",
+        "engagementStatus": "COMPLETED",
+        "engagementDate": "2026-03-02",
+        "requestedBy": "CSM",
+        "adoptionProfile": {
+          "SCM": "ACTIVE",
+          "CI": "ACTIVE",
+          "CD": "ACTIVE",
+          "DevSecOps": "GROWING",
+          "Agile Planning": "EXPLORING"
+        }
       },
       {
         "id": "cust_coho",
@@ -248,7 +468,29 @@
         "tags": [
           "Security",
           "Enablement"
-        ]
+        ],
+        "arr": 320000,
+        "internalNotes": "Security scanners are partially enabled; needs enablement for broader team adoption.",
+        "contractEndDate": "2026-07-22",
+        "renewalRisk": "Moderate",
+        "churnProbability": 35,
+        "healthRawScore": 38,
+        "licenseCount": 240,
+        "npsScore": 24,
+        "escalationFlag": false,
+        "ownerEmail": "alex.nguyen@coho.example",
+        "cseName": "Erin Walters",
+        "engagementType": "WEBINAR",
+        "engagementStatus": "COMPLETED",
+        "engagementDate": "2026-02-24",
+        "requestedBy": "CSM",
+        "adoptionProfile": {
+          "SCM": "ACTIVE",
+          "CI": "GROWING",
+          "CD": "EXPLORING",
+          "DevSecOps": "EXPLORING",
+          "Agile Planning": "EXPLORING"
+        }
       },
       {
         "id": "cust_litware",
@@ -269,7 +511,29 @@
         "tags": [
           "Telecom",
           "Growth"
-        ]
+        ],
+        "arr": 650000,
+        "internalNotes": "High growth customer adding new product teams and standardizing deployment quality gates.",
+        "contractEndDate": "2026-10-02",
+        "renewalRisk": "Moderate",
+        "churnProbability": 35,
+        "healthRawScore": 57,
+        "licenseCount": 420,
+        "npsScore": 34,
+        "escalationFlag": false,
+        "ownerEmail": "helena.park@litware.example",
+        "cseName": "Mike Macri",
+        "engagementType": "ON_DEMAND",
+        "engagementStatus": "COMPLETED",
+        "engagementDate": "2026-03-01",
+        "requestedBy": "CSM",
+        "adoptionProfile": {
+          "SCM": "OPTIMIZING",
+          "CI": "GROWING",
+          "CD": "GROWING",
+          "DevSecOps": "EXPLORING",
+          "Agile Planning": "EXPLORING"
+        }
       }
     ],
     "adoption": {

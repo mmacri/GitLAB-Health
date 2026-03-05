@@ -47,7 +47,7 @@ const buildRows = (workspaceRows = []) =>
     stage: item.customer.stage
   }));
 
-const renderTableRows = (rows, selected) => {
+const renderTableRows = (rows, selected, maskField) => {
   if (!rows.length) {
     return '<tr><td colspan="10">No customers match current filters.</td></tr>';
   }
@@ -56,7 +56,7 @@ const renderTableRows = (rows, selected) => {
       (row) => `
       <tr>
         <td><input type="checkbox" data-row-select="${row.id}" ${selected.has(row.id) ? 'checked' : ''} /></td>
-        <td><a href="#" data-open-customer="${row.id}">${row.name}</a></td>
+        <td><a href="#" data-open-customer="${row.id}">${maskField?.('accountName', row.name) || row.name}</a></td>
         <td>${row.tier}</td>
         <td>${row.stage}</td>
         <td>${statusChip({ label: row.health, tone: stageTone(row.health) })}</td>
@@ -80,7 +80,8 @@ export const renderCustomersPage = (ctx) => {
     onBulkAddToProgram,
     onBulkExport,
     onBulkLogEngagement,
-    notify
+    notify,
+    maskField
   } = ctx;
 
   const rows = buildRows(portfolioRows || []);
@@ -227,7 +228,7 @@ export const renderCustomersPage = (ctx) => {
   };
 
   const renderRows = () => {
-    body.innerHTML = renderTableRows(filteredRows(), selected);
+    body.innerHTML = renderTableRows(filteredRows(), selected, maskField);
     syncSelectedStatus();
   };
 

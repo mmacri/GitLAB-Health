@@ -1,5 +1,7 @@
 import { createCommandPalette } from './components/commandPalette.js';
 import { createModal } from './components/modal.js';
+import { createCustomerSafeBanner } from './components/CustomerSafeBanner.js';
+import { createEngagementExportModal } from './components/EngagementExportModal.js';
 import { createRouter, detectBasePath, parseRoute, routePath } from './lib/router.js';
 import {
   loadDashboardData,
@@ -37,6 +39,8 @@ import {
 } from './lib/scoring.js';
 import { storage, STORAGE_KEYS } from './lib/storage.js';
 import { createDefaultWorkspace, ensureWorkspaceShape, validateWorkspace } from './lib/model.js';
+import { useCustomerSafe, setCustomerSafeMode } from './composables/useCustomerSafe.js';
+import { ENGAGEMENT_TYPES, normalizeEngagementType } from './config/engagementTypes.js';
 import { renderAccountPage, accountCommandEntries } from './pages/accountPage.js';
 import { renderExportsPage, exportsCommandEntries } from './pages/exportsPage.js';
 import { renderIntakePage, intakeCommandEntries } from './pages/intakePage.js';
@@ -64,6 +68,7 @@ const toastRoot = document.querySelector('[data-toast]');
 const settingsRoot = document.querySelector('[data-settings]');
 let headerResizeObserver = null;
 let pendingSnapshotWorkspace = null;
+const customerSafe = useCustomerSafe();
 
 const syncHeaderOffset = () => {
   const header = document.querySelector('.app-header');
@@ -120,8 +125,9 @@ if (!appRoot || !routeRoot || !leftRailRoot) {
 const state = {
   data: null,
   route: { name: 'home', params: {}, path: '/' },
-  customerSafe: Boolean(storage.get(STORAGE_KEYS.safeMode, false)),
+  customerSafe: customerSafe.isCustomerSafe,
   viewMode: storage.get(STORAGE_KEYS.viewMode, 'today') || 'today',
+  persona: 'cse',
   basePath: '',
   portfolioFilters: {
     segment: 'all',
@@ -132,7 +138,12 @@ const state = {
     engagementRecency: 'all',
     lowestUseCase: 'all',
     hasOpenRequest: false,
-    belowThreeGreen: false
+    belowThreeGreen: false,
+    engagementTypes: [],
+    requestedBy: [],
+    engagementStatus: [],
+    adoptionUseCase: 'all',
+    adoptionMaturity: []
   },
   checklistState: {},
   selectedAccountId: storage.get(STORAGE_KEYS.selectedAccountId, ''),
@@ -237,10 +248,11 @@ const updateWorkspace = (updater) => {
 };
 
 const setSafeMode = (value) => {
-  state.customerSafe = Boolean(value);
-  storage.set(STORAGE_KEYS.safeMode, state.customerSafe);
+  state.customerSafe = setCustomerSafeMode(Boolean(value));
   render();
 };
+
+const maskField = (fieldName, value) => customerSafe.maskField(fieldName, value);
 
 const setViewMode = (value) => {
   state.viewMode = value || 'today';
@@ -254,6 +266,24 @@ const setPortfolioFilters = (patch) => {
     ...patch
   };
   render();
+};
+
+const countActivePortfolioFilters = (filters = {}) => {
+  let count = 0;
+  if (filters.segment && filters.segment !== 'all') count += 1;
+  if (filters.renewalWindow && filters.renewalWindow !== 'all') count += 1;
+  if (filters.health && filters.health !== 'all') count += 1;
+  if (filters.engagementRecency && filters.engagementRecency !== 'all') count += 1;
+  if (filters.lowestUseCase && filters.lowestUseCase !== 'all') count += 1;
+  if (filters.adoptionUseCase && filters.adoptionUseCase !== 'all') count += 1;
+  if (Array.isArray(filters.adoptionMaturity) && filters.adoptionMaturity.length) count += 1;
+  if (Array.isArray(filters.engagementTypes) && filters.engagementTypes.length) count += 1;
+  if (Array.isArray(filters.requestedBy) && filters.requestedBy.length) count += 1;
+  if (Array.isArray(filters.engagementStatus) && filters.engagementStatus.length) count += 1;
+  if (filters.staleOnly) count += 1;
+  if (filters.hasOpenRequest) count += 1;
+  if (filters.belowThreeGreen) count += 1;
+  return count;
 };
 
 const setActionCardCompletion = (accountId, actionId, complete) => {
@@ -276,8 +306,7 @@ const applyQueryOverrides = () => {
   const snapshot = search.get('ws');
 
   if (audience === 'customer') {
-    state.customerSafe = true;
-    storage.set(STORAGE_KEYS.safeMode, true);
+    state.customerSafe = setCustomerSafeMode(true);
   }
 
   if (snapshot) {
@@ -451,7 +480,9 @@ const renderLeftRail = () => {
             ? recentCustomers
                 .map(
                   (customer) =>
-                    `<button class="rail-link ${customer.id === state.selectedCustomerId ? 'is-active' : ''}" type="button" data-rail-customer="${customer.id}">${customer.name}</button>`
+                    `<button class="rail-link ${customer.id === state.selectedCustomerId ? 'is-active' : ''}" type="button" data-rail-customer="${customer.id}">${
+                      state.customerSafe ? maskField('accountName', customer.name) || 'Your Organization' : customer.name
+                    }</button>`
                 )
                 .join('')
             : accountLoadError
@@ -1180,7 +1211,9 @@ const renderShellContext = () => {
       ? options
           .map(
             (account) =>
-              `<option value="${account.id}" ${account.id === activeAccountId ? 'selected' : ''}>${account.name}</option>`
+              `<option value="${account.id}" ${account.id === activeAccountId ? 'selected' : ''}>${
+                state.customerSafe ? maskField('accountName', account.name) || 'Your Organization' : account.name
+              }</option>`
           )
           .join('')
       : '<option value="">No accounts loaded</option>';
@@ -1189,7 +1222,7 @@ const renderShellContext = () => {
 
   const personaSelect = appRoot.querySelector('[data-global-persona]');
   if (personaSelect) {
-    personaSelect.value = state.route.name === 'manager' ? 'manager' : 'cse';
+    personaSelect.value = state.route.name === 'manager' ? 'manager' : state.persona;
   }
 
   const jumpSelect = appRoot.querySelector('[data-global-jump]');
@@ -1230,8 +1263,34 @@ const renderShellContext = () => {
     const routeLabel = ROUTE_LABELS[state.route.name] || 'Today';
     const modeLabel = state.viewMode === 'deep' ? 'Deep Dive' : state.viewMode === 'review' ? 'Review' : 'Today';
     safeLabel.textContent = state.customerSafe
-      ? `Customer-safe mode • ${routeLabel} • ${modeLabel}`
-      : `Internal mode • ${routeLabel} • ${modeLabel}`;
+      ? `Customer-safe mode • ${routeLabel} • ${modeLabel} • ${state.persona === 'manager' ? 'Manager' : 'CSE On-Demand'}`
+      : `Internal mode • ${routeLabel} • ${modeLabel} • ${state.persona === 'manager' ? 'Manager' : 'CSE On-Demand'}`;
+  }
+
+  const managerBadge = appRoot.querySelector('[data-manager-badge]');
+  if (managerBadge) {
+    managerBadge.hidden = state.persona !== 'manager';
+  }
+
+  appRoot.querySelectorAll('[data-global-filter-engagement-type]').forEach((input) => {
+    const value = String(input.getAttribute('data-global-filter-engagement-type') || '').toUpperCase();
+    input.checked = Array.isArray(state.portfolioFilters.engagementTypes) && state.portfolioFilters.engagementTypes.includes(value);
+  });
+
+  appRoot.querySelectorAll('[data-global-filter-requested-by]').forEach((input) => {
+    const value = String(input.getAttribute('data-global-filter-requested-by') || '').toUpperCase();
+    input.checked = Array.isArray(state.portfolioFilters.requestedBy) && state.portfolioFilters.requestedBy.includes(value);
+  });
+
+  appRoot.querySelectorAll('[data-global-filter-engagement-status]').forEach((input) => {
+    const value = String(input.getAttribute('data-global-filter-engagement-status') || '').toUpperCase();
+    input.checked = Array.isArray(state.portfolioFilters.engagementStatus) && state.portfolioFilters.engagementStatus.includes(value);
+  });
+
+  const filtersShortcut = appRoot.querySelector('.header-panel [data-go-portfolio]');
+  if (filtersShortcut) {
+    const activeCount = countActivePortfolioFilters(state.portfolioFilters);
+    filtersShortcut.textContent = `Open Portfolio Filters${activeCount ? ` (${activeCount} active)` : ''}`;
   }
 };
 
@@ -1254,6 +1313,22 @@ const openToolkitTool = (toolId) => {
 };
 
 const commandEntries = (workspace) => {
+  const workspaceRows = buildWorkspacePortfolio(currentWorkspace()).rows || [];
+  const workspaceCustomerCommands = workspaceRows.map((row) => {
+    const typeKey = normalizeEngagementType(row.engagementType);
+    const typeMeta = ENGAGEMENT_TYPES[typeKey] || ENGAGEMENT_TYPES.ON_DEMAND;
+    const label = state.customerSafe ? maskField('accountName', row.customer.name) || 'Your Organization' : row.customer.name;
+    return {
+      id: `workspace-customer-${row.customer.id}`,
+      label: `Open customer: ${label}`,
+      meta: `${typeMeta.label} • ${row.customer.tier || 'Standard'} • ${row.health}`,
+      engagementType: typeKey,
+      engagementIcon: typeMeta.icon,
+      engagementColor: typeMeta.color,
+      action: { route: 'customer', params: { id: row.customer.id } }
+    };
+  });
+
   const accountSectionCommands = workspace?.account
     ? ACCOUNT_SECTION_LINKS.map((item) => ({
         id: `account-section-${item.id}`,
@@ -1303,6 +1378,7 @@ const commandEntries = (workspace) => {
     { id: 'cmd-tool-issue', label: 'Collaboration Issue Generator', meta: 'Success Plans', action: { custom: () => openToolkitTool('issue-generator') } },
     { id: 'cmd-tool-log', label: 'Engagement Logger', meta: 'Success Plans', action: { custom: () => openToolkitTool('engagement-logger') } },
     { id: 'cmd-share', label: 'Copy Share Snapshot', meta: 'Exports', action: { custom: copyShareSnapshot } },
+    ...workspaceCustomerCommands,
     ...portfolioCommandEntries(state.data),
     ...managerCommandEntries(),
     ...simulatorCommandEntries(),
@@ -1369,6 +1445,7 @@ const normalizeRouteLayout = (view) => {
 
 const renderCurrentRoute = () => {
   const route = state.route;
+  if (route.name === 'manager') state.persona = 'manager';
   const portfolio = buildPortfolioView(state.data);
   const workspaceModel = currentWorkspace();
   const workspacePortfolio = buildWorkspacePortfolio(workspaceModel);
@@ -1446,6 +1523,9 @@ const renderCurrentRoute = () => {
       : null;
 
   const common = {
+    customerSafe: state.customerSafe,
+    maskField,
+    persona: state.persona,
     navigate: (name, params) => {
       if (name === 'account' && params?.id) setSelectedAccount(params.id);
       if (name === 'account' && !params?.id) params = { id: currentAccount()?.id || state.data.accounts?.[0]?.id || '' };
@@ -1768,6 +1848,9 @@ const renderCurrentRoute = () => {
 
   routeRoot.innerHTML = '';
   normalizeRouteLayout(view);
+  if (state.customerSafe) {
+    view.prepend(createCustomerSafeBanner());
+  }
   routeRoot.appendChild(view);
 
   const commands = commandEntries(workspace);
@@ -1832,17 +1915,42 @@ const bindGlobalEvents = () => {
     router.navigate('account', { id: accountId });
   });
 
+  const syncGlobalMultiFilters = () => {
+    const engagementTypes = [...appRoot.querySelectorAll('[data-global-filter-engagement-type]:checked')].map((input) =>
+      String(input.getAttribute('data-global-filter-engagement-type') || '').toUpperCase()
+    );
+    const requestedBy = [...appRoot.querySelectorAll('[data-global-filter-requested-by]:checked')].map((input) =>
+      String(input.getAttribute('data-global-filter-requested-by') || '').toUpperCase()
+    );
+    const engagementStatus = [...appRoot.querySelectorAll('[data-global-filter-engagement-status]:checked')].map((input) =>
+      String(input.getAttribute('data-global-filter-engagement-status') || '').toUpperCase()
+    );
+    setPortfolioFilters({
+      engagementTypes,
+      requestedBy,
+      engagementStatus
+    });
+  };
+
   appRoot.querySelector('[data-global-export]')?.addEventListener('click', () => {
-    router.navigate('exports');
+    const modal = createEngagementExportModal({
+      workspace: currentWorkspace(),
+      customerSafe: state.customerSafe,
+      maskField,
+      notify,
+      onClose: () => {}
+    });
+    document.body.appendChild(modal);
   });
 
   appRoot.querySelector('[data-global-persona]')?.addEventListener('change', (event) => {
     const persona = event.target.value;
-    if (persona === 'manager') {
-      router.navigate('manager');
+    state.persona = persona === 'manager' ? 'manager' : 'cse';
+    if (state.route.name === 'manager' && state.persona !== 'manager') {
+      router.navigate('home');
       return;
     }
-    router.navigate('home');
+    render();
   });
 
   appRoot.querySelector('[data-global-jump]')?.addEventListener('change', (event) => {
@@ -1912,6 +2020,16 @@ const bindGlobalEvents = () => {
 
   appRoot.querySelector('[data-global-mode]')?.addEventListener('change', (event) => {
     setViewMode(event.target.value);
+  });
+
+  appRoot.querySelectorAll('[data-global-filter-engagement-type]').forEach((input) => {
+    input.addEventListener('change', syncGlobalMultiFilters);
+  });
+  appRoot.querySelectorAll('[data-global-filter-requested-by]').forEach((input) => {
+    input.addEventListener('change', syncGlobalMultiFilters);
+  });
+  appRoot.querySelectorAll('[data-global-filter-engagement-status]').forEach((input) => {
+    input.addEventListener('change', syncGlobalMultiFilters);
   });
 
   appRoot.querySelector('[data-open-settings]')?.addEventListener('click', () => {

@@ -268,10 +268,12 @@ export const renderCustomerDetailPage = (ctx) => {
     onAddVoc,
     onExportCustomerPdf,
     onExportCustomerCsv,
+    maskField,
     navigate
   } = ctx;
 
   const customerId = customer?.id || '';
+  const customerName = maskField?.('accountName', customer?.name) || customer?.name || 'Customer';
   const stagePercent = stageProgress(customer?.stage);
   const renewal = customer?.renewalDate ? `${Math.max(0, metrics?.renewalDays ?? 0)}d` : 'Not configured';
   const riskSignals = risk?.signals || [];
@@ -284,7 +286,7 @@ export const renderCustomerDetailPage = (ctx) => {
   wrapper.innerHTML = `
     ${pageHeader({
       eyebrow: 'Customer Workspace',
-      title: customer?.name || 'Customer',
+      title: customerName,
       subtitle:
         'Technical adoption + customer outcomes workspace for Align, Enable, and Expand motions.',
       meta: `Tier: ${customer?.tier || 'Standard'} | ARR: ${customer?.arrBand || 'n/a'} | Renewal: ${formatDate(customer?.renewalDate)}`,

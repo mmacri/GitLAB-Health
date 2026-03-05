@@ -1,10 +1,14 @@
 import { createDataTable } from '../components/dataTable.js';
 import { metricTile } from '../components/metricTile.js';
 import { statusChip, statusToneFromHealth } from '../components/statusChip.js';
+import { createAdoptionStageWidget, compactAdoptionDots } from '../components/adoption/AdoptionStageWidget.js';
+import { createManagerOverviewPanel } from '../components/manager/ManagerOverviewPanel.js';
 import { barChartSvg, donutChartSvg } from '../lib/charts.js';
 import { formatDate, parseDate } from '../lib/date.js';
 import { loadEngagementLog } from '../lib/engagementLog.js';
 import { applyPortfolioFilters } from '../lib/scoring.js';
+import { ENGAGEMENT_TYPES, normalizeEngagementType } from '../config/engagementTypes.js';
+import { MATURITY_LEVELS, USE_CASES } from '../data/adoptionStages.js';
 
 const uniqueSegments = (signals) => ['all', ...new Set((signals || []).map((signal) => signal.account.segment))];
 
@@ -358,6 +362,32 @@ const useCaseCoverageAverages = (workspace) => {
   return Object.fromEntries(Object.entries(totals).map(([key, value]) => [key, Math.round(value / divisor)]));
 };
 
+const engagementLabel = (typeKey) => ENGAGEMENT_TYPES[typeKey]?.label || 'On-Demand';
+const engagementColor = (typeKey) => ENGAGEMENT_TYPES[typeKey]?.color || '#10b981';
+
+const normalizeMaturityKey = (value) => {
+  const key = String(value || '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, '_');
+  return MATURITY_LEVELS[key] ? key : 'NOT_STARTED';
+};
+
+const profileToUseCaseMap = (profile = {}) => ({
+  SCM: normalizeMaturityKey(profile.SCM),
+  CI: normalizeMaturityKey(profile.CI),
+  CD: normalizeMaturityKey(profile.CD),
+  DevSecOps: normalizeMaturityKey(profile.DevSecOps),
+  'Agile Planning': normalizeMaturityKey(profile['Agile Planning'])
+});
+
+const sortByEngagementDate = (rows = []) =>
+  [...rows].sort((left, right) => {
+    const leftTime = parseDate(left.customer.engagementDate || left.customer.renewalDate || '')?.getTime() || Number.POSITIVE_INFINITY;
+    const rightTime = parseDate(right.customer.engagementDate || right.customer.renewalDate || '')?.getTime() || Number.POSITIVE_INFINITY;
+    return leftTime - rightTime;
+  });
+
 const buildWorkspaceActionQueue = (workspace, rows = []) => {
   const actions = [];
   rows.forEach((row) => {
@@ -435,18 +465,29 @@ const renderWorkspaceTodayPage = (ctx) => {
     workspace,
     workspacePortfolio,
     mode,
+    persona,
+    customerSafe,
+    maskField,
     navigate,
     onExportPortfolio,
     onCopyShare,
     onQuickLogEngagement
   } = ctx;
-  const rows = workspacePortfolio?.rows || [];
+  const rows = sortByEngagementDate(workspacePortfolio?.rows || []);
   const healthDistribution = workspacePortfolio?.healthDistribution || { green: 0, yellow: 0, red: 0 };
   const engagementCoverage = workspacePortfolio?.engagementCoverage || { in30: 0, in60: 0, in90: 0, over90: 0 };
   const useCaseCoverage = useCaseCoverageAverages(workspace);
   const actions = buildWorkspaceActionQueue(workspace, rows);
   const expansionCandidates = rows.filter((row) => Number(row.openExpansionCount || 0) > 0).length;
   const engagementCoveragePercent = rows.length ? Math.round((Number(engagementCoverage.in30 || 0) / rows.length) * 100) : 0;
+  const isManager = persona === 'manager';
+  const selectedCustomerId = rows[0]?.customer?.id || '';
+  let selectedType = 'ALL';
+
+  const counts = Object.keys(ENGAGEMENT_TYPES).reduce(
+    (acc, key) => ({ ...acc, [key]: rows.filter((row) => normalizeEngagementType(row.engagementType) === key).length }),
+    {}
+  );
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
@@ -460,6 +501,7 @@ const renderWorkspaceTodayPage = (ctx) => {
         <p class="muted page-meta">Mode behavior: ${String(mode || 'today')}.</p>
       </div>
       <div class="page-actions">
+        ${isManager ? '<span class="status-chip tone-info">Manager</span>' : ''}
         <button class="ghost-btn" type="button" data-go-portfolio>Open Portfolio Filters</button>
         <button class="ghost-btn" type="button" data-go-playbooks>Open Playbooks</button>
         <button class="ghost-btn" type="button" data-export-portfolio>Export Portfolio CSV</button>
@@ -525,7 +567,40 @@ const renderWorkspaceTodayPage = (ctx) => {
       </article>
     </section>
 
+    ${
+      isManager
+        ? `<section class="manager-mount" data-manager-overview-mount></section>`
+        : ''
+    }
+
     <section class="card">
+      <div class="metric-head">
+        <h2>Engagement Queue</h2>
+      </div>
+      <div class="engagement-tabbar" role="tablist" aria-label="Engagement type filter">
+        <button type="button" class="ghost-btn is-active" data-type-tab="ALL">All (${rows.length})</button>
+        ${Object.entries(ENGAGEMENT_TYPES)
+          .map(
+            ([type, meta]) =>
+              `<button type="button" class="ghost-btn" data-type-tab="${type}">${meta.label} (${counts[type] || 0})</button>`
+          )
+          .join('')}
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Customer</th><th>Engagement Type</th><th>Status</th><th>Date</th><th>Adoption</th><th>Action</th></tr></thead>
+          <tbody data-engagement-queue></tbody>
+        </table>
+      </div>
+    </section>
+
+    ${
+      mode === 'review' || mode === 'deep'
+        ? `<section class="card"><div data-adoption-widget-mount></div></section>`
+        : ''
+    }
+
+    <section class="card ${isManager ? 'is-hidden-mode' : ''}">
       <div class="metric-head">
         <h2>Next Best Actions</h2>
         ${statusChip({ label: `${actions.length} prioritized`, tone: actions.length ? 'warn' : 'good' })}
@@ -561,6 +636,81 @@ const renderWorkspaceTodayPage = (ctx) => {
       </div>
     </section>
   `;
+
+  const renderQueue = () => {
+    const tbody = wrapper.querySelector('[data-engagement-queue]');
+    if (!tbody) return;
+    const filteredRows = rows.filter((row) => selectedType === 'ALL' || normalizeEngagementType(row.engagementType) === selectedType);
+    tbody.innerHTML = filteredRows.length
+      ? filteredRows
+          .map((row) => {
+            const customerName = maskField?.('accountName', row.customer.name) || row.customer.name;
+            const typeKey = normalizeEngagementType(row.engagementType);
+            const typeMeta = ENGAGEMENT_TYPES[typeKey] || ENGAGEMENT_TYPES.ON_DEMAND;
+            return `
+              <tr>
+                <td><a href="#" data-open-customer="${row.customer.id}">${customerName}</a></td>
+                <td><span class="status-chip" style="background:${typeMeta.color};color:#fff;">${typeMeta.label}</span></td>
+                <td>${String(row.engagementStatus || 'REQUESTED').replace(/_/g, ' ')}</td>
+                <td>${formatDate(row.engagementDate)}</td>
+                <td><div class="adoption-dot-row">${compactAdoptionDots(row.customer.adoptionProfile || {})}</div></td>
+                <td><button class="ghost-btn" type="button" data-quick-log="${row.customer.id}">Log engagement</button></td>
+              </tr>
+            `;
+          })
+          .join('')
+      : '<tr><td colspan="6">No engagements in this type.</td></tr>';
+  };
+
+  renderQueue();
+
+  wrapper.querySelectorAll('[data-type-tab]').forEach((button) => {
+    button.addEventListener('click', () => {
+      selectedType = button.getAttribute('data-type-tab') || 'ALL';
+      wrapper.querySelectorAll('[data-type-tab]').forEach((node) => node.classList.toggle('is-active', node === button));
+      renderQueue();
+    });
+  });
+
+  if (isManager) {
+    const mount = wrapper.querySelector('[data-manager-overview-mount]');
+    if (mount) {
+      mount.appendChild(
+        createManagerOverviewPanel({
+          workspace,
+          portfolioRows: rows,
+          maskField,
+          customerSafe,
+          onOpenCustomer: (customerId) => navigate('customer', { id: customerId })
+        })
+      );
+    }
+  }
+
+  if (mode === 'review' || mode === 'deep') {
+    const customer = rows.find((row) => row.customer.id === selectedCustomerId)?.customer;
+    const adoptionProfile = customer?.adoptionProfile || {};
+    const trendPoints = (workspace?.snapshots || []).slice(-4).map((item) => ({
+      label: String(item.month || '').slice(5),
+      value: Number(item.adoptionAvg || 0)
+    }));
+    const mount = wrapper.querySelector('[data-adoption-widget-mount]');
+    if (mount && customer) {
+      mount.appendChild(
+        createAdoptionStageWidget({
+          accountId: customer.id,
+          adoptionProfile,
+          customerSafe,
+          showTrend: mode === 'deep',
+          trendPoints,
+          onScheduleEngagement: ({ accountId, recommendation }) => {
+            onQuickLogEngagement?.(accountId);
+            navigate('playbooks');
+          }
+        })
+      );
+    }
+  }
 
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
   wrapper.querySelector('[data-go-playbooks]')?.addEventListener('click', () => navigate('playbooks'));
@@ -869,7 +1019,7 @@ export const renderPortfolioHomePage = (ctx) => {
 
 export const renderPortfolioPage = (ctx) => {
   if ((ctx.workspacePortfolio?.rows || []).length && ctx.workspace) {
-    const { workspace, workspacePortfolio, filters, onSetFilters, navigate, onExportPortfolio } = ctx;
+    const { workspace, workspacePortfolio, filters, onSetFilters, navigate, onExportPortfolio, maskField } = ctx;
     const rows = workspacePortfolio.rows || [];
     const greenUseCaseCount = (customerId) => {
       const useCases = workspace?.adoption?.[customerId]?.useCases || {};
@@ -882,6 +1032,23 @@ export const renderPortfolioPage = (ctx) => {
       if (filters.renewalWindow === '180+' && Number(row.renewalDays ?? 0) <= 180) return false;
       if (filters.staleOnly && Number(row.engagementDays ?? 999) <= 30) return false;
       if (filters.belowThreeGreen && greenUseCaseCount(row.customer.id) >= 3) return false;
+      if (Array.isArray(filters.engagementTypes) && filters.engagementTypes.length) {
+        const key = normalizeEngagementType(row.engagementType);
+        if (!filters.engagementTypes.includes(key)) return false;
+      }
+      if (Array.isArray(filters.requestedBy) && filters.requestedBy.length) {
+        if (!filters.requestedBy.includes(String(row.requestedBy || '').toUpperCase())) return false;
+      }
+      if (Array.isArray(filters.engagementStatus) && filters.engagementStatus.length) {
+        if (!filters.engagementStatus.includes(String(row.engagementStatus || '').toUpperCase())) return false;
+      }
+      if (filters.adoptionUseCase && filters.adoptionUseCase !== 'all') {
+        const profile = profileToUseCaseMap(row.customer?.adoptionProfile || {});
+        const maturity = profile[filters.adoptionUseCase] || 'NOT_STARTED';
+        if (Array.isArray(filters.adoptionMaturity) && filters.adoptionMaturity.length && !filters.adoptionMaturity.includes(maturity)) {
+          return false;
+        }
+      }
       return true;
     });
 
@@ -936,6 +1103,73 @@ export const renderPortfolioPage = (ctx) => {
             <input type=\"checkbox\" data-filter=\"belowThreeGreen\" ${filters.belowThreeGreen ? 'checked' : ''} />
             <span>Below 3 green use cases</span>
           </label>
+          <label>
+            Adoption Use Case
+            <select data-filter="adoptionUseCase">
+              <option value="all" ${filters.adoptionUseCase === 'all' ? 'selected' : ''}>All</option>
+              ${USE_CASES.map((useCase) => `<option value="${useCase}" ${filters.adoptionUseCase === useCase ? 'selected' : ''}>${useCase}</option>`).join('')}
+            </select>
+          </label>
+          <fieldset class="filter-multi">
+            <legend>Maturity</legend>
+            ${Object.keys(MATURITY_LEVELS)
+              .map(
+                (key) => `
+                <label class="safe-toggle">
+                  <input type="checkbox" data-filter-maturity="${key}" ${
+                    Array.isArray(filters.adoptionMaturity) && filters.adoptionMaturity.includes(key) ? 'checked' : ''
+                  } />
+                  <span>${MATURITY_LEVELS[key].label}</span>
+                </label>
+              `
+              )
+              .join('')}
+          </fieldset>
+          <fieldset class="filter-multi">
+            <legend>Engagement Type</legend>
+            ${Object.keys(ENGAGEMENT_TYPES)
+              .map(
+                (key) => `
+                <label class="safe-toggle">
+                  <input type="checkbox" data-filter-engagement-type="${key}" ${
+                    Array.isArray(filters.engagementTypes) && filters.engagementTypes.includes(key) ? 'checked' : ''
+                  } />
+                  <span>${ENGAGEMENT_TYPES[key].label}</span>
+                </label>
+              `
+              )
+              .join('')}
+          </fieldset>
+          <fieldset class="filter-multi">
+            <legend>Requested By</legend>
+            ${['CSM', 'AE', 'CUSTOMER', 'RENEWAL_MANAGER']
+              .map(
+                (key) => `
+                <label class="safe-toggle">
+                  <input type="checkbox" data-filter-requested-by="${key}" ${
+                    Array.isArray(filters.requestedBy) && filters.requestedBy.includes(key) ? 'checked' : ''
+                  } />
+                  <span>${key.replace('_', ' ')}</span>
+                </label>
+              `
+              )
+              .join('')}
+          </fieldset>
+          <fieldset class="filter-multi">
+            <legend>Engagement Status</legend>
+            ${['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'REQUESTED']
+              .map(
+                (key) => `
+                <label class="safe-toggle">
+                  <input type="checkbox" data-filter-engagement-status="${key}" ${
+                    Array.isArray(filters.engagementStatus) && filters.engagementStatus.includes(key) ? 'checked' : ''
+                  } />
+                  <span>${key.replace('_', ' ')}</span>
+                </label>
+              `
+              )
+              .join('')}
+          </fieldset>
         </div>
       </section>
 
@@ -968,7 +1202,7 @@ export const renderPortfolioPage = (ctx) => {
                       .map(
                         (row) => `
                       <tr>
-                        <td><a href=\"#\" data-open-customer=\"${row.customer.id}\">${row.customer.name}</a></td>
+                        <td><a href=\"#\" data-open-customer=\"${row.customer.id}\">${maskField?.('accountName', row.customer.name) || row.customer.name}</a></td>
                         <td>${row.customer.tier || 'Standard'}</td>
                         <td>${formatDate(row.customer.renewalDate)}</td>
                         <td>${statusChip({ label: row.health, tone: statusToneFromHealth(row.health) })}</td>
@@ -1002,6 +1236,38 @@ export const renderPortfolioPage = (ctx) => {
           return;
         }
         onSetFilters?.({ [key]: event.target.value });
+      });
+    });
+    wrapper.querySelectorAll('[data-filter-maturity]').forEach((node) => {
+      node.addEventListener('change', () => {
+        const selected = [...wrapper.querySelectorAll('[data-filter-maturity]:checked')].map((item) =>
+          item.getAttribute('data-filter-maturity')
+        );
+        onSetFilters?.({ adoptionMaturity: selected });
+      });
+    });
+    wrapper.querySelectorAll('[data-filter-engagement-type]').forEach((node) => {
+      node.addEventListener('change', () => {
+        const selected = [...wrapper.querySelectorAll('[data-filter-engagement-type]:checked')].map((item) =>
+          item.getAttribute('data-filter-engagement-type')
+        );
+        onSetFilters?.({ engagementTypes: selected });
+      });
+    });
+    wrapper.querySelectorAll('[data-filter-requested-by]').forEach((node) => {
+      node.addEventListener('change', () => {
+        const selected = [...wrapper.querySelectorAll('[data-filter-requested-by]:checked')].map((item) =>
+          item.getAttribute('data-filter-requested-by')
+        );
+        onSetFilters?.({ requestedBy: selected });
+      });
+    });
+    wrapper.querySelectorAll('[data-filter-engagement-status]').forEach((node) => {
+      node.addEventListener('change', () => {
+        const selected = [...wrapper.querySelectorAll('[data-filter-engagement-status]:checked')].map((item) =>
+          item.getAttribute('data-filter-engagement-status')
+        );
+        onSetFilters?.({ engagementStatus: selected });
       });
     });
     wrapper.addEventListener('click', (event) => {

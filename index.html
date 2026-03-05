@@ -86,12 +86,76 @@
             </label>
             <button class="ghost-btn" type="button" data-open-filters>Filters</button>
           </div>
-          <p class="meta" data-safe-label>Internal mode • Today</p>
+          <div class="header__controls">
+            <span class="status-chip status-chip--neutral" data-manager-badge hidden>Manager</span>
+            <p class="meta" data-safe-label>Internal mode • Today</p>
+          </div>
         </div>
 
         <div class="header-panel" data-filters-panel hidden>
           <div class="header-panel__inner">
             <p class="meta">Advanced filters stay route-specific. Use these quick shortcuts to move into filter-heavy views.</p>
+            <div class="filter-row filter-row--panel">
+              <fieldset class="filter-multi">
+                <legend>Engagement Type</legend>
+                <label class="safe-toggle">
+                  <input type="checkbox" data-global-filter-engagement-type="WEBINAR" />
+                  <span>Webinar</span>
+                </label>
+                <label class="safe-toggle">
+                  <input type="checkbox" data-global-filter-engagement-type="OFFICE_HOURS" />
+                  <span>Office Hours</span>
+                </label>
+                <label class="safe-toggle">
+                  <input type="checkbox" data-global-filter-engagement-type="HANDS_ON_LAB" />
+                  <span>Hands-On Lab</span>
+                </label>
+                <label class="safe-toggle">
+                  <input type="checkbox" data-global-filter-engagement-type="ON_DEMAND" />
+                  <span>On-Demand</span>
+                </label>
+              </fieldset>
+
+              <fieldset class="filter-multi">
+                <legend>Requested By</legend>
+                <label class="safe-toggle">
+                  <input type="checkbox" data-global-filter-requested-by="CSM" />
+                  <span>CSM</span>
+                </label>
+                <label class="safe-toggle">
+                  <input type="checkbox" data-global-filter-requested-by="AE" />
+                  <span>AE</span>
+                </label>
+                <label class="safe-toggle">
+                  <input type="checkbox" data-global-filter-requested-by="CUSTOMER" />
+                  <span>Customer</span>
+                </label>
+                <label class="safe-toggle">
+                  <input type="checkbox" data-global-filter-requested-by="RENEWAL_MANAGER" />
+                  <span>Renewal Manager</span>
+                </label>
+              </fieldset>
+
+              <fieldset class="filter-multi">
+                <legend>Engagement Status</legend>
+                <label class="safe-toggle">
+                  <input type="checkbox" data-global-filter-engagement-status="SCHEDULED" />
+                  <span>Scheduled</span>
+                </label>
+                <label class="safe-toggle">
+                  <input type="checkbox" data-global-filter-engagement-status="IN_PROGRESS" />
+                  <span>In Progress</span>
+                </label>
+                <label class="safe-toggle">
+                  <input type="checkbox" data-global-filter-engagement-status="COMPLETED" />
+                  <span>Completed</span>
+                </label>
+                <label class="safe-toggle">
+                  <input type="checkbox" data-global-filter-engagement-status="REQUESTED" />
+                  <span>Requested</span>
+                </label>
+              </fieldset>
+            </div>
             <div class="header__controls">
               <button class="ghost-btn" type="button" data-go-portfolio>Open Portfolio Filters</button>
               <button class="ghost-btn" type="button" data-go-playbooks>Open Playbooks</button>
