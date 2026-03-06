@@ -146,6 +146,8 @@ const state = {
     staleOnly: false,
     staleDays: 30,
     engagementRecency: 'all',
+    pteBand: 'all',
+    ptcBand: 'all',
     lowestUseCase: 'all',
     hasOpenRequest: false,
     belowThreeGreen: false,
@@ -375,6 +377,8 @@ const countActivePortfolioFilters = (filters = {}) => {
   if (filters.renewalWindow && filters.renewalWindow !== 'all') count += 1;
   if (filters.health && filters.health !== 'all') count += 1;
   if (filters.engagementRecency && filters.engagementRecency !== 'all') count += 1;
+  if (filters.pteBand && filters.pteBand !== 'all') count += 1;
+  if (filters.ptcBand && filters.ptcBand !== 'all') count += 1;
   if (filters.lowestUseCase && filters.lowestUseCase !== 'all') count += 1;
   if (filters.adoptionUseCase && filters.adoptionUseCase !== 'all') count += 1;
   if (Array.isArray(filters.adoptionMaturity) && filters.adoptionMaturity.length) count += 1;
@@ -392,6 +396,8 @@ const activeFilterChipData = (filters = {}) => {
   if (filters.segment && filters.segment !== 'all') chips.push({ id: 'segment', label: `Segment: ${filters.segment}` });
   if (filters.renewalWindow && filters.renewalWindow !== 'all') chips.push({ id: 'renewalWindow', label: `Renewal: ${filters.renewalWindow}` });
   if (filters.health && filters.health !== 'all') chips.push({ id: 'health', label: `Health: ${filters.health}` });
+  if (filters.pteBand && filters.pteBand !== 'all') chips.push({ id: 'pteBand', label: `PtE: ${filters.pteBand}` });
+  if (filters.ptcBand && filters.ptcBand !== 'all') chips.push({ id: 'ptcBand', label: `PtC: ${filters.ptcBand}` });
   if (filters.staleOnly) chips.push({ id: 'staleOnly', label: `Stale > ${filters.staleDays || 30}d` });
   if (filters.belowThreeGreen) chips.push({ id: 'belowThreeGreen', label: 'Adoption < 3 green' });
   if (Array.isArray(filters.engagementTypes) && filters.engagementTypes.length) {
@@ -2113,6 +2119,8 @@ const renderCurrentRoute = () => {
       if (chipId === 'segment') reset.segment = 'all';
       if (chipId === 'renewalWindow') reset.renewalWindow = 'all';
       if (chipId === 'health') reset.health = 'all';
+      if (chipId === 'pteBand') reset.pteBand = 'all';
+      if (chipId === 'ptcBand') reset.ptcBand = 'all';
       if (chipId === 'staleOnly') reset.staleOnly = false;
       if (chipId === 'belowThreeGreen') reset.belowThreeGreen = false;
       if (chipId === 'engagementTypes') reset.engagementTypes = [];
@@ -2126,6 +2134,8 @@ const renderCurrentRoute = () => {
         segment: 'all',
         renewalWindow: 'all',
         health: 'all',
+        pteBand: 'all',
+        ptcBand: 'all',
         staleOnly: false,
         hasOpenRequest: false,
         belowThreeGreen: false,

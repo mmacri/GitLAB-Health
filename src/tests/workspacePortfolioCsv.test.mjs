@@ -13,7 +13,7 @@ test('workspace portfolio csv exports expanded operating columns', () => {
   assert.ok(lines.length > 1);
   assert.equal(
     lines[0],
-    'customerId,name,tier,renewalDate,health,adoptionScore,engagementScore,riskScore,cicdPercent,securityPercent,lastEngagementDate,openExpansionCount'
+    'customerId,name,tier,renewalDate,health,adoptionScore,engagementScore,riskScore,pteScore,ptcScore,pteBand,ptcBand,pteDriver,ptcDriver,cicdPercent,securityPercent,lastEngagementDate,openExpansionCount'
   );
 
   const acmeRow = lines.find((line) => line.includes('cust_acme,Acme Corp'));

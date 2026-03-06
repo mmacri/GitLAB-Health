@@ -362,6 +362,35 @@ const countEngagementsSince = (workspace, customerId, days, now = new Date()) =>
   return (workspace?.engagements?.[customerId] || []).filter((entry) => new Date(entry.ts || 0).getTime() >= cutoff).length;
 };
 
+const clampScore = (value, min = 0, max = 100) => {
+  const numeric = Number(value || 0);
+  if (!Number.isFinite(numeric)) return min;
+  return Math.max(min, Math.min(max, numeric));
+};
+
+const propensityBand = (score) => {
+  const value = Number(score || 0);
+  if (value >= 70) return 'High';
+  if (value >= 45) return 'Medium';
+  return 'Low';
+};
+
+const renewalPressureScore = (renewalDays) => {
+  const days = Number(renewalDays);
+  if (!Number.isFinite(days)) return 20;
+  if (days <= 30) return 100;
+  if (days <= 60) return 80;
+  if (days <= 90) return 60;
+  if (days <= 180) return 35;
+  return 15;
+};
+
+const primaryFactorLabel = (factors, fallback) => {
+  const strongest = [...(factors || [])]
+    .sort((left, right) => Math.abs(Number(right.points || 0)) - Math.abs(Number(left.points || 0)))[0];
+  return strongest?.label || fallback;
+};
+
 export const computeAdoptionScore = (workspace, customerId) => {
   const adoption = workspace?.adoption?.[customerId];
   if (!adoption) return 0;
@@ -481,6 +510,112 @@ export const computeRiskScore = (workspace, customerId, now = new Date()) => {
   return Math.max(0, Math.min(100, Math.round(weight + playbookPenalty)));
 };
 
+export const computePtEProxy = (workspace, customerId, now = new Date()) => {
+  const customer = ensureWorkspaceCustomer(workspace, customerId);
+  if (!customer) {
+    return {
+      score: 0,
+      band: 'Low',
+      driver: 'No customer data available.',
+      factors: []
+    };
+  }
+
+  const adoptionScore = computeAdoptionScore(workspace, customerId);
+  const engagementScore = computeEngagementScore(workspace, customerId, now);
+  const riskScore = computeRiskScore(workspace, customerId, now);
+  const renewalDays = daysUntil(customer.renewalDate, now);
+  const useCases = workspace?.adoption?.[customerId]?.useCases || {};
+  const stageStatuses = workspace?.adoption?.[customerId]?.devsecopsStages || {};
+  const stageCoverage = Object.keys(stageStatuses).length
+    ? (Object.values(stageStatuses).filter((status) => String(status) === 'Adopted').length / Object.keys(stageStatuses).length) * 100
+    : 0;
+  const cicdPercent = Number(useCases.CICD?.percent || 0);
+  const securityPercent = Number(useCases.Security?.percent || 0);
+  const openExpansionCount = deriveExpansionSuggestions(workspace, customerId).filter(
+    (item) => !['won', 'closed'].includes(String(item.status || '').toLowerCase())
+  ).length;
+
+  const factors = [
+    { label: 'Adoption depth', points: adoptionScore * 0.32 },
+    { label: 'Engagement quality', points: engagementScore * 0.23 },
+    { label: 'Risk stability', points: (100 - riskScore) * 0.15 },
+    { label: 'CI/CD adoption depth', points: cicdPercent * 0.13 },
+    { label: 'Security adoption depth', points: securityPercent * 0.08 },
+    { label: 'DevSecOps stage progression', points: stageCoverage * 0.09 }
+  ];
+
+  if (Number.isFinite(Number(renewalDays))) {
+    if (renewalDays <= 120) factors.push({ label: 'Renewal expansion window', points: 8 });
+    else if (renewalDays <= 180) factors.push({ label: 'Near-term renewal leverage', points: 4 });
+    else if (renewalDays > 365) factors.push({ label: 'Renewal too distant', points: -4 });
+  }
+
+  if (openExpansionCount > 0) {
+    factors.push({ label: 'Open expansion opportunities', points: Math.min(8, openExpansionCount * 2) });
+  }
+  if (engagementScore < 45) {
+    factors.push({ label: 'Low engagement momentum', points: -10 });
+  }
+  if (riskScore >= 70) {
+    factors.push({ label: 'High active risk burden', points: -12 });
+  }
+
+  const rawScore = factors.reduce((sum, factor) => sum + Number(factor.points || 0), 0);
+  const score = Math.round(clampScore(rawScore));
+  const band = propensityBand(score);
+  const driver = primaryFactorLabel(factors, 'Balanced adoption and engagement posture.');
+  return { score, band, driver, factors };
+};
+
+export const computePtCProxy = (workspace, customerId, now = new Date()) => {
+  const customer = ensureWorkspaceCustomer(workspace, customerId);
+  if (!customer) {
+    return {
+      score: 0,
+      band: 'Low',
+      driver: 'No customer data available.',
+      factors: []
+    };
+  }
+
+  const adoptionScore = computeAdoptionScore(workspace, customerId);
+  const engagementScore = computeEngagementScore(workspace, customerId, now);
+  const riskScore = computeRiskScore(workspace, customerId, now);
+  const renewalDays = daysUntil(customer.renewalDate, now);
+  const renewalPressure = renewalPressureScore(renewalDays);
+  const signals = deriveRiskSignals(workspace, customerId, now);
+  const lastTouch = latestEngagementTs(workspace, customerId);
+  const noTouchDays = diffInDays(String(lastTouch || '').slice(0, 10), now) ?? 999;
+  const securePercent = Number(workspace?.adoption?.[customerId]?.useCases?.Security?.percent || 0);
+
+  const factors = [
+    { label: 'Active risk signals', points: riskScore * 0.42 },
+    { label: 'Adoption gap', points: (100 - adoptionScore) * 0.24 },
+    { label: 'Engagement gap', points: (100 - engagementScore) * 0.17 },
+    { label: 'Renewal pressure', points: renewalPressure * 0.17 }
+  ];
+
+  if (signals.some((signal) => String(signal.code) === 'RENEWAL_SOON')) {
+    factors.push({ label: 'Renewal soon risk signal', points: 8 });
+  }
+  if (noTouchDays > 90) {
+    factors.push({ label: 'Prolonged engagement gap', points: 10 });
+  }
+  if (securePercent < 30) {
+    factors.push({ label: 'Security adoption gap', points: 5 });
+  }
+  if (engagementScore >= 70 && adoptionScore >= 70 && riskScore <= 35) {
+    factors.push({ label: 'Strong customer momentum', points: -12 });
+  }
+
+  const rawScore = factors.reduce((sum, factor) => sum + Number(factor.points || 0), 0);
+  const score = Math.round(clampScore(rawScore));
+  const band = propensityBand(score);
+  const driver = primaryFactorLabel(factors, 'No material churn pressure detected.');
+  return { score, band, driver, factors };
+};
+
 const healthFromScores = ({ adoptionScore, engagementScore, riskScore, weights }) => {
   const modelWeights = weights || { adoption: 0.45, engagement: 0.3, risk: 0.25 };
   const total = adoptionScore * modelWeights.adoption + engagementScore * modelWeights.engagement + (100 - riskScore) * modelWeights.risk;
@@ -493,6 +628,8 @@ export const scoreBreakdown = (workspace, customerId, now = new Date()) => {
   const adoptionScore = computeAdoptionScore(workspace, customerId);
   const engagementScore = computeEngagementScore(workspace, customerId, now);
   const riskScore = computeRiskScore(workspace, customerId, now);
+  const pte = computePtEProxy(workspace, customerId, now);
+  const ptc = computePtCProxy(workspace, customerId, now);
   const customer = ensureWorkspaceCustomer(workspace, customerId);
   const signals = deriveRiskSignals(workspace, customerId, now);
   const dismissals = activeDismissals(workspace, customerId, now);
@@ -506,6 +643,12 @@ export const scoreBreakdown = (workspace, customerId, now = new Date()) => {
     adoptionScore,
     engagementScore,
     riskScore,
+    pteScore: pte.score,
+    ptcScore: ptc.score,
+    pteBand: pte.band,
+    ptcBand: ptc.band,
+    pteDriver: pte.driver,
+    ptcDriver: ptc.driver,
     health,
     riskSignals: signals,
     dismissedSignals: dismissals,
@@ -517,6 +660,8 @@ export const scoreBreakdown = (workspace, customerId, now = new Date()) => {
       `Adoption ${adoptionScore} contributes ${(adoptionScore * weights.adoption).toFixed(1)} points (${weights.normalized.adoption}% weight)`,
       `Engagement ${engagementScore} contributes ${(engagementScore * weights.engagement).toFixed(1)} points (${weights.normalized.engagement}% weight)`,
       `Risk burden ${riskScore} subtracts ${(riskScore * weights.risk).toFixed(1)} points (${weights.normalized.risk}% weight)`,
+      `PtE proxy ${pte.score} (${pte.band}) driven by ${pte.driver}`,
+      `PtC proxy ${ptc.score} (${ptc.band}) driven by ${ptc.driver}`,
       `Engagement recency: ${engagementDays === 999 ? 'no touch logged' : `${engagementDays} days since last touch`}`,
       signals.length ? `${signals.length} active risk signal(s): ${signals.map((item) => item.code).join(', ')}` : 'No active risk signals',
       dismissals.length ? `${dismissals.length} signal dismissal(s) active through ${dismissals.map((item) => String(item.dismissedUntil || '').slice(0, 10)).join(', ')}` : 'No active dismissals'
@@ -581,6 +726,12 @@ export const buildWorkspacePortfolio = (workspace, now = new Date()) => {
       stageCoverage: stageAdopted,
       stageTotal: Object.keys(stageStatuses).length || 8,
       openExpansionCount,
+      pteScore: metrics.pteScore,
+      ptcScore: metrics.ptcScore,
+      pteBand: metrics.pteBand,
+      ptcBand: metrics.ptcBand,
+      pteDriver: metrics.pteDriver,
+      ptcDriver: metrics.ptcDriver,
       engagementType: String(customer.engagementType || 'ON_DEMAND').toUpperCase(),
       engagementStatus: String(customer.engagementStatus || 'REQUESTED').toUpperCase(),
       engagementDate: customer.engagementDate || '',
@@ -643,6 +794,22 @@ export const buildProgramMetrics = (workspace) => {
 export const buildManagerDashboard = (workspace, now = new Date()) => {
   const portfolio = buildWorkspacePortfolio(workspace, now);
   const programs = buildProgramMetrics(workspace);
+  const pteSummary = {
+    high: portfolio.rows.filter((row) => row.pteBand === 'High').length,
+    medium: portfolio.rows.filter((row) => row.pteBand === 'Medium').length,
+    low: portfolio.rows.filter((row) => row.pteBand === 'Low').length
+  };
+  const ptcSummary = {
+    high: portfolio.rows.filter((row) => row.ptcBand === 'High').length,
+    medium: portfolio.rows.filter((row) => row.ptcBand === 'Medium').length,
+    low: portfolio.rows.filter((row) => row.ptcBand === 'Low').length
+  };
+  const propensityQuadrants = {
+    expandAndRetain: portfolio.rows.filter((row) => row.pteBand === 'High' && row.ptcBand === 'Low').length,
+    growWithRisk: portfolio.rows.filter((row) => row.pteBand === 'High' && row.ptcBand !== 'Low').length,
+    stabilizeThenExpand: portfolio.rows.filter((row) => row.pteBand !== 'High' && row.ptcBand === 'High').length,
+    monitor: portfolio.rows.filter((row) => row.pteBand !== 'High' && row.ptcBand !== 'High').length
+  };
   const members = workspace?.team?.cseMembers || [];
   const workload = members.map((member) => ({
     ...member,
@@ -663,6 +830,9 @@ export const buildManagerDashboard = (workspace, now = new Date()) => {
   const snapshots = workspace?.snapshots || [];
   return {
     portfolio,
+    pteSummary,
+    ptcSummary,
+    propensityQuadrants,
     workload,
     programs,
     programFunnel,

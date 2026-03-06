@@ -91,5 +91,8 @@ test('scoreBreakdown exposes normalized scoring weights in explainable output', 
   const breakdown = scoreBreakdown(workspace, 'cust_test', new Date('2026-03-01T00:00:00.000Z'));
   assert.equal(breakdown.weights.adoption + breakdown.weights.engagement + breakdown.weights.risk, 100);
   assert.ok(breakdown.why.some((line) => line.includes('weight')));
+  assert.equal(typeof breakdown.pteScore, 'number');
+  assert.equal(typeof breakdown.ptcScore, 'number');
+  assert.match(String(breakdown.pteBand), /High|Medium|Low/);
+  assert.match(String(breakdown.ptcBand), /High|Medium|Low/);
 });
-

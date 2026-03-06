@@ -44,6 +44,14 @@ export const renderManagerPage = (ctx) => {
   const workload = dashboard.workload || [];
   const snapshots = dashboard.snapshots || [];
   const programFunnel = dashboard.programFunnel || { invited: 0, attended: 0, completed: 0 };
+  const pteSummary = dashboard.pteSummary || { high: 0, medium: 0, low: 0 };
+  const ptcSummary = dashboard.ptcSummary || { high: 0, medium: 0, low: 0 };
+  const propensityQuadrants = dashboard.propensityQuadrants || {
+    expandAndRetain: 0,
+    growWithRisk: 0,
+    stabilizeThenExpand: 0,
+    monitor: 0
+  };
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
@@ -67,6 +75,8 @@ export const renderManagerPage = (ctx) => {
         ${metricTile({ label: 'Average adoption', value: adoption.avgAdoption || 0, tone: (adoption.avgAdoption || 0) >= 70 ? 'good' : 'warn' })}
         ${metricTile({ label: 'At-risk customers', value: atRisk.length, tone: atRisk.length ? 'risk' : 'good' })}
         ${metricTile({ label: 'Engagement in 30d', value: engagement.in30 || 0, tone: (engagement.in30 || 0) > 0 ? 'good' : 'warn' })}
+        ${metricTile({ label: 'High PtE', value: pteSummary.high, tone: pteSummary.high ? 'good' : 'neutral' })}
+        ${metricTile({ label: 'High PtC', value: ptcSummary.high, tone: ptcSummary.high ? 'risk' : 'good' })}
       </div>
       `
     })}
@@ -133,6 +143,21 @@ export const renderManagerPage = (ctx) => {
           ])}
         </div>
       </article>
+
+      <article class="card">
+        <div class="metric-head">
+          <h2>PtE / PtC Distribution</h2>
+          ${statusChip({ label: 'Propensity bands', tone: 'neutral' })}
+        </div>
+        <div class="chart-wrap">
+          ${barChartSvg([
+            { label: 'PtE High', value: Number(pteSummary.high || 0), color: '#16A34A' },
+            { label: 'PtE Medium', value: Number(pteSummary.medium || 0), color: '#D97706' },
+            { label: 'PtC High', value: Number(ptcSummary.high || 0), color: '#DC2626' },
+            { label: 'PtC Medium', value: Number(ptcSummary.medium || 0), color: '#0284C7' }
+          ])}
+        </div>
+      </article>
     </section>
 
     <section class="grid-cards">
@@ -188,6 +213,19 @@ export const renderManagerPage = (ctx) => {
                   .join('')
               : '<li>No manager actions currently generated.</li>'
           }
+        </ul>
+      </article>
+
+      <article class="card">
+        <div class="metric-head">
+          <h2>PtE x PtC Segment Grid</h2>
+          ${statusChip({ label: `${rows.length} customers`, tone: 'neutral' })}
+        </div>
+        <ul class="simple-list">
+          <li><strong>Expand + Retain:</strong> ${propensityQuadrants.expandAndRetain}</li>
+          <li><strong>Grow with Risk:</strong> ${propensityQuadrants.growWithRisk}</li>
+          <li><strong>Stabilize then Expand:</strong> ${propensityQuadrants.stabilizeThenExpand}</li>
+          <li><strong>Monitor:</strong> ${propensityQuadrants.monitor}</li>
         </ul>
       </article>
     </section>

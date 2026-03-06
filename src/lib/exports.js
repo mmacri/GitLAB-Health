@@ -96,6 +96,12 @@ export const buildWorkspacePortfolioCsv = (workspace) => {
     adoptionScore: item.adoptionScore,
     engagementScore: item.engagementScore,
     riskScore: item.riskScore,
+    pteScore: item.pteScore,
+    ptcScore: item.ptcScore,
+    pteBand: item.pteBand,
+    ptcBand: item.ptcBand,
+    pteDriver: item.pteDriver,
+    ptcDriver: item.ptcDriver,
     cicdPercent: item.cicdPercent,
     securityPercent: item.securityPercent,
     lastEngagementDate: normalizeDateOnly(item.lastEngagementDate),
@@ -111,6 +117,12 @@ export const buildWorkspacePortfolioCsv = (workspace) => {
     { label: 'adoptionScore', value: (row) => row.adoptionScore },
     { label: 'engagementScore', value: (row) => row.engagementScore },
     { label: 'riskScore', value: (row) => row.riskScore },
+    { label: 'pteScore', value: (row) => row.pteScore },
+    { label: 'ptcScore', value: (row) => row.ptcScore },
+    { label: 'pteBand', value: (row) => row.pteBand },
+    { label: 'ptcBand', value: (row) => row.ptcBand },
+    { label: 'pteDriver', value: (row) => row.pteDriver },
+    { label: 'ptcDriver', value: (row) => row.ptcDriver },
     { label: 'cicdPercent', value: (row) => row.cicdPercent },
     { label: 'securityPercent', value: (row) => row.securityPercent },
     { label: 'lastEngagementDate', value: (row) => row.lastEngagementDate },
@@ -478,6 +490,14 @@ export const buildManagerSummaryHtml = (workspace, options = {}) => {
   const adoption = manager.portfolio.adoptionCoverage || {};
   const engagement = manager.portfolio.engagementCoverage || {};
   const atRisk = manager.portfolio.atRisk || [];
+  const pteSummary = manager.pteSummary || { high: 0, medium: 0, low: 0 };
+  const ptcSummary = manager.ptcSummary || { high: 0, medium: 0, low: 0 };
+  const propensityQuadrants = manager.propensityQuadrants || {
+    expandAndRetain: 0,
+    growWithRisk: 0,
+    stabilizeThenExpand: 0,
+    monitor: 0
+  };
 
   return `<!doctype html>
 <html lang="en">
@@ -511,21 +531,32 @@ export const buildManagerSummaryHtml = (workspace, options = {}) => {
       <p><strong>Engagement 31-60d:</strong> ${engagement.in60 || 0}</p>
       <p><strong>Engagement 61-90d:</strong> ${engagement.in90 || 0}</p>
       <p><strong>Engagement 90d+:</strong> ${engagement.over90 || 0}</p>
+      <p><strong>PtE High / Medium / Low:</strong> ${pteSummary.high} / ${pteSummary.medium} / ${pteSummary.low}</p>
+      <p><strong>PtC High / Medium / Low:</strong> ${ptcSummary.high} / ${ptcSummary.medium} / ${ptcSummary.low}</p>
+    </div>
+
+    <h2>PtE x PtC Segment Grid</h2>
+    <div class="grid">
+      <p><strong>Expand + Retain:</strong> ${propensityQuadrants.expandAndRetain}</p>
+      <p><strong>Grow with Risk:</strong> ${propensityQuadrants.growWithRisk}</p>
+      <p><strong>Stabilize then Expand:</strong> ${propensityQuadrants.stabilizeThenExpand}</p>
+      <p><strong>Monitor:</strong> ${propensityQuadrants.monitor}</p>
     </div>
 
     <h2>Top 10 At-Risk Customers</h2>
     <table>
-      <thead><tr><th>Customer</th><th>Health</th><th>Risk Score</th><th>Primary Signal</th><th>Renewal</th></tr></thead>
+      <thead><tr><th>Customer</th><th>Health</th><th>Risk Score</th><th>PtE</th><th>PtC</th><th>Primary Signal</th><th>Renewal</th></tr></thead>
       <tbody>
         ${
           atRisk.length
             ? atRisk
                 .slice(0, 10)
                 .map(
-                  (item) => `<tr><td>${item.customer.name}</td><td>${item.health}</td><td>${item.riskScore}</td><td>${item.riskSignals?.[0]?.code || 'None'}</td><td>${formatDate(item.customer.renewalDate)}</td></tr>`
+                  (item) =>
+                    `<tr><td>${item.customer.name}</td><td>${item.health}</td><td>${item.riskScore}</td><td>${item.pteScore} (${item.pteBand})</td><td>${item.ptcScore} (${item.ptcBand})</td><td>${item.riskSignals?.[0]?.code || 'None'}</td><td>${formatDate(item.customer.renewalDate)}</td></tr>`
                 )
                 .join('')
-            : '<tr><td colspan="5">No at-risk customers.</td></tr>'
+            : '<tr><td colspan="7">No at-risk customers.</td></tr>'
         }
       </tbody>
     </table>
@@ -642,6 +673,10 @@ const compactSnapshot = (workspace) => {
       adoption: row.adoptionScore,
       engagement: row.engagementScore,
       risk: row.riskScore,
+      pte: row.pteScore,
+      pteBand: row.pteBand,
+      ptc: row.ptcScore,
+      ptcBand: row.ptcBand,
       cicd: row.cicdPercent,
       security: row.securityPercent
     })),

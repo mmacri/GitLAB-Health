@@ -26,6 +26,8 @@ export const renderReportsPage = (ctx) => {
   const adoption = manager?.portfolio?.adoptionCoverage || {};
   const engagement = manager?.portfolio?.engagementCoverage || {};
   const programFunnel = manager?.programFunnel || {};
+  const pteSummary = manager?.pteSummary || { high: 0, medium: 0, low: 0 };
+  const ptcSummary = manager?.ptcSummary || { high: 0, medium: 0, low: 0 };
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
@@ -61,7 +63,8 @@ export const renderReportsPage = (ctx) => {
           `Average adoption score: ${adoption.avgAdoption || 0}`,
           `Average CI/CD adoption: ${adoption.avgCicd || 0}%`,
           `Average Security adoption: ${adoption.avgSecurity || 0}%`,
-          `Engagement 0-30d: ${engagement.in30 || 0}`
+          `Engagement 0-30d: ${engagement.in30 || 0}`,
+          `PtE High: ${pteSummary.high} | PtC High: ${ptcSummary.high}`
         ],
         actionLabel: 'Export portfolio CSV'
       })}

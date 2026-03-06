@@ -303,6 +303,16 @@ export const renderCustomerDetailPage = (ctx) => {
         ${metricTile({ label: 'Adoption score', value: metrics?.adoptionScore ?? 0, tone: (metrics?.adoptionScore ?? 0) >= 70 ? 'good' : 'warn' })}
         ${metricTile({ label: 'Engagement score', value: metrics?.engagementScore ?? 0, tone: (metrics?.engagementScore ?? 0) >= 70 ? 'good' : 'warn' })}
         ${metricTile({ label: 'Risk score', value: metrics?.riskScore ?? 0, tone: (metrics?.riskScore ?? 0) >= 65 ? 'risk' : 'warn' })}
+        ${metricTile({
+          label: 'PtE proxy',
+          value: `${metrics?.pteScore ?? 0} (${metrics?.pteBand || 'Low'})`,
+          tone: String(metrics?.pteBand || '') === 'High' ? 'good' : String(metrics?.pteBand || '') === 'Medium' ? 'warn' : 'neutral'
+        })}
+        ${metricTile({
+          label: 'PtC proxy',
+          value: `${metrics?.ptcScore ?? 0} (${metrics?.ptcBand || 'Low'})`,
+          tone: String(metrics?.ptcBand || '') === 'High' ? 'risk' : String(metrics?.ptcBand || '') === 'Medium' ? 'warn' : 'good'
+        })}
         ${metricTile({ label: 'Renewal', value: renewal, tone: (metrics?.renewalDays ?? 999) <= 90 ? 'warn' : 'neutral' })}
       </div>
       <div class="lifecycle-progress">
@@ -318,6 +328,21 @@ export const renderCustomerDetailPage = (ctx) => {
           </ul>
         </details>
       </div>
+    </section>
+
+    <section class="card compact-card">
+      <div class="metric-head">
+        <h2>Expansion + Retention Signals</h2>
+        ${statusChip({
+          label: `PtE ${metrics?.pteBand || 'Low'} | PtC ${metrics?.ptcBand || 'Low'}`,
+          tone: String(metrics?.ptcBand || '') === 'High' ? 'risk' : String(metrics?.pteBand || '') === 'High' ? 'good' : 'warn'
+        })}
+      </div>
+      <ul class="simple-list">
+        <li><strong>Primary PtE driver:</strong> ${metrics?.pteDriver || 'Not enough adoption and engagement signal depth yet.'}</li>
+        <li><strong>Primary PtC driver:</strong> ${metrics?.ptcDriver || 'No material churn pressure detected.'}</li>
+        <li><strong>Operator guidance:</strong> Use PtE to prioritize expansion motions and PtC to prioritize retention playbooks.</li>
+      </ul>
     </section>
 
     <section class="card tabs" data-tabs>

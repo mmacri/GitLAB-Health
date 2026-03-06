@@ -365,6 +365,8 @@ const useCaseCoverageAverages = (workspace) => {
 
 const engagementLabel = (typeKey) => ENGAGEMENT_TYPES[typeKey]?.label || 'On-Demand';
 const engagementColor = (typeKey) => ENGAGEMENT_TYPES[typeKey]?.color || '#10b981';
+const pteTone = (band) => (String(band) === 'High' ? 'good' : String(band) === 'Medium' ? 'warn' : 'neutral');
+const ptcTone = (band) => (String(band) === 'High' ? 'risk' : String(band) === 'Medium' ? 'warn' : 'good');
 
 const normalizeMaturityKey = (value) => {
   const key = String(value || '')
@@ -407,6 +409,10 @@ const buildWorkspaceActionQueue = (workspace, rows = []) => {
         id: `risk_${customerId}_${topSignal.code}`,
         customerId,
         customerName: customer.name,
+        pteBand: row.pteBand,
+        ptcBand: row.ptcBand,
+        pteScore: row.pteScore,
+        ptcScore: row.ptcScore,
         reason: topSignal.detail || topSignal.code,
         action: topSignal.code === 'RENEWAL_SOON' ? 'Run renewal readiness playbook and align executive narrative.' : 'Address active risk signal via targeted enablement action.',
         due: customer.renewalDate || new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
@@ -419,6 +425,10 @@ const buildWorkspaceActionQueue = (workspace, rows = []) => {
         id: `cicd_${customerId}`,
         customerId,
         customerName: customer.name,
+        pteBand: row.pteBand,
+        ptcBand: row.ptcBand,
+        pteScore: row.pteScore,
+        ptcScore: row.ptcScore,
         reason: `CI/CD adoption is ${Number(useCases.CICD?.percent || 0)}% (<40%)`,
         action: 'Invite to CI/CD Adoption Lab and schedule pipeline template workshop.',
         due: new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10),
@@ -431,6 +441,10 @@ const buildWorkspaceActionQueue = (workspace, rows = []) => {
         id: `security_${customerId}`,
         customerId,
         customerName: customer.name,
+        pteBand: row.pteBand,
+        ptcBand: row.ptcBand,
+        pteScore: row.pteScore,
+        ptcScore: row.ptcScore,
         reason: `Security adoption is ${Number(useCases.Security?.percent || 0)}% (<30%)`,
         action: 'Run Secure enablement session and add default scan jobs to pipeline baseline.',
         due: new Date(Date.now() + 12 * 86400000).toISOString().slice(0, 10),
@@ -443,6 +457,10 @@ const buildWorkspaceActionQueue = (workspace, rows = []) => {
         id: `ttv_${customerId}`,
         customerId,
         customerName: customer.name,
+        pteBand: row.pteBand,
+        ptcBand: row.ptcBand,
+        pteScore: row.pteScore,
+        ptcScore: row.ptcScore,
         reason: 'First pipeline run milestone not complete.',
         action: 'Execute time-to-value motion: first pipeline, runner baseline, and owner handoff.',
         due: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
@@ -481,6 +499,8 @@ const renderWorkspaceTodayPage = (ctx) => {
   const actions = buildWorkspaceActionQueue(workspace, rows);
   const expansionCandidates = rows.filter((row) => Number(row.openExpansionCount || 0) > 0).length;
   const engagementCoveragePercent = rows.length ? Math.round((Number(engagementCoverage.in30 || 0) / rows.length) * 100) : 0;
+  const highPteCount = rows.filter((row) => String(row.pteBand) === 'High').length;
+  const highPtcCount = rows.filter((row) => String(row.ptcBand) === 'High').length;
   const isManager = persona === 'manager';
   const selectedCustomerId = rows[0]?.customer?.id || '';
   let selectedType = 'ALL';
@@ -514,6 +534,8 @@ const renderWorkspaceTodayPage = (ctx) => {
       <div class="metric-grid kpi-5">
         ${metricTile({ label: 'Accounts in scope', value: rows.length, tone: 'neutral' })}
         ${metricTile({ label: 'At-risk', value: rows.filter((row) => String(row.health || '').toLowerCase() !== 'green').length, tone: 'risk' })}
+        ${metricTile({ label: 'High PtC', value: highPtcCount, tone: highPtcCount ? 'risk' : 'good' })}
+        ${metricTile({ label: 'High PtE', value: highPteCount, tone: highPteCount ? 'good' : 'neutral' })}
         ${metricTile({ label: 'Active programs', value: (workspace?.programs || []).length, tone: 'good' })}
         ${metricTile({ label: 'Expansion candidates', value: expansionCandidates, tone: expansionCandidates ? 'warn' : 'neutral' })}
         ${metricTile({ label: 'Engagement coverage 30d', value: `${engagementCoveragePercent}%`, tone: engagementCoveragePercent >= 70 ? 'good' : 'warn' })}
@@ -536,7 +558,7 @@ const renderWorkspaceTodayPage = (ctx) => {
       </div>
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th>Customer</th><th>Why now</th><th>Next move</th><th>Due</th><th>Quick actions</th></tr></thead>
+          <thead><tr><th>Customer</th><th>Why now</th><th>PtE</th><th>PtC</th><th>Next move</th><th>Due</th><th>Quick actions</th></tr></thead>
           <tbody>
             ${
               actions.length
@@ -546,6 +568,8 @@ const renderWorkspaceTodayPage = (ctx) => {
                     <tr>
                       <td><a href="#" data-open-customer="${item.customerId}">${item.customerName}</a></td>
                       <td>${item.reason}</td>
+                      <td>${statusChip({ label: `${item.pteScore ?? 0} (${item.pteBand || 'Low'})`, tone: pteTone(item.pteBand) })}</td>
+                      <td>${statusChip({ label: `${item.ptcScore ?? 0} (${item.ptcBand || 'Low'})`, tone: ptcTone(item.ptcBand) })}</td>
                       <td>${item.action}</td>
                       <td>${formatDate(item.due)}</td>
                       <td>
@@ -558,7 +582,7 @@ const renderWorkspaceTodayPage = (ctx) => {
                   `
                     )
                     .join('')
-                : '<tr><td colspan="5">No immediate actions generated. Portfolio signals are currently stable.</td></tr>'
+                : '<tr><td colspan="7">No immediate actions generated. Portfolio signals are currently stable.</td></tr>'
             }
           </tbody>
         </table>
@@ -630,7 +654,7 @@ const renderWorkspaceTodayPage = (ctx) => {
       </div>
       <div class="table-wrap" data-engagement-table-wrap>
         <table class="data-table">
-          <thead><tr><th>Customer</th><th>Engagement Type</th><th>Status</th><th>Date</th><th>Adoption</th><th>Action</th></tr></thead>
+          <thead><tr><th>Customer</th><th>Engagement Type</th><th>Status</th><th>Date</th><th>Adoption</th><th>PtE</th><th>PtC</th><th>Action</th></tr></thead>
           <tbody data-engagement-queue></tbody>
         </table>
       </div>
@@ -712,6 +736,8 @@ const renderWorkspaceTodayPage = (ctx) => {
             <td>${String(row.engagementStatus || 'REQUESTED').replace(/_/g, ' ')}</td>
             <td>${formatDate(row.engagementDate)}</td>
             <td><div class="adoption-dot-row">${compactAdoptionDots(row.customer.adoptionProfile || {})}</div></td>
+            <td>${statusChip({ label: `${row.pteScore ?? 0} (${row.pteBand || 'Low'})`, tone: pteTone(row.pteBand) })}</td>
+            <td>${statusChip({ label: `${row.ptcScore ?? 0} (${row.ptcBand || 'Low'})`, tone: ptcTone(row.ptcBand) })}</td>
             <td><button class="ghost-btn" type="button" data-quick-log="${row.customer.id}">Log touchpoint</button></td>
           </tr>
         `;
@@ -1081,6 +1107,8 @@ export const renderPortfolioPage = (ctx) => {
     };
     const filteredRows = rows.filter((row) => {
       if (filters.health && filters.health !== 'all' && String(row.health || '').toLowerCase() !== String(filters.health || '').toLowerCase()) return false;
+      if (filters.pteBand && filters.pteBand !== 'all' && String(row.pteBand || '') !== String(filters.pteBand || '')) return false;
+      if (filters.ptcBand && filters.ptcBand !== 'all' && String(row.ptcBand || '') !== String(filters.ptcBand || '')) return false;
       if (filters.renewalWindow === '0-90' && Number(row.renewalDays ?? 999) > 90) return false;
       if (filters.renewalWindow === '91-180' && (Number(row.renewalDays ?? 999) <= 90 || Number(row.renewalDays ?? 999) > 180)) return false;
       if (filters.renewalWindow === '180+' && Number(row.renewalDays ?? 0) <= 180) return false;
@@ -1147,6 +1175,24 @@ export const renderPortfolioPage = (ctx) => {
               <option value=\"0-90\" ${filters.renewalWindow === '0-90' ? 'selected' : ''}>0-90 days</option>
               <option value=\"91-180\" ${filters.renewalWindow === '91-180' ? 'selected' : ''}>91-180 days</option>
               <option value=\"180+\" ${filters.renewalWindow === '180+' ? 'selected' : ''}>180+ days</option>
+            </select>
+          </label>
+          <label>
+            PtE Band
+            <select data-filter=\"pteBand\">
+              <option value=\"all\" ${(filters.pteBand || 'all') === 'all' ? 'selected' : ''}>All</option>
+              <option value=\"High\" ${filters.pteBand === 'High' ? 'selected' : ''}>High</option>
+              <option value=\"Medium\" ${filters.pteBand === 'Medium' ? 'selected' : ''}>Medium</option>
+              <option value=\"Low\" ${filters.pteBand === 'Low' ? 'selected' : ''}>Low</option>
+            </select>
+          </label>
+          <label>
+            PtC Band
+            <select data-filter=\"ptcBand\">
+              <option value=\"all\" ${(filters.ptcBand || 'all') === 'all' ? 'selected' : ''}>All</option>
+              <option value=\"High\" ${filters.ptcBand === 'High' ? 'selected' : ''}>High</option>
+              <option value=\"Medium\" ${filters.ptcBand === 'Medium' ? 'selected' : ''}>Medium</option>
+              <option value=\"Low\" ${filters.ptcBand === 'Low' ? 'selected' : ''}>Low</option>
             </select>
           </label>
           <label class=\"safe-toggle\">
@@ -1243,6 +1289,9 @@ export const renderPortfolioPage = (ctx) => {
                 <th>Adoption</th>
                 <th>Engagement</th>
                 <th>Risk</th>
+                <th>PtE</th>
+                <th>PtC</th>
+                <th>Propensity drivers</th>
                 <th>CI/CD %</th>
                 <th>Security %</th>
                 <th>Last engagement</th>
@@ -1263,6 +1312,9 @@ export const renderPortfolioPage = (ctx) => {
                         <td>${row.adoptionScore}</td>
                         <td>${row.engagementScore}</td>
                         <td>${row.riskScore}</td>
+                        <td>${statusChip({ label: `${row.pteScore} (${row.pteBand})`, tone: pteTone(row.pteBand) })}</td>
+                        <td>${statusChip({ label: `${row.ptcScore} (${row.ptcBand})`, tone: ptcTone(row.ptcBand) })}</td>
+                        <td>${row.pteDriver || 'n/a'} | ${row.ptcDriver || 'n/a'}</td>
                         <td>${row.cicdPercent}%</td>
                         <td>${row.securityPercent}%</td>
                         <td>${formatDate(String(row.lastEngagementDate || '').slice(0, 10))}</td>
@@ -1271,7 +1323,7 @@ export const renderPortfolioPage = (ctx) => {
                     `
                       )
                       .join('')
-                  : '<tr><td colspan=\"11\">No customers match current filters.</td></tr>'
+                  : '<tr><td colspan=\"14\">No customers match current filters.</td></tr>'
               }
             </tbody>
           </table>

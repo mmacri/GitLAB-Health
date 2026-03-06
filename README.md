@@ -113,6 +113,8 @@ Computed in `src/lib/scoring.js`:
 - `adoptionScore` (use-case average + DevSecOps stage completion)
 - `engagementScore` (recency + frequency)
 - `riskScore` (deterministic signals + playbook burden)
+- `pteScore` / `pteBand` (Propensity to Expand proxy; handbook-aligned deterministic model)
+- `ptcScore` / `ptcBand` (Propensity to Churn/Contract proxy; handbook-aligned deterministic model)
 - `health` (Green/Yellow/Red) with optional customer override
 
 Auto-derived risk signals:
@@ -126,6 +128,7 @@ Auto-derived risk signals:
 Risk operations:
 - Auto-signals can be dismissed per customer with `dismissedUntil` windows.
 - Scoring weights are configurable in Settings and normalized to 100.
+- PtE/PtC are intentionally labeled as proxy metrics because they emulate handbook model intent using static deterministic inputs.
 
 ## Exports
 - Portfolio CSV (workspace model columns)
