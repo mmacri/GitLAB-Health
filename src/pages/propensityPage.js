@@ -146,6 +146,217 @@ const saveChecklist = (value) => {
   }
 };
 
+const toneFromConfidence = (score) => {
+  const numeric = Number(score || 0);
+  if (numeric >= 85) return 'good';
+  if (numeric >= 65) return 'warn';
+  return 'risk';
+};
+
+const buildConfidenceForRow = (workspace, row) => {
+  const customerId = row?.customer?.id || '';
+  const adoption = workspace?.adoption?.[customerId] || {};
+  const engagements = workspace?.engagements?.[customerId] || [];
+  const riskPlaybook = workspace?.risk?.[customerId]?.playbook || [];
+  const useCases = adoption?.useCases || {};
+  const timeToValue = adoption?.timeToValue || [];
+  const evidenceEntries = Object.values(useCases || {});
+  const evidenceCoverage = evidenceEntries.length
+    ? evidenceEntries.filter((entry) => String(entry?.evidence || '').trim().length > 0).length / evidenceEntries.length
+    : 0;
+
+  const checks = [
+    { key: 'renewal', label: 'Renewal date configured', ok: Boolean(String(row?.customer?.renewalDate || '').trim()) },
+    { key: 'engagement', label: 'Engagement history logged', ok: engagements.length > 0 || Boolean(String(row?.lastEngagementDate || '').trim()) },
+    {
+      key: 'milestones',
+      label: 'Time-to-value milestones captured',
+      ok: (timeToValue || []).some((item) => String(item?.milestone || '').trim() && String(item?.date || '').trim())
+    },
+    { key: 'evidence', label: 'Use-case evidence coverage >= 50%', ok: evidenceCoverage >= 0.5 },
+    {
+      key: 'riskAction',
+      label: 'Risk mitigation action owner + due date set',
+      ok: (riskPlaybook || []).some((item) => String(item?.owner || '').trim() && String(item?.due || '').trim())
+    }
+  ];
+
+  const completeCount = checks.filter((item) => item.ok).length;
+  const score = Math.round((completeCount / checks.length) * 100);
+  const missing = checks.filter((item) => !item.ok).map((item) => item.label);
+
+  return {
+    score,
+    tone: toneFromConfidence(score),
+    checks,
+    missing,
+    completeCount,
+    evidenceCoveragePct: Math.round(evidenceCoverage * 100)
+  };
+};
+
+const drillRows = (rows, confidenceMap, token) => {
+  const [kindRaw, valueRaw] = String(token || '').split(':');
+  const kind = String(kindRaw || '').toLowerCase();
+  const value = String(valueRaw || '');
+  let filtered = [...(rows || [])];
+  let title = 'Drill-through results';
+  let description = 'Filtered account list from chart selection.';
+
+  if (kind === 'pte') {
+    filtered = filtered.filter((row) => String(row.pteBand || '') === value);
+    title = `PtE ${value} accounts`;
+    description = `Accounts currently in PtE ${value}.`;
+  }
+
+  if (kind === 'ptc') {
+    filtered = filtered.filter((row) => String(row.ptcBand || '') === value);
+    title = `PtC ${value} accounts`;
+    description = `Accounts currently in PtC ${value}.`;
+  }
+
+  if (kind === 'quadrant') {
+    if (value === 'expandAndRetain') filtered = filtered.filter((row) => row.pteBand === 'High' && row.ptcBand === 'Low');
+    if (value === 'growWithRisk') filtered = filtered.filter((row) => row.pteBand === 'High' && row.ptcBand !== 'Low');
+    if (value === 'stabilizeThenExpand') filtered = filtered.filter((row) => row.pteBand !== 'High' && row.ptcBand === 'High');
+    if (value === 'monitor') filtered = filtered.filter((row) => row.pteBand !== 'High' && row.ptcBand !== 'High');
+    title = `Quadrant: ${value}`;
+    description = 'Accounts in the selected PtE/PtC execution quadrant.';
+  }
+
+  if (kind === 'trigger') {
+    const code = normalizeCode(value);
+    filtered = filtered.filter((row) => (row.riskSignals || []).some((signal) => normalizeCode(signal.code) === code));
+    title = `Trigger: ${code}`;
+    description = 'Accounts with the selected active trigger.';
+  }
+
+  if (kind === 'readiness' && value === 'high') {
+    filtered = filtered.filter((row) => Number(row.pteScore || 0) >= 70).sort((a, b) => Number(b.pteScore || 0) - Number(a.pteScore || 0));
+    title = 'Highest readiness accounts';
+    description = 'Sorted by PtE proxy descending.';
+  }
+
+  if (kind === 'readiness' && value === 'low') {
+    filtered = filtered.filter((row) => Number(row.pteScore || 0) < 45).sort((a, b) => Number(a.pteScore || 0) - Number(b.pteScore || 0));
+    title = 'Lowest readiness accounts';
+    description = 'Sorted by PtE proxy ascending.';
+  }
+
+  if (kind === 'riskpressure' && value === 'high') {
+    filtered = filtered.filter((row) => Number(row.ptcScore || 0) >= 70).sort((a, b) => Number(b.ptcScore || 0) - Number(a.ptcScore || 0));
+    title = 'Highest risk pressure accounts';
+    description = 'Sorted by PtC proxy descending.';
+  }
+
+  if (kind === 'riskpressure' && value === 'low') {
+    filtered = filtered.filter((row) => Number(row.ptcScore || 0) < 45).sort((a, b) => Number(a.ptcScore || 0) - Number(b.ptcScore || 0));
+    title = 'Lowest risk pressure accounts';
+    description = 'Sorted by PtC proxy ascending.';
+  }
+
+  if (kind === 'confidence' && value === 'low') {
+    filtered = filtered
+      .filter((row) => Number(confidenceMap.get(row.customer.id)?.score || 0) < 65)
+      .sort((a, b) => Number(confidenceMap.get(a.customer.id)?.score || 0) - Number(confidenceMap.get(b.customer.id)?.score || 0));
+    title = 'Low-confidence accounts';
+    description = 'Accounts where data quality confidence is below 65.';
+  }
+
+  return {
+    title,
+    description,
+    rows: filtered.slice(0, 30)
+  };
+};
+
+const recommendPlays = ({ triggerCode, pteBand, ptcBand, renewalDays, confidenceScore }) => {
+  const trigger = normalizeCode(triggerCode || '');
+  const pte = String(pteBand || 'Low');
+  const ptc = String(ptcBand || 'Low');
+  const renewal = Number.isFinite(Number(renewalDays)) ? Number(renewalDays) : 999;
+  const confidence = Number.isFinite(Number(confidenceScore)) ? Number(confidenceScore) : 0;
+
+  let primary = {
+    title: 'Adoption foundation sprint',
+    why: 'Default motion when confidence is limited or adoption depth is low.',
+    firstStep: 'Define one 14-day use-case uplift plan with owner and dated milestones.'
+  };
+  let secondary = {
+    title: 'Cadence stabilization',
+    why: 'Maintain engagement rhythm while validating trigger signal quality.',
+    firstStep: 'Schedule next customer touch and document expected outcome.'
+  };
+  let window = '14-30 days';
+  let successMetric = 'PtE moves one band up OR PtC moves one band down by next cycle.';
+  let reviewCadence = 'Weekly';
+
+  if (ptc === 'High' || renewal <= 90 || trigger === 'RENEWAL_SOON') {
+    primary = {
+      title: 'Retention stabilization sprint',
+      why: 'High churn pressure requires immediate risk mitigation before growth actions.',
+      firstStep: 'Create top-3 risk burndown plan with owner, due date, and executive checkpoint.'
+    };
+    secondary = {
+      title: 'Engagement recovery sequence',
+      why: 'Risk plans fail without active customer touch cadence.',
+      firstStep: 'Book office hours/workshop series for next two weeks.'
+    };
+    window = '0-14 days';
+    successMetric = 'PtC High -> Medium and at least one high-severity trigger closed.';
+    reviewCadence = 'Twice weekly';
+  } else if (pte === 'High' && ptc === 'Low') {
+    primary = {
+      title: 'Expansion proposal sprint',
+      why: 'High readiness with low pressure is the strongest expansion window.',
+      firstStep: 'Package executive value narrative linked to measurable outcomes.'
+    };
+    secondary = {
+      title: 'Commercial alignment checkpoint',
+      why: 'Synchronize technical evidence with account team timing.',
+      firstStep: 'Run expansion prep review with CSM/AE this cycle.'
+    };
+    window = '7-21 days';
+    successMetric = 'Expansion plan accepted with sponsor, scope, and target close date.';
+    reviewCadence = 'Weekly';
+  } else if (trigger === 'LOW_SECURITY_ADOPTION' || trigger === 'STAGE_GAP_SECURE') {
+    primary = {
+      title: 'Secure baseline rollout',
+      why: 'Security adoption gaps increase retention pressure and limit platform value.',
+      firstStep: 'Enable baseline secure scans on one priority team and publish results.'
+    };
+    secondary = {
+      title: 'Evidence-to-outcome mapping',
+      why: 'Secure improvements need business framing to influence renewal confidence.',
+      firstStep: 'Map scan adoption to risk-reduction narrative for QBR.'
+    };
+    window = '14-30 days';
+    successMetric = 'Security use-case adoption +15 points and trigger count reduced.';
+    reviewCadence = 'Weekly';
+  } else if (pte === 'Medium' && ptc === 'Medium') {
+    primary = {
+      title: 'Targeted uplift plan',
+      why: 'Balanced but fragile posture benefits from focused use-case improvement.',
+      firstStep: 'Select weakest use case and run 2-week uplift milestones.'
+    };
+    secondary = {
+      title: 'Proof-point capture',
+      why: 'Need measurable wins to move into expansion-ready state.',
+      firstStep: 'Capture two customer-validated outcomes for executive recap.'
+    };
+    window = '14-30 days';
+    successMetric = 'PtE Medium -> High while PtC stays Medium or lower.';
+    reviewCadence = 'Weekly';
+  }
+
+  const confidenceNote =
+    confidence < 65
+      ? 'Data confidence is low. Validate missing fields before committing full-motion plays.'
+      : 'Data confidence is acceptable for execution decisions.';
+
+  return { primary, secondary, window, successMetric, reviewCadence, confidenceNote };
+};
+
 const escapeHtml = (value = '') =>
   String(value)
     .replace(/&/g, '&amp;')
@@ -445,7 +656,7 @@ const quadrantGuide = [
 ];
 
 export const renderPropensityPage = (ctx) => {
-  const { manager, workspacePortfolio, navigate, notify } = ctx;
+  const { manager, workspacePortfolio, workspace, navigate, notify } = ctx;
   const rows = workspacePortfolio?.rows || manager?.portfolio?.rows || [];
   const total = rows.length;
   const pteHigh = rows.filter((row) => String(row.pteBand || '') === 'High').length;
@@ -523,6 +734,18 @@ export const renderPropensityPage = (ctx) => {
   const avgPtc = rows.length ? round1(rows.reduce((sum, row) => sum + Number(row.ptcScore || 0), 0) / rows.length) : 0;
 
   const checklist = loadChecklist();
+  const confidenceById = new Map(rows.map((row) => [row.customer.id, buildConfidenceForRow(workspace, row)]));
+  const confidenceScores = [...confidenceById.values()].map((item) => Number(item.score || 0));
+  const avgConfidence = confidenceScores.length ? Math.round(confidenceScores.reduce((sum, value) => sum + value, 0) / confidenceScores.length) : 0;
+  const lowConfidenceRows = rows
+    .filter((row) => Number(confidenceById.get(row.customer.id)?.score || 0) < 65)
+    .sort((left, right) => Number(confidenceById.get(left.customer.id)?.score || 0) - Number(confidenceById.get(right.customer.id)?.score || 0));
+  const missingRenewalCount = rows.filter((row) => !String(row.customer?.renewalDate || '').trim()).length;
+  const missingEngagementCount = rows.filter((row) => !(workspace?.engagements?.[row.customer.id] || []).length && !String(row.lastEngagementDate || '').trim()).length;
+
+  const accountOptions = rows
+    .map((row) => `<option value="${row.customer.id}">${escapeHtml(row.customer.name)}</option>`)
+    .join('');
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
@@ -553,6 +776,55 @@ export const renderPropensityPage = (ctx) => {
       </div>
       <div class="callout">
         Use PtE/PtC as a prioritization system, not a replacement for account judgment. Run one PtC mitigation play and one PtE acceleration play per priority account each cycle.
+      </div>
+    </section>
+
+    <section class="card" id="section-confidence">
+      <div class="metric-head">
+        <h2>Confidence and Data Quality</h2>
+        ${statusChip({ label: `${avgConfidence}% portfolio confidence`, tone: toneFromConfidence(avgConfidence) })}
+      </div>
+      <div class="metric-grid kpi-4">
+        ${metricTile({ label: 'Average confidence', value: `${avgConfidence}%`, tone: toneFromConfidence(avgConfidence) })}
+        ${metricTile({ label: 'Low-confidence accounts', value: lowConfidenceRows.length, tone: lowConfidenceRows.length ? 'warn' : 'good' })}
+        ${metricTile({ label: 'Missing renewal dates', value: missingRenewalCount, tone: missingRenewalCount ? 'warn' : 'good' })}
+        ${metricTile({ label: 'Missing engagement logs', value: missingEngagementCount, tone: missingEngagementCount ? 'warn' : 'good' })}
+      </div>
+      <div class="callout">Confidence reflects data completeness (renewal, engagement, milestones, evidence coverage, and mitigation ownership). Use low-confidence rows as data hygiene backlog before major decisions.</div>
+      ${
+        lowConfidenceRows.length
+          ? `
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Account</th>
+                    <th>Confidence</th>
+                    <th>Missing inputs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${lowConfidenceRows
+                    .slice(0, 10)
+                    .map((row) => {
+                      const confidence = confidenceById.get(row.customer.id);
+                      return `
+                        <tr>
+                          <td><a href="#" data-open-customer="${row.customer.id}">${escapeHtml(row.customer.name)}</a></td>
+                          <td>${statusChip({ label: `${confidence?.score || 0}%`, tone: confidence?.tone || 'neutral' })}</td>
+                          <td>${(confidence?.missing || []).slice(0, 3).join(' | ') || 'No gaps'}</td>
+                        </tr>
+                      `;
+                    })
+                    .join('')}
+                </tbody>
+              </table>
+            </div>
+          `
+          : '<p class="empty-text">No low-confidence accounts detected.</p>'
+      }
+      <div class="form-actions">
+        <button class="ghost-btn" type="button" data-drill="confidence:low">Drill low-confidence accounts</button>
       </div>
     </section>
 
@@ -692,6 +964,11 @@ export const renderPropensityPage = (ctx) => {
         <p class="muted" title="Prioritize PtE High + PtC Low for near-term expansion execution.">
           How to use: prioritize High PtE accounts for expansion, then filter by PtC to avoid risk-heavy motions.
         </p>
+        <div class="form-actions">
+          <button class="ghost-btn" type="button" data-drill="pte:High">Drill PtE High</button>
+          <button class="ghost-btn" type="button" data-drill="pte:Medium">Drill PtE Medium</button>
+          <button class="ghost-btn" type="button" data-drill="pte:Low">Drill PtE Low</button>
+        </div>
       </article>
 
       <article class="card">
@@ -714,6 +991,11 @@ export const renderPropensityPage = (ctx) => {
         <p class="muted" title="PtC reflects retention pressure from risk signals, engagement gaps, and renewal pressure.">
           How to use: all High PtC accounts require dated mitigation plans before expansion planning.
         </p>
+        <div class="form-actions">
+          <button class="ghost-btn" type="button" data-drill="ptc:High">Drill PtC High</button>
+          <button class="ghost-btn" type="button" data-drill="ptc:Medium">Drill PtC Medium</button>
+          <button class="ghost-btn" type="button" data-drill="ptc:Low">Drill PtC Low</button>
+        </div>
       </article>
 
       <article class="card">
@@ -732,6 +1014,12 @@ export const renderPropensityPage = (ctx) => {
         <p class="muted" title="Quadrants combine PtE and PtC bands to segment account strategy.">
           How to use: assign coverage based on quadrant volume so capacity follows risk and growth opportunity.
         </p>
+        <div class="form-actions">
+          <button class="ghost-btn" type="button" data-drill="quadrant:expandAndRetain">Expand + Retain</button>
+          <button class="ghost-btn" type="button" data-drill="quadrant:growWithRisk">Grow with Risk</button>
+          <button class="ghost-btn" type="button" data-drill="quadrant:stabilizeThenExpand">Stabilize then Expand</button>
+          <button class="ghost-btn" type="button" data-drill="quadrant:monitor">Monitor</button>
+        </div>
       </article>
 
       <article class="card">
@@ -761,6 +1049,18 @@ export const renderPropensityPage = (ctx) => {
         <p class="muted" title="High-severity trigger clusters should be addressed before low-severity volume.">
           How to use: combine volume + severity to decide which playbooks run first in the weekly queue.
         </p>
+        <div class="form-actions">
+          ${
+            topSignals.length
+              ? topSignals
+                  .map(
+                    (signal) =>
+                      `<button class="ghost-btn" type="button" data-drill="trigger:${signal.code}">${signal.code} (${signal.count})</button>`
+                  )
+                  .join('')
+              : '<span class="muted">No trigger drill available.</span>'
+          }
+        </div>
       </article>
     </section>
 
@@ -816,6 +1116,17 @@ export const renderPropensityPage = (ctx) => {
       </article>
     </section>
 
+    <section class="card" id="section-drill">
+      <div class="metric-head">
+        <h2 data-drill-title>Chart Drill-through Results</h2>
+        ${statusChip({ label: 'Select a chart control', tone: 'neutral' })}
+      </div>
+      <p class="muted" data-drill-description>Use any "Drill" button in the visual sections above to list contributing accounts.</p>
+      <div class="table-wrap" data-drill-results>
+        <p class="empty-text">No drill selection yet.</p>
+      </div>
+    </section>
+
     <section class="grid-cards">
       <article class="card">
         <div class="metric-head">
@@ -842,6 +1153,10 @@ export const renderPropensityPage = (ctx) => {
         <p class="muted" title="Readiness proxy = (adoptionAvg * 0.62) + (engagementCoverage * 0.38).">
           Interpretation: an upward line means the portfolio is becoming more expansion-ready.
         </p>
+        <div class="form-actions">
+          <button class="ghost-btn" type="button" data-drill="readiness:high">Drill highest readiness</button>
+          <button class="ghost-btn" type="button" data-drill="readiness:low">Drill lowest readiness</button>
+        </div>
       </article>
 
       <article class="card">
@@ -870,6 +1185,10 @@ export const renderPropensityPage = (ctx) => {
         <p class="muted" title="Risk pressure proxy = (redHealthRate * 100 * 0.58) + ((100 - engagementCoverage) * 0.42).">
           Interpretation: a rising line signals accumulating churn pressure and needs manager attention.
         </p>
+        <div class="form-actions">
+          <button class="ghost-btn" type="button" data-drill="riskpressure:high">Drill highest risk pressure</button>
+          <button class="ghost-btn" type="button" data-drill="riskpressure:low">Drill lowest risk pressure</button>
+        </div>
       </article>
     </section>
 
@@ -946,6 +1265,60 @@ export const renderPropensityPage = (ctx) => {
               .join('')}
           </tbody>
         </table>
+      </div>
+    </section>
+
+    <section class="card" id="section-play-wizard">
+      <div class="metric-head">
+        <h2>Play Selection Wizard</h2>
+        ${statusChip({ label: 'Deterministic recommendation', tone: 'neutral' })}
+      </div>
+      <p class="muted">Select an account or configure a manual scenario to get a primary/secondary play with expected impact window.</p>
+      <form class="form-grid" data-play-wizard-form>
+        <label class="form-span">
+          Account context
+          <select name="accountId">
+            <option value="">Manual scenario</option>
+            ${accountOptions}
+          </select>
+        </label>
+        <label>
+          Trigger
+          <select name="triggerCode">
+            <option value="">Select trigger</option>
+            ${triggerGuide.map((item) => `<option value="${item.code}">${item.code}</option>`).join('')}
+          </select>
+        </label>
+        <label>
+          PtE band
+          <select name="pteBand">
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low" selected>Low</option>
+          </select>
+        </label>
+        <label>
+          PtC band
+          <select name="ptcBand">
+            <option value="High">High</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </label>
+        <label>
+          Renewal days
+          <input name="renewalDays" type="number" min="0" step="1" value="999" />
+        </label>
+        <label>
+          Data confidence (%)
+          <input name="confidenceScore" type="number" min="0" max="100" step="1" value="70" />
+        </label>
+      </form>
+      <div class="form-actions">
+        <button class="qa" type="button" data-run-play-wizard>Recommend plays</button>
+      </div>
+      <div data-play-wizard-output>
+        <p class="empty-text">Run the wizard to generate recommended primary and secondary plays.</p>
       </div>
     </section>
 
@@ -1184,6 +1557,153 @@ export const renderPropensityPage = (ctx) => {
       if (!node) return;
       node.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+  });
+
+  wrapper.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+    const accountLink = event.target.closest('[data-open-customer]');
+    if (accountLink) {
+      event.preventDefault();
+      const customerId = accountLink.getAttribute('data-open-customer');
+      if (customerId) navigate('customer', { id: customerId });
+    }
+  });
+
+  const drillTitle = wrapper.querySelector('[data-drill-title]');
+  const drillDescription = wrapper.querySelector('[data-drill-description]');
+  const drillResults = wrapper.querySelector('[data-drill-results]');
+
+  const renderDrillResults = (token) => {
+    if (!drillResults || !drillTitle || !drillDescription) return;
+    const result = drillRows(rows, confidenceById, token);
+    drillTitle.textContent = result.title;
+    drillDescription.textContent = `${result.description} (${result.rows.length} account${result.rows.length === 1 ? '' : 's'}).`;
+    if (!result.rows.length) {
+      drillResults.innerHTML = '<p class="empty-text">No accounts match this drill selection.</p>';
+      return;
+    }
+    drillResults.innerHTML = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Account</th>
+            <th>Health</th>
+            <th>PtE</th>
+            <th>PtC</th>
+            <th>Primary trigger</th>
+            <th>Confidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${result.rows
+            .map((row) => {
+              const confidence = confidenceById.get(row.customer.id);
+              const trigger = (row.riskSignals || [])[0];
+              return `
+                <tr>
+                  <td><a href="#" data-open-customer="${row.customer.id}">${escapeHtml(row.customer.name)}</a></td>
+                  <td>${statusChip({ label: row.health || 'Unknown', tone: String(row.health || '').toLowerCase() === 'green' ? 'good' : String(row.health || '').toLowerCase() === 'red' ? 'risk' : 'warn' })}</td>
+                  <td>${statusChip({ label: `${row.pteScore || 0} (${row.pteBand || 'Low'})`, tone: row.pteBand === 'High' ? 'good' : row.pteBand === 'Medium' ? 'warn' : 'neutral' })}</td>
+                  <td>${statusChip({ label: `${row.ptcScore || 0} (${row.ptcBand || 'Low'})`, tone: row.ptcBand === 'High' ? 'risk' : row.ptcBand === 'Medium' ? 'warn' : 'good' })}</td>
+                  <td>${trigger ? `${escapeHtml(trigger.code)} (${escapeHtml(trigger.severity || 'Low')})` : 'None'}</td>
+                  <td>${statusChip({ label: `${confidence?.score || 0}%`, tone: confidence?.tone || 'neutral' })}</td>
+                </tr>
+              `;
+            })
+            .join('')}
+        </tbody>
+      </table>
+    `;
+  };
+
+  wrapper.querySelectorAll('[data-drill]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const token = button.getAttribute('data-drill');
+      if (!token) return;
+      renderDrillResults(token);
+      const section = wrapper.querySelector('#section-drill');
+      section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  const playWizardForm = wrapper.querySelector('[data-play-wizard-form]');
+  const playWizardOutput = wrapper.querySelector('[data-play-wizard-output]');
+
+  const setWizardValuesFromAccount = (customerId) => {
+    if (!(playWizardForm instanceof HTMLFormElement)) return;
+    const row = rows.find((item) => item.customer.id === customerId);
+    if (!row) return;
+    const trigger = normalizeCode((row.riskSignals || [])[0]?.code || '');
+    const confidence = confidenceById.get(customerId);
+    const set = (name, value) => {
+      const field = playWizardForm.elements.namedItem(name);
+      if (field && 'value' in field && value !== undefined && value !== null) field.value = String(value);
+    };
+    if (trigger) set('triggerCode', trigger);
+    set('pteBand', row.pteBand || 'Low');
+    set('ptcBand', row.ptcBand || 'Medium');
+    set('renewalDays', Number(row.renewalDays ?? 999));
+    set('confidenceScore', Number(confidence?.score ?? 70));
+  };
+
+  const getWizardInput = () => {
+    if (!(playWizardForm instanceof HTMLFormElement)) {
+      return { triggerCode: '', pteBand: 'Low', ptcBand: 'Medium', renewalDays: 999, confidenceScore: 70 };
+    }
+    const read = (name) => String(playWizardForm.elements.namedItem(name)?.value || '').trim();
+    return {
+      accountId: read('accountId'),
+      triggerCode: read('triggerCode'),
+      pteBand: read('pteBand') || 'Low',
+      ptcBand: read('ptcBand') || 'Medium',
+      renewalDays: Number(read('renewalDays') || 999),
+      confidenceScore: Number(read('confidenceScore') || 70)
+    };
+  };
+
+  const renderWizardOutput = (input) => {
+    if (!playWizardOutput) return;
+    const recommendation = recommendPlays(input);
+    playWizardOutput.innerHTML = `
+      <section class="grid-cards">
+        <article class="card compact-card">
+          <div class="metric-head">
+            <h3>Primary play</h3>
+            ${statusChip({ label: recommendation.window, tone: 'warn' })}
+          </div>
+          <p><strong>${recommendation.primary.title}</strong></p>
+          <p class="muted">${recommendation.primary.why}</p>
+          <p class="muted"><strong>First step:</strong> ${recommendation.primary.firstStep}</p>
+        </article>
+        <article class="card compact-card">
+          <div class="metric-head">
+            <h3>Secondary play</h3>
+            ${statusChip({ label: recommendation.reviewCadence, tone: 'neutral' })}
+          </div>
+          <p><strong>${recommendation.secondary.title}</strong></p>
+          <p class="muted">${recommendation.secondary.why}</p>
+          <p class="muted"><strong>First step:</strong> ${recommendation.secondary.firstStep}</p>
+        </article>
+      </section>
+      <div class="callout">
+        <strong>Success metric:</strong> ${recommendation.successMetric}<br>
+        <strong>Confidence note:</strong> ${recommendation.confidenceNote}
+      </div>
+    `;
+  };
+
+  if (playWizardForm instanceof HTMLFormElement) {
+    playWizardForm.elements.namedItem('accountId')?.addEventListener('change', (event) => {
+      const customerId = String(event?.target?.value || '');
+      if (!customerId) return;
+      setWizardValuesFromAccount(customerId);
+    });
+  }
+
+  wrapper.querySelector('[data-run-play-wizard]')?.addEventListener('click', () => {
+    const input = getWizardInput();
+    renderWizardOutput(input);
+    notify?.('Play recommendation generated.');
   });
 
   const readinessForm = wrapper.querySelector('[data-readiness-form]');
