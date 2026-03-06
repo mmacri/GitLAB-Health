@@ -4,6 +4,7 @@ import { statusChip } from '../components/statusChip.js';
 import { barChartSvg, donutChartSvg, lineChartSvg } from '../lib/charts.js';
 import { toIsoDate } from '../lib/date.js';
 import { triggerDownload } from '../lib/exports.js';
+import { computePtCProxy, computePtEProxy } from '../lib/scoring.js';
 
 const safePercent = (value, total) => {
   const numerator = Number(value || 0);
@@ -112,6 +113,7 @@ const deriveHealthDistribution = (rows = []) =>
   );
 
 const PLAYBOOK_CHECKLIST_KEY = 'gh_propensity_playbook_readiness_v1';
+const PLAY_EFFECTIVENESS_KEY = 'gh_propensity_play_effectiveness_v1';
 
 const defaultChecklist = () => ({
   playName: '',
@@ -144,6 +146,32 @@ const saveChecklist = (value) => {
   } catch {
     // Ignore storage quota/access errors in static mode.
   }
+};
+
+const loadPlayEffectivenessLog = () => {
+  try {
+    const raw = window.localStorage.getItem(PLAY_EFFECTIVENESS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const savePlayEffectivenessLog = (entries = []) => {
+  try {
+    window.localStorage.setItem(PLAY_EFFECTIVENESS_KEY, JSON.stringify(entries.slice(-500)));
+  } catch {
+    // Ignore storage quota/access errors in static mode.
+  }
+};
+
+const appendPlayEffectivenessLog = (entry) => {
+  const existing = loadPlayEffectivenessLog();
+  const next = [...existing, entry];
+  savePlayEffectivenessLog(next);
+  return next;
 };
 
 const toneFromConfidence = (score) => {
@@ -512,6 +540,248 @@ const buildMitigationCoverage = (rows, workspace, confidenceMap, now = new Date(
   };
 };
 
+const diffDaysFromIso = (value, now = new Date()) => {
+  const date = parseDateValue(value);
+  if (!date) return null;
+  return Math.max(0, Math.floor((now.getTime() - date.getTime()) / (24 * 60 * 60 * 1000)));
+};
+
+const signalAgingDays = (row, signal, now = new Date()) => {
+  const detectedAging = diffDaysFromIso(signal?.detectedAt, now);
+  if (detectedAging !== null && detectedAging > 0) return detectedAging;
+  const code = normalizeCode(signal?.code || '');
+  if (code === 'LOW_ENGAGEMENT') return Number(row?.engagementDays ?? 0);
+  if (code === 'RENEWAL_SOON') {
+    const renewalDays = Number(row?.renewalDays ?? 999);
+    if (!Number.isFinite(renewalDays)) return 0;
+    return Math.max(0, 90 - renewalDays);
+  }
+  return detectedAging ?? 0;
+};
+
+const triggerSlaDays = (code) => {
+  const normalized = normalizeCode(code || '');
+  if (normalized === 'RENEWAL_SOON') return 2;
+  if (normalized === 'LOW_ENGAGEMENT') return 3;
+  if (normalized === 'NO_TIME_TO_VALUE') return 7;
+  if (normalized === 'LOW_CICD_ADOPTION' || normalized === 'LOW_SECURITY_ADOPTION') return 14;
+  if (normalized === 'STAGE_GAP_SECURE') return 30;
+  if (normalized === 'HIGH_PTE_LOW_PTC') return 7;
+  if (normalized === 'HIGH_PTE_HIGH_PTC') return 2;
+  return 7;
+};
+
+const lifecycleStageFromActions = (actions = [], row, primarySignal, now = new Date()) => {
+  if (!primarySignal) return 'Validated';
+  const normalizedStatuses = actions.map((item) => String(item?.status || '').toLowerCase());
+  const hasOwner = actions.some((item) => String(item?.owner || '').trim());
+  const hasDated = actions.some((item) => String(item?.owner || '').trim() && parseDateValue(item?.due));
+  const hasOpen = normalizedStatuses.some((status) => !isClosedAction(status));
+  const allClosed = actions.length > 0 && normalizedStatuses.every((status) => isClosedAction(status));
+  if (allClosed && Number(row?.ptcScore || 0) < 55) return 'Validated';
+  if (hasDated && hasOpen) return 'Mitigating';
+  if (hasOwner) return 'Assigned';
+  const aging = signalAgingDays(row, primarySignal, now);
+  if (aging === 0 && String(primarySignal?.source || '') === 'derived') return 'Detected';
+  return 'Detected';
+};
+
+const buildTriggerLifecycle = (rows, workspace, now = new Date()) => {
+  const lifecycleRows = [...(rows || [])]
+    .filter((row) => (row.riskSignals || []).length > 0)
+    .map((row) => {
+      const customerId = row.customer.id;
+      const riskBlock = workspace?.risk?.[customerId] || {};
+      const actions = Array.isArray(riskBlock.playbook) ? riskBlock.playbook : [];
+      const primarySignal = primarySignalForRow(row);
+      const stage = lifecycleStageFromActions(actions, row, primarySignal, now);
+      const ageDays = signalAgingDays(row, primarySignal, now);
+      const slaDays = triggerSlaDays(primarySignal?.code);
+      const breach = ['Detected', 'Assigned'].includes(stage) && ageDays > slaDays;
+      return {
+        row,
+        primarySignal,
+        stage,
+        ageDays,
+        slaDays,
+        breach,
+        openActions: actions.filter((item) => !isClosedAction(item?.status)).length,
+        nextDue: actions
+          .map((item) => String(item?.due || '').trim())
+          .filter(Boolean)
+          .sort((left, right) => String(left).localeCompare(String(right)))[0] || ''
+      };
+    })
+    .sort((left, right) => {
+      if (Number(right.breach) !== Number(left.breach)) return Number(right.breach) - Number(left.breach);
+      return Number(right.ageDays || 0) - Number(left.ageDays || 0);
+    });
+
+  const stageCounts = lifecycleRows.reduce(
+    (acc, item) => {
+      const key = String(item.stage || 'Detected');
+      if (!acc[key]) acc[key] = 0;
+      acc[key] += 1;
+      return acc;
+    },
+    { Detected: 0, Assigned: 0, Mitigating: 0, Validated: 0 }
+  );
+
+  return {
+    rows: lifecycleRows,
+    breaches: lifecycleRows.filter((item) => item.breach).length,
+    stageCounts
+  };
+};
+
+const buildAccountOwnerMap = (workspace) => {
+  const map = new Map();
+  (workspace?.team?.cseMembers || []).forEach((member) => {
+    (member?.accounts || []).forEach((customerId) => {
+      map.set(customerId, String(member?.name || 'Unassigned'));
+    });
+  });
+  return map;
+};
+
+const buildCalibrationRows = (rows, ownerMap) => {
+  const triggerCodes = new Set();
+  (rows || []).forEach((row) => {
+    (row.riskSignals || []).forEach((signal) => triggerCodes.add(normalizeCode(signal.code)));
+  });
+  ['HIGH_PTE_LOW_PTC', 'HIGH_PTE_HIGH_PTC'].forEach((code) => triggerCodes.add(code));
+
+  return [...triggerCodes]
+    .map((code) => {
+      const impacted = (rows || []).filter((row) => {
+        if (code === 'HIGH_PTE_LOW_PTC') return row.pteBand === 'High' && row.ptcBand === 'Low';
+        if (code === 'HIGH_PTE_HIGH_PTC') return row.pteBand === 'High' && row.ptcBand === 'High';
+        return (row.riskSignals || []).some((signal) => normalizeCode(signal.code) === code);
+      });
+      if (!impacted.length) return null;
+
+      const suggestions = impacted.map((row) => {
+        const rec = recommendPlays({
+          triggerCode: code,
+          pteBand: row.pteBand,
+          ptcBand: row.ptcBand,
+          renewalDays: Number(row.renewalDays ?? 999),
+          confidenceScore: 75
+        });
+        return {
+          owner: ownerMap.get(row.customer.id) || 'Unassigned',
+          play: rec.primary.title
+        };
+      });
+
+      const playCounts = new Map();
+      suggestions.forEach((item) => {
+        playCounts.set(item.play, Number(playCounts.get(item.play) || 0) + 1);
+      });
+      const dominant = [...playCounts.entries()].sort((left, right) => right[1] - left[1])[0] || ['No play', 0];
+      const alignedCount = suggestions.filter((item) => item.play === dominant[0]).length;
+      const alignmentPct = Math.round((alignedCount / Math.max(1, suggestions.length)) * 100);
+      const uniqueOwners = new Set(suggestions.map((item) => item.owner)).size;
+      const playVariance = playCounts.size;
+
+      return {
+        code,
+        impactedCount: impacted.length,
+        owners: uniqueOwners,
+        dominantPlay: dominant[0],
+        playVariance,
+        alignmentPct,
+        slaExpectation: triggerOpsMeta[code]?.sla || 'This cycle',
+        tone: alignmentPct >= 80 ? 'good' : alignmentPct >= 60 ? 'warn' : 'risk'
+      };
+    })
+    .filter(Boolean)
+    .sort((left, right) => {
+      if (left.alignmentPct !== right.alignmentPct) return left.alignmentPct - right.alignmentPct;
+      return right.impactedCount - left.impactedCount;
+    });
+};
+
+const buildQuarterPlan = ({ pteHigh, ptcHigh, readinessDelta, riskPressureDelta, mitigationSummary, lifecycleSummary, quadrants }) => {
+  const day30 = [
+    ptcHigh > 0
+      ? `Stabilize ${ptcHigh} PtC High account(s) with dated mitigation plans and weekly checkpoints.`
+      : 'Maintain zero PtC High backlog and monitor medium-risk drift.',
+    mitigationSummary.missingOwnerOrDue > 0
+      ? `Close owner/date gaps on ${mitigationSummary.missingOwnerOrDue} account(s).`
+      : 'Owner/date coverage is complete for active trigger accounts.',
+    lifecycleSummary.breaches > 0
+      ? `Clear ${lifecycleSummary.breaches} SLA breach(es) in Detected/Assigned stage.`
+      : 'No SLA breaches currently open.'
+  ];
+
+  const day60 = [
+    `Move at least ${Math.max(1, Math.ceil(Number(quadrants.growWithRisk || 0) * 0.4))} Grow with Risk account(s) to lower PtC bands.`,
+    readinessDelta < 0
+      ? 'Run targeted adoption uplift on weakest use case clusters to reverse readiness decline.'
+      : 'Sustain readiness gains with measurable proof-point cadence.',
+    riskPressureDelta > 0
+      ? 'Add manager review cadence for risk pressure trend reversal.'
+      : 'Keep risk pressure below baseline with preventive play sequencing.'
+  ];
+
+  const day90 = [
+    pteHigh > 0
+      ? `Convert ${Math.max(1, Math.ceil(pteHigh * 0.35))} PtE High account(s) into expansion-ready proposals.`
+      : 'Build PtE High pipeline through adoption depth campaigns.',
+    `Reduce Stabilize then Expand quadrant volume (currently ${Number(quadrants.stabilizeThenExpand || 0)}).`,
+    'Publish quarterly executive brief linking trigger movement to revenue/retention outcomes.'
+  ];
+
+  return { day30, day60, day90 };
+};
+
+const walkthroughTemplates = {
+  default: [
+    { window: 'Day 0-2', cse: 'Confirm trigger root cause and set owner + due date.', manager: 'Validate urgency and capacity allocation for execution.' },
+    { window: 'Day 3-7', cse: 'Execute first mitigation play and log measurable checkpoint.', manager: 'Review early signal movement and remove blockers.' },
+    { window: 'Day 8-14', cse: 'Adjust play based on observed movement and evidence quality.', manager: 'Coach narrative quality and enforce SLA adherence.' }
+  ],
+  RENEWAL_SOON: [
+    { window: 'Day 0-2', cse: 'Publish renewal risk brief with top 3 blockers.', manager: 'Confirm executive sponsor engagement and weekly cadence.' },
+    { window: 'Day 3-7', cse: 'Run mitigation workshop and capture dated actions.', manager: 'Escalate if no sponsor response or blocked ownership.' },
+    { window: 'Day 8-14', cse: 'Validate PtC movement and update renewal narrative.', manager: 'Approve go/no-go on expansion asks in-cycle.' }
+  ],
+  LOW_ENGAGEMENT: [
+    { window: 'Day 0-2', cse: 'Launch re-engagement outreach with explicit outcome asks.', manager: 'Check outreach quality and channel coverage.' },
+    { window: 'Day 3-7', cse: 'Host office hours/webinar touchpoint and log next step.', manager: 'Reassign support if account remains unresponsive.' },
+    { window: 'Day 8-14', cse: 'Convert engagement touch into adoption action plan.', manager: 'Review recovery trend and prevent relapse.' }
+  ],
+  STAGE_GAP_SECURE: [
+    { window: 'Day 0-2', cse: 'Set Secure baseline objective and first implementation owner.', manager: 'Confirm sponsor for Secure maturity motion.' },
+    { window: 'Day 3-7', cse: 'Run secure enablement sprint with one target team.', manager: 'Verify deliverables and remove resourcing blockers.' },
+    { window: 'Day 8-14', cse: 'Capture evidence and tie secure progress to outcomes.', manager: 'Coach executive narrative for broader rollout.' }
+  ]
+};
+
+const evidenceExamples = [
+  {
+    area: 'CI/CD adoption',
+    weak: '“Teams are using pipelines more now.”',
+    strong: '“CICD moved 42% -> 61% across 14 projects in 30 days; 9 projects now use standardized templates.”'
+  },
+  {
+    area: 'Security adoption',
+    weak: '“Security scans were enabled.”',
+    strong: '“SAST enabled in 6 services; critical findings triaged within 48h for 4 consecutive weeks.”'
+  },
+  {
+    area: 'Engagement',
+    weak: '“Had a productive call.”',
+    strong: '“Workshop completed with 12 engineers, 3 dated actions assigned, next office hours scheduled for 2026-03-20.”'
+  },
+  {
+    area: 'Business outcome',
+    weak: '“Delivery has improved.”',
+    strong: '“Lead time median reduced 9.2d -> 4.7d after runner standardization and MR policy rollout.”'
+  }
+];
+
 const bandLevels = ['High', 'Medium', 'Low'];
 
 const buildBandMatrix = (rows = []) => {
@@ -817,6 +1087,57 @@ const buildMitigationMarkdown = ({ generatedOn, summary, mitigationRows = [] }) 
   });
 
   return `${lines.join('\n')}\n`;
+};
+
+const buildPlayEffectivenessRows = (logs, rows) => {
+  const currentById = new Map((rows || []).map((row) => [row.customer.id, row]));
+  const grouped = new Map();
+
+  (logs || []).forEach((entry) => {
+    const play = String(entry?.playTitle || 'Unspecified play');
+    if (!grouped.has(play)) {
+      grouped.set(play, {
+        play,
+        runs: 0,
+        improved: 0,
+        stable: 0,
+        regressed: 0,
+        pending: 0,
+        pteDeltaTotal: 0,
+        ptcDeltaTotal: 0,
+        observed: 0
+      });
+    }
+    const bucket = grouped.get(play);
+    bucket.runs += 1;
+    const current = currentById.get(entry.accountId);
+    if (!current || !Number.isFinite(Number(entry.baselinePteScore)) || !Number.isFinite(Number(entry.baselinePtcScore))) {
+      bucket.pending += 1;
+      return;
+    }
+    const pteDelta = Number(current.pteScore || 0) - Number(entry.baselinePteScore || 0);
+    const ptcDelta = Number(entry.baselinePtcScore || 0) - Number(current.ptcScore || 0);
+    const positive = pteDelta > 0 || ptcDelta > 0;
+    const negative = pteDelta < 0 || ptcDelta < 0;
+    if (positive && !negative) bucket.improved += 1;
+    else if (negative && !positive) bucket.regressed += 1;
+    else bucket.stable += 1;
+    bucket.pteDeltaTotal += pteDelta;
+    bucket.ptcDeltaTotal += ptcDelta;
+    bucket.observed += 1;
+  });
+
+  return [...grouped.values()]
+    .map((item) => ({
+      ...item,
+      avgPteDelta: item.observed ? round1(item.pteDeltaTotal / item.observed) : 0,
+      avgPtcDelta: item.observed ? round1(item.ptcDeltaTotal / item.observed) : 0,
+      effectivenessPct: item.runs ? Math.round((item.improved / item.runs) * 100) : 0
+    }))
+    .sort((left, right) => {
+      if (right.effectivenessPct !== left.effectivenessPct) return right.effectivenessPct - left.effectivenessPct;
+      return right.runs - left.runs;
+    });
 };
 
 const openPrintWindow = (title, markdown) => {
@@ -1142,8 +1463,22 @@ export const renderPropensityPage = (ctx) => {
     .sort((left, right) => Number(confidenceById.get(left.customer.id)?.score || 0) - Number(confidenceById.get(right.customer.id)?.score || 0));
   const missingRenewalCount = rows.filter((row) => !String(row.customer?.renewalDate || '').trim()).length;
   const missingEngagementCount = rows.filter((row) => !(workspace?.engagements?.[row.customer.id] || []).length && !String(row.lastEngagementDate || '').trim()).length;
+  const ownerMap = buildAccountOwnerMap(workspace);
   const weeklyQueue = buildWeeklyActionQueue(rows, confidenceById);
   const mitigationSummary = buildMitigationCoverage(rows, workspace, confidenceById);
+  const lifecycleSummary = buildTriggerLifecycle(rows, workspace);
+  const calibrationRows = buildCalibrationRows(rows, ownerMap);
+  const quarterPlan = buildQuarterPlan({
+    pteHigh,
+    ptcHigh,
+    readinessDelta,
+    riskPressureDelta,
+    mitigationSummary,
+    lifecycleSummary,
+    quadrants
+  });
+  const playEffectivenessLog = loadPlayEffectivenessLog();
+  const playEffectivenessRows = buildPlayEffectivenessRows(playEffectivenessLog, rows);
   const bandMatrix = buildBandMatrix(rows);
 
   const accountOptions = rows
@@ -1232,6 +1567,40 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
+    <section class="card" id="section-evidence-quality">
+      <div class="metric-head">
+        <h2>Evidence Quality: Good vs Weak</h2>
+        ${statusChip({ label: 'Documentation standard', tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        Use these examples to improve confidence scoring and executive narrative quality. Strong evidence is specific, dated, and measurable.
+      </p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Area</th>
+              <th>Weak evidence</th>
+              <th>Strong evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${evidenceExamples
+              .map(
+                (item) => `
+                  <tr>
+                    <td><strong>${escapeHtml(item.area)}</strong></td>
+                    <td>${escapeHtml(item.weak)}</td>
+                    <td>${escapeHtml(item.strong)}</td>
+                  </tr>
+                `
+              )
+              .join('')}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <section class="card" id="section-start-here">
       <div class="metric-head">
         <h2>Start Here in 5 Minutes</h2>
@@ -1257,6 +1626,40 @@ export const renderPropensityPage = (ctx) => {
           <strong>Step 4: Compare trend</strong>
           <p>Use delta panel to verify direction change against the last monthly snapshot.</p>
           <button class="ghost-btn" type="button" data-jump-target="section-score-delta">Open score delta</button>
+        </article>
+      </div>
+    </section>
+
+    <section class="card" id="section-learning-path">
+      <div class="metric-head">
+        <h2>Guided Learning Path (New Users)</h2>
+        ${statusChip({ label: 'Read -> Drill -> Execute -> Validate -> Export', tone: 'good' })}
+      </div>
+      <div class="flow-steps">
+        <article class="flow-step">
+          <strong>1) Read metrics</strong>
+          <p>Start with PtE/PtC mix and confidence quality to understand posture.</p>
+          <button class="ghost-btn" type="button" data-jump-target="section-visuals">Open metrics</button>
+        </article>
+        <article class="flow-step">
+          <strong>2) Run drill</strong>
+          <p>Use chart drills to isolate account clusters behind each trigger or band.</p>
+          <button class="ghost-btn" type="button" data-jump-target="section-drill">Open drill results</button>
+        </article>
+        <article class="flow-step">
+          <strong>3) Pick play</strong>
+          <p>Load account/scenario into wizard and choose deterministic primary + secondary plays.</p>
+          <button class="ghost-btn" type="button" data-jump-target="section-play-wizard">Open play wizard</button>
+        </article>
+        <article class="flow-step">
+          <strong>4) Validate movement</strong>
+          <p>Compare against baseline snapshots and check lifecycle/SLA movement.</p>
+          <button class="ghost-btn" type="button" data-jump-target="section-change-cycle">Open cycle comparison</button>
+        </article>
+        <article class="flow-step">
+          <strong>5) Export narrative</strong>
+          <p>Export guide/brief/queue outputs for team and executive reviews.</p>
+          <button class="ghost-btn" type="button" data-download-exec-brief>Download brief</button>
         </article>
       </div>
     </section>
@@ -1306,6 +1709,7 @@ export const renderPropensityPage = (ctx) => {
                             <div class="page-actions">
                               <button class="ghost-btn" type="button" data-open-customer="${row.customer.id}">Open</button>
                               <button class="ghost-btn" type="button" data-wizard-account="${row.customer.id}">Load in wizard</button>
+                              <button class="ghost-btn" type="button" data-explain-customer="${row.customer.id}">Why this score?</button>
                             </div>
                           </td>
                         </tr>
@@ -1322,6 +1726,30 @@ export const renderPropensityPage = (ctx) => {
         <button class="ghost-btn" type="button" data-drill="ptc:High">Drill PtC High queue</button>
         <button class="ghost-btn" type="button" data-jump-target="section-play-wizard">Jump to Play Wizard</button>
         <button class="ghost-btn" type="button" data-download-queue>Download queue .md</button>
+      </div>
+    </section>
+
+    <section class="card" id="section-score-explainer">
+      <div class="metric-head">
+        <h2>Why This Account Scored This Way</h2>
+        ${statusChip({ label: 'Score explainer drawer', tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        Click <em>Why this score?</em> from queue, mitigation, or drill rows to open account-level factor detail for PtE and PtC.
+      </p>
+      <div class="workspace-layout">
+        <article class="card compact-card" data-explainer-main>
+          <p class="empty-text">No account selected yet. Use any “Why this score?” button to load explanation.</p>
+        </article>
+        <aside class="drawer card compact-card" data-explainer-drawer>
+          <h3>Interpreting Factors</h3>
+          <ul class="drawer-list">
+            <li>Positive PtE points raise expansion readiness.</li>
+            <li>Positive PtC points raise churn/contract risk pressure.</li>
+            <li>Renewal pressure and trigger severity drive urgency.</li>
+            <li>Use this view to align CSE and manager narrative.</li>
+          </ul>
+        </aside>
       </div>
     </section>
 
@@ -1378,6 +1806,7 @@ export const renderPropensityPage = (ctx) => {
                             <div class="page-actions">
                               <button class="ghost-btn" type="button" data-open-customer="${row.customer.id}">Open</button>
                               <button class="ghost-btn" type="button" data-wizard-account="${row.customer.id}">Load in wizard</button>
+                              <button class="ghost-btn" type="button" data-explain-customer="${row.customer.id}">Why this score?</button>
                             </div>
                           </td>
                         </tr>
@@ -1394,6 +1823,63 @@ export const renderPropensityPage = (ctx) => {
         <button class="ghost-btn" type="button" data-drill="ptc:High">Drill PtC High</button>
         <button class="ghost-btn" type="button" data-drill="confidence:low">Drill low-confidence accounts</button>
         <button class="ghost-btn" type="button" data-download-mitigation>Download mitigation coverage .md</button>
+      </div>
+    </section>
+
+    <section class="card" id="section-trigger-lifecycle">
+      <div class="metric-head">
+        <h2>Trigger Lifecycle Tracker</h2>
+        ${statusChip({ label: `${lifecycleSummary.breaches} SLA breach(es)`, tone: lifecycleSummary.breaches ? 'risk' : 'good' })}
+      </div>
+      <div class="chip-row">
+        ${statusChip({ label: `Detected ${lifecycleSummary.stageCounts.Detected || 0}`, tone: 'neutral' })}
+        ${statusChip({ label: `Assigned ${lifecycleSummary.stageCounts.Assigned || 0}`, tone: 'warn' })}
+        ${statusChip({ label: `Mitigating ${lifecycleSummary.stageCounts.Mitigating || 0}`, tone: 'good' })}
+        ${statusChip({ label: `Validated ${lifecycleSummary.stageCounts.Validated || 0}`, tone: 'good' })}
+      </div>
+      <p class="muted">
+        Lifecycle stages: Detected -> Assigned -> Mitigating -> Validated. Aging and SLA breach flags identify where action is stalled.
+      </p>
+      <div class="table-wrap">
+        ${
+          lifecycleSummary.rows.length
+            ? `
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Account</th>
+                    <th>Trigger</th>
+                    <th>Lifecycle stage</th>
+                    <th>Aging (days)</th>
+                    <th>SLA (days)</th>
+                    <th>Breach</th>
+                    <th>Next due</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${lifecycleSummary.rows
+                    .slice(0, 15)
+                    .map((item) => {
+                      const tone =
+                        item.stage === 'Validated' ? 'good' : item.stage === 'Mitigating' ? 'good' : item.stage === 'Assigned' ? 'warn' : 'neutral';
+                      return `
+                        <tr>
+                          <td><a href="#" data-open-customer="${item.row.customer.id}">${escapeHtml(item.row.customer.name)}</a></td>
+                          <td>${escapeHtml(item.primarySignal?.code || 'None')}</td>
+                          <td>${statusChip({ label: item.stage, tone })}</td>
+                          <td>${item.ageDays}</td>
+                          <td>${item.slaDays}</td>
+                          <td>${statusChip({ label: item.breach ? 'SLA Breach' : 'On Track', tone: item.breach ? 'risk' : 'good' })}</td>
+                          <td>${escapeHtml(item.nextDue || 'Not set')}</td>
+                        </tr>
+                      `;
+                    })
+                    .join('')}
+                </tbody>
+              </table>
+            `
+            : '<p class="empty-text">No active trigger lifecycle entries in this snapshot.</p>'
+        }
       </div>
     </section>
 
@@ -1568,6 +2054,45 @@ export const renderPropensityPage = (ctx) => {
       <p class="muted" data-change-summary>
         Comparison engine uses saved monthly snapshots and current portfolio posture.
       </p>
+    </section>
+
+    <section class="card" id="section-quarter-plan">
+      <div class="metric-head">
+        <h2>Quarterly Planning View (30/60/90 Days)</h2>
+        ${statusChip({ label: 'Sequencing beyond weekly queue', tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        Plan forward motions based on current PtE/PtC deltas and trigger pressure. Use this view to sequence recovery, uplift, and expansion over the quarter.
+      </p>
+      <div class="grid-cards">
+        <article class="card compact-card">
+          <div class="metric-head">
+            <h3>Next 30 days</h3>
+            ${statusChip({ label: 'Stabilize', tone: 'warn' })}
+          </div>
+          <ul class="simple-list">
+            ${quarterPlan.day30.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
+          </ul>
+        </article>
+        <article class="card compact-card">
+          <div class="metric-head">
+            <h3>Days 31-60</h3>
+            ${statusChip({ label: 'Uplift', tone: 'neutral' })}
+          </div>
+          <ul class="simple-list">
+            ${quarterPlan.day60.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
+          </ul>
+        </article>
+        <article class="card compact-card">
+          <div class="metric-head">
+            <h3>Days 61-90</h3>
+            ${statusChip({ label: 'Expand', tone: 'good' })}
+          </div>
+          <ul class="simple-list">
+            ${quarterPlan.day90.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
+          </ul>
+        </article>
+      </div>
     </section>
 
     <section class="grid-cards" id="section-visuals">
@@ -1895,6 +2420,30 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
+    <section class="card" id="section-role-walkthroughs">
+      <div class="metric-head">
+        <h2>Role-Based Play Walkthroughs (CSE vs Manager)</h2>
+        ${statusChip({ label: 'Day-by-day checkpoints', tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        Select a trigger to view who does what and when. This keeps IC execution and manager governance aligned throughout the play.
+      </p>
+      <form class="form-grid">
+        <label class="form-span">
+          Trigger walkthrough
+          <select data-walkthrough-trigger>
+            <option value="default">General operating motion</option>
+            ${triggerGuide
+              .map((item) => `<option value="${item.code}">${item.code}</option>`)
+              .join('')}
+          </select>
+        </label>
+      </form>
+      <div class="table-wrap" data-walkthrough-content>
+        <p class="empty-text">Select a trigger to render CSE and Manager day-by-day walkthrough.</p>
+      </div>
+    </section>
+
     <section class="card" id="section-play-wizard">
       <div class="metric-head">
         <h2>Play Selection Wizard</h2>
@@ -1980,6 +2529,109 @@ export const renderPropensityPage = (ctx) => {
             `
           )
           .join('')}
+      </div>
+    </section>
+
+    <section class="card" id="section-manager-calibration">
+      <div class="metric-head">
+        <h2>Manager Calibration Checks</h2>
+        ${statusChip({
+          label: `${calibrationRows.filter((item) => item.alignmentPct < 80).length} trigger(s) need coaching`,
+          tone: calibrationRows.some((item) => item.alignmentPct < 80) ? 'warn' : 'good'
+        })}
+      </div>
+      <p class="muted">
+        Calibration verifies that same trigger clusters lead to consistent play recommendations and SLA expectations across CSE owners.
+      </p>
+      <div class="table-wrap">
+        ${
+          calibrationRows.length
+            ? `
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Trigger</th>
+                    <th>Impacted accounts</th>
+                    <th>Owners</th>
+                    <th>Dominant play</th>
+                    <th>Play variance</th>
+                    <th>Alignment</th>
+                    <th>SLA expectation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${calibrationRows
+                    .map(
+                      (item) => `
+                        <tr>
+                          <td><strong>${item.code}</strong></td>
+                          <td>${item.impactedCount}</td>
+                          <td>${item.owners}</td>
+                          <td>${escapeHtml(item.dominantPlay)}</td>
+                          <td>${item.playVariance}</td>
+                          <td>${statusChip({ label: `${item.alignmentPct}%`, tone: item.tone })}</td>
+                          <td>${escapeHtml(item.slaExpectation)}</td>
+                        </tr>
+                      `
+                    )
+                    .join('')}
+                </tbody>
+              </table>
+            `
+            : '<p class="empty-text">No trigger cohorts available for calibration yet.</p>'
+        }
+      </div>
+    </section>
+
+    <section class="card" id="section-play-effectiveness">
+      <div class="metric-head">
+        <h2>Play Outcome Effectiveness</h2>
+        ${statusChip({ label: `${playEffectivenessRows.length} tracked play type(s)`, tone: playEffectivenessRows.length ? 'neutral' : 'warn' })}
+      </div>
+      <p class="muted">
+        Tracks whether logged play runs correlate with PtE increases and PtC decreases on observed accounts. Use this to tune play selection over time.
+      </p>
+      <div class="table-wrap" data-play-effectiveness>
+        ${
+          playEffectivenessRows.length
+            ? `
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Play type</th>
+                    <th>Runs</th>
+                    <th>Improved</th>
+                    <th>Stable</th>
+                    <th>Regressed</th>
+                    <th>Pending</th>
+                    <th>Avg PtE delta</th>
+                    <th>Avg PtC delta</th>
+                    <th>Effectiveness</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${playEffectivenessRows
+                    .map(
+                      (item) => `
+                        <tr>
+                          <td>${escapeHtml(item.play)}</td>
+                          <td>${item.runs}</td>
+                          <td>${item.improved}</td>
+                          <td>${item.stable}</td>
+                          <td>${item.regressed}</td>
+                          <td>${item.pending}</td>
+                          <td>${formatSigned(item.avgPteDelta, 1)}</td>
+                          <td>${formatSigned(item.avgPtcDelta, 1)}</td>
+                          <td>${statusChip({ label: `${item.effectivenessPct}%`, tone: item.effectivenessPct >= 60 ? 'good' : item.effectivenessPct >= 40 ? 'warn' : 'risk' })}</td>
+                        </tr>
+                      `
+                    )
+                    .join('')}
+                </tbody>
+              </table>
+            `
+            : '<p class="empty-text">No logged play runs yet. Use the wizard and click “Log play run” to start tracking outcomes.</p>'
+        }
       </div>
     </section>
 
@@ -2249,13 +2901,198 @@ export const renderPropensityPage = (ctx) => {
     });
   });
 
+  const explainerMain = wrapper.querySelector('[data-explainer-main]');
+  const explainerDrawer = wrapper.querySelector('[data-explainer-drawer]');
+  const walkthroughTrigger = wrapper.querySelector('[data-walkthrough-trigger]');
+  const walkthroughContent = wrapper.querySelector('[data-walkthrough-content]');
+  const playEffectivenessContainer = wrapper.querySelector('[data-play-effectiveness]');
+  let livePlayEffectivenessLog = [...playEffectivenessLog];
+  let lastWizardRun = null;
+
+  const renderPlayEffectivenessTable = () => {
+    if (!playEffectivenessContainer) return;
+    const effectivenessRows = buildPlayEffectivenessRows(livePlayEffectivenessLog, rows);
+    playEffectivenessContainer.innerHTML = effectivenessRows.length
+      ? `
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Play type</th>
+                <th>Runs</th>
+                <th>Improved</th>
+                <th>Stable</th>
+                <th>Regressed</th>
+                <th>Pending</th>
+                <th>Avg PtE delta</th>
+                <th>Avg PtC delta</th>
+                <th>Effectiveness</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${effectivenessRows
+                .map(
+                  (item) => `
+                    <tr>
+                      <td>${escapeHtml(item.play)}</td>
+                      <td>${item.runs}</td>
+                      <td>${item.improved}</td>
+                      <td>${item.stable}</td>
+                      <td>${item.regressed}</td>
+                      <td>${item.pending}</td>
+                      <td>${formatSigned(item.avgPteDelta, 1)}</td>
+                      <td>${formatSigned(item.avgPtcDelta, 1)}</td>
+                      <td>${statusChip({ label: `${item.effectivenessPct}%`, tone: item.effectivenessPct >= 60 ? 'good' : item.effectivenessPct >= 40 ? 'warn' : 'risk' })}</td>
+                    </tr>
+                  `
+                )
+                .join('')}
+            </tbody>
+          </table>
+        `
+      : '<p class="empty-text">No logged play runs yet. Use the wizard and click “Log play run” to start tracking outcomes.</p>';
+  };
+
+  const renderScoreExplainer = (customerId) => {
+    if (!explainerMain || !explainerDrawer) return;
+    const row = rows.find((item) => item.customer.id === customerId);
+    if (!row) return;
+    const pte = computePtEProxy(workspace, customerId, new Date());
+    const ptc = computePtCProxy(workspace, customerId, new Date());
+    const primarySignal = primarySignalForRow(row);
+    const owner = ownerMap.get(customerId) || 'Unassigned';
+    explainerMain.innerHTML = `
+      <div class="metric-head">
+        <h3>${escapeHtml(row.customer.name)}</h3>
+        ${statusChip({ label: `Health ${row.health || 'Unknown'}`, tone: String(row.health || '').toLowerCase() === 'green' ? 'good' : String(row.health || '').toLowerCase() === 'red' ? 'risk' : 'warn' })}
+      </div>
+      <div class="chip-row">
+        ${statusChip({ label: `PtE ${row.pteScore} (${row.pteBand})`, tone: row.pteBand === 'High' ? 'good' : row.pteBand === 'Medium' ? 'warn' : 'neutral' })}
+        ${statusChip({ label: `PtC ${row.ptcScore} (${row.ptcBand})`, tone: row.ptcBand === 'High' ? 'risk' : row.ptcBand === 'Medium' ? 'warn' : 'good' })}
+        ${statusChip({ label: `Owner ${owner}`, tone: 'neutral' })}
+      </div>
+      <p class="muted"><strong>PtE driver:</strong> ${escapeHtml(pte.driver || row.pteDriver || 'No driver')}</p>
+      <p class="muted"><strong>PtC driver:</strong> ${escapeHtml(ptc.driver || row.ptcDriver || 'No driver')}</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Factor</th>
+              <th>PtE points</th>
+              <th>PtC points</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${[...new Set([...(pte.factors || []).map((f) => f.label), ...(ptc.factors || []).map((f) => f.label)])]
+              .map((label) => {
+                const pteFactor = (pte.factors || []).find((item) => item.label === label);
+                const ptcFactor = (ptc.factors || []).find((item) => item.label === label);
+                return `
+                  <tr>
+                    <td>${escapeHtml(label)}</td>
+                    <td>${pteFactor ? formatSigned(Number(pteFactor.points || 0), 1) : '-'}</td>
+                    <td>${ptcFactor ? formatSigned(Number(ptcFactor.points || 0), 1) : '-'}</td>
+                  </tr>
+                `;
+              })
+              .join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    explainerDrawer.innerHTML = `
+      <h3>Interpretation</h3>
+      <ul class="drawer-list">
+        <li><strong>Primary trigger:</strong> ${escapeHtml(primarySignal?.code || 'None')}</li>
+        <li><strong>Renewal window:</strong> ${Number.isFinite(Number(row.renewalDays)) ? `${row.renewalDays} days` : 'Not configured'}</li>
+        <li><strong>Engagement recency:</strong> ${Number(row.engagementDays ?? 999) === 999 ? 'No recent touch' : `${row.engagementDays} days ago`}</li>
+        ${(row.why || []).slice(0, 6).map((line) => `<li>${escapeHtml(line)}</li>`).join('')}
+      </ul>
+      <div class="drawer-actions">
+        <button class="ghost-btn" type="button" data-open-customer="${row.customer.id}">Open account</button>
+        <button class="ghost-btn" type="button" data-wizard-account="${row.customer.id}">Load in wizard</button>
+      </div>
+    `;
+    wrapper.querySelector('#section-score-explainer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const renderWalkthrough = (code) => {
+    if (!walkthroughContent) return;
+    const normalized = normalizeCode(code || '');
+    const rows = walkthroughTemplates[normalized] || walkthroughTemplates.default;
+    walkthroughContent.innerHTML = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Window</th>
+            <th>CSE actions</th>
+            <th>Manager actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows
+            .map(
+              (item) => `
+                <tr>
+                  <td><strong>${escapeHtml(item.window)}</strong></td>
+                  <td>${escapeHtml(item.cse)}</td>
+                  <td>${escapeHtml(item.manager)}</td>
+                </tr>
+              `
+            )
+            .join('')}
+        </tbody>
+      </table>
+    `;
+  };
+
+  if (walkthroughTrigger instanceof HTMLSelectElement) {
+    walkthroughTrigger.addEventListener('change', () => {
+      renderWalkthrough(walkthroughTrigger.value);
+    });
+    const firstCode = topSignals[0]?.code || 'default';
+    walkthroughTrigger.value = triggerGuide.some((item) => item.code === firstCode) ? firstCode : 'default';
+    renderWalkthrough(walkthroughTrigger.value);
+  }
+
+  renderPlayEffectivenessTable();
+
   wrapper.addEventListener('click', (event) => {
     if (!(event.target instanceof Element)) return;
+    const logPlayButton = event.target.closest('[data-log-play-run]');
+    if (logPlayButton) {
+      event.preventDefault();
+      if (!lastWizardRun) {
+        notify?.('Run a play recommendation first.');
+        return;
+      }
+      const row = rows.find((item) => item.customer.id === lastWizardRun.input.accountId);
+      const entry = {
+        id: `play_${Date.now()}`,
+        ts: new Date().toISOString(),
+        accountId: row?.customer?.id || '',
+        accountName: row?.customer?.name || 'Manual scenario',
+        triggerCode: normalizeCode(lastWizardRun.input.triggerCode || ''),
+        playTitle: String(lastWizardRun.recommendation?.primary?.title || ''),
+        baselinePteScore: Number(row?.pteScore ?? Number.NaN),
+        baselinePtcScore: Number(row?.ptcScore ?? Number.NaN)
+      };
+      livePlayEffectivenessLog = appendPlayEffectivenessLog(entry);
+      renderPlayEffectivenessTable();
+      notify?.('Play run logged for effectiveness tracking.');
+      return;
+    }
     const scenarioButton = event.target.closest('[data-load-scenario]');
     if (scenarioButton) {
       event.preventDefault();
       const scenarioId = scenarioButton.getAttribute('data-load-scenario');
       if (scenarioId) loadScenarioIntoWizard(scenarioId);
+      return;
+    }
+    const explainButton = event.target.closest('[data-explain-customer]');
+    if (explainButton) {
+      event.preventDefault();
+      const customerId = explainButton.getAttribute('data-explain-customer');
+      if (customerId) renderScoreExplainer(customerId);
       return;
     }
     const wizardButton = event.target.closest('[data-wizard-account]');
@@ -2446,6 +3283,7 @@ export const renderPropensityPage = (ctx) => {
             <th>PtC</th>
             <th>Primary trigger</th>
             <th>Confidence</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -2461,6 +3299,12 @@ export const renderPropensityPage = (ctx) => {
                   <td>${statusChip({ label: `${row.ptcScore || 0} (${row.ptcBand || 'Low'})`, tone: row.ptcBand === 'High' ? 'risk' : row.ptcBand === 'Medium' ? 'warn' : 'good' })}</td>
                   <td>${trigger ? `${escapeHtml(trigger.code)} (${escapeHtml(trigger.severity || 'Low')})` : 'None'}</td>
                   <td>${statusChip({ label: `${confidence?.score || 0}%`, tone: confidence?.tone || 'neutral' })}</td>
+                  <td>
+                    <div class="page-actions">
+                      <button class="ghost-btn" type="button" data-open-customer="${row.customer.id}">Open</button>
+                      <button class="ghost-btn" type="button" data-explain-customer="${row.customer.id}">Why this score?</button>
+                    </div>
+                  </td>
                 </tr>
               `;
             })
@@ -2519,7 +3363,8 @@ export const renderPropensityPage = (ctx) => {
     if (accountField && 'value' in accountField) accountField.value = '';
     applyWizardPreset(scenario);
     const input = getWizardInput();
-    renderWizardOutput(input);
+    const recommendation = renderWizardOutput(input);
+    lastWizardRun = { input, recommendation };
     const section = wrapper.querySelector('#section-play-wizard');
     section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     notify?.(`Scenario loaded: ${scenario.title}`);
@@ -2568,7 +3413,11 @@ export const renderPropensityPage = (ctx) => {
         <strong>Success metric:</strong> ${recommendation.successMetric}<br>
         <strong>Confidence note:</strong> ${recommendation.confidenceNote}
       </div>
+      <div class="form-actions">
+        <button class="ghost-btn" type="button" data-log-play-run>Log play run</button>
+      </div>
     `;
+    return recommendation;
   };
 
   if (playWizardForm instanceof HTMLFormElement) {
@@ -2581,7 +3430,8 @@ export const renderPropensityPage = (ctx) => {
 
   wrapper.querySelector('[data-run-play-wizard]')?.addEventListener('click', () => {
     const input = getWizardInput();
-    renderWizardOutput(input);
+    const recommendation = renderWizardOutput(input);
+    lastWizardRun = { input, recommendation };
     notify?.('Play recommendation generated.');
   });
 
@@ -2650,21 +3500,29 @@ export const renderPropensityPage = (ctx) => {
     notify?.('Playbook readiness checklist reset.');
   });
 
-  wrapper.querySelector('[data-download-guide]')?.addEventListener('click', () => {
-    triggerDownload(`pte-ptc-guide-${toIsoDate(new Date())}.md`, guideMarkdown, 'text/markdown;charset=utf-8');
-    notify?.('PtE/PtC guide markdown downloaded.');
+  wrapper.querySelectorAll('[data-download-guide]').forEach((button) => {
+    button.addEventListener('click', () => {
+      triggerDownload(`pte-ptc-guide-${toIsoDate(new Date())}.md`, guideMarkdown, 'text/markdown;charset=utf-8');
+      notify?.('PtE/PtC guide markdown downloaded.');
+    });
   });
-  wrapper.querySelector('[data-download-queue]')?.addEventListener('click', () => {
-    triggerDownload(`pte-ptc-action-queue-${toIsoDate(new Date())}.md`, queueMarkdown, 'text/markdown;charset=utf-8');
-    notify?.('PtE/PtC weekly action queue downloaded.');
+  wrapper.querySelectorAll('[data-download-queue]').forEach((button) => {
+    button.addEventListener('click', () => {
+      triggerDownload(`pte-ptc-action-queue-${toIsoDate(new Date())}.md`, queueMarkdown, 'text/markdown;charset=utf-8');
+      notify?.('PtE/PtC weekly action queue downloaded.');
+    });
   });
-  wrapper.querySelector('[data-download-mitigation]')?.addEventListener('click', () => {
-    triggerDownload(`pte-ptc-mitigation-coverage-${toIsoDate(new Date())}.md`, mitigationMarkdown, 'text/markdown;charset=utf-8');
-    notify?.('PtE/PtC mitigation coverage downloaded.');
+  wrapper.querySelectorAll('[data-download-mitigation]').forEach((button) => {
+    button.addEventListener('click', () => {
+      triggerDownload(`pte-ptc-mitigation-coverage-${toIsoDate(new Date())}.md`, mitigationMarkdown, 'text/markdown;charset=utf-8');
+      notify?.('PtE/PtC mitigation coverage downloaded.');
+    });
   });
-  wrapper.querySelector('[data-download-exec-brief]')?.addEventListener('click', () => {
-    triggerDownload(`pte-ptc-exec-brief-${toIsoDate(new Date())}.md`, executiveBriefMarkdown, 'text/markdown;charset=utf-8');
-    notify?.('PtE/PtC executive brief downloaded.');
+  wrapper.querySelectorAll('[data-download-exec-brief]').forEach((button) => {
+    button.addEventListener('click', () => {
+      triggerDownload(`pte-ptc-exec-brief-${toIsoDate(new Date())}.md`, executiveBriefMarkdown, 'text/markdown;charset=utf-8');
+      notify?.('PtE/PtC executive brief downloaded.');
+    });
   });
   wrapper.querySelector('[data-print-guide]')?.addEventListener('click', () => {
     const opened = openPrintWindow('PtE / PtC Operator Guide', guideMarkdown);
