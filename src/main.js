@@ -64,6 +64,7 @@ import { renderRisksPage } from './pages/risksPage.js';
 import { renderExpansionPage } from './pages/expansionPage.js';
 import { renderVocPage } from './pages/vocPage.js';
 import { renderReportsPage } from './pages/reportsPage.js';
+import { renderPropensityPage, propensityCommandEntries } from './pages/propensityPage.js';
 import { renderSettingsPage } from './pages/settingsPage.js';
 
 const appRoot = document.querySelector('[data-app-root]');
@@ -499,6 +500,7 @@ const PRIMARY_NAV_ITEMS = [
   { route: 'simulator', label: 'Simulator', icon: 'S' },
   { route: 'manager', label: 'Manager', icon: 'M' },
   { route: 'reports', label: 'Reports', icon: 'RP' },
+  { route: 'propensity', label: 'PtE / PtC', icon: 'PX' },
   { route: 'settings', label: 'Settings', icon: 'ST' },
   { route: 'resources', label: 'Resources', icon: 'RS' }
 ];
@@ -517,6 +519,7 @@ const ROUTE_LABELS = {
   expansion: 'Expansion',
   voc: 'Voice of Customer',
   reports: 'Reports',
+  propensity: 'PtE / PtC',
   settings: 'Settings',
   playbooks: 'Playbooks',
   resources: 'Resources',
@@ -551,6 +554,8 @@ const SHELL_ICON_SVGS = {
     '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.1"></circle><path d="M8 2.6v1.4M8 12v1.4M3.9 3.9l1 1M11.1 11.1l1 1M2.6 8h1.4M12 8h1.4M3.9 12.1l1-1M11.1 4.9l1-1"></path></svg>',
   resources:
     '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3.4h4.8a2 2 0 0 1 2 2v7.2H5a2 2 0 0 0-2 2z"></path><path d="M9.8 5.4h2.5c.9 0 1.7.7 1.7 1.7v7.5H8.8"></path></svg>',
+  propensity:
+    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12.5h11"></path><path d="M4.2 12.5V9.2M8 12.5V6.2M11.8 12.5V3.8"></path></svg>',
   dot:
     '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="2.1" fill="currentColor"></circle></svg>'
 };
@@ -666,6 +671,10 @@ const renderLeftRail = () => {
         ${shellIcon('playbooks')}
         <span>Open Playbooks</span>
       </button>
+      <button class="sidebar__item ${state.route.name === 'propensity' ? 'active' : ''}" type="button" data-go-propensity>
+        ${shellIcon('propensity')}
+        <span>PtE / PtC Guide</span>
+      </button>
       ${
         lastPlaybook?.name
           ? `<span class="sidebar__subtitle">${lastPlaybook.name}</span>`
@@ -743,7 +752,7 @@ const renderLeftRail = () => {
   `;
 
   leftRailRoot.querySelector('[data-rail-open-current]')?.addEventListener('click', () => {
-    const customerContext = ['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'settings'].includes(
+    const customerContext = ['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'propensity', 'settings'].includes(
       state.route.name
     );
     if (customerContext) {
@@ -1422,7 +1431,7 @@ const renderShellContext = () => {
   const accounts = state.data?.accounts || [];
   const workspace = currentWorkspace();
   const customers = workspace.customers || [];
-  const inCustomerModel = ['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'settings'].includes(
+  const inCustomerModel = ['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'propensity', 'settings'].includes(
     state.route.name
   );
   const activeAccountId = inCustomerModel
@@ -1626,6 +1635,7 @@ const commandEntries = (workspace) => {
     ...programsCommandEntries(state.data.programs),
     ...playbooksCommandEntries(state.data.playbooks),
     ...resourcesCommandEntries(),
+    ...propensityCommandEntries(),
     ...cheatsheetCommandEntries(),
     ...toolkitCommandEntries(),
     ...exportsCommandEntries(),
@@ -2055,6 +2065,15 @@ const renderCurrentRoute = () => {
     });
   }
 
+  if (route.name === 'propensity') {
+    view = renderPropensityPage({
+      workspace: workspaceModel,
+      workspacePortfolio,
+      manager,
+      ...common
+    });
+  }
+
   if (route.name === 'settings') {
     view = renderSettingsPage({
       workspace: workspaceModel,
@@ -2195,7 +2214,7 @@ const bindGlobalEvents = () => {
   const handleJumpSelection = (rawValue, select) => {
     const value = String(rawValue || '').trim();
     if (!value) return;
-    const customerRouteContext = ['customer', 'customers', 'program', 'risks', 'expansion', 'voc', 'reports', 'settings'].includes(
+    const customerRouteContext = ['customer', 'customers', 'program', 'risks', 'expansion', 'voc', 'reports', 'propensity', 'settings'].includes(
       state.route.name
     );
     if (value.startsWith('section:')) {
@@ -2319,6 +2338,15 @@ const bindGlobalEvents = () => {
       return;
     }
 
+    const openPropensity = event.target.closest('[data-go-propensity]');
+    if (openPropensity) {
+      router.navigate('propensity');
+      closeSidebar();
+      if (moreMenu) moreMenu.hidden = true;
+      moreButton?.setAttribute('aria-expanded', 'false');
+      return;
+    }
+
     const openPortfolio = event.target.closest('[data-go-portfolio]');
     if (openPortfolio) {
       router.navigate('portfolio');
@@ -2408,7 +2436,7 @@ const bindGlobalEvents = () => {
     if (target.matches('[data-global-account-select]')) {
       const accountId = target.value;
       if (!accountId) return;
-      if (['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'settings'].includes(state.route.name)) {
+      if (['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'propensity', 'settings'].includes(state.route.name)) {
         setSelectedCustomer(accountId);
         router.navigate('customer', { id: accountId });
       } else {

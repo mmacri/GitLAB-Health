@@ -57,6 +57,7 @@ test('router supports playbooks and exports routes', () => {
   assert.equal(parseRoute('/expansion').name, 'expansion');
   assert.equal(parseRoute('/voc').name, 'voc');
   assert.equal(parseRoute('/reports').name, 'reports');
+  assert.equal(parseRoute('/propensity').name, 'propensity');
   assert.equal(parseRoute('/settings').name, 'settings');
   assert.equal(parseRoute('/cheatsheet').name, 'cheatsheet');
   assert.equal(parseRoute('/exports').name, 'exports');
@@ -69,6 +70,7 @@ test('router supports playbooks and exports routes', () => {
   assert.equal(routePath('expansion'), '/expansion');
   assert.equal(routePath('voc'), '/voc');
   assert.equal(routePath('reports'), '/reports');
+  assert.equal(routePath('propensity'), '/propensity');
   assert.equal(routePath('settings'), '/settings');
   assert.equal(routePath('toolkit'), '/toolkit');
   assert.equal(routePath('success-plans'), '/success-plans');
