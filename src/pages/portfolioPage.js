@@ -467,6 +467,7 @@ const renderWorkspaceTodayPage = (ctx) => {
     workspacePortfolio,
     mode,
     persona,
+    filterCount,
     customerSafe,
     maskField,
     navigate,
@@ -498,12 +499,14 @@ const renderWorkspaceTodayPage = (ctx) => {
         <p class="eyebrow">Today</p>
         <h1>Today Console</h1>
         <p class="hero-lede">Portfolio command center for pooled CSE operations: prioritize risk, lift adoption, and prove outcomes.</p>
-        <p class="muted page-meta">Mode behavior: ${String(mode || 'today')}.</p>
+        <p class="muted page-meta">Focus first on at-risk customers, near-term renewals, and adoption blockers.</p>
       </div>
       <div class="page-actions">
         ${isManager ? '<span class="status-chip tone-info">Manager</span>' : ''}
-        <button class="ghost-btn" type="button" data-go-portfolio>Open Portfolio Filters</button>
-        <button class="ghost-btn" type="button" data-go-playbooks>Open Playbooks</button>
+        <button class="ghost-btn" type="button" data-open-filters aria-expanded="false">Open Filters${
+          Number(filterCount || 0) > 0 ? ` (${Number(filterCount)} active)` : ''
+        }</button>
+        <button class="ghost-btn" type="button" data-go-portfolio>Review Portfolio</button>
       </div>
     </header>
 
@@ -522,6 +525,45 @@ const renderWorkspaceTodayPage = (ctx) => {
         ? `<section class="manager-mount" data-manager-overview-mount></section>`
         : ''
     }
+
+    <section class="card dashboard-row-wide ${isManager ? 'is-hidden-mode' : ''}">
+      <div class="metric-head">
+        <h2>Next Best Actions</h2>
+        <div class="page-actions">
+          ${statusChip({ label: `${actions.length} prioritized`, tone: actions.length ? 'warn' : 'good' })}
+          <button class="ghost-btn" type="button" data-go-playbooks>Open playbooks</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Customer</th><th>Why now</th><th>Next move</th><th>Due</th><th>Quick actions</th></tr></thead>
+          <tbody>
+            ${
+              actions.length
+                ? actions
+                    .map(
+                      (item) => `
+                    <tr>
+                      <td><a href="#" data-open-customer="${item.customerId}">${item.customerName}</a></td>
+                      <td>${item.reason}</td>
+                      <td>${item.action}</td>
+                      <td>${formatDate(item.due)}</td>
+                      <td>
+                        <div class="page-actions">
+                          <button class="ghost-btn" type="button" data-quick-log="${item.customerId}">Log touchpoint</button>
+                          <button class="ghost-btn" type="button" data-open-playbooks>Open playbook</button>
+                        </div>
+                      </td>
+                    </tr>
+                  `
+                    )
+                    .join('')
+                : '<tr><td colspan="5">No immediate actions generated. Portfolio signals are currently stable.</td></tr>'
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
 
     <section class="dashboard-row-2">
       <article class="card">
@@ -556,42 +598,6 @@ const renderWorkspaceTodayPage = (ctx) => {
       </article>
     </section>
 
-    <section class="card dashboard-row-wide ${isManager ? 'is-hidden-mode' : ''}">
-      <div class="metric-head">
-        <h2>Next Best Actions</h2>
-        ${statusChip({ label: `${actions.length} prioritized`, tone: actions.length ? 'warn' : 'good' })}
-      </div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th>Customer</th><th>Reason</th><th>Recommended Action</th><th>Due</th><th>Actions</th></tr></thead>
-          <tbody>
-            ${
-              actions.length
-                ? actions
-                    .map(
-                      (item) => `
-                    <tr>
-                      <td><a href="#" data-open-customer="${item.customerId}">${item.customerName}</a></td>
-                      <td>${item.reason}</td>
-                      <td>${item.action}</td>
-                      <td>${formatDate(item.due)}</td>
-                      <td>
-                        <div class="page-actions">
-                          <button class="ghost-btn" type="button" data-quick-log="${item.customerId}">Log engagement</button>
-                          <button class="ghost-btn" type="button" data-open-playbooks>Open playbook</button>
-                        </div>
-                      </td>
-                    </tr>
-                  `
-                    )
-                    .join('')
-                : '<tr><td colspan="5">No immediate actions generated. Portfolio signals are currently stable.</td></tr>'
-            }
-          </tbody>
-        </table>
-      </div>
-    </section>
-
     <section class="dashboard-row-wide">
       <article class="card">
         <div class="metric-head">
@@ -611,7 +617,7 @@ const renderWorkspaceTodayPage = (ctx) => {
 
     <section class="card dashboard-row-table">
       <div class="metric-head">
-        <h2>Engagement Queue</h2>
+        <h2>Today Engagement Queue</h2>
       </div>
       <div class="engagement-tabbar" role="tablist" aria-label="Engagement type filter">
         <button type="button" class="ghost-btn is-active" data-type-tab="ALL">All (${rows.length})</button>
@@ -706,7 +712,7 @@ const renderWorkspaceTodayPage = (ctx) => {
             <td>${String(row.engagementStatus || 'REQUESTED').replace(/_/g, ' ')}</td>
             <td>${formatDate(row.engagementDate)}</td>
             <td><div class="adoption-dot-row">${compactAdoptionDots(row.customer.adoptionProfile || {})}</div></td>
-            <td><button class="ghost-btn" type="button" data-quick-log="${row.customer.id}">Log engagement</button></td>
+            <td><button class="ghost-btn" type="button" data-quick-log="${row.customer.id}">Log touchpoint</button></td>
           </tr>
         `;
       })
@@ -793,7 +799,7 @@ export const renderPortfolioHomePage = (ctx) => {
     return renderWorkspaceTodayPage(ctx);
   }
 
-  const { portfolio, filters, navigate, onLogAttendance, onExportPortfolio, onCopyShare, updatedOn, accountLoadError, onRetryData, mode } = ctx;
+  const { portfolio, filters, filterCount, navigate, onLogAttendance, updatedOn, accountLoadError, onRetryData, mode } = ctx;
 
   const staleThreshold = Number(filters.staleDays || 30);
   const allSignals = [...(portfolio.signals || [])].sort((left, right) => (right.outlierScore || 0) - (left.outlierScore || 0));
@@ -825,13 +831,14 @@ export const renderPortfolioHomePage = (ctx) => {
         <p class="eyebrow">Today</p>
         <h1>Today Console</h1>
         <p class="hero-lede">Your prioritized CSE operating queue for triage, enablement, and lifecycle progression.</p>
-        <p class="muted page-meta">Last updated: ${formatDate(updatedOn)}</p>
+        <p class="muted page-meta">Last updated: ${formatDate(updatedOn)}. Focus first on highest-risk and near-term renewal work.</p>
       </div>
       <div class="page-actions">
         <button class="qa" type="button" data-go-intake>Create Engagement Request</button>
-        <button class="ghost-btn" type="button" data-go-portfolio>Open Portfolio</button>
-        <button class="ghost-btn" type="button" data-export-portfolio>Export Portfolio CSV</button>
-        <button class="ghost-btn" type="button" data-share-snapshot>Share snapshot</button>
+        <button class="ghost-btn" type="button" data-open-filters aria-expanded="false">Open Filters${
+          Number(filterCount || 0) > 0 ? ` (${Number(filterCount)} active)` : ''
+        }</button>
+        <button class="ghost-btn" type="button" data-go-portfolio>Review Portfolio</button>
       </div>
     </header>
 
@@ -1040,8 +1047,6 @@ export const renderPortfolioHomePage = (ctx) => {
 
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
   wrapper.querySelector('[data-go-intake]')?.addEventListener('click', () => navigate('intake'));
-  wrapper.querySelector('[data-export-portfolio]')?.addEventListener('click', onExportPortfolio);
-  wrapper.querySelector('[data-share-snapshot]')?.addEventListener('click', onCopyShare);
   wrapper.querySelector('[data-retry-data]')?.addEventListener('click', () => onRetryData?.());
   wrapper.querySelector('[data-configure-expectations]')?.addEventListener('click', () => navigate('playbooks'));
 

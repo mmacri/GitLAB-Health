@@ -106,7 +106,7 @@ const observeHeaderOffset = () => {
 const closeHeaderMenus = () => {
   const moreButton = appRoot?.querySelector('[data-open-more]');
   const moreMenu = appRoot?.querySelector('[data-more-menu]');
-  const filtersButton = appRoot?.querySelector('[data-open-filters]');
+  const filterButtons = [...(appRoot?.querySelectorAll('[data-open-filters]') || [])];
   const filtersPanel = appRoot?.querySelector('[data-filters-panel]');
 
   if (moreMenu && !moreMenu.hidden) {
@@ -118,9 +118,7 @@ const closeHeaderMenus = () => {
   if (filtersPanel && !filtersPanel.hasAttribute('hidden')) {
     filtersPanel.setAttribute('hidden', 'hidden');
   }
-  if (filtersButton) {
-    filtersButton.setAttribute('aria-expanded', 'false');
-  }
+  filterButtons.forEach((button) => button.setAttribute('aria-expanded', 'false'));
 };
 
 if (!appRoot || !routeRoot || !leftRailRoot) {
@@ -669,7 +667,7 @@ const renderLeftRail = () => {
       }
       <button class="sidebar__item" type="button" data-rail-open-current ${current ? '' : 'disabled'}>
         ${shellIcon('current')}
-        <span>Open Current Account</span>
+        <span>Open Selected Customer</span>
       </button>
       <div class="sidebar__field">
         <label for="sidebar-jump">Jump to section</label>
@@ -1504,7 +1502,7 @@ const renderShellContext = () => {
     headerStatus.classList.toggle('status-pill--safe', state.customerSafe);
     headerStatus.innerHTML = state.customerSafe
       ? '<span class="status-pill__dot" aria-hidden="true"></span>Customer-Safe'
-      : '<span class="status-pill__dot" aria-hidden="true"></span>Internal';
+      : '<span class="status-pill__dot" aria-hidden="true"></span>Internal View';
   }
 
   const themeToggleButton = appRoot.querySelector('[data-toggle-theme]');
@@ -1779,6 +1777,7 @@ const renderCurrentRoute = () => {
       workspace: workspaceModel,
       workspacePortfolio,
       filters: state.portfolioFilters,
+      filterCount: countActivePortfolioFilters(state.portfolioFilters),
       onSetFilters: setPortfolioFilters,
       updatedOn: state.data.updated_on,
       mode: state.viewMode,
@@ -2247,7 +2246,7 @@ const bindGlobalEvents = () => {
   const moreButton = appRoot.querySelector('[data-open-more]');
   const moreMenu = appRoot.querySelector('[data-more-menu]');
   const filtersPanel = appRoot.querySelector('[data-filters-panel]');
-  const getFiltersButton = () => appRoot.querySelector('[data-open-filters]');
+  const getFiltersButtons = () => [...appRoot.querySelectorAll('[data-open-filters]')];
 
   moreButton?.setAttribute('aria-expanded', 'false');
 
@@ -2328,10 +2327,10 @@ const bindGlobalEvents = () => {
     if (toggleMore) {
       event.stopPropagation();
       if (!moreMenu) return;
-      const filtersButton = getFiltersButton();
+      const filterButtons = getFiltersButtons();
       if (filtersPanel && !filtersPanel.hasAttribute('hidden')) {
         filtersPanel.setAttribute('hidden', 'hidden');
-        filtersButton?.setAttribute('aria-expanded', 'false');
+        filterButtons.forEach((button) => button.setAttribute('aria-expanded', 'false'));
       }
       const expanded = moreButton?.getAttribute('aria-expanded') === 'true';
       moreMenu.hidden = Boolean(expanded);
@@ -2350,10 +2349,10 @@ const bindGlobalEvents = () => {
       const hidden = filtersPanel.hasAttribute('hidden');
       if (hidden) {
         filtersPanel.removeAttribute('hidden');
-        toggleFilters.setAttribute('aria-expanded', 'true');
+        getFiltersButtons().forEach((button) => button.setAttribute('aria-expanded', 'true'));
       } else {
         filtersPanel.setAttribute('hidden', 'hidden');
-        toggleFilters.setAttribute('aria-expanded', 'false');
+        getFiltersButtons().forEach((button) => button.setAttribute('aria-expanded', 'false'));
       }
       syncHeaderOffset();
       return;
