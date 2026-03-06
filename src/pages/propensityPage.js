@@ -1,6 +1,7 @@
 import { pageHeader } from '../components/pageHeader.js';
 import { metricTile } from '../components/metricTile.js';
 import { statusChip } from '../components/statusChip.js';
+import { barChartSvg, donutChartSvg, lineChartSvg } from '../lib/charts.js';
 
 const safePercent = (value, total) => {
   const numerator = Number(value || 0);
@@ -56,6 +57,26 @@ const buildSignalWatchlist = (rows = []) => {
   return [...map.values()].sort((left, right) => {
     if (right.count !== left.count) return right.count - left.count;
     return severityRank(right.severity) - severityRank(left.severity);
+  });
+};
+
+const totalHealthCount = (distribution = {}) =>
+  Number(distribution.green || 0) + Number(distribution.yellow || 0) + Number(distribution.red || 0);
+
+const buildSnapshotTrend = (snapshots = []) => {
+  const items = Array.isArray(snapshots) ? snapshots : [];
+  return items.map((snapshot) => {
+    const health = snapshot.healthDistribution || {};
+    const total = Math.max(1, totalHealthCount(health));
+    const redRate = Number(health.red || 0) / total;
+    const adoption = Number(snapshot.adoptionAvg || 0);
+    const engagement = Number(snapshot.engagementCoverage || 0);
+
+    return {
+      month: snapshot.month || '',
+      readiness: Math.round(adoption * 0.62 + engagement * 0.38),
+      riskPressure: Math.round(redRate * 100 * 0.58 + (100 - engagement) * 0.42)
+    };
   });
 };
 
@@ -187,6 +208,8 @@ export const renderPropensityPage = (ctx) => {
   };
 
   const signalWatchlist = buildSignalWatchlist(rows);
+  const topSignals = signalWatchlist.slice(0, 5);
+  const trend = buildSnapshotTrend(manager?.snapshots || []);
   const signalCountByCode = new Map(signalWatchlist.map((item) => [item.code, item.count]));
   const triggerRows = triggerGuide.map((item) => ({
     ...item,
@@ -226,6 +249,77 @@ export const renderPropensityPage = (ctx) => {
       <div class="callout">
         Use PtE/PtC as a prioritization system, not a replacement for account judgment. Run one PtC mitigation play and one PtE acceleration play per priority account each cycle.
       </div>
+    </section>
+
+    <section class="grid-cards">
+      <article class="card">
+        <div class="metric-head">
+          <h2>PtE Band Mix</h2>
+          ${statusChip({ label: 'Expansion mix', tone: 'good' })}
+        </div>
+        <div class="chart-wrap">
+          ${donutChartSvg([
+            { label: 'High', value: pteHigh, color: '#16A34A' },
+            { label: 'Medium', value: pteMedium, color: '#D97706' },
+            { label: 'Low', value: pteLow, color: '#6B7280' }
+          ])}
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="metric-head">
+          <h2>PtC Band Mix</h2>
+          ${statusChip({ label: 'Retention pressure mix', tone: 'risk' })}
+        </div>
+        <div class="chart-wrap">
+          ${donutChartSvg([
+            { label: 'High', value: ptcHigh, color: '#DC2626' },
+            { label: 'Medium', value: ptcMedium, color: '#D97706' },
+            { label: 'Low', value: ptcLow, color: '#16A34A' }
+          ])}
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="metric-head">
+          <h2>Quadrant Volume</h2>
+          ${statusChip({ label: 'Execution segmentation', tone: 'neutral' })}
+        </div>
+        <div class="chart-wrap">
+          ${barChartSvg([
+            { label: 'Expand+Retain', value: Number(quadrants.expandAndRetain || 0), color: '#16A34A' },
+            { label: 'Grow+Risk', value: Number(quadrants.growWithRisk || 0), color: '#D97706' },
+            { label: 'Stabilize', value: Number(quadrants.stabilizeThenExpand || 0), color: '#DC2626' },
+            { label: 'Monitor', value: Number(quadrants.monitor || 0), color: '#0284C7' }
+          ])}
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="metric-head">
+          <h2>Top Trigger Volume</h2>
+          ${statusChip({ label: `${topSignals.length} signal types`, tone: topSignals.length ? 'warn' : 'good' })}
+        </div>
+        <div class="chart-wrap">
+          ${
+            topSignals.length
+              ? barChartSvg(
+                  topSignals.map((signal) => ({
+                    label: signal.code.length > 12 ? `${signal.code.slice(0, 12)}...` : signal.code,
+                    value: Number(signal.count || 0),
+                    color:
+                      String(signal.severity).toLowerCase() === 'high'
+                        ? '#DC2626'
+                        : String(signal.severity).toLowerCase() === 'medium'
+                          ? '#D97706'
+                          : '#6B7280'
+                  })),
+                  { width: 520 }
+                )
+              : '<p class="empty-text">No active trigger volume to chart.</p>'
+          }
+        </div>
+      </article>
     </section>
 
     <section class="card">
@@ -277,6 +371,49 @@ export const renderPropensityPage = (ctx) => {
           <li><strong>Medium:</strong> targeted risk reduction and engagement cadence reset.</li>
           <li><strong>Low:</strong> maintain health and prevent drift with proactive check-ins.</li>
         </ul>
+      </article>
+    </section>
+
+    <section class="grid-cards">
+      <article class="card">
+        <div class="metric-head">
+          <h2>Readiness Trend (Proxy)</h2>
+          ${statusChip({ label: `${trend.length} snapshots`, tone: 'neutral' })}
+        </div>
+        <p class="muted">Derived from adoption average and engagement coverage. Use this trend to validate whether expansion readiness is improving.</p>
+        <div class="chart-wrap">
+          ${
+            trend.length
+              ? lineChartSvg(
+                  trend.map((item) => ({
+                    label: item.month,
+                    value: item.readiness
+                  }))
+                )
+              : '<p class="empty-text">No monthly snapshots available yet.</p>'
+          }
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="metric-head">
+          <h2>Risk Pressure Trend (Proxy)</h2>
+          ${statusChip({ label: `${trend.length} snapshots`, tone: 'warn' })}
+        </div>
+        <p class="muted">Derived from red-health ratio and engagement coverage decay. Rising trend means retention pressure is accumulating.</p>
+        <div class="chart-wrap">
+          ${
+            trend.length
+              ? lineChartSvg(
+                  trend.map((item) => ({
+                    label: item.month,
+                    value: item.riskPressure
+                  })),
+                  { width: 520 }
+                )
+              : '<p class="empty-text">No monthly snapshots available yet.</p>'
+          }
+        </div>
       </article>
     </section>
 
