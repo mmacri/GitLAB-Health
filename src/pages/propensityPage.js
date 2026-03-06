@@ -357,6 +357,72 @@ const recommendPlays = ({ triggerCode, pteBand, ptcBand, renewalDays, confidence
   return { primary, secondary, window, successMetric, reviewCadence, confidenceNote };
 };
 
+const quadrantLabelForRow = (row) => {
+  if (row?.pteBand === 'High' && row?.ptcBand === 'Low') return 'Expand + Retain';
+  if (row?.pteBand === 'High' && row?.ptcBand !== 'Low') return 'Grow with Risk';
+  if (row?.pteBand !== 'High' && row?.ptcBand === 'High') return 'Stabilize then Expand';
+  return 'Monitor';
+};
+
+const primarySignalForRow = (row) =>
+  [...(row?.riskSignals || [])]
+    .sort((left, right) => severityRank(right?.severity) - severityRank(left?.severity))
+    .find(Boolean) || null;
+
+const buildWeeklyActionQueue = (rows, confidenceMap) =>
+  [...(rows || [])]
+    .map((row) => {
+      const confidence = confidenceMap.get(row.customer.id) || { score: 70 };
+      const primarySignal = primarySignalForRow(row);
+      const renewalDays = Number(row.renewalDays ?? 999);
+
+      let priorityScore = 0;
+      if (row.ptcBand === 'High') priorityScore += 60;
+      else if (row.ptcBand === 'Medium') priorityScore += 35;
+      else priorityScore += 15;
+
+      if (renewalDays <= 60) priorityScore += 22;
+      else if (renewalDays <= 90) priorityScore += 14;
+
+      if (row.pteBand === 'High' && row.ptcBand === 'Low') priorityScore += 12;
+      if (row.pteBand === 'Low') priorityScore += 10;
+
+      if (primarySignal) {
+        if (severityRank(primarySignal.severity) === 3) priorityScore += 16;
+        else if (severityRank(primarySignal.severity) === 2) priorityScore += 10;
+        else priorityScore += 4;
+      }
+
+      if (Number(confidence.score || 0) < 65) priorityScore += 8;
+
+      const recommendation = recommendPlays({
+        triggerCode: primarySignal?.code || '',
+        pteBand: row.pteBand,
+        ptcBand: row.ptcBand,
+        renewalDays,
+        confidenceScore: confidence.score
+      });
+
+      const reasons = [];
+      if (row.ptcBand === 'High') reasons.push('PtC High');
+      if (renewalDays <= 90) reasons.push(`Renewal ${renewalDays}d`);
+      if (primarySignal?.code) reasons.push(primarySignal.code);
+      if (Number(confidence.score || 0) < 65) reasons.push('Low confidence');
+      if (!reasons.length) reasons.push('Routine monitoring');
+
+      return {
+        row,
+        primarySignal,
+        confidence,
+        recommendation,
+        renewalDays,
+        priorityScore,
+        reasons
+      };
+    })
+    .sort((left, right) => right.priorityScore - left.priorityScore)
+    .slice(0, 12);
+
 const escapeHtml = (value = '') =>
   String(value)
     .replace(/&/g, '&amp;')
@@ -555,6 +621,29 @@ ${priorityRows.map((item, index) => `${index + 1}. **${item.title}** (${item.whe
 2. Require one measurable proof-point update per priority account this cycle.
 3. Rebalance CSE capacity if PtC High queue is flat for two consecutive reviews.
 `;
+};
+
+const buildQueueMarkdown = ({ generatedOn, queueRows = [] }) => {
+  const lines = [
+    '# PtE / PtC Weekly Action Queue',
+    '',
+    `Generated: ${generatedOn}`,
+    '',
+    '| Priority | Account | Quadrant | Trigger | Why now | Primary play | Window |',
+    '|---:|---|---|---|---|---|---|'
+  ];
+
+  queueRows.forEach((item, index) => {
+    lines.push(
+      `| ${index + 1} (${Number(item.priorityScore || 0)}) | ${escapeMd(item.row?.customer?.name || 'Unknown')} | ${escapeMd(
+        quadrantLabelForRow(item.row)
+      )} | ${escapeMd(item.primarySignal?.code || 'None')} | ${escapeMd((item.reasons || []).join(', '))} | ${escapeMd(
+        item.recommendation?.primary?.title || 'No play'
+      )} | ${escapeMd(item.recommendation?.window || 'This cycle')} |`
+    );
+  });
+
+  return `${lines.join('\n')}\n`;
 };
 
 const openPrintWindow = (title, markdown) => {
@@ -880,6 +969,7 @@ export const renderPropensityPage = (ctx) => {
     .sort((left, right) => Number(confidenceById.get(left.customer.id)?.score || 0) - Number(confidenceById.get(right.customer.id)?.score || 0));
   const missingRenewalCount = rows.filter((row) => !String(row.customer?.renewalDate || '').trim()).length;
   const missingEngagementCount = rows.filter((row) => !(workspace?.engagements?.[row.customer.id] || []).length && !String(row.lastEngagementDate || '').trim()).length;
+  const weeklyQueue = buildWeeklyActionQueue(rows, confidenceById);
 
   const accountOptions = rows
     .map((row) => `<option value="${row.customer.id}">${escapeHtml(row.customer.name)}</option>`)
@@ -993,6 +1083,70 @@ export const renderPropensityPage = (ctx) => {
           <p>Use delta panel to verify direction change against the last monthly snapshot.</p>
           <button class="ghost-btn" type="button" data-jump-target="section-score-delta">Open score delta</button>
         </article>
+      </div>
+    </section>
+
+    <section class="card" id="section-action-queue">
+      <div class="metric-head">
+        <h2>Weekly Action Queue (Prioritized)</h2>
+        ${statusChip({ label: `${weeklyQueue.length} queued`, tone: weeklyQueue.length ? 'warn' : 'neutral' })}
+      </div>
+      <p class="muted">
+        Ranking combines PtC pressure, renewal proximity, trigger severity, and confidence gaps. Use this queue to decide execution order before ad-hoc requests.
+      </p>
+      <div class="table-wrap">
+        ${
+          weeklyQueue.length
+            ? `
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Priority</th>
+                    <th>Account</th>
+                    <th>Quadrant</th>
+                    <th>Primary trigger</th>
+                    <th>Why now</th>
+                    <th>Primary play</th>
+                    <th>Window</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${weeklyQueue
+                    .map((item, index) => {
+                      const row = item.row;
+                      return `
+                        <tr>
+                          <td>${statusChip({ label: `#${index + 1} (${item.priorityScore})`, tone: item.priorityScore >= 90 ? 'risk' : item.priorityScore >= 70 ? 'warn' : 'neutral' })}</td>
+                          <td><a href="#" data-open-customer="${row.customer.id}">${escapeHtml(row.customer.name)}</a></td>
+                          <td>${statusChip({
+                            label: quadrantLabelForRow(row),
+                            tone: row.pteBand === 'High' && row.ptcBand === 'Low' ? 'good' : row.ptcBand === 'High' ? 'risk' : 'warn'
+                          })}</td>
+                          <td>${item.primarySignal ? `${escapeHtml(item.primarySignal.code)} (${escapeHtml(item.primarySignal.severity || 'Low')})` : 'None'}</td>
+                          <td>${escapeHtml((item.reasons || []).join(', '))}</td>
+                          <td>${escapeHtml(item.recommendation?.primary?.title || 'No recommendation')}</td>
+                          <td>${escapeHtml(item.recommendation?.window || 'This cycle')}</td>
+                          <td>
+                            <div class="page-actions">
+                              <button class="ghost-btn" type="button" data-open-customer="${row.customer.id}">Open</button>
+                              <button class="ghost-btn" type="button" data-wizard-account="${row.customer.id}">Load in wizard</button>
+                            </div>
+                          </td>
+                        </tr>
+                      `;
+                    })
+                    .join('')}
+                </tbody>
+              </table>
+            `
+            : '<p class="empty-text">No queue entries available. Confirm portfolio data is loaded.</p>'
+        }
+      </div>
+      <div class="form-actions">
+        <button class="ghost-btn" type="button" data-drill="ptc:High">Drill PtC High queue</button>
+        <button class="ghost-btn" type="button" data-jump-target="section-play-wizard">Jump to Play Wizard</button>
+        <button class="ghost-btn" type="button" data-download-queue>Download queue .md</button>
       </div>
     </section>
 
@@ -1738,6 +1892,11 @@ export const renderPropensityPage = (ctx) => {
     topSignals
   });
 
+  const queueMarkdown = buildQueueMarkdown({
+    generatedOn: toIsoDate(new Date()),
+    queueRows: weeklyQueue
+  });
+
   wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
   wrapper.querySelector('[data-go-manager]')?.addEventListener('click', () => navigate('manager'));
@@ -1755,6 +1914,20 @@ export const renderPropensityPage = (ctx) => {
 
   wrapper.addEventListener('click', (event) => {
     if (!(event.target instanceof Element)) return;
+    const wizardButton = event.target.closest('[data-wizard-account]');
+    if (wizardButton) {
+      event.preventDefault();
+      const customerId = wizardButton.getAttribute('data-wizard-account');
+      if (customerId) {
+        const accountField = wrapper.querySelector('[data-play-wizard-form] [name="accountId"]');
+        if (accountField && 'value' in accountField) accountField.value = customerId;
+        setWizardValuesFromAccount(customerId);
+        const section = wrapper.querySelector('#section-play-wizard');
+        section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        notify?.(`Wizard loaded for ${rows.find((item) => item.customer.id === customerId)?.customer?.name || 'selected account'}.`);
+      }
+      return;
+    }
     const accountLink = event.target.closest('[data-open-customer]');
     if (accountLink) {
       event.preventDefault();
@@ -2111,6 +2284,10 @@ export const renderPropensityPage = (ctx) => {
   wrapper.querySelector('[data-download-guide]')?.addEventListener('click', () => {
     triggerDownload(`pte-ptc-guide-${toIsoDate(new Date())}.md`, guideMarkdown, 'text/markdown;charset=utf-8');
     notify?.('PtE/PtC guide markdown downloaded.');
+  });
+  wrapper.querySelector('[data-download-queue]')?.addEventListener('click', () => {
+    triggerDownload(`pte-ptc-action-queue-${toIsoDate(new Date())}.md`, queueMarkdown, 'text/markdown;charset=utf-8');
+    notify?.('PtE/PtC weekly action queue downloaded.');
   });
   wrapper.querySelector('[data-download-exec-brief]')?.addEventListener('click', () => {
     triggerDownload(`pte-ptc-exec-brief-${toIsoDate(new Date())}.md`, executiveBriefMarkdown, 'text/markdown;charset=utf-8');
