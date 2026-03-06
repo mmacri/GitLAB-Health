@@ -82,6 +82,70 @@ const buildSnapshotTrend = (snapshots = []) => {
   });
 };
 
+const formatSigned = (value, decimals = 1) => {
+  const numeric = Number(value || 0);
+  if (!Number.isFinite(numeric)) return '0';
+  return `${numeric > 0 ? '+' : ''}${numeric.toFixed(decimals)}`;
+};
+
+const round1 = (value) => {
+  const numeric = Number(value || 0);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.round(numeric * 10) / 10;
+};
+
+const computeReadinessProxy = (adoptionAvg, engagementCoveragePct) => round1(Number(adoptionAvg || 0) * 0.62 + Number(engagementCoveragePct || 0) * 0.38);
+
+const computeRiskPressureProxy = (redHealthRatePct, engagementCoveragePct) =>
+  round1(Number(redHealthRatePct || 0) * 0.58 + (100 - Number(engagementCoveragePct || 0)) * 0.42);
+
+const deriveHealthDistribution = (rows = []) =>
+  rows.reduce(
+    (acc, row) => {
+      const key = String(row.health || '').toLowerCase();
+      if (key === 'green') acc.green += 1;
+      else if (key === 'red') acc.red += 1;
+      else acc.yellow += 1;
+      return acc;
+    },
+    { green: 0, yellow: 0, red: 0 }
+  );
+
+const PLAYBOOK_CHECKLIST_KEY = 'gh_propensity_playbook_readiness_v1';
+
+const defaultChecklist = () => ({
+  playName: '',
+  owner: '',
+  dueDate: '',
+  successMetric: '',
+  nextTouchDate: ''
+});
+
+const loadChecklist = () => {
+  try {
+    const raw = window.localStorage.getItem(PLAYBOOK_CHECKLIST_KEY);
+    if (!raw) return defaultChecklist();
+    const parsed = JSON.parse(raw);
+    return {
+      playName: String(parsed?.playName || ''),
+      owner: String(parsed?.owner || ''),
+      dueDate: String(parsed?.dueDate || ''),
+      successMetric: String(parsed?.successMetric || ''),
+      nextTouchDate: String(parsed?.nextTouchDate || '')
+    };
+  } catch {
+    return defaultChecklist();
+  }
+};
+
+const saveChecklist = (value) => {
+  try {
+    window.localStorage.setItem(PLAYBOOK_CHECKLIST_KEY, JSON.stringify(value || defaultChecklist()));
+  } catch {
+    // Ignore storage quota/access errors in static mode.
+  }
+};
+
 const escapeHtml = (value = '') =>
   String(value)
     .replace(/&/g, '&amp;')
@@ -294,6 +358,57 @@ const triggerGuide = [
   }
 ];
 
+const triggerOpsMeta = {
+  RENEWAL_SOON: {
+    severity: 'High',
+    owner: 'CSE + CSM',
+    sla: '24-48 hours',
+    escalateIf: 'No executive sponsor response or no dated mitigation plan within 7 days'
+  },
+  LOW_ENGAGEMENT: {
+    severity: 'Medium',
+    owner: 'CSE',
+    sla: '3 business days',
+    escalateIf: 'No customer response after two outreach attempts'
+  },
+  NO_TIME_TO_VALUE: {
+    severity: 'High',
+    owner: 'CSE',
+    sla: 'This week',
+    escalateIf: 'No first-value milestone date committed'
+  },
+  LOW_CICD_ADOPTION: {
+    severity: 'Medium',
+    owner: 'CSE',
+    sla: '7-14 days',
+    escalateIf: 'No CI uplift plan owner assigned'
+  },
+  LOW_SECURITY_ADOPTION: {
+    severity: 'Medium',
+    owner: 'CSE',
+    sla: '7-14 days',
+    escalateIf: 'Secure baseline still not planned by next review'
+  },
+  STAGE_GAP_SECURE: {
+    severity: 'Medium',
+    owner: 'CSE Manager',
+    sla: 'This month',
+    escalateIf: 'No sponsor for secure rollout'
+  },
+  HIGH_PTE_LOW_PTC: {
+    severity: 'Medium',
+    owner: 'CSE',
+    sla: 'Start now',
+    escalateIf: 'Expansion proposal not positioned by next cycle'
+  },
+  HIGH_PTE_HIGH_PTC: {
+    severity: 'High',
+    owner: 'CSE Manager',
+    sla: 'Immediate',
+    escalateIf: 'Top 3 risk drivers not closing week over week'
+  }
+};
+
 const quadrantGuide = [
   {
     title: 'Expand + Retain (PtE High, PtC Low)',
@@ -352,6 +467,12 @@ export const renderPropensityPage = (ctx) => {
   const signalCountByCode = new Map(signalWatchlist.map((item) => [item.code, item.count]));
   const triggerRows = triggerGuide.map((item) => ({
     ...item,
+    ...(triggerOpsMeta[item.code] || {
+      severity: 'Medium',
+      owner: 'CSE',
+      sla: item.response || 'This cycle',
+      escalateIf: 'No movement after two review cycles'
+    }),
     activeCount:
       item.code === 'HIGH_PTE_LOW_PTC'
         ? quadrants.expandAndRetain
@@ -359,6 +480,49 @@ export const renderPropensityPage = (ctx) => {
           ? quadrants.growWithRisk
           : Number(signalCountByCode.get(item.code) || 0)
   }));
+
+  const slaRows = [...triggerRows].sort((left, right) => {
+    const severityDiff = severityRank(right.severity) - severityRank(left.severity);
+    if (severityDiff !== 0) return severityDiff;
+    return Number(right.activeCount || 0) - Number(left.activeCount || 0);
+  });
+
+  const currentAdoptionAvg = rows.length
+    ? round1(rows.reduce((sum, row) => sum + Number(row.adoptionScore || 0), 0) / rows.length)
+    : 0;
+  const currentEngagementCoverage = rows.length
+    ? round1((rows.filter((row) => Number(row.engagementDays ?? 999) <= 30).length / rows.length) * 100)
+    : 0;
+  const currentHealthDistribution = manager?.portfolio?.healthDistribution || deriveHealthDistribution(rows);
+  const currentRedRate = rows.length ? round1((Number(currentHealthDistribution.red || 0) / rows.length) * 100) : 0;
+
+  const currentReadinessAdoption = round1(currentAdoptionAvg * 0.62);
+  const currentReadinessEngagement = round1(currentEngagementCoverage * 0.38);
+  const currentReadiness = computeReadinessProxy(currentAdoptionAvg, currentEngagementCoverage);
+
+  const currentRiskRed = round1(currentRedRate * 0.58);
+  const currentRiskEngagementGap = round1((100 - currentEngagementCoverage) * 0.42);
+  const currentRiskPressure = computeRiskPressureProxy(currentRedRate, currentEngagementCoverage);
+
+  const latestSnapshot = Array.isArray(manager?.snapshots) && manager.snapshots.length ? manager.snapshots[manager.snapshots.length - 1] : null;
+  const previousAdoptionAvg = Number(latestSnapshot?.adoptionAvg || 0);
+  const previousEngagementCoverage = Number(latestSnapshot?.engagementCoverage || 0);
+  const previousHealthDistribution = latestSnapshot?.healthDistribution || { green: 0, yellow: 0, red: 0 };
+  const previousTotal = Math.max(1, totalHealthCount(previousHealthDistribution));
+  const previousRedRate = round1((Number(previousHealthDistribution.red || 0) / previousTotal) * 100);
+  const previousReadinessAdoption = round1(previousAdoptionAvg * 0.62);
+  const previousReadinessEngagement = round1(previousEngagementCoverage * 0.38);
+  const previousReadiness = computeReadinessProxy(previousAdoptionAvg, previousEngagementCoverage);
+  const previousRiskRed = round1(previousRedRate * 0.58);
+  const previousRiskEngagementGap = round1((100 - previousEngagementCoverage) * 0.42);
+  const previousRiskPressure = computeRiskPressureProxy(previousRedRate, previousEngagementCoverage);
+
+  const readinessDelta = round1(currentReadiness - previousReadiness);
+  const riskPressureDelta = round1(currentRiskPressure - previousRiskPressure);
+  const avgPte = rows.length ? round1(rows.reduce((sum, row) => sum + Number(row.pteScore || 0), 0) / rows.length) : 0;
+  const avgPtc = rows.length ? round1(rows.reduce((sum, row) => sum + Number(row.ptcScore || 0), 0) / rows.length) : 0;
+
+  const checklist = loadChecklist();
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
@@ -392,7 +556,122 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
-    <section class="grid-cards">
+    <section class="card" id="section-start-here">
+      <div class="metric-head">
+        <h2>Start Here in 5 Minutes</h2>
+        ${statusChip({ label: 'Quick orientation', tone: 'neutral' })}
+      </div>
+      <div class="flow-steps">
+        <article class="flow-step">
+          <strong>Step 1: Read band mix</strong>
+          <p>Check whether expansion readiness (PtE) or retention pressure (PtC) dominates.</p>
+          <button class="ghost-btn" type="button" data-jump-target="section-visuals">Open visuals</button>
+        </article>
+        <article class="flow-step">
+          <strong>Step 2: Prioritize triggers</strong>
+          <p>Review high-severity triggers and SLA matrix to set the weekly action queue.</p>
+          <button class="ghost-btn" type="button" data-jump-target="section-trigger-catalog">Open trigger catalog</button>
+        </article>
+        <article class="flow-step">
+          <strong>Step 3: Confirm readiness</strong>
+          <p>Do not launch a play without owner, due date, success metric, and next touch scheduled.</p>
+          <button class="ghost-btn" type="button" data-jump-target="section-playbook-readiness">Open readiness checklist</button>
+        </article>
+        <article class="flow-step">
+          <strong>Step 4: Compare trend</strong>
+          <p>Use delta panel to verify direction change against the last monthly snapshot.</p>
+          <button class="ghost-btn" type="button" data-jump-target="section-score-delta">Open score delta</button>
+        </article>
+      </div>
+    </section>
+
+    <section class="card" id="section-score-delta">
+      <div class="metric-head">
+        <h2>Why This Score Changed</h2>
+        ${
+          latestSnapshot
+            ? statusChip({ label: `Vs ${latestSnapshot.month}`, tone: readinessDelta >= 0 ? 'good' : 'warn' })
+            : statusChip({ label: 'No baseline snapshot', tone: 'neutral' })
+        }
+      </div>
+      <div class="metric-grid kpi-4">
+        ${metricTile({
+          label: 'Avg PtE (current)',
+          value: avgPte,
+          meta: latestSnapshot ? `Direction proxy ${formatSigned(readinessDelta, 1)}` : 'Capture snapshot baseline',
+          tone: readinessDelta >= 0 ? 'good' : 'warn'
+        })}
+        ${metricTile({
+          label: 'Avg PtC (current)',
+          value: avgPtc,
+          meta: latestSnapshot ? `Direction proxy ${formatSigned(riskPressureDelta, 1)}` : 'Capture snapshot baseline',
+          tone: riskPressureDelta > 0 ? 'risk' : 'good'
+        })}
+        ${metricTile({
+          label: 'Readiness proxy',
+          value: currentReadiness,
+          meta: latestSnapshot ? `${formatSigned(readinessDelta, 1)} vs ${previousReadiness}` : 'No prior snapshot',
+          tone: readinessDelta >= 0 ? 'good' : 'warn'
+        })}
+        ${metricTile({
+          label: 'Risk pressure proxy',
+          value: currentRiskPressure,
+          meta: latestSnapshot ? `${formatSigned(riskPressureDelta, 1)} vs ${previousRiskPressure}` : 'No prior snapshot',
+          tone: riskPressureDelta > 0 ? 'risk' : 'good'
+        })}
+      </div>
+      ${
+        latestSnapshot
+          ? `
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Driver</th>
+                    <th>Current</th>
+                    <th>Previous</th>
+                    <th>Delta</th>
+                    <th>Effect</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Readiness - adoption contribution (62%)</td>
+                    <td>${currentReadinessAdoption}</td>
+                    <td>${previousReadinessAdoption}</td>
+                    <td>${formatSigned(currentReadinessAdoption - previousReadinessAdoption, 1)}</td>
+                    <td>${currentReadinessAdoption >= previousReadinessAdoption ? 'Supports PtE' : 'Drags PtE'}</td>
+                  </tr>
+                  <tr>
+                    <td>Readiness - engagement contribution (38%)</td>
+                    <td>${currentReadinessEngagement}</td>
+                    <td>${previousReadinessEngagement}</td>
+                    <td>${formatSigned(currentReadinessEngagement - previousReadinessEngagement, 1)}</td>
+                    <td>${currentReadinessEngagement >= previousReadinessEngagement ? 'Supports PtE' : 'Drags PtE'}</td>
+                  </tr>
+                  <tr>
+                    <td>Risk pressure - red health contribution (58%)</td>
+                    <td>${currentRiskRed}</td>
+                    <td>${previousRiskRed}</td>
+                    <td>${formatSigned(currentRiskRed - previousRiskRed, 1)}</td>
+                    <td>${currentRiskRed > previousRiskRed ? 'Raises PtC pressure' : 'Lowers PtC pressure'}</td>
+                  </tr>
+                  <tr>
+                    <td>Risk pressure - engagement gap contribution (42%)</td>
+                    <td>${currentRiskEngagementGap}</td>
+                    <td>${previousRiskEngagementGap}</td>
+                    <td>${formatSigned(currentRiskEngagementGap - previousRiskEngagementGap, 1)}</td>
+                    <td>${currentRiskEngagementGap > previousRiskEngagementGap ? 'Raises PtC pressure' : 'Lowers PtC pressure'}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          `
+          : '<p class="empty-text">Capture a monthly snapshot in Settings to unlock score-change deltas.</p>'
+      }
+    </section>
+
+    <section class="grid-cards" id="section-visuals">
       <article class="card">
         <div class="metric-head">
           <h2>PtE Band Mix</h2>
@@ -594,7 +873,7 @@ export const renderPropensityPage = (ctx) => {
       </article>
     </section>
 
-    <section class="card">
+    <section class="card" id="section-trigger-catalog">
       <div class="metric-head">
         <h2>Trigger Catalog: What, Why, and How to Respond</h2>
         ${statusChip({ label: 'Execution reference', tone: 'warn' })}
@@ -623,6 +902,43 @@ export const renderPropensityPage = (ctx) => {
                     <td>${item.csePlay}</td>
                     <td>${item.managerPlay}</td>
                     <td>${item.response}</td>
+                    <td>${statusChip({ label: `${item.activeCount}`, tone: item.activeCount > 0 ? 'warn' : 'neutral' })}</td>
+                  </tr>
+                `
+              )
+              .join('')}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="section-trigger-sla">
+      <div class="metric-head">
+        <h2>Trigger Severity and SLA Matrix</h2>
+        ${statusChip({ label: 'Operating guardrails', tone: 'warn' })}
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Trigger</th>
+              <th>Severity</th>
+              <th>Initial owner</th>
+              <th>SLA to first action</th>
+              <th>Escalate when</th>
+              <th>Active now</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${slaRows
+              .map(
+                (item) => `
+                  <tr>
+                    <td><strong>${item.code}</strong></td>
+                    <td>${statusChip({ label: item.severity, tone: severityTone(item.severity) })}</td>
+                    <td>${item.owner}</td>
+                    <td>${item.sla}</td>
+                    <td>${item.escalateIf}</td>
                     <td>${statusChip({ label: `${item.activeCount}`, tone: item.activeCount > 0 ? 'warn' : 'neutral' })}</td>
                   </tr>
                 `
@@ -702,6 +1018,55 @@ export const renderPropensityPage = (ctx) => {
           </div>
         </div>
       </article>
+    </section>
+
+    <section class="card" id="section-playbook-readiness">
+      <div class="metric-head">
+        <h2>Playbook Readiness Checklist</h2>
+        ${statusChip({
+          label: `${
+            [checklist.owner, checklist.dueDate, checklist.successMetric, checklist.nextTouchDate].filter(Boolean).length
+          }/4 required fields`,
+          tone:
+            [checklist.owner, checklist.dueDate, checklist.successMetric, checklist.nextTouchDate].filter(Boolean).length === 4
+              ? 'good'
+              : 'warn'
+        })}
+      </div>
+      <p class="muted">Before launching a play, confirm owner, due date, success metric, and next touch are all defined.</p>
+      <form class="form-grid" data-readiness-form>
+        <label class="form-span">
+          Playbook / motion
+          <input name="playName" type="text" value="${escapeHtml(checklist.playName || '')}" placeholder="e.g., Renewal recovery sprint" />
+        </label>
+        <label>
+          Owner
+          <input name="owner" type="text" value="${escapeHtml(checklist.owner || '')}" placeholder="CSE name" />
+        </label>
+        <label>
+          Due date
+          <input name="dueDate" type="date" value="${escapeHtml(checklist.dueDate || '')}" />
+        </label>
+        <label class="form-span">
+          Success metric
+          <input
+            name="successMetric"
+            type="text"
+            value="${escapeHtml(checklist.successMetric || '')}"
+            placeholder="e.g., PtC from High to Medium in 14 days"
+          />
+        </label>
+        <label>
+          Next customer touch
+          <input name="nextTouchDate" type="date" value="${escapeHtml(checklist.nextTouchDate || '')}" />
+        </label>
+      </form>
+      <div class="chip-row" data-readiness-status></div>
+      <div class="form-actions">
+        <button class="qa" type="button" data-save-readiness>Save checklist</button>
+        <button class="ghost-btn" type="button" data-reset-readiness>Reset checklist</button>
+        <button class="ghost-btn" type="button" data-go-playbooks>Open Playbooks</button>
+      </div>
     </section>
 
     <section class="grid-cards">
@@ -809,6 +1174,83 @@ export const renderPropensityPage = (ctx) => {
   wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
   wrapper.querySelector('[data-go-manager]')?.addEventListener('click', () => navigate('manager'));
+  wrapper.querySelector('[data-go-playbooks]')?.addEventListener('click', () => navigate('playbooks'));
+
+  wrapper.querySelectorAll('[data-jump-target]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const target = button.getAttribute('data-jump-target');
+      if (!target) return;
+      const node = wrapper.querySelector(`#${target}`);
+      if (!node) return;
+      node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  const readinessForm = wrapper.querySelector('[data-readiness-form]');
+  const readinessStatus = wrapper.querySelector('[data-readiness-status]');
+  const requiredChecklistItems = (value) => {
+    const state = value || defaultChecklist();
+    return [
+      { label: 'Owner assigned', complete: Boolean(String(state.owner || '').trim()) },
+      { label: 'Due date set', complete: Boolean(String(state.dueDate || '').trim()) },
+      { label: 'Success metric defined', complete: Boolean(String(state.successMetric || '').trim()) },
+      { label: 'Next touch scheduled', complete: Boolean(String(state.nextTouchDate || '').trim()) }
+    ];
+  };
+
+  const checklistStateFromForm = () => {
+    if (!(readinessForm instanceof HTMLFormElement)) return defaultChecklist();
+    const read = (name) => String(readinessForm.elements.namedItem(name)?.value || '').trim();
+    return {
+      playName: read('playName'),
+      owner: read('owner'),
+      dueDate: read('dueDate'),
+      successMetric: read('successMetric'),
+      nextTouchDate: read('nextTouchDate')
+    };
+  };
+
+  const renderReadinessStatus = (value) => {
+    if (!readinessStatus) return;
+    const items = requiredChecklistItems(value);
+    const completeCount = items.filter((item) => item.complete).length;
+    readinessStatus.innerHTML = `
+      ${items
+        .map((item) => statusChip({ label: item.label, tone: item.complete ? 'good' : 'warn', icon: item.complete }))
+        .join('')}
+      ${statusChip({
+        label: `${completeCount}/4 ready`,
+        tone: completeCount === 4 ? 'good' : completeCount >= 2 ? 'warn' : 'risk'
+      })}
+    `;
+  };
+
+  renderReadinessStatus(checklist);
+
+  readinessForm?.addEventListener('input', () => {
+    renderReadinessStatus(checklistStateFromForm());
+  });
+
+  wrapper.querySelector('[data-save-readiness]')?.addEventListener('click', () => {
+    const next = checklistStateFromForm();
+    saveChecklist(next);
+    renderReadinessStatus(next);
+    notify?.('Playbook readiness checklist saved.');
+  });
+
+  wrapper.querySelector('[data-reset-readiness]')?.addEventListener('click', () => {
+    const reset = defaultChecklist();
+    if (readinessForm instanceof HTMLFormElement) {
+      ['playName', 'owner', 'dueDate', 'successMetric', 'nextTouchDate'].forEach((name) => {
+        const field = readinessForm.elements.namedItem(name);
+        if (field && 'value' in field) field.value = '';
+      });
+    }
+    saveChecklist(reset);
+    renderReadinessStatus(reset);
+    notify?.('Playbook readiness checklist reset.');
+  });
+
   wrapper.querySelector('[data-download-guide]')?.addEventListener('click', () => {
     triggerDownload(`pte-ptc-guide-${toIsoDate(new Date())}.md`, guideMarkdown, 'text/markdown;charset=utf-8');
     notify?.('PtE/PtC guide markdown downloaded.');
