@@ -466,6 +466,97 @@ ${trendTable}
 `;
 };
 
+const buildExecutiveBriefMarkdown = ({
+  generatedOn,
+  baselineMonth,
+  total,
+  pteHigh,
+  pteMedium,
+  pteLow,
+  ptcHigh,
+  ptcMedium,
+  ptcLow,
+  quadrants,
+  currentReadiness,
+  currentRiskPressure,
+  readinessDelta,
+  riskPressureDelta,
+  topSignals
+}) => {
+  const topThreeSignals = (topSignals || []).slice(0, 3);
+  const trajectoryLabel =
+    readinessDelta >= 0 && riskPressureDelta <= 0
+      ? 'Improving'
+      : readinessDelta < 0 && riskPressureDelta > 0
+        ? 'Deteriorating'
+        : 'Mixed';
+
+  const priorityRows = [
+    {
+      title: 'Retention stabilization',
+      when: ptcHigh > 0 ? 'Immediate' : 'Monitor',
+      detail:
+        ptcHigh > 0
+          ? `Work top ${ptcHigh} PtC High account(s) first with owner/date coverage.`
+          : 'No PtC High accounts currently active.'
+    },
+    {
+      title: 'Expansion activation',
+      when: quadrants.expandAndRetain > 0 ? 'This cycle' : 'After readiness uplift',
+      detail:
+        quadrants.expandAndRetain > 0
+          ? `Advance expansion plans on ${quadrants.expandAndRetain} Expand + Retain account(s).`
+          : 'No high-confidence expansion cluster in current snapshot.'
+    },
+    {
+      title: 'Data quality backlog',
+      when: 'Weekly hygiene',
+      detail: 'Close missing milestone/engagement/owner gaps before major decision reviews.'
+    }
+  ];
+
+  return `# PtE / PtC Executive Brief
+
+Generated: ${generatedOn}
+Baseline: ${baselineMonth || 'None'}
+
+## Portfolio Position
+
+- Accounts in scope: **${total}**
+- PtE bands (H/M/L): **${pteHigh} / ${pteMedium} / ${pteLow}**
+- PtC bands (H/M/L): **${ptcHigh} / ${ptcMedium} / ${ptcLow}**
+- Quadrants:
+  - Expand + Retain: **${Number(quadrants.expandAndRetain || 0)}**
+  - Grow with Risk: **${Number(quadrants.growWithRisk || 0)}**
+  - Stabilize then Expand: **${Number(quadrants.stabilizeThenExpand || 0)}**
+  - Monitor: **${Number(quadrants.monitor || 0)}**
+
+## Direction of Travel
+
+- Readiness proxy: **${currentReadiness}** (${formatSigned(readinessDelta, 1)} vs baseline)
+- Risk pressure proxy: **${currentRiskPressure}** (${formatSigned(riskPressureDelta, 1)} vs baseline)
+- Trajectory: **${trajectoryLabel}**
+
+## Top Trigger Signals
+
+${
+  topThreeSignals.length
+    ? topThreeSignals.map((signal, index) => `${index + 1}. **${signal.code}** (${signal.count} accounts, ${signal.severity})`).join('\n')
+    : '- No active trigger clusters in this snapshot.'
+}
+
+## Priority Plays
+
+${priorityRows.map((item, index) => `${index + 1}. **${item.title}** (${item.when}) - ${item.detail}`).join('\n')}
+
+## Manager Checkpoints
+
+1. Confirm owner/date coverage for all red-health accounts.
+2. Require one measurable proof-point update per priority account this cycle.
+3. Rebalance CSE capacity if PtC High queue is flat for two consecutive reviews.
+`;
+};
+
 const openPrintWindow = (title, markdown) => {
   const win = window.open('', '_blank', 'noopener,noreferrer,width=980,height=760');
   if (!win) return false;
@@ -674,7 +765,15 @@ export const renderPropensityPage = (ctx) => {
 
   const signalWatchlist = buildSignalWatchlist(rows);
   const topSignals = signalWatchlist.slice(0, 5);
-  const trend = buildSnapshotTrend(manager?.snapshots || []);
+  const snapshots = Array.isArray(manager?.snapshots) ? [...manager.snapshots] : [];
+  snapshots.sort((left, right) => String(left?.month || '').localeCompare(String(right?.month || '')));
+  const trend = buildSnapshotTrend(snapshots);
+  const snapshotByMonth = new Map(snapshots.map((item) => [String(item.month || ''), item]));
+  const snapshotOptions = snapshots
+    .slice()
+    .reverse()
+    .map((item) => `<option value="${escapeHtml(String(item.month || ''))}">${escapeHtml(String(item.month || ''))}</option>`)
+    .join('');
   const signalCountByCode = new Map(signalWatchlist.map((item) => [item.code, item.count]));
   const triggerRows = triggerGuide.map((item) => ({
     ...item,
@@ -715,7 +814,7 @@ export const renderPropensityPage = (ctx) => {
   const currentRiskEngagementGap = round1((100 - currentEngagementCoverage) * 0.42);
   const currentRiskPressure = computeRiskPressureProxy(currentRedRate, currentEngagementCoverage);
 
-  const latestSnapshot = Array.isArray(manager?.snapshots) && manager.snapshots.length ? manager.snapshots[manager.snapshots.length - 1] : null;
+  const latestSnapshot = snapshots.length ? snapshots[snapshots.length - 1] : null;
   const previousAdoptionAvg = Number(latestSnapshot?.adoptionAvg || 0);
   const previousEngagementCoverage = Number(latestSnapshot?.engagementCoverage || 0);
   const previousHealthDistribution = latestSnapshot?.healthDistribution || { green: 0, yellow: 0, red: 0 };
@@ -732,6 +831,45 @@ export const renderPropensityPage = (ctx) => {
   const riskPressureDelta = round1(currentRiskPressure - previousRiskPressure);
   const avgPte = rows.length ? round1(rows.reduce((sum, row) => sum + Number(row.pteScore || 0), 0) / rows.length) : 0;
   const avgPtc = rows.length ? round1(rows.reduce((sum, row) => sum + Number(row.ptcScore || 0), 0) / rows.length) : 0;
+
+  const buildComparison = (snapshot) => {
+    if (!snapshot) return null;
+    const baselineHealth = snapshot.healthDistribution || { green: 0, yellow: 0, red: 0 };
+    const baselineTotal = Math.max(1, totalHealthCount(baselineHealth));
+    const baselineAdoption = round1(Number(snapshot.adoptionAvg || 0));
+    const baselineEngagement = round1(Number(snapshot.engagementCoverage || 0));
+    const baselineRedRate = round1((Number(baselineHealth.red || 0) / baselineTotal) * 100);
+    const baselineReadiness = computeReadinessProxy(baselineAdoption, baselineEngagement);
+    const baselineRiskPressure = computeRiskPressureProxy(baselineRedRate, baselineEngagement);
+
+    const readinessChange = round1(currentReadiness - baselineReadiness);
+    const riskPressureChange = round1(currentRiskPressure - baselineRiskPressure);
+    const adoptionChange = round1(currentAdoptionAvg - baselineAdoption);
+    const engagementChange = round1(currentEngagementCoverage - baselineEngagement);
+    const redRateChange = round1(currentRedRate - baselineRedRate);
+
+    const trajectory =
+      readinessChange >= 0 && riskPressureChange <= 0
+        ? 'Improving'
+        : readinessChange < 0 && riskPressureChange > 0
+          ? 'Deteriorating'
+          : 'Mixed';
+
+    return {
+      month: String(snapshot.month || ''),
+      baselineAdoption,
+      baselineEngagement,
+      baselineRedRate,
+      baselineReadiness,
+      baselineRiskPressure,
+      readinessChange,
+      riskPressureChange,
+      adoptionChange,
+      engagementChange,
+      redRateChange,
+      trajectory
+    };
+  };
 
   const checklist = loadChecklist();
   const confidenceById = new Map(rows.map((row) => [row.customer.id, buildConfidenceForRow(workspace, row)]));
@@ -763,6 +901,7 @@ export const renderPropensityPage = (ctx) => {
         <button class="ghost-btn" type="button" data-go-portfolio>Open Portfolio</button>
         <button class="ghost-btn" type="button" data-go-manager>Open Manager</button>
         <button class="ghost-btn" type="button" data-download-guide>Download Guide .md</button>
+        <button class="ghost-btn" type="button" data-download-exec-brief>Download Executive Brief .md</button>
         <button class="ghost-btn" type="button" data-print-guide>Print Guide (PDF)</button>
       `
     })}
@@ -941,6 +1080,43 @@ export const renderPropensityPage = (ctx) => {
           `
           : '<p class="empty-text">Capture a monthly snapshot in Settings to unlock score-change deltas.</p>'
       }
+    </section>
+
+    <section class="card" id="section-change-cycle">
+      <div class="metric-head">
+        <h2>What Changed This Cycle</h2>
+        ${
+          latestSnapshot
+            ? statusChip({ label: `Baseline options: ${snapshots.length}`, tone: 'neutral' })
+            : statusChip({ label: 'Capture snapshots to compare', tone: 'warn' })
+        }
+      </div>
+      <p class="muted">
+        Select a baseline snapshot to compare current readiness and risk pressure direction, then adjust plays based on actual movement.
+      </p>
+      <form class="form-grid">
+        <label class="form-span">
+          Baseline snapshot month
+          <select data-change-baseline>
+            <option value="">Select baseline</option>
+            ${snapshotOptions || ''}
+          </select>
+        </label>
+      </form>
+      <div class="metric-grid kpi-4" data-change-kpis>
+        ${metricTile({ label: 'Readiness delta', value: 'N/A', tone: 'neutral', meta: 'Select baseline snapshot' })}
+        ${metricTile({ label: 'Risk pressure delta', value: 'N/A', tone: 'neutral', meta: 'Select baseline snapshot' })}
+        ${metricTile({ label: 'Adoption delta', value: 'N/A', tone: 'neutral', meta: 'Select baseline snapshot' })}
+        ${metricTile({ label: 'Red health delta', value: 'N/A', tone: 'neutral', meta: 'Select baseline snapshot' })}
+      </div>
+      <div class="chip-row" data-change-summary-chips></div>
+      <div class="table-wrap" data-change-drivers>
+        <p class="empty-text">No baseline selected. Choose a snapshot month to render comparison drivers.</p>
+      </div>
+      <div class="grid-cards" data-change-charts></div>
+      <p class="muted" data-change-summary>
+        Comparison engine uses saved monthly snapshots and current portfolio posture.
+      </p>
     </section>
 
     <section class="grid-cards" id="section-visuals">
@@ -1544,6 +1720,24 @@ export const renderPropensityPage = (ctx) => {
     trend
   });
 
+  const executiveBriefMarkdown = buildExecutiveBriefMarkdown({
+    generatedOn: toIsoDate(new Date()),
+    baselineMonth: latestSnapshot?.month || '',
+    total,
+    pteHigh,
+    pteMedium,
+    pteLow,
+    ptcHigh,
+    ptcMedium,
+    ptcLow,
+    quadrants,
+    currentReadiness,
+    currentRiskPressure,
+    readinessDelta,
+    riskPressureDelta,
+    topSignals
+  });
+
   wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
   wrapper.querySelector('[data-go-manager]')?.addEventListener('click', () => navigate('manager'));
@@ -1568,6 +1762,149 @@ export const renderPropensityPage = (ctx) => {
       if (customerId) navigate('customer', { id: customerId });
     }
   });
+
+  const changeBaselineSelect = wrapper.querySelector('[data-change-baseline]');
+  const changeKpis = wrapper.querySelector('[data-change-kpis]');
+  const changeSummaryChips = wrapper.querySelector('[data-change-summary-chips]');
+  const changeDrivers = wrapper.querySelector('[data-change-drivers]');
+  const changeCharts = wrapper.querySelector('[data-change-charts]');
+  const changeSummary = wrapper.querySelector('[data-change-summary]');
+
+  const renderCycleComparison = (month) => {
+    if (!changeKpis || !changeSummaryChips || !changeDrivers || !changeCharts || !changeSummary) return;
+    const snapshot = snapshotByMonth.get(String(month || '')) || null;
+    const comparison = buildComparison(snapshot);
+    if (!comparison) {
+      changeKpis.innerHTML = `
+        ${metricTile({ label: 'Readiness delta', value: 'N/A', tone: 'neutral', meta: 'Select baseline snapshot' })}
+        ${metricTile({ label: 'Risk pressure delta', value: 'N/A', tone: 'neutral', meta: 'Select baseline snapshot' })}
+        ${metricTile({ label: 'Adoption delta', value: 'N/A', tone: 'neutral', meta: 'Select baseline snapshot' })}
+        ${metricTile({ label: 'Red health delta', value: 'N/A', tone: 'neutral', meta: 'Select baseline snapshot' })}
+      `;
+      changeSummaryChips.innerHTML = '';
+      changeDrivers.innerHTML = '<p class="empty-text">No baseline selected. Choose a snapshot month to render comparison drivers.</p>';
+      changeCharts.innerHTML = '';
+      changeSummary.textContent = 'Comparison engine uses saved monthly snapshots and current portfolio posture.';
+      return;
+    }
+
+    const readinessTone = comparison.readinessChange >= 0 ? 'good' : 'warn';
+    const riskTone = comparison.riskPressureChange <= 0 ? 'good' : 'risk';
+    const adoptionTone = comparison.adoptionChange >= 0 ? 'good' : 'warn';
+    const redTone = comparison.redRateChange <= 0 ? 'good' : 'risk';
+
+    changeKpis.innerHTML = `
+      ${metricTile({ label: `Readiness delta vs ${comparison.month}`, value: formatSigned(comparison.readinessChange, 1), tone: readinessTone })}
+      ${metricTile({ label: `Risk pressure delta vs ${comparison.month}`, value: formatSigned(comparison.riskPressureChange, 1), tone: riskTone })}
+      ${metricTile({ label: `Adoption delta vs ${comparison.month}`, value: formatSigned(comparison.adoptionChange, 1), tone: adoptionTone })}
+      ${metricTile({ label: `Red health delta vs ${comparison.month}`, value: formatSigned(comparison.redRateChange, 1), tone: redTone })}
+    `;
+
+    changeSummaryChips.innerHTML = `
+      ${statusChip({ label: `Trajectory: ${comparison.trajectory}`, tone: comparison.trajectory === 'Improving' ? 'good' : comparison.trajectory === 'Deteriorating' ? 'risk' : 'warn' })}
+      ${statusChip({ label: `Baseline ${comparison.month}`, tone: 'neutral' })}
+      ${statusChip({ label: `Current readiness ${currentReadiness}`, tone: 'neutral' })}
+      ${statusChip({ label: `Current risk pressure ${currentRiskPressure}`, tone: 'neutral' })}
+    `;
+
+    changeDrivers.innerHTML = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Current</th>
+            <th>Baseline (${comparison.month})</th>
+            <th>Delta</th>
+            <th>Interpretation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Adoption average</td>
+            <td>${currentAdoptionAvg}</td>
+            <td>${comparison.baselineAdoption}</td>
+            <td>${formatSigned(comparison.adoptionChange, 1)}</td>
+            <td>${comparison.adoptionChange >= 0 ? 'Adoption depth improving' : 'Adoption depth declining'}</td>
+          </tr>
+          <tr>
+            <td>Engagement coverage (30d)</td>
+            <td>${currentEngagementCoverage}%</td>
+            <td>${comparison.baselineEngagement}%</td>
+            <td>${formatSigned(comparison.engagementChange, 1)} pts</td>
+            <td>${comparison.engagementChange >= 0 ? 'Recent engagement improving' : 'Recent engagement weakening'}</td>
+          </tr>
+          <tr>
+            <td>Readiness proxy</td>
+            <td>${currentReadiness}</td>
+            <td>${comparison.baselineReadiness}</td>
+            <td>${formatSigned(comparison.readinessChange, 1)}</td>
+            <td>${comparison.readinessChange >= 0 ? 'Supports PtE increase' : 'Drags PtE'}</td>
+          </tr>
+          <tr>
+            <td>Risk pressure proxy</td>
+            <td>${currentRiskPressure}</td>
+            <td>${comparison.baselineRiskPressure}</td>
+            <td>${formatSigned(comparison.riskPressureChange, 1)}</td>
+            <td>${comparison.riskPressureChange <= 0 ? 'Retention pressure easing' : 'Retention pressure rising'}</td>
+          </tr>
+          <tr>
+            <td>Red health rate</td>
+            <td>${currentRedRate}%</td>
+            <td>${comparison.baselineRedRate}%</td>
+            <td>${formatSigned(comparison.redRateChange, 1)} pts</td>
+            <td>${comparison.redRateChange <= 0 ? 'Red account ratio improving' : 'Red account ratio worsening'}</td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+
+    changeCharts.innerHTML = `
+      <article class="card compact-card">
+        <div class="metric-head">
+          <h3>Readiness comparison</h3>
+          ${statusChip({ label: `${comparison.month} -> now`, tone: 'neutral' })}
+        </div>
+        <div class="chart-wrap">
+          ${lineChartSvg(
+            [
+              { label: comparison.month, value: comparison.baselineReadiness },
+              { label: 'Now', value: currentReadiness }
+            ],
+            { width: 420, height: 210 }
+          )}
+        </div>
+      </article>
+      <article class="card compact-card">
+        <div class="metric-head">
+          <h3>Risk pressure comparison</h3>
+          ${statusChip({ label: `${comparison.month} -> now`, tone: 'warn' })}
+        </div>
+        <div class="chart-wrap">
+          ${lineChartSvg(
+            [
+              { label: comparison.month, value: comparison.baselineRiskPressure },
+              { label: 'Now', value: currentRiskPressure }
+            ],
+            { width: 420, height: 210 }
+          )}
+        </div>
+      </article>
+    `;
+
+    changeSummary.textContent = `Compared to ${comparison.month}, trajectory is ${comparison.trajectory.toLowerCase()}. Prioritize plays where deltas moved in the wrong direction.`;
+  };
+
+  if (changeBaselineSelect instanceof HTMLSelectElement) {
+    changeBaselineSelect.addEventListener('change', () => {
+      renderCycleComparison(changeBaselineSelect.value);
+    });
+    if (latestSnapshot?.month) {
+      changeBaselineSelect.value = String(latestSnapshot.month);
+      renderCycleComparison(String(latestSnapshot.month));
+    } else {
+      renderCycleComparison('');
+    }
+  }
 
   const drillTitle = wrapper.querySelector('[data-drill-title]');
   const drillDescription = wrapper.querySelector('[data-drill-description]');
@@ -1774,6 +2111,10 @@ export const renderPropensityPage = (ctx) => {
   wrapper.querySelector('[data-download-guide]')?.addEventListener('click', () => {
     triggerDownload(`pte-ptc-guide-${toIsoDate(new Date())}.md`, guideMarkdown, 'text/markdown;charset=utf-8');
     notify?.('PtE/PtC guide markdown downloaded.');
+  });
+  wrapper.querySelector('[data-download-exec-brief]')?.addEventListener('click', () => {
+    triggerDownload(`pte-ptc-exec-brief-${toIsoDate(new Date())}.md`, executiveBriefMarkdown, 'text/markdown;charset=utf-8');
+    notify?.('PtE/PtC executive brief downloaded.');
   });
   wrapper.querySelector('[data-print-guide]')?.addEventListener('click', () => {
     const opened = openPrintWindow('PtE / PtC Operator Guide', guideMarkdown);
