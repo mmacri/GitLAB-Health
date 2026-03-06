@@ -2,6 +2,8 @@ import { pageHeader } from '../components/pageHeader.js';
 import { metricTile } from '../components/metricTile.js';
 import { statusChip } from '../components/statusChip.js';
 import { barChartSvg, donutChartSvg, lineChartSvg } from '../lib/charts.js';
+import { toIsoDate } from '../lib/date.js';
+import { triggerDownload } from '../lib/exports.js';
 
 const safePercent = (value, total) => {
   const numerator = Number(value || 0);
@@ -78,6 +80,143 @@ const buildSnapshotTrend = (snapshots = []) => {
       riskPressure: Math.round(redRate * 100 * 0.58 + (100 - engagement) * 0.42)
     };
   });
+};
+
+const escapeHtml = (value = '') =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+const escapeMd = (value = '') => String(value).replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+
+const buildGuideMarkdown = ({
+  generatedOn,
+  total,
+  pteHigh,
+  pteMedium,
+  pteLow,
+  ptcHigh,
+  ptcMedium,
+  ptcLow,
+  quadrants,
+  triggerRows,
+  topSignals,
+  trend
+}) => {
+  const triggerTable = [
+    '| Trigger | Metric | Why | CSE Play | Manager Play | Response | Active |',
+    '|---|---|---|---|---|---|---|',
+    ...triggerRows.map(
+      (item) =>
+        `| ${escapeMd(item.code)} | ${escapeMd(item.metric)} | ${escapeMd(item.why)} | ${escapeMd(item.csePlay)} | ${escapeMd(
+          item.managerPlay
+        )} | ${escapeMd(item.response)} | ${Number(item.activeCount || 0)} |`
+    )
+  ].join('\n');
+
+  const signalTable = topSignals.length
+    ? [
+        '| Signal | Accounts | Severity | Detail |',
+        '|---|---:|---|---|',
+        ...topSignals.map(
+          (signal) =>
+            `| ${escapeMd(signal.code)} | ${Number(signal.count || 0)} | ${escapeMd(signal.severity)} | ${escapeMd(
+              signal.detail || 'Review risk timeline'
+            )} |`
+        )
+      ].join('\n')
+    : 'No active signal watchlist entries.';
+
+  const trendTable = trend.length
+    ? [
+        '| Month | Readiness Proxy | Risk Pressure Proxy |',
+        '|---|---:|---:|',
+        ...trend.map((item) => `| ${escapeMd(item.month)} | ${Number(item.readiness || 0)} | ${Number(item.riskPressure || 0)} |`)
+      ].join('\n')
+    : 'No monthly snapshot trend available.';
+
+  return `# PtE / PtC Operator Guide
+
+Generated: ${generatedOn}
+
+## Summary Metrics
+
+- Portfolio rows: **${total}**
+- PtE High / Medium / Low: **${pteHigh} / ${pteMedium} / ${pteLow}**
+- PtC High / Medium / Low: **${ptcHigh} / ${ptcMedium} / ${ptcLow}**
+- Expand + Retain: **${Number(quadrants.expandAndRetain || 0)}**
+- Grow with Risk: **${Number(quadrants.growWithRisk || 0)}**
+- Stabilize then Expand: **${Number(quadrants.stabilizeThenExpand || 0)}**
+- Monitor: **${Number(quadrants.monitor || 0)}**
+
+## How To Use Weekly
+
+1. Classify by quadrant, then prioritize PtC High first.
+2. Diagnose trigger drivers (renewal, engagement, adoption, risk signals).
+3. Execute one dated play per trigger cluster with a named owner.
+4. Verify movement weekly; change play type if flat for two cycles.
+
+## Trigger Catalog
+
+${triggerTable}
+
+## Top Trigger Watchlist
+
+${signalTable}
+
+## Trend Proxies
+
+Formulas:
+- Readiness proxy = (adoptionAvg * 0.62) + (engagementCoverage * 0.38)
+- Risk pressure proxy = (redHealthRate * 100 * 0.58) + ((100 - engagementCoverage) * 0.42)
+
+${trendTable}
+
+## Role Checklists
+
+### CSE
+- Pair one PtC mitigation with one PtE acceleration per priority account.
+- Log trigger codes consistently.
+- Attach measurable evidence to every action.
+- Escalate when no movement after two cycles.
+
+### CSE Manager
+- Review PtC High queue first.
+- Ensure owner/date coverage for every red account.
+- Protect capacity for risk-heavy quadrants.
+- Use trend deltas to rebalance portfolio load.
+`;
+};
+
+const openPrintWindow = (title, markdown) => {
+  const win = window.open('', '_blank', 'noopener,noreferrer,width=980,height=760');
+  if (!win) return false;
+  win.document.open();
+  win.document.write(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>${escapeHtml(title)}</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 32px; color: #111827; }
+      h1 { margin: 0 0 8px; font-size: 24px; }
+      .meta { color: #6b7280; margin-bottom: 14px; }
+      pre { white-space: pre-wrap; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; }
+    </style>
+  </head>
+  <body>
+    <h1>${escapeHtml(title)}</h1>
+    <p class="meta">Generated ${escapeHtml(toIsoDate(new Date()))}</p>
+    <pre>${escapeHtml(markdown)}</pre>
+  </body>
+</html>`);
+  win.document.close();
+  win.focus();
+  win.print();
+  return true;
 };
 
 const triggerGuide = [
@@ -191,7 +330,7 @@ const quadrantGuide = [
 ];
 
 export const renderPropensityPage = (ctx) => {
-  const { manager, workspacePortfolio, navigate } = ctx;
+  const { manager, workspacePortfolio, navigate, notify } = ctx;
   const rows = workspacePortfolio?.rows || manager?.portfolio?.rows || [];
   const total = rows.length;
   const pteHigh = rows.filter((row) => String(row.pteBand || '') === 'High').length;
@@ -236,6 +375,8 @@ export const renderPropensityPage = (ctx) => {
         <button class="ghost-btn" type="button" data-go-home>Back to Today</button>
         <button class="ghost-btn" type="button" data-go-portfolio>Open Portfolio</button>
         <button class="ghost-btn" type="button" data-go-manager>Open Manager</button>
+        <button class="ghost-btn" type="button" data-download-guide>Download Guide .md</button>
+        <button class="ghost-btn" type="button" data-print-guide>Print Guide (PDF)</button>
       `
     })}
 
@@ -650,9 +791,36 @@ export const renderPropensityPage = (ctx) => {
     </section>
   `;
 
+  const guideMarkdown = buildGuideMarkdown({
+    generatedOn: toIsoDate(new Date()),
+    total,
+    pteHigh,
+    pteMedium,
+    pteLow,
+    ptcHigh,
+    ptcMedium,
+    ptcLow,
+    quadrants,
+    triggerRows,
+    topSignals,
+    trend
+  });
+
   wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
   wrapper.querySelector('[data-go-manager]')?.addEventListener('click', () => navigate('manager'));
+  wrapper.querySelector('[data-download-guide]')?.addEventListener('click', () => {
+    triggerDownload(`pte-ptc-guide-${toIsoDate(new Date())}.md`, guideMarkdown, 'text/markdown;charset=utf-8');
+    notify?.('PtE/PtC guide markdown downloaded.');
+  });
+  wrapper.querySelector('[data-print-guide]')?.addEventListener('click', () => {
+    const opened = openPrintWindow('PtE / PtC Operator Guide', guideMarkdown);
+    if (!opened) {
+      notify?.('Popup blocked. Enable popups to print guide.');
+      return;
+    }
+    notify?.('Print dialog opened for PtE/PtC guide.');
+  });
 
   return wrapper;
 };

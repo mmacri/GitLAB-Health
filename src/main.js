@@ -2070,6 +2070,7 @@ const renderCurrentRoute = () => {
       workspace: workspaceModel,
       workspacePortfolio,
       manager,
+      notify,
       ...common
     });
   }
