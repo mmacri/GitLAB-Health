@@ -263,6 +263,15 @@ const drillRows = (rows, confidenceMap, token) => {
     description = 'Accounts where data quality confidence is below 65.';
   }
 
+  if (kind === 'cell') {
+    const [pteBand, ptcBand] = String(value || '').split(',');
+    const validPte = ['High', 'Medium', 'Low'].includes(String(pteBand || '')) ? String(pteBand) : '';
+    const validPtc = ['High', 'Medium', 'Low'].includes(String(ptcBand || '')) ? String(ptcBand) : '';
+    filtered = filtered.filter((row) => String(row.pteBand || '') === validPte && String(row.ptcBand || '') === validPtc);
+    title = `Matrix cell: PtE ${validPte} / PtC ${validPtc}`;
+    description = 'Accounts mapped to the selected PtE x PtC matrix cell.';
+  }
+
   return {
     title,
     description,
@@ -422,6 +431,63 @@ const buildWeeklyActionQueue = (rows, confidenceMap) =>
     })
     .sort((left, right) => right.priorityScore - left.priorityScore)
     .slice(0, 12);
+
+const bandLevels = ['High', 'Medium', 'Low'];
+
+const buildBandMatrix = (rows = []) => {
+  const cells = {};
+  bandLevels.forEach((pte) => {
+    bandLevels.forEach((ptc) => {
+      cells[`${pte}:${ptc}`] = {
+        pte,
+        ptc,
+        count: 0
+      };
+    });
+  });
+
+  (rows || []).forEach((row) => {
+    const pte = bandLevels.includes(String(row?.pteBand || '')) ? String(row.pteBand) : 'Low';
+    const ptc = bandLevels.includes(String(row?.ptcBand || '')) ? String(row.ptcBand) : 'Low';
+    const key = `${pte}:${ptc}`;
+    if (cells[key]) cells[key].count += 1;
+  });
+
+  return cells;
+};
+
+const scenarioTemplates = [
+  {
+    id: 'renewal-risk',
+    title: 'Renewal pressure with high churn risk',
+    triggerCode: 'RENEWAL_SOON',
+    pteBand: 'Medium',
+    ptcBand: 'High',
+    renewalDays: 45,
+    confidenceScore: 72,
+    why: 'Use when a renewal window is near and retention pressure is elevated.'
+  },
+  {
+    id: 'secure-gap',
+    title: 'Strong CI but Secure stage gap',
+    triggerCode: 'STAGE_GAP_SECURE',
+    pteBand: 'High',
+    ptcBand: 'Medium',
+    renewalDays: 140,
+    confidenceScore: 78,
+    why: 'Use when CI maturity exists but Secure adoption is lagging.'
+  },
+  {
+    id: 'expansion-ready',
+    title: 'Expansion-ready account',
+    triggerCode: 'HIGH_PTE_LOW_PTC',
+    pteBand: 'High',
+    ptcBand: 'Low',
+    renewalDays: 180,
+    confidenceScore: 88,
+    why: 'Use when momentum is high and risk headwind is low.'
+  }
+];
 
 const escapeHtml = (value = '') =>
   String(value)
@@ -970,6 +1036,7 @@ export const renderPropensityPage = (ctx) => {
   const missingRenewalCount = rows.filter((row) => !String(row.customer?.renewalDate || '').trim()).length;
   const missingEngagementCount = rows.filter((row) => !(workspace?.engagements?.[row.customer.id] || []).length && !String(row.lastEngagementDate || '').trim()).length;
   const weeklyQueue = buildWeeklyActionQueue(rows, confidenceById);
+  const bandMatrix = buildBandMatrix(rows);
 
   const accountOptions = rows
     .map((row) => `<option value="${row.customer.id}">${escapeHtml(row.customer.name)}</option>`)
@@ -1147,6 +1214,56 @@ export const renderPropensityPage = (ctx) => {
         <button class="ghost-btn" type="button" data-drill="ptc:High">Drill PtC High queue</button>
         <button class="ghost-btn" type="button" data-jump-target="section-play-wizard">Jump to Play Wizard</button>
         <button class="ghost-btn" type="button" data-download-queue>Download queue .md</button>
+      </div>
+    </section>
+
+    <section class="card" id="section-matrix">
+      <div class="metric-head">
+        <h2>PtE x PtC Intervention Matrix</h2>
+        ${statusChip({ label: 'Coverage map', tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        Use this matrix to see where accounts cluster. Click any cell to drill contributing accounts and run the matching play motion.
+      </p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>PtE \ PtC</th>
+              ${bandLevels.map((ptc) => `<th>PtC ${ptc}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${bandLevels
+              .map((pte) => {
+                return `
+                  <tr>
+                    <td><strong>PtE ${pte}</strong></td>
+                    ${bandLevels
+                      .map((ptc) => {
+                        const cell = bandMatrix[`${pte}:${ptc}`] || { count: 0 };
+                        const tone = ptc === 'High' ? 'risk' : pte === 'High' && ptc === 'Low' ? 'good' : cell.count ? 'warn' : 'neutral';
+                        return `
+                          <td>
+                            ${statusChip({ label: `${cell.count} account${cell.count === 1 ? '' : 's'}`, tone })}
+                            <div class="form-actions">
+                              <button class="ghost-btn" type="button" data-drill="cell:${pte},${ptc}">Drill cell</button>
+                            </div>
+                          </td>
+                        `;
+                      })
+                      .join('')}
+                  </tr>
+                `;
+              })
+              .join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="chip-row">
+        ${statusChip({ label: 'Top-right (PtE High / PtC High): dual-track risk + growth', tone: 'warn' })}
+        ${statusChip({ label: 'Top-left (PtE High / PtC Low): expansion now', tone: 'good' })}
+        ${statusChip({ label: 'Bottom-right (PtE Low / PtC High): stabilization first', tone: 'risk' })}
       </div>
     </section>
 
@@ -1652,6 +1769,40 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
+    <section class="card" id="section-practice-scenarios">
+      <div class="metric-head">
+        <h2>Practice Scenarios</h2>
+        ${statusChip({ label: `${scenarioTemplates.length} guided examples`, tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        Use these preset scenarios to train CSEs and managers on trigger interpretation and play selection. Each scenario loads directly into the wizard.
+      </p>
+      <div class="grid-cards">
+        ${scenarioTemplates
+          .map(
+            (scenario) => `
+              <article class="card compact-card">
+                <div class="metric-head">
+                  <h3>${escapeHtml(scenario.title)}</h3>
+                  ${statusChip({ label: scenario.triggerCode, tone: scenario.ptcBand === 'High' ? 'risk' : scenario.pteBand === 'High' ? 'good' : 'warn' })}
+                </div>
+                <ul class="simple-list">
+                  <li><strong>PtE:</strong> ${scenario.pteBand}</li>
+                  <li><strong>PtC:</strong> ${scenario.ptcBand}</li>
+                  <li><strong>Renewal window:</strong> ${scenario.renewalDays} days</li>
+                  <li><strong>Confidence:</strong> ${scenario.confidenceScore}%</li>
+                </ul>
+                <p class="muted">${escapeHtml(scenario.why)}</p>
+                <div class="form-actions">
+                  <button class="ghost-btn" type="button" data-load-scenario="${scenario.id}">Load scenario in wizard</button>
+                </div>
+              </article>
+            `
+          )
+          .join('')}
+      </div>
+    </section>
+
     <section class="grid-cards">
       <article class="card">
         <div class="metric-head">
@@ -1914,6 +2065,13 @@ export const renderPropensityPage = (ctx) => {
 
   wrapper.addEventListener('click', (event) => {
     if (!(event.target instanceof Element)) return;
+    const scenarioButton = event.target.closest('[data-load-scenario]');
+    if (scenarioButton) {
+      event.preventDefault();
+      const scenarioId = scenarioButton.getAttribute('data-load-scenario');
+      if (scenarioId) loadScenarioIntoWizard(scenarioId);
+      return;
+    }
     const wizardButton = event.target.closest('[data-wizard-account]');
     if (wizardButton) {
       event.preventDefault();
@@ -2139,21 +2297,46 @@ export const renderPropensityPage = (ctx) => {
   const playWizardForm = wrapper.querySelector('[data-play-wizard-form]');
   const playWizardOutput = wrapper.querySelector('[data-play-wizard-output]');
 
+  const applyWizardPreset = (preset = {}) => {
+    if (!(playWizardForm instanceof HTMLFormElement)) return;
+    const set = (name, value) => {
+      const field = playWizardForm.elements.namedItem(name);
+      if (field && 'value' in field && value !== undefined && value !== null) field.value = String(value);
+    };
+    set('triggerCode', preset.triggerCode || '');
+    set('pteBand', preset.pteBand || 'Low');
+    set('ptcBand', preset.ptcBand || 'Medium');
+    set('renewalDays', Number(preset.renewalDays ?? 999));
+    set('confidenceScore', Number(preset.confidenceScore ?? 70));
+  };
+
   const setWizardValuesFromAccount = (customerId) => {
     if (!(playWizardForm instanceof HTMLFormElement)) return;
     const row = rows.find((item) => item.customer.id === customerId);
     if (!row) return;
     const trigger = normalizeCode((row.riskSignals || [])[0]?.code || '');
     const confidence = confidenceById.get(customerId);
-    const set = (name, value) => {
-      const field = playWizardForm.elements.namedItem(name);
-      if (field && 'value' in field && value !== undefined && value !== null) field.value = String(value);
-    };
-    if (trigger) set('triggerCode', trigger);
-    set('pteBand', row.pteBand || 'Low');
-    set('ptcBand', row.ptcBand || 'Medium');
-    set('renewalDays', Number(row.renewalDays ?? 999));
-    set('confidenceScore', Number(confidence?.score ?? 70));
+    applyWizardPreset({
+      triggerCode: trigger || '',
+      pteBand: row.pteBand || 'Low',
+      ptcBand: row.ptcBand || 'Medium',
+      renewalDays: Number(row.renewalDays ?? 999),
+      confidenceScore: Number(confidence?.score ?? 70)
+    });
+  };
+
+  const loadScenarioIntoWizard = (scenarioId) => {
+    const scenario = scenarioTemplates.find((item) => item.id === scenarioId);
+    if (!scenario) return;
+    if (!(playWizardForm instanceof HTMLFormElement)) return;
+    const accountField = playWizardForm.elements.namedItem('accountId');
+    if (accountField && 'value' in accountField) accountField.value = '';
+    applyWizardPreset(scenario);
+    const input = getWizardInput();
+    renderWizardOutput(input);
+    const section = wrapper.querySelector('#section-play-wizard');
+    section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    notify?.(`Scenario loaded: ${scenario.title}`);
   };
 
   const getWizardInput = () => {
