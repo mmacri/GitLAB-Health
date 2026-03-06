@@ -432,6 +432,86 @@ const buildWeeklyActionQueue = (rows, confidenceMap) =>
     .sort((left, right) => right.priorityScore - left.priorityScore)
     .slice(0, 12);
 
+const parseDateValue = (value) => {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+};
+
+const isClosedAction = (status) => {
+  const normalized = String(status || '').trim().toLowerCase();
+  return ['done', 'closed', 'complete', 'completed'].includes(normalized);
+};
+
+const buildMitigationCoverage = (rows, workspace, confidenceMap, now = new Date()) => {
+  const activeRows = [...(rows || [])].filter((row) => (row.riskSignals || []).length > 0);
+
+  const tableRows = activeRows
+    .map((row) => {
+      const customerId = row.customer.id;
+      const riskBlock = workspace?.risk?.[customerId] || {};
+      const playbook = Array.isArray(riskBlock.playbook) ? riskBlock.playbook : [];
+      const actions = playbook.map((item) => {
+        const due = parseDateValue(item?.due);
+        return {
+          owner: String(item?.owner || '').trim(),
+          due,
+          dueRaw: String(item?.due || '').trim(),
+          status: String(item?.status || '').trim()
+        };
+      });
+      const datedActions = actions.filter((item) => item.owner && item.due);
+      const overdueOpenActions = actions.filter((item) => item.due && item.due < now && !isClosedAction(item.status)).length;
+      const nextDue = actions
+        .filter((item) => item.due && !isClosedAction(item.status))
+        .sort((left, right) => left.due - right.due)[0];
+      const activeTriggerCount = (row.riskSignals || []).length;
+      const coveragePct = activeTriggerCount ? Math.min(100, Math.round((datedActions.length / activeTriggerCount) * 100)) : 0;
+      const confidence = confidenceMap.get(customerId) || { score: 70 };
+      const recommendation = recommendPlays({
+        triggerCode: primarySignalForRow(row)?.code || '',
+        pteBand: row.pteBand,
+        ptcBand: row.ptcBand,
+        renewalDays: Number(row.renewalDays ?? 999),
+        confidenceScore: confidence.score
+      });
+      return {
+        row,
+        activeTriggerCount,
+        datedActionsCount: datedActions.length,
+        hasDatedPlan: datedActions.length > 0,
+        overdueOpenActions,
+        nextDueRaw: nextDue?.dueRaw || '',
+        coveragePct,
+        recommendation
+      };
+    })
+    .sort((left, right) => {
+      if (Number(left.hasDatedPlan) !== Number(right.hasDatedPlan)) return Number(left.hasDatedPlan) - Number(right.hasDatedPlan);
+      if (right.overdueOpenActions !== left.overdueOpenActions) return right.overdueOpenActions - left.overdueOpenActions;
+      if (right.activeTriggerCount !== left.activeTriggerCount) return right.activeTriggerCount - left.activeTriggerCount;
+      return Number(right.row?.ptcScore || 0) - Number(left.row?.ptcScore || 0);
+    })
+    .slice(0, 20);
+
+  const activeTriggerAccounts = activeRows.length;
+  const withDatedPlan = tableRows.filter((item) => item.hasDatedPlan).length;
+  const missingOwnerOrDue = Math.max(0, activeTriggerAccounts - withDatedPlan);
+  const overdueAccounts = tableRows.filter((item) => item.overdueOpenActions > 0).length;
+  const coveragePct = activeTriggerAccounts ? Math.round((withDatedPlan / activeTriggerAccounts) * 100) : 100;
+
+  return {
+    activeTriggerAccounts,
+    withDatedPlan,
+    missingOwnerOrDue,
+    overdueAccounts,
+    coveragePct,
+    tableRows
+  };
+};
+
 const bandLevels = ['High', 'Medium', 'Low'];
 
 const buildBandMatrix = (rows = []) => {
@@ -706,6 +786,33 @@ const buildQueueMarkdown = ({ generatedOn, queueRows = [] }) => {
       )} | ${escapeMd(item.primarySignal?.code || 'None')} | ${escapeMd((item.reasons || []).join(', '))} | ${escapeMd(
         item.recommendation?.primary?.title || 'No play'
       )} | ${escapeMd(item.recommendation?.window || 'This cycle')} |`
+    );
+  });
+
+  return `${lines.join('\n')}\n`;
+};
+
+const buildMitigationMarkdown = ({ generatedOn, summary, mitigationRows = [] }) => {
+  const lines = [
+    '# PtE / PtC Trigger Mitigation Coverage',
+    '',
+    `Generated: ${generatedOn}`,
+    '',
+    `- Active trigger accounts: **${Number(summary?.activeTriggerAccounts || 0)}**`,
+    `- Accounts with dated mitigation plan: **${Number(summary?.withDatedPlan || 0)}**`,
+    `- Missing owner/due: **${Number(summary?.missingOwnerOrDue || 0)}**`,
+    `- Accounts with overdue actions: **${Number(summary?.overdueAccounts || 0)}**`,
+    `- Coverage rate: **${Number(summary?.coveragePct || 0)}%**`,
+    '',
+    '| Account | Active triggers | Plan coverage | Next due | Overdue actions | Suggested play |',
+    '|---|---:|---:|---|---:|---|'
+  ];
+
+  mitigationRows.forEach((item) => {
+    lines.push(
+      `| ${escapeMd(item.row?.customer?.name || 'Unknown')} | ${Number(item.activeTriggerCount || 0)} | ${Number(item.coveragePct || 0)}% | ${escapeMd(
+        item.nextDueRaw || 'Not set'
+      )} | ${Number(item.overdueOpenActions || 0)} | ${escapeMd(item.recommendation?.primary?.title || 'No recommendation')} |`
     );
   });
 
@@ -1036,6 +1143,7 @@ export const renderPropensityPage = (ctx) => {
   const missingRenewalCount = rows.filter((row) => !String(row.customer?.renewalDate || '').trim()).length;
   const missingEngagementCount = rows.filter((row) => !(workspace?.engagements?.[row.customer.id] || []).length && !String(row.lastEngagementDate || '').trim()).length;
   const weeklyQueue = buildWeeklyActionQueue(rows, confidenceById);
+  const mitigationSummary = buildMitigationCoverage(rows, workspace, confidenceById);
   const bandMatrix = buildBandMatrix(rows);
 
   const accountOptions = rows
@@ -1214,6 +1322,78 @@ export const renderPropensityPage = (ctx) => {
         <button class="ghost-btn" type="button" data-drill="ptc:High">Drill PtC High queue</button>
         <button class="ghost-btn" type="button" data-jump-target="section-play-wizard">Jump to Play Wizard</button>
         <button class="ghost-btn" type="button" data-download-queue>Download queue .md</button>
+      </div>
+    </section>
+
+    <section class="card" id="section-mitigation-coverage">
+      <div class="metric-head">
+        <h2>Trigger Mitigation Coverage</h2>
+        ${statusChip({
+          label: `${mitigationSummary.coveragePct}% coverage`,
+          tone: mitigationSummary.coveragePct >= 80 ? 'good' : mitigationSummary.coveragePct >= 60 ? 'warn' : 'risk'
+        })}
+      </div>
+      <p class="muted">
+        Tracks whether accounts with active trigger signals have dated mitigation actions with clear ownership. Use this as execution hygiene before weekly reviews.
+      </p>
+      <div class="metric-grid kpi-4">
+        ${metricTile({ label: 'Active trigger accounts', value: mitigationSummary.activeTriggerAccounts, tone: mitigationSummary.activeTriggerAccounts ? 'warn' : 'good' })}
+        ${metricTile({ label: 'With owner + due', value: mitigationSummary.withDatedPlan, tone: mitigationSummary.withDatedPlan ? 'good' : 'warn' })}
+        ${metricTile({ label: 'Missing owner/date', value: mitigationSummary.missingOwnerOrDue, tone: mitigationSummary.missingOwnerOrDue ? 'risk' : 'good' })}
+        ${metricTile({ label: 'Overdue actions', value: mitigationSummary.overdueAccounts, tone: mitigationSummary.overdueAccounts ? 'risk' : 'good' })}
+      </div>
+      <div class="table-wrap">
+        ${
+          mitigationSummary.tableRows.length
+            ? `
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Account</th>
+                    <th>Active triggers</th>
+                    <th>Plan coverage</th>
+                    <th>Next due</th>
+                    <th>Overdue</th>
+                    <th>Suggested play</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${mitigationSummary.tableRows
+                    .slice(0, 12)
+                    .map((item) => {
+                      const row = item.row;
+                      return `
+                        <tr>
+                          <td><a href="#" data-open-customer="${row.customer.id}">${escapeHtml(row.customer.name)}</a></td>
+                          <td>${item.activeTriggerCount}</td>
+                          <td>${statusChip({
+                            label: `${item.coveragePct}%`,
+                            tone: item.coveragePct >= 80 ? 'good' : item.coveragePct >= 50 ? 'warn' : 'risk'
+                          })}</td>
+                          <td>${escapeHtml(item.nextDueRaw || 'Not set')}</td>
+                          <td>${statusChip({ label: `${item.overdueOpenActions}`, tone: item.overdueOpenActions ? 'risk' : 'good' })}</td>
+                          <td>${escapeHtml(item.recommendation?.primary?.title || 'No recommendation')}</td>
+                          <td>
+                            <div class="page-actions">
+                              <button class="ghost-btn" type="button" data-open-customer="${row.customer.id}">Open</button>
+                              <button class="ghost-btn" type="button" data-wizard-account="${row.customer.id}">Load in wizard</button>
+                            </div>
+                          </td>
+                        </tr>
+                      `;
+                    })
+                    .join('')}
+                </tbody>
+              </table>
+            `
+            : '<p class="empty-text">No active trigger accounts found in this snapshot.</p>'
+        }
+      </div>
+      <div class="form-actions">
+        <button class="ghost-btn" type="button" data-drill="ptc:High">Drill PtC High</button>
+        <button class="ghost-btn" type="button" data-drill="confidence:low">Drill low-confidence accounts</button>
+        <button class="ghost-btn" type="button" data-download-mitigation>Download mitigation coverage .md</button>
       </div>
     </section>
 
@@ -2048,6 +2228,12 @@ export const renderPropensityPage = (ctx) => {
     queueRows: weeklyQueue
   });
 
+  const mitigationMarkdown = buildMitigationMarkdown({
+    generatedOn: toIsoDate(new Date()),
+    summary: mitigationSummary,
+    mitigationRows: mitigationSummary.tableRows
+  });
+
   wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
   wrapper.querySelector('[data-go-manager]')?.addEventListener('click', () => navigate('manager'));
@@ -2471,6 +2657,10 @@ export const renderPropensityPage = (ctx) => {
   wrapper.querySelector('[data-download-queue]')?.addEventListener('click', () => {
     triggerDownload(`pte-ptc-action-queue-${toIsoDate(new Date())}.md`, queueMarkdown, 'text/markdown;charset=utf-8');
     notify?.('PtE/PtC weekly action queue downloaded.');
+  });
+  wrapper.querySelector('[data-download-mitigation]')?.addEventListener('click', () => {
+    triggerDownload(`pte-ptc-mitigation-coverage-${toIsoDate(new Date())}.md`, mitigationMarkdown, 'text/markdown;charset=utf-8');
+    notify?.('PtE/PtC mitigation coverage downloaded.');
   });
   wrapper.querySelector('[data-download-exec-brief]')?.addEventListener('click', () => {
     triggerDownload(`pte-ptc-exec-brief-${toIsoDate(new Date())}.md`, executiveBriefMarkdown, 'text/markdown;charset=utf-8');
