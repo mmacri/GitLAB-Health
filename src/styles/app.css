@@ -2530,17 +2530,13 @@ textarea.artifact,
 
 @media (max-width: 1024px) {
   .app-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: clamp(210px, 28vw, 240px) minmax(0, 1fr);
     gap: var(--space-4);
     padding: var(--space-4) var(--space-4) var(--s-8);
   }
 
   .sidebar {
-    width: 100%;
-    height: auto;
-    max-height: none;
-    position: static;
-    top: auto;
+    width: clamp(210px, 28vw, 240px);
   }
 
   .kpi-5,
