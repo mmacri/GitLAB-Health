@@ -264,6 +264,14 @@ export const renderPropensityPage = (ctx) => {
             { label: 'Low', value: pteLow, color: '#6B7280' }
           ])}
         </div>
+        <div class="chip-row">
+          ${statusChip({ label: `High ${pteHigh}`, tone: 'good' })}
+          ${statusChip({ label: `Medium ${pteMedium}`, tone: 'warn' })}
+          ${statusChip({ label: `Low ${pteLow}`, tone: 'neutral' })}
+        </div>
+        <p class="muted" title="Prioritize PtE High + PtC Low for near-term expansion execution.">
+          How to use: prioritize High PtE accounts for expansion, then filter by PtC to avoid risk-heavy motions.
+        </p>
       </article>
 
       <article class="card">
@@ -278,6 +286,14 @@ export const renderPropensityPage = (ctx) => {
             { label: 'Low', value: ptcLow, color: '#16A34A' }
           ])}
         </div>
+        <div class="chip-row">
+          ${statusChip({ label: `High ${ptcHigh}`, tone: 'risk' })}
+          ${statusChip({ label: `Medium ${ptcMedium}`, tone: 'warn' })}
+          ${statusChip({ label: `Low ${ptcLow}`, tone: 'good' })}
+        </div>
+        <p class="muted" title="PtC reflects retention pressure from risk signals, engagement gaps, and renewal pressure.">
+          How to use: all High PtC accounts require dated mitigation plans before expansion planning.
+        </p>
       </article>
 
       <article class="card">
@@ -293,6 +309,9 @@ export const renderPropensityPage = (ctx) => {
             { label: 'Monitor', value: Number(quadrants.monitor || 0), color: '#0284C7' }
           ])}
         </div>
+        <p class="muted" title="Quadrants combine PtE and PtC bands to segment account strategy.">
+          How to use: assign coverage based on quadrant volume so capacity follows risk and growth opportunity.
+        </p>
       </article>
 
       <article class="card">
@@ -319,6 +338,9 @@ export const renderPropensityPage = (ctx) => {
               : '<p class="empty-text">No active trigger volume to chart.</p>'
           }
         </div>
+        <p class="muted" title="High-severity trigger clusters should be addressed before low-severity volume.">
+          How to use: combine volume + severity to decide which playbooks run first in the weekly queue.
+        </p>
       </article>
     </section>
 
@@ -393,6 +415,13 @@ export const renderPropensityPage = (ctx) => {
               : '<p class="empty-text">No monthly snapshots available yet.</p>'
           }
         </div>
+        <div class="chip-row">
+          ${statusChip({ label: 'Formula: 62% adoption', tone: 'neutral' })}
+          ${statusChip({ label: '38% engagement', tone: 'neutral' })}
+        </div>
+        <p class="muted" title="Readiness proxy = (adoptionAvg * 0.62) + (engagementCoverage * 0.38).">
+          Interpretation: an upward line means the portfolio is becoming more expansion-ready.
+        </p>
       </article>
 
       <article class="card">
@@ -414,6 +443,13 @@ export const renderPropensityPage = (ctx) => {
               : '<p class="empty-text">No monthly snapshots available yet.</p>'
           }
         </div>
+        <div class="chip-row">
+          ${statusChip({ label: 'Formula: 58% red-health', tone: 'neutral' })}
+          ${statusChip({ label: '42% engagement gap', tone: 'neutral' })}
+        </div>
+        <p class="muted" title="Risk pressure proxy = (redHealthRate * 100 * 0.58) + ((100 - engagementCoverage) * 0.42).">
+          Interpretation: a rising line signals accumulating churn pressure and needs manager attention.
+        </p>
       </article>
     </section>
 
