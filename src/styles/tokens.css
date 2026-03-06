@@ -98,6 +98,8 @@
   --sidebar-text: #e2e7f2;
   --sidebar-text-muted: #a8b1c7;
   --sidebar-accent: var(--gl-brand-orange);
+  --sidebar-width: 240px;
+  --sidebar-width-collapsed: 56px;
 
   --text-xs: 11px;
   --text-sm: 12px;
@@ -113,6 +115,15 @@
   --leading-tight: 1.25;
   --leading-normal: 1.5;
   --leading-loose: 1.7;
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-safe-banner: 600;
 }
 
 html[data-theme='dark'] {
@@ -144,4 +155,3 @@ html[data-theme='dark'] {
   --sidebar-text: #e7ecf8;
   --sidebar-text-muted: #afbad2;
 }
-
