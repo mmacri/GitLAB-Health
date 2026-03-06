@@ -495,8 +495,10 @@ button:hover {
   flex-direction: column;
   gap: 0;
   padding: 0;
-  max-height: none;
-  overflow: visible;
+  max-height: inherit;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
 }
 
 .sidebar__brand {
@@ -2582,6 +2584,7 @@ textarea.artifact,
   .app-shell {
     grid-template-columns: 1fr;
     padding: 0 var(--space-4) var(--s-8);
+    overflow-x: clip;
   }
 
   .sidebar {
@@ -2593,6 +2596,8 @@ textarea.artifact,
     transform: translateX(-100%);
     transition: transform var(--transition-slow);
     width: min(280px, 85vw);
+    max-width: min(280px, 85vw);
+    flex: none;
     height: 100vh;
     max-height: none;
     border-radius: 0;
@@ -2634,6 +2639,11 @@ textarea.artifact,
 
   .app-header__left [data-safe-label] {
     display: none;
+  }
+
+  .app-header__right {
+    min-width: 0;
+    gap: var(--space-1);
   }
 
   .mode-tabs {
