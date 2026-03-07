@@ -2249,6 +2249,26 @@ textarea.artifact,
   border-left: 3px solid var(--secondary);
 }
 
+.guide-chapter__rubric {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.guide-chapter__rubric div {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  padding: 8px 10px;
+}
+
+.guide-chapter__rubric strong {
+  color: var(--ink);
+}
+
 .guide-chapter__body {
   display: grid;
   gap: var(--card-gap);
@@ -2868,6 +2888,10 @@ textarea.artifact,
 
   .guide-chapter-rail__actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .guide-chapter__rubric {
+    grid-template-columns: 1fr;
   }
 
   .app-shell {

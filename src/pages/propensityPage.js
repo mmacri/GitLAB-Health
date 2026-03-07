@@ -5029,6 +5029,13 @@ export const renderPropensityPage = (ctx) => {
       title: 'Orientation',
       subtitle: 'Understand what PtE/PtC means and where to start in under 5 minutes.',
       tone: 'neutral',
+      guidance: {
+        question: 'What operating posture are we in right now?',
+        inputs: 'Start-here flow, learning path, decision tree, PtE/PtC meaning cards.',
+        rule: 'Use branch logic first, then decide whether to stabilize, dual-track, or expand.',
+        action: 'Pick an initial lane and proceed to Data Trust before any plan commitment.',
+        evidence: 'Document the chosen branch and why it was selected.'
+      },
       sections: ['section-start-here', 'section-learning-path', 'section-decision-tree', 'section-operating-loop', 'section-pte-ptc-meaning']
     },
     {
@@ -5036,6 +5043,13 @@ export const renderPropensityPage = (ctx) => {
       title: 'Data Trust Gate',
       subtitle: 'Validate confidence and input quality before score-based decisions.',
       tone: 'good',
+      guidance: {
+        question: 'Are the inputs trustworthy enough for score-based decisions?',
+        inputs: 'Confidence checks, evidence quality, metric lineage and data gap visuals.',
+        rule: 'If confidence is low, clear critical data gaps before changing operating plans.',
+        action: 'Close renewal/engagement/milestone/evidence/owner gaps in priority order.',
+        evidence: 'Capture confidence movement and missing-field burndown.'
+      },
       sections: ['section-confidence', 'section-evidence-quality', 'section-metric-lineage']
     },
     {
@@ -5043,6 +5057,13 @@ export const renderPropensityPage = (ctx) => {
       title: 'Diagnose Posture',
       subtitle: 'Read band mix, matrix, trigger concentration, and account-level driver context.',
       tone: 'warn',
+      guidance: {
+        question: 'Where is risk and growth pressure concentrated across the portfolio?',
+        inputs: 'Band mix charts, advanced distributions, matrix, lifecycle, score explainer.',
+        rule: 'Prioritize clusters with high PtC and high-severity trigger concentration first.',
+        action: 'Identify top clusters and load impacted accounts into the working queue.',
+        evidence: 'Record trigger concentration and matrix movement versus prior cycle.'
+      },
       sections: ['section-visuals', 'section-visuals-advanced', 'section-matrix', 'section-trigger-lifecycle', 'section-score-explainer']
     },
     {
@@ -5050,6 +5071,13 @@ export const renderPropensityPage = (ctx) => {
       title: 'Choose Plays',
       subtitle: 'Prioritize queue order and map trigger clusters to deterministic plays.',
       tone: 'warn',
+      guidance: {
+        question: 'Which deterministic plays should be run first and by whom?',
+        inputs: 'Weekly queue, trigger catalog, SLA matrix, walkthroughs, mitigation coverage.',
+        rule: 'For priority accounts, map one primary mitigation and one secondary uplift play.',
+        action: 'Commit owner, due date, and expected outcome per chosen play.',
+        evidence: 'Store queue decisions and trigger-to-play rationale for review.'
+      },
       sections: ['section-action-queue', 'section-trigger-catalog', 'section-trigger-sla', 'section-role-walkthroughs', 'section-mitigation-coverage']
     },
     {
@@ -5057,6 +5085,13 @@ export const renderPropensityPage = (ctx) => {
       title: 'Execute With Guardrails',
       subtitle: 'Run wizard recommendations with readiness checks and role-based operating cadence.',
       tone: 'good',
+      guidance: {
+        question: 'Are execution commitments complete and operationally ready?',
+        inputs: 'Play wizard, readiness checklist, cadence agendas, role checklists.',
+        rule: 'Do not launch plays without owner, due date, success metric, and next touch.',
+        action: 'Run plays, log artifacts, and schedule follow-up checkpoints.',
+        evidence: 'Track execution completeness and cadence adherence weekly.'
+      },
       sections: ['section-play-wizard', 'section-playbook-readiness', 'section-cadence-agenda', 'section-role-checklists']
     },
     {
@@ -5064,6 +5099,13 @@ export const renderPropensityPage = (ctx) => {
       title: 'Verify and Calibrate',
       subtitle: 'Measure movement, compare to baseline, and adjust plays by observed effectiveness.',
       tone: 'neutral',
+      guidance: {
+        question: 'Did actions move the portfolio in the expected direction?',
+        inputs: 'Score delta, baseline comparison, quarter plan, effectiveness and calibration tables.',
+        rule: 'If no movement after two cycles, change play type or escalate support.',
+        action: 'Rebalance ownership, tune playbooks, and adjust next-cycle priorities.',
+        evidence: 'Publish delta summary with keep/change/escalate decisions.'
+      },
       sections: ['section-score-delta', 'section-change-cycle', 'section-quarter-plan', 'section-play-effectiveness', 'section-manager-calibration', 'section-quadrant-plays', 'section-band-reference']
     },
     {
@@ -5084,6 +5126,19 @@ export const renderPropensityPage = (ctx) => {
       ]
     }
   ];
+
+  const chapterGuidanceHtml = (guidance) => {
+    if (!guidance) return '';
+    return `
+      <div class="guide-chapter__rubric">
+        <div><strong>Question:</strong> ${escapeHtml(guidance.question || '')}</div>
+        <div><strong>Inputs:</strong> ${escapeHtml(guidance.inputs || '')}</div>
+        <div><strong>Decision Rule:</strong> ${escapeHtml(guidance.rule || '')}</div>
+        <div><strong>Action:</strong> ${escapeHtml(guidance.action || '')}</div>
+        <div><strong>Evidence:</strong> ${escapeHtml(guidance.evidence || '')}</div>
+      </div>
+    `;
+  };
 
   const buildChapteredGuideLayout = () => {
     wrapper.setAttribute('data-guide-layout', 'chaptered');
@@ -5128,6 +5183,7 @@ export const renderPropensityPage = (ctx) => {
               ${statusChip({ label: 'Collapsed by default', tone: chapter.tone || 'neutral' })}
             </div>
             <p class="muted">${escapeHtml(chapter.subtitle || '')}</p>
+            ${chapterGuidanceHtml(chapter.guidance)}
           </summary>
         `;
       } else {
@@ -5138,6 +5194,7 @@ export const renderPropensityPage = (ctx) => {
               ${statusChip({ label: 'Workflow chapter', tone: chapter.tone || 'neutral' })}
             </div>
             <p class="muted">${escapeHtml(chapter.subtitle || '')}</p>
+            ${chapterGuidanceHtml(chapter.guidance)}
           </article>
         `;
       }
