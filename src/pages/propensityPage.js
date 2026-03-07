@@ -5014,6 +5014,7 @@ export const renderPropensityPage = (ctx) => {
 
   const GUIDE_MODE_KEY = 'gh_propensity_guide_mode_v1';
   const GUIDE_PROGRESS_KEY = 'gh_propensity_guide_progress_v1';
+  const CHAPTER_PROGRESS_KEY = 'gh_propensity_chapter_progress_v1';
   const guideStepIds = ['section-confidence', 'section-visuals', 'section-formulas', 'section-play-wizard', 'section-score-delta'];
   let guideMode = 'guided';
   try {
@@ -5126,6 +5127,25 @@ export const renderPropensityPage = (ctx) => {
       ]
     }
   ];
+  const chapterIds = chapterPlan.map((item) => item.id);
+  const defaultChapterProgress = chapterIds.reduce((acc, id) => {
+    acc[id] = false;
+    return acc;
+  }, {});
+  let chapterProgress = { ...defaultChapterProgress };
+  try {
+    const raw = window.localStorage.getItem(CHAPTER_PROGRESS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        chapterIds.forEach((id) => {
+          if (typeof parsed[id] === 'boolean') chapterProgress[id] = parsed[id];
+        });
+      }
+    }
+  } catch {
+    chapterProgress = { ...defaultChapterProgress };
+  }
 
   const chapterGuidanceHtml = (guidance) => {
     if (!guidance) return '';
@@ -5158,13 +5178,18 @@ export const renderPropensityPage = (ctx) => {
         ${statusChip({ label: `${chapterPlan.length} chapters`, tone: 'neutral' })}
       </div>
       <p class="muted">Follow chapters in order for a complete expansion + churn operating cycle.</p>
+      <div class="guide-chapter-rail__meta">
+        <strong data-chapter-progress-label>0 / ${chapterPlan.length} complete</strong>
+        <button class="ghost-btn guide-chapter-rail__reset" type="button" data-reset-chapter-progress>Reset chapters</button>
+      </div>
       <div class="guide-chapter-rail__actions">
         ${chapterPlan
           .map(
             (chapter, index) =>
-              `<button class="ghost-btn guide-chapter-rail__item" type="button" data-jump-target="${chapter.id}">${index + 1}. ${escapeHtml(
-                chapter.title
-              )}</button>`
+              `<button class="ghost-btn guide-chapter-rail__item" type="button" data-jump-target="${chapter.id}" data-chapter-nav="${chapter.id}">
+                <span>${index + 1}. ${escapeHtml(chapter.title)}</span>
+                <small data-chapter-status="${chapter.id}">Pending</small>
+              </button>`
           )
           .join('')}
       </div>
@@ -5172,6 +5197,7 @@ export const renderPropensityPage = (ctx) => {
     chapterStack.appendChild(chapterRail);
 
     chapterPlan.forEach((chapter, index) => {
+      const nextChapter = chapterPlan[index + 1];
       const node = chapter.collapsible ? document.createElement('details') : document.createElement('section');
       node.className = chapter.collapsible ? 'guide-chapter guide-chapter--appendix' : 'guide-chapter';
       node.id = chapter.id;
@@ -5184,6 +5210,9 @@ export const renderPropensityPage = (ctx) => {
             </div>
             <p class="muted">${escapeHtml(chapter.subtitle || '')}</p>
             ${chapterGuidanceHtml(chapter.guidance)}
+            <div class="form-actions guide-chapter__controls">
+              <button class="ghost-btn" type="button" data-mark-chapter="${chapter.id}">Mark chapter complete</button>
+            </div>
           </summary>
         `;
       } else {
@@ -5195,6 +5224,14 @@ export const renderPropensityPage = (ctx) => {
             </div>
             <p class="muted">${escapeHtml(chapter.subtitle || '')}</p>
             ${chapterGuidanceHtml(chapter.guidance)}
+            <div class="form-actions guide-chapter__controls">
+              <button class="ghost-btn" type="button" data-mark-chapter="${chapter.id}">Mark chapter complete</button>
+              ${
+                nextChapter
+                  ? `<button class="ghost-btn" type="button" data-jump-target="${nextChapter.id}">Continue to ${escapeHtml(nextChapter.title)}</button>`
+                  : ''
+              }
+            </div>
           </article>
         `;
       }
@@ -5227,6 +5264,81 @@ export const renderPropensityPage = (ctx) => {
   };
 
   buildChapteredGuideLayout();
+
+  const chapterMarkButtons = new Map();
+  wrapper.querySelectorAll('[data-mark-chapter]').forEach((button) => {
+    const chapterId = button.getAttribute('data-mark-chapter');
+    if (!chapterId) return;
+    chapterMarkButtons.set(chapterId, button);
+  });
+  const chapterNavButtons = new Map();
+  wrapper.querySelectorAll('[data-chapter-nav]').forEach((button) => {
+    const chapterId = button.getAttribute('data-chapter-nav');
+    if (!chapterId) return;
+    chapterNavButtons.set(chapterId, button);
+  });
+  const chapterStatusLabels = new Map();
+  wrapper.querySelectorAll('[data-chapter-status]').forEach((node) => {
+    const chapterId = node.getAttribute('data-chapter-status');
+    if (!chapterId) return;
+    chapterStatusLabels.set(chapterId, node);
+  });
+  const chapterProgressLabel = wrapper.querySelector('[data-chapter-progress-label]');
+
+  const persistChapterProgress = () => {
+    try {
+      window.localStorage.setItem(CHAPTER_PROGRESS_KEY, JSON.stringify(chapterProgress));
+    } catch {
+      // Ignore storage write failures in static mode.
+    }
+  };
+
+  const applyChapterProgress = () => {
+    const totalChapters = chapterIds.length || 1;
+    const completed = chapterIds.filter((id) => Boolean(chapterProgress[id])).length;
+    if (chapterProgressLabel) chapterProgressLabel.textContent = `${completed} / ${totalChapters} complete`;
+    chapterIds.forEach((chapterId) => {
+      const complete = Boolean(chapterProgress[chapterId]);
+      const markButton = chapterMarkButtons.get(chapterId);
+      if (markButton) {
+        markButton.textContent = complete ? 'Mark chapter incomplete' : 'Mark chapter complete';
+        markButton.setAttribute('aria-pressed', String(complete));
+      }
+      const status = chapterStatusLabels.get(chapterId);
+      if (status) {
+        status.textContent = complete ? 'Done' : 'Pending';
+      }
+      const nav = chapterNavButtons.get(chapterId);
+      if (nav) nav.classList.toggle('is-complete', complete);
+      const chapterNode = wrapper.querySelector(`#${chapterId}`);
+      if (chapterNode) chapterNode.classList.toggle('is-complete', complete);
+    });
+  };
+
+  const setActiveChapter = (chapterId) => {
+    chapterNavButtons.forEach((button, id) => {
+      button.classList.toggle('is-active', id === chapterId);
+    });
+  };
+
+  chapterMarkButtons.forEach((button, chapterId) => {
+    button.addEventListener('click', () => {
+      chapterProgress[chapterId] = !chapterProgress[chapterId];
+      persistChapterProgress();
+      applyChapterProgress();
+      notify?.(chapterProgress[chapterId] ? 'Chapter marked complete.' : 'Chapter marked incomplete.');
+    });
+  });
+
+  wrapper.querySelector('[data-reset-chapter-progress]')?.addEventListener('click', () => {
+    chapterProgress = { ...defaultChapterProgress };
+    persistChapterProgress();
+    applyChapterProgress();
+    notify?.('Chapter progress reset.');
+  });
+
+  applyChapterProgress();
+  setActiveChapter(chapterIds[0]);
 
   const stepButtons = new Map();
   wrapper.querySelectorAll('.guide-stepper [data-jump-target]').forEach((button) => {
@@ -5329,8 +5441,11 @@ export const renderPropensityPage = (ctx) => {
       const target = button.getAttribute('data-jump-target');
       if (!target) return;
       if (stepButtons.has(target)) setActiveGuideStep(target);
+      if (chapterNavButtons.has(target)) setActiveChapter(target);
       const node = wrapper.querySelector(`#${target}`);
       if (!node) return;
+      const chapterNode = node.closest('.guide-chapter');
+      if (chapterNode?.id) setActiveChapter(chapterNode.id);
       node.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });

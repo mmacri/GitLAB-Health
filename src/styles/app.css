@@ -2226,6 +2226,23 @@ textarea.artifact,
   z-index: 17;
 }
 
+.guide-chapter-rail__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.guide-chapter-rail__meta strong {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.guide-chapter-rail__reset {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
 .guide-chapter-rail__actions {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2233,11 +2250,38 @@ textarea.artifact,
 }
 
 .guide-chapter-rail__item {
+  display: grid;
+  gap: 2px;
+  position: relative;
   justify-content: center;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.guide-chapter-rail__item small {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.guide-chapter-rail__item.is-active {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  background: color-mix(in srgb, var(--primary) 8%, white);
+  color: var(--primary-strong);
+}
+
+.guide-chapter-rail__item.is-complete small {
+  color: color-mix(in srgb, var(--success) 78%, black);
+}
+
+.guide-chapter-rail__item.is-complete::after {
+  content: '✓';
+  position: absolute;
+  right: 6px;
+  top: 4px;
+  font-size: 11px;
+  color: color-mix(in srgb, var(--success) 78%, black);
 }
 
 .guide-chapter {
@@ -2247,6 +2291,15 @@ textarea.artifact,
 
 .guide-chapter__intro {
   border-left: 3px solid var(--secondary);
+}
+
+.guide-chapter.is-complete .guide-chapter__intro,
+.guide-chapter.is-complete .guide-chapter__summary {
+  border-left: 3px solid var(--success);
+}
+
+.guide-chapter__controls {
+  margin-top: 4px;
 }
 
 .guide-chapter__rubric {
