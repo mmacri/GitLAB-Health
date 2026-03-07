@@ -1319,6 +1319,122 @@ const interpretationPitfalls = [
   }
 ];
 
+const decisionTreeRows = [
+  {
+    label: 'PtC High + Renewal pressure active',
+    tone: 'risk',
+    firstPlay: 'Retention mitigation play first (risk burndown + dated owner plan).',
+    secondPlay: 'Executive alignment checkpoint after mitigation plan is in flight.',
+    owner: 'CSE primary, Manager governance',
+    escalate: 'Escalate if trigger SLA target is missed or overdue mitigation remains open.',
+    proof: 'Overdue actions down, engagement cadence restored, PtC trend stabilizing.'
+  },
+  {
+    label: 'PtC High + PtE Low',
+    tone: 'risk',
+    firstPlay: 'Stabilization-first motion: adoption gap closure + engagement reset.',
+    secondPlay: 'Expansion planning only after pressure drops from High band.',
+    owner: 'CSE execution with manager checkpoint',
+    escalate: 'Escalate when no directional movement after two operating cycles.',
+    proof: 'Primary trigger severity reduced and confidence score improved.'
+  },
+  {
+    label: 'PtE High + PtC Low',
+    tone: 'good',
+    firstPlay: 'Expansion activation with quantified value narrative and sponsor mapping.',
+    secondPlay: 'Protect retention baseline with lightweight risk monitoring.',
+    owner: 'CSE execution',
+    escalate: 'Escalate only if new High-severity triggers appear mid-cycle.',
+    proof: 'Expansion opportunities progressed with stable/low PtC profile.'
+  },
+  {
+    label: 'PtE Medium + PtC Medium',
+    tone: 'warn',
+    firstPlay: 'Dual-track play: one mitigation action + one adoption uplift action.',
+    secondPlay: 'Re-score next cycle and decide whether to pivot to risk or expansion lane.',
+    owner: 'CSE with manager calibration support',
+    escalate: 'Escalate if alignment on dominant play drops by trigger cohort.',
+    proof: 'Band movement or improved trigger mix in next snapshot.'
+  },
+  {
+    label: 'Low-confidence account (data trust gate)',
+    tone: 'warn',
+    firstPlay: 'Data hygiene first: close missing renewal, engagement, milestone, and owner fields.',
+    secondPlay: 'Run score interpretation only after confidence backlog is reduced.',
+    owner: 'CSE data owner, manager enforces review gate',
+    escalate: 'Escalate when low-confidence rows block portfolio decisions.',
+    proof: 'Confidence score rises and missing-input list is cleared.'
+  }
+];
+
+const metricLineageRows = [
+  {
+    metric: 'Time to Engage (handbook)',
+    formula: 'first CSM meeting date - contract/onboarding start date',
+    fields: 'firstContactDate, subscriptionStartDate',
+    guardrail: 'Missing first contact date makes engagement velocity unverifiable.'
+  },
+  {
+    metric: 'Time to Onboard (handbook)',
+    formula: 'onboarding completion date - onboarding start date',
+    fields: 'onboardingCompletedAt, onboardingStartAt',
+    guardrail: 'Incomplete onboarding tasks invalidate onboarding duration interpretation.'
+  },
+  {
+    metric: 'Time to First Value (handbook)',
+    formula: 'first value event date - contract start date (10% utilization marker)',
+    fields: 'firstValueAt OR utilization threshold event, subscriptionStartDate',
+    guardrail: 'License utilization evidence must be timestamped and attributable.'
+  },
+  {
+    metric: 'Platform Adoption Score (handbook)',
+    formula: 'count of green use cases (successful platform adoption when >= 3)',
+    fields: 'useCase maturity/status by account',
+    guardrail: 'Use-case status criteria must be consistently applied across accounts.'
+  },
+  {
+    metric: 'PtE local proxy',
+    formula:
+      'weighted readiness inputs + contextual adjustments; final clamp(0..100) and banding',
+    fields: 'adoptionScore, engagementScore, riskScore, cicdPercent, securityPercent, stageCoverage, renewalDays, openExpansionCount',
+    guardrail: 'Treat coefficients as local operating heuristic; recalibrate against outcomes.'
+  },
+  {
+    metric: 'PtC local proxy',
+    formula:
+      'weighted pressure inputs + contextual adjustments; final clamp(0..100) and banding',
+    fields: 'riskScore, adoptionScore, engagementScore, renewalPressure, trigger flags',
+    guardrail: 'Never interpret PtC without trigger severity and mitigation coverage context.'
+  }
+];
+
+const ptePtcFaq = [
+  {
+    q: 'Is PtE/PtC an official published GitLab formula?',
+    a: 'No. PtE/PtC are handbook-aligned predictive concepts, but internal production coefficients are not published. This guide uses a deterministic local proxy and labels it explicitly as such.'
+  },
+  {
+    q: 'Why can PtE and PtC both increase at the same time?',
+    a: 'Expansion readiness and retention pressure can move independently. Example: adoption improves (raising PtE) while renewal urgency or risk triggers increase (raising PtC). Treat this as “grow with risk” posture.'
+  },
+  {
+    q: 'Why does renewal timing have strong effect on PtC outcomes?',
+    a: 'As renewal windows tighten, downside risk has less recovery time. Renewal pressure acts as a time-urgency multiplier, so equal risk posture near renewal is operationally more critical.'
+  },
+  {
+    q: 'Why is confidence reviewed before score-based decisions?',
+    a: 'Scores are only as reliable as the input evidence. Missing engagement logs, renewal dates, or milestone proof can produce misleading prioritization and poor execution sequencing.'
+  },
+  {
+    q: 'When should local PtE/PtC weights be recalibrated?',
+    a: 'Recalibrate after observing repeated mismatch between predicted posture and actual outcomes over multiple cycles, and document profile version, owner, and date when changing coefficients.'
+  },
+  {
+    q: 'What is the safest way to explain PtE/PtC to leadership?',
+    a: 'Use this chain: trigger context -> score posture -> selected play -> expected measurable outcome -> next checkpoint date. Avoid presenting score alone without driver evidence.'
+  }
+];
+
 const escapeHtml = (value = '') =>
   String(value)
     .replace(/&/g, '&amp;')
@@ -2731,6 +2847,73 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
+    <section class="card" id="section-decision-tree">
+      <div class="metric-head">
+        <h2>60-Second Decision Tree: Which Play Comes First?</h2>
+        ${statusChip({ label: 'Execution order guide', tone: 'warn' })}
+      </div>
+      <p class="muted">
+        Use this sequence table to decide first-action order by posture. Apply these guardrails before ad-hoc requests reorder the queue.
+      </p>
+      <div class="grid-cards">
+        ${decisionTreeRows
+          .map(
+            (item) => `
+              <article class="card compact-card">
+                <div class="metric-head">
+                  <h3>${escapeHtml(item.label)}</h3>
+                  ${statusChip({ label: 'Decision branch', tone: item.tone })}
+                </div>
+                <ul class="simple-list">
+                  <li><strong>First play:</strong> ${escapeHtml(item.firstPlay)}</li>
+                  <li><strong>Second play:</strong> ${escapeHtml(item.secondPlay)}</li>
+                  <li><strong>Owner motion:</strong> ${escapeHtml(item.owner)}</li>
+                  <li><strong>Escalate when:</strong> ${escapeHtml(item.escalate)}</li>
+                  <li><strong>Proof point:</strong> ${escapeHtml(item.proof)}</li>
+                </ul>
+              </article>
+            `
+          )
+          .join('')}
+      </div>
+    </section>
+
+    <section class="card" id="section-metric-lineage">
+      <div class="metric-head">
+        <h2>Metric Lineage and Data Requirements</h2>
+        ${statusChip({ label: 'Trust + explainability', tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        This table links each metric to formula, required fields, and data-quality guardrail so teams can validate inputs before presenting outputs.
+      </p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Formula definition</th>
+              <th>Required fields</th>
+              <th>Data-quality guardrail</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${metricLineageRows
+              .map(
+                (item) => `
+                  <tr>
+                    <td><strong>${escapeHtml(item.metric)}</strong></td>
+                    <td>${escapeHtml(item.formula)}</td>
+                    <td>${escapeHtml(item.fields)}</td>
+                    <td>${escapeHtml(item.guardrail)}</td>
+                  </tr>
+                `
+              )
+              .join('')}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <section class="card" id="section-action-queue">
       <div class="metric-head">
         <h2>Weekly Action Queue (Prioritized)</h2>
@@ -3734,6 +3917,30 @@ export const renderPropensityPage = (ctx) => {
               .join('')}
           </tbody>
         </table>
+      </div>
+    </section>
+
+    <section class="card" id="section-faq">
+      <div class="metric-head">
+        <h2>PtE/PtC Interpretation Clinic (FAQ)</h2>
+        ${statusChip({ label: 'Coaching-ready answers', tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        Use these answers during onboarding and leadership reviews to keep explanation quality consistent across CSE and Manager workflows.
+      </p>
+      <div class="accordion">
+        ${ptePtcFaq
+          .map(
+            (item, idx) => `
+              <details class="accordion__item"${idx === 0 ? ' open' : ''}>
+                <summary class="accordion__header">${escapeHtml(item.q)}</summary>
+                <div class="accordion__body">
+                  <p>${escapeHtml(item.a)}</p>
+                </div>
+              </details>
+            `
+          )
+          .join('')}
       </div>
     </section>
 
