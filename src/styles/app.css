@@ -2238,9 +2238,67 @@ textarea.artifact,
   color: var(--ink-muted);
 }
 
+.guide-chapter-rail__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.guide-chapter-rail__summary strong {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
 .guide-chapter-rail__reset {
   padding: 4px 8px;
   font-size: 12px;
+}
+
+.guide-chapter-rail__outcomes {
+  display: grid;
+  gap: 8px;
+}
+
+.guide-chapter-rail__outcome {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-muted);
+  padding: 8px 10px;
+}
+
+.guide-chapter-rail__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 3px;
+  background: var(--ink-soft);
+}
+
+.guide-chapter-rail__outcome strong {
+  display: block;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.guide-chapter-rail__outcome p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+  max-width: none;
+}
+
+.guide-chapter-rail__outcome.is-complete {
+  border-color: color-mix(in srgb, var(--success) 40%, var(--border));
+  background: color-mix(in srgb, var(--success) 8%, white);
+}
+
+.guide-chapter-rail__outcome.is-complete .guide-chapter-rail__dot {
+  background: color-mix(in srgb, var(--success) 86%, black);
 }
 
 .guide-chapter-rail__actions {
@@ -2945,6 +3003,12 @@ textarea.artifact,
 
   .guide-chapter__rubric {
     grid-template-columns: 1fr;
+  }
+
+  .guide-chapter-rail__summary,
+  .guide-chapter-rail__meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .app-shell {

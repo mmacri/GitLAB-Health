@@ -5030,6 +5030,7 @@ export const renderPropensityPage = (ctx) => {
       title: 'Orientation',
       subtitle: 'Understand what PtE/PtC means and where to start in under 5 minutes.',
       tone: 'neutral',
+      outcome: 'Clear initial posture lane (stabilize, dual-track, or expand).',
       guidance: {
         question: 'What operating posture are we in right now?',
         inputs: 'Start-here flow, learning path, decision tree, PtE/PtC meaning cards.',
@@ -5044,6 +5045,7 @@ export const renderPropensityPage = (ctx) => {
       title: 'Data Trust Gate',
       subtitle: 'Validate confidence and input quality before score-based decisions.',
       tone: 'good',
+      outcome: 'Confidence and data gaps are known and prioritized.',
       guidance: {
         question: 'Are the inputs trustworthy enough for score-based decisions?',
         inputs: 'Confidence checks, evidence quality, metric lineage and data gap visuals.',
@@ -5058,6 +5060,7 @@ export const renderPropensityPage = (ctx) => {
       title: 'Diagnose Posture',
       subtitle: 'Read band mix, matrix, trigger concentration, and account-level driver context.',
       tone: 'warn',
+      outcome: 'Top risk/growth clusters identified with evidence-backed drivers.',
       guidance: {
         question: 'Where is risk and growth pressure concentrated across the portfolio?',
         inputs: 'Band mix charts, advanced distributions, matrix, lifecycle, score explainer.',
@@ -5072,6 +5075,7 @@ export const renderPropensityPage = (ctx) => {
       title: 'Choose Plays',
       subtitle: 'Prioritize queue order and map trigger clusters to deterministic plays.',
       tone: 'warn',
+      outcome: 'Primary and secondary plays assigned for priority accounts.',
       guidance: {
         question: 'Which deterministic plays should be run first and by whom?',
         inputs: 'Weekly queue, trigger catalog, SLA matrix, walkthroughs, mitigation coverage.',
@@ -5086,6 +5090,7 @@ export const renderPropensityPage = (ctx) => {
       title: 'Execute With Guardrails',
       subtitle: 'Run wizard recommendations with readiness checks and role-based operating cadence.',
       tone: 'good',
+      outcome: 'Execution commitments are complete and cadence is scheduled.',
       guidance: {
         question: 'Are execution commitments complete and operationally ready?',
         inputs: 'Play wizard, readiness checklist, cadence agendas, role checklists.',
@@ -5100,6 +5105,7 @@ export const renderPropensityPage = (ctx) => {
       title: 'Verify and Calibrate',
       subtitle: 'Measure movement, compare to baseline, and adjust plays by observed effectiveness.',
       tone: 'neutral',
+      outcome: 'Keep/change/escalate decisions documented for the next cycle.',
       guidance: {
         question: 'Did actions move the portfolio in the expected direction?',
         inputs: 'Score delta, baseline comparison, quarter plan, effectiveness and calibration tables.',
@@ -5114,6 +5120,7 @@ export const renderPropensityPage = (ctx) => {
       title: 'Appendix and Formula Lab',
       subtitle: 'Reference formulas, glossary, FAQ, drills, and sandbox tools when needed.',
       tone: 'neutral',
+      outcome: 'Reference and simulation tools available for deep analysis.',
       collapsible: true,
       sections: [
         'section-formulas',
@@ -5128,6 +5135,7 @@ export const renderPropensityPage = (ctx) => {
     }
   ];
   const chapterIds = chapterPlan.map((item) => item.id);
+  const chapterTitleById = new Map(chapterPlan.map((item) => [item.id, item.title]));
   const defaultChapterProgress = chapterIds.reduce((acc, id) => {
     acc[id] = false;
     return acc;
@@ -5178,9 +5186,28 @@ export const renderPropensityPage = (ctx) => {
         ${statusChip({ label: `${chapterPlan.length} chapters`, tone: 'neutral' })}
       </div>
       <p class="muted">Follow chapters in order for a complete expansion + churn operating cycle.</p>
+      <div class="guide-chapter-rail__summary">
+        <strong data-next-chapter-label>Next chapter: ${escapeHtml(chapterPlan[0]?.title || 'Orientation')}</strong>
+        <button class="ghost-btn" type="button" data-jump-next-chapter>Go to next incomplete chapter</button>
+      </div>
       <div class="guide-chapter-rail__meta">
         <strong data-chapter-progress-label>0 / ${chapterPlan.length} complete</strong>
         <button class="ghost-btn guide-chapter-rail__reset" type="button" data-reset-chapter-progress>Reset chapters</button>
+      </div>
+      <div class="guide-chapter-rail__outcomes">
+        ${chapterPlan
+          .map(
+            (chapter, index) => `
+              <article class="guide-chapter-rail__outcome" data-chapter-outcome="${chapter.id}">
+                <span class="guide-chapter-rail__dot" aria-hidden="true"></span>
+                <div>
+                  <strong>${index + 1}. ${escapeHtml(chapter.title)}</strong>
+                  <p>${escapeHtml(chapter.outcome || chapter.subtitle || '')}</p>
+                </div>
+              </article>
+            `
+          )
+          .join('')}
       </div>
       <div class="guide-chapter-rail__actions">
         ${chapterPlan
@@ -5261,6 +5288,10 @@ export const renderPropensityPage = (ctx) => {
       toggle.textContent = isGuided ? 'Switch to Expert View' : 'Switch to Guided View';
       toggle.setAttribute('aria-pressed', String(!isGuided));
     }
+    const appendix = wrapper.querySelector('#chapter-appendix');
+    if (appendix instanceof HTMLDetailsElement) {
+      appendix.open = guideMode === 'expert';
+    }
   };
 
   buildChapteredGuideLayout();
@@ -5283,7 +5314,15 @@ export const renderPropensityPage = (ctx) => {
     if (!chapterId) return;
     chapterStatusLabels.set(chapterId, node);
   });
+  const chapterOutcomeRows = new Map();
+  wrapper.querySelectorAll('[data-chapter-outcome]').forEach((node) => {
+    const chapterId = node.getAttribute('data-chapter-outcome');
+    if (!chapterId) return;
+    chapterOutcomeRows.set(chapterId, node);
+  });
   const chapterProgressLabel = wrapper.querySelector('[data-chapter-progress-label]');
+  const nextChapterLabel = wrapper.querySelector('[data-next-chapter-label]');
+  const jumpNextChapterButton = wrapper.querySelector('[data-jump-next-chapter]');
 
   const persistChapterProgress = () => {
     try {
@@ -5312,7 +5351,24 @@ export const renderPropensityPage = (ctx) => {
       if (nav) nav.classList.toggle('is-complete', complete);
       const chapterNode = wrapper.querySelector(`#${chapterId}`);
       if (chapterNode) chapterNode.classList.toggle('is-complete', complete);
+      const outcome = chapterOutcomeRows.get(chapterId);
+      if (outcome) outcome.classList.toggle('is-complete', complete);
     });
+    const nextIncomplete = chapterIds.find((id) => !chapterProgress[id]) || null;
+    if (nextChapterLabel) {
+      nextChapterLabel.textContent = nextIncomplete
+        ? `Next chapter: ${chapterTitleById.get(nextIncomplete) || nextIncomplete}`
+        : 'All chapters complete';
+    }
+    if (jumpNextChapterButton) {
+      if (nextIncomplete) {
+        jumpNextChapterButton.removeAttribute('disabled');
+        jumpNextChapterButton.setAttribute('data-next-target', nextIncomplete);
+      } else {
+        jumpNextChapterButton.setAttribute('disabled', 'true');
+        jumpNextChapterButton.removeAttribute('data-next-target');
+      }
+    }
   };
 
   const setActiveChapter = (chapterId) => {
@@ -5335,6 +5391,14 @@ export const renderPropensityPage = (ctx) => {
     persistChapterProgress();
     applyChapterProgress();
     notify?.('Chapter progress reset.');
+  });
+  jumpNextChapterButton?.addEventListener('click', () => {
+    const target = jumpNextChapterButton.getAttribute('data-next-target');
+    if (!target) return;
+    const node = wrapper.querySelector(`#${target}`);
+    if (!node) return;
+    setActiveChapter(target);
+    node.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   applyChapterProgress();
