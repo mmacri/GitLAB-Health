@@ -254,6 +254,44 @@ const calculateFormulaSensitivity = (input = {}) => {
     .sort((left, right) => Math.abs(right.pteDelta) + Math.abs(right.ptcDelta) - (Math.abs(left.pteDelta) + Math.abs(left.ptcDelta)));
 };
 
+const deriveBandTargetGuidance = (scenario, sensitivity) => {
+  const pteFinal = Number(scenario?.pte?.final || 0);
+  const ptcFinal = Number(scenario?.ptc?.final || 0);
+  const pteBand = String(scenario?.pte?.band || 'Low');
+  const ptcBand = String(scenario?.ptc?.band || 'Low');
+
+  const pteTarget = pteBand === 'High' ? pteFinal : 70;
+  const pteGap = Math.max(0, round1(pteTarget - pteFinal));
+  const pteLevers = [...(sensitivity || [])].filter((item) => Number(item.pteDelta || 0) > 0).sort((a, b) => Number(b.pteDelta || 0) - Number(a.pteDelta || 0));
+
+  const ptcTarget = ptcBand === 'High' ? 69 : ptcBand === 'Medium' ? 44 : ptcFinal;
+  const ptcGap = Math.max(0, round1(ptcFinal - ptcTarget));
+  const ptcLevers = [...(sensitivity || [])].filter((item) => Number(item.ptcDelta || 0) < 0).sort((a, b) => Number(a.ptcDelta || 0) - Number(b.ptcDelta || 0));
+
+  const bestPteLever = pteLevers[0] || null;
+  const bestPtcLever = ptcLevers[0] || null;
+
+  const pteRepeats = bestPteLever ? Math.max(1, Math.ceil(pteGap / Math.max(0.1, Number(bestPteLever.pteDelta || 0)))) : 0;
+  const ptcRepeats = bestPtcLever ? Math.max(1, Math.ceil(ptcGap / Math.max(0.1, Math.abs(Number(bestPtcLever.ptcDelta || 0))))) : 0;
+
+  return {
+    pte: {
+      band: pteBand,
+      target: pteTarget,
+      gap: pteGap,
+      bestLever: bestPteLever,
+      repeats: pteRepeats
+    },
+    ptc: {
+      band: ptcBand,
+      target: ptcTarget,
+      gap: ptcGap,
+      bestLever: bestPtcLever,
+      repeats: ptcRepeats
+    }
+  };
+};
+
 const deriveHealthDistribution = (rows = []) =>
   rows.reduce(
     (acc, row) => {
@@ -1678,6 +1716,68 @@ export const renderPropensityPage = (ctx) => {
     secureBelow30: avgSecurityPercent < 30,
     strongMomentum: avgAdoptionScore >= 70 && avgEngagementScore >= 70 && avgRiskScore <= 35
   };
+  const workedFormulaScenarios = [
+    {
+      id: 'expansion-ready',
+      title: 'Expansion-ready profile',
+      input: {
+        adoptionScore: 82,
+        engagementScore: 78,
+        riskScore: 28,
+        cicdPercent: 84,
+        securityPercent: 62,
+        stageCoveragePercent: 76,
+        openExpansionCount: 3,
+        renewalDays: 140,
+        renewalSoonSignal: false,
+        staleEngagement90: false,
+        secureBelow30: false,
+        strongMomentum: true
+      },
+      interpretation: 'High PtE with low PtC supports immediate expansion planning with executive alignment.'
+    },
+    {
+      id: 'balanced-fragile',
+      title: 'Balanced but fragile profile',
+      input: {
+        adoptionScore: 58,
+        engagementScore: 54,
+        riskScore: 52,
+        cicdPercent: 56,
+        securityPercent: 34,
+        stageCoveragePercent: 50,
+        openExpansionCount: 1,
+        renewalDays: 105,
+        renewalSoonSignal: true,
+        staleEngagement90: false,
+        secureBelow30: false,
+        strongMomentum: false
+      },
+      interpretation: 'Medium PtE and Medium PtC requires targeted uplift plus risk controls before any expansion ask.'
+    },
+    {
+      id: 'retention-risk',
+      title: 'Retention pressure profile',
+      input: {
+        adoptionScore: 36,
+        engagementScore: 30,
+        riskScore: 81,
+        cicdPercent: 28,
+        securityPercent: 14,
+        stageCoveragePercent: 26,
+        openExpansionCount: 0,
+        renewalDays: 45,
+        renewalSoonSignal: true,
+        staleEngagement90: true,
+        secureBelow30: true,
+        strongMomentum: false
+      },
+      interpretation: 'Low PtE and High PtC requires immediate stabilization, owner/date coverage, and weekly mitigation reviews.'
+    }
+  ].map((item) => ({
+    ...item,
+    output: calculateFormulaSandbox(item.input)
+  }));
 
   const buildComparison = (snapshot) => {
     if (!snapshot) return null;
@@ -2642,6 +2742,58 @@ export const renderPropensityPage = (ctx) => {
         ${statusChip({ label: 'Banding: High >=70', tone: 'neutral' })}
         ${statusChip({ label: 'Banding: Medium 45-69', tone: 'warn' })}
         ${statusChip({ label: 'Banding: Low <45', tone: 'good' })}
+      </div>
+    </section>
+
+    <section class="card" id="section-formula-examples">
+      <div class="metric-head">
+        <h2>Worked Examples: Why Scores Land in Each Band</h2>
+        ${statusChip({ label: 'Formula walk-through', tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        These examples use fixed inputs and the exact formula engine. Use them as pattern references when coaching CSEs on trigger interpretation.
+      </p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Scenario</th>
+              <th>Input profile</th>
+              <th>PtE result</th>
+              <th>PtC result</th>
+              <th>How to use</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${workedFormulaScenarios
+              .map((item) => {
+                const pteTone = item.output.pte.band === 'High' ? 'good' : item.output.pte.band === 'Medium' ? 'warn' : 'neutral';
+                const ptcTone = item.output.ptc.band === 'High' ? 'risk' : item.output.ptc.band === 'Medium' ? 'warn' : 'good';
+                return `
+                  <tr>
+                    <td>
+                      <strong>${escapeHtml(item.title)}</strong><br>
+                      <span class="muted">Renewal ${Number(item.input.renewalDays)}d</span>
+                    </td>
+                    <td>
+                      Adoption ${Number(item.input.adoptionScore)} / Engagement ${Number(item.input.engagementScore)} / Risk ${Number(item.input.riskScore)}<br>
+                      CI/CD ${Number(item.input.cicdPercent)}% | Security ${Number(item.input.securityPercent)}% | Stage ${Number(item.input.stageCoveragePercent)}%
+                    </td>
+                    <td>
+                      ${statusChip({ label: `${item.output.pte.final} (${item.output.pte.band})`, tone: pteTone })}<br>
+                      <span class="muted">Base ${item.output.pte.base}, adj ${formatSigned(item.output.pte.adjustment, 1)}</span>
+                    </td>
+                    <td>
+                      ${statusChip({ label: `${item.output.ptc.final} (${item.output.ptc.band})`, tone: ptcTone })}<br>
+                      <span class="muted">Base ${item.output.ptc.base}, adj ${formatSigned(item.output.ptc.adjustment, 1)}</span>
+                    </td>
+                    <td>${escapeHtml(item.interpretation)}</td>
+                  </tr>
+                `;
+              })
+              .join('')}
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -3829,6 +3981,7 @@ export const renderPropensityPage = (ctx) => {
     const scenario = calculateFormulaSandbox(readFormulaSandboxState());
     const { inputs, pte, ptc } = scenario;
     const sensitivity = calculateFormulaSensitivity(inputs);
+    const targetGuidance = deriveBandTargetGuidance(scenario, sensitivity);
     const maxSensitivityImpact = Math.max(
       1,
       ...sensitivity.map((item) => Math.max(Math.abs(Number(item.pteDelta || 0)), Math.abs(Number(item.ptcDelta || 0))))
@@ -3975,6 +4128,50 @@ export const renderPropensityPage = (ctx) => {
             strongestPtcPressure?.ptcDelta || 0,
             1
           )}).
+        </div>
+      </article>
+      <article class="card compact-card">
+        <div class="metric-head">
+          <h3>Band Target Guidance</h3>
+          ${statusChip({ label: 'Action translation', tone: 'warn' })}
+        </div>
+        <div class="grid-cards">
+          <article class="card compact-card">
+            <div class="metric-head">
+              <h4>Move PtE upward</h4>
+              ${statusChip({ label: `Gap ${targetGuidance.pte.gap}`, tone: targetGuidance.pte.gap > 0 ? 'warn' : 'good' })}
+            </div>
+            ${
+              targetGuidance.pte.gap > 0 && targetGuidance.pte.bestLever
+                ? `<p class="muted">
+                    Need about <strong>${targetGuidance.pte.gap}</strong> points to reach PtE High (70).<br>
+                    Best current lever: <strong>${escapeHtml(targetGuidance.pte.bestLever.label)}</strong> (${formatSigned(
+                      targetGuidance.pte.bestLever.pteDelta,
+                      1
+                    )} per probe).<br>
+                    Rough effort: repeat equivalent uplift <strong>${targetGuidance.pte.repeats}x</strong>.
+                  </p>`
+                : '<p class="muted">PtE already High. Maintain momentum and protect engagement quality.</p>'
+            }
+          </article>
+          <article class="card compact-card">
+            <div class="metric-head">
+              <h4>Reduce PtC pressure</h4>
+              ${statusChip({ label: `Gap ${targetGuidance.ptc.gap}`, tone: targetGuidance.ptc.gap > 0 ? 'risk' : 'good' })}
+            </div>
+            ${
+              targetGuidance.ptc.gap > 0 && targetGuidance.ptc.bestLever
+                ? `<p class="muted">
+                    Need about <strong>${targetGuidance.ptc.gap}</strong> points down to exit current PtC band.<br>
+                    Strongest reduction lever: <strong>${escapeHtml(targetGuidance.ptc.bestLever.label)}</strong> (${formatSigned(
+                      targetGuidance.ptc.bestLever.ptcDelta,
+                      1
+                    )} per probe).<br>
+                    Rough effort: repeat equivalent mitigation <strong>${targetGuidance.ptc.repeats}x</strong>.
+                  </p>`
+                : '<p class="muted">PtC already Low. Keep renewal and engagement protections in place to prevent drift.</p>'
+            }
+          </article>
         </div>
       </article>
     `;
