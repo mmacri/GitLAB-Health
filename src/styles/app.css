@@ -1621,6 +1621,36 @@ textarea.artifact,
   height: 16px;
 }
 
+.formula-impact-cell {
+  display: grid;
+  gap: 4px;
+  min-width: 92px;
+}
+
+.formula-impact-cell strong {
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.formula-impact {
+  height: 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-muted);
+  overflow: hidden;
+}
+
+.formula-impact i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--info), var(--primary));
+}
+
+.formula-impact--risk i {
+  background: linear-gradient(90deg, var(--warning), var(--danger));
+}
+
 .density-control {
   display: flex;
   gap: var(--space-2);

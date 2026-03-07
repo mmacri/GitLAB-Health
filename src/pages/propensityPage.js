@@ -178,6 +178,82 @@ const calculateFormulaSandbox = (input = {}) => {
   };
 };
 
+const calculateFormulaSensitivity = (input = {}) => {
+  const baselineInput = { ...input };
+  const baseline = calculateFormulaSandbox(baselineInput);
+  const clampPct = (value, delta = 0) => Math.max(0, Math.min(100, Number(value || 0) + delta));
+
+  const probes = [
+    {
+      id: 'adoption',
+      label: 'Adoption score',
+      step: '+10 points',
+      why: 'Higher adoption adds PtE weight (0.32) and shrinks PtC adoption gap (0.24).',
+      apply: (draft) => ({ ...draft, adoptionScore: clampPct(draft.adoptionScore, 10) })
+    },
+    {
+      id: 'engagement',
+      label: 'Engagement score',
+      step: '+10 points',
+      why: 'Higher engagement adds PtE weight (0.23) and reduces PtC engagement gap (0.17).',
+      apply: (draft) => ({ ...draft, engagementScore: clampPct(draft.engagementScore, 10) })
+    },
+    {
+      id: 'risk',
+      label: 'Risk score',
+      step: '+10 points',
+      why: 'Higher risk reduces PtE stability term and increases PtC risk weight (0.42).',
+      apply: (draft) => ({ ...draft, riskScore: clampPct(draft.riskScore, 10) })
+    },
+    {
+      id: 'cicd',
+      label: 'CI/CD adoption %',
+      step: '+10 points',
+      why: 'CI/CD adoption contributes directly to PtE via weight 0.13.',
+      apply: (draft) => ({ ...draft, cicdPercent: clampPct(draft.cicdPercent, 10) })
+    },
+    {
+      id: 'security',
+      label: 'Security adoption %',
+      step: '+10 points',
+      why: 'Security adoption raises PtE and can reduce low-security penalty exposure.',
+      apply: (draft) => ({ ...draft, securityPercent: clampPct(draft.securityPercent, 10) })
+    },
+    {
+      id: 'stageCoverage',
+      label: 'Stage coverage %',
+      step: '+10 points',
+      why: 'Stage coverage adds PtE weight (0.09) as platform depth indicator.',
+      apply: (draft) => ({ ...draft, stageCoveragePercent: clampPct(draft.stageCoveragePercent, 10) })
+    },
+    {
+      id: 'renewalDays',
+      label: 'Renewal days',
+      step: '-30 days',
+      why: 'Nearer renewal increases renewal pressure and raises PtC urgency terms.',
+      apply: (draft) => ({ ...draft, renewalDays: Math.max(0, Number(draft.renewalDays || 0) - 30) })
+    },
+    {
+      id: 'expansionCount',
+      label: 'Open expansion count',
+      step: '+1',
+      why: 'More validated expansion signals add PtE context uplift (up to +8).',
+      apply: (draft) => ({ ...draft, openExpansionCount: Math.max(0, Number(draft.openExpansionCount || 0) + 1) })
+    }
+  ];
+
+  return probes
+    .map((probe) => {
+      const next = calculateFormulaSandbox(probe.apply({ ...baselineInput }));
+      return {
+        ...probe,
+        pteDelta: round1(next.pte.final - baseline.pte.final),
+        ptcDelta: round1(next.ptc.final - baseline.ptc.final)
+      };
+    })
+    .sort((left, right) => Math.abs(right.pteDelta) + Math.abs(right.ptcDelta) - (Math.abs(left.pteDelta) + Math.abs(left.ptcDelta)));
+};
+
 const deriveHealthDistribution = (rows = []) =>
   rows.reduce(
     (acc, row) => {
@@ -3752,6 +3828,13 @@ export const renderPropensityPage = (ctx) => {
     if (!formulaSandboxOutput) return;
     const scenario = calculateFormulaSandbox(readFormulaSandboxState());
     const { inputs, pte, ptc } = scenario;
+    const sensitivity = calculateFormulaSensitivity(inputs);
+    const maxSensitivityImpact = Math.max(
+      1,
+      ...sensitivity.map((item) => Math.max(Math.abs(Number(item.pteDelta || 0)), Math.abs(Number(item.ptcDelta || 0))))
+    );
+    const strongestPteLever = [...sensitivity].sort((left, right) => Number(right.pteDelta || 0) - Number(left.pteDelta || 0))[0];
+    const strongestPtcPressure = [...sensitivity].sort((left, right) => Number(right.ptcDelta || 0) - Number(left.ptcDelta || 0))[0];
     const pteTone = pte.band === 'High' ? 'good' : pte.band === 'Medium' ? 'warn' : 'neutral';
     const ptcTone = ptc.band === 'High' ? 'risk' : ptc.band === 'Medium' ? 'warn' : 'good';
     const pteWhy =
@@ -3838,6 +3921,62 @@ export const renderPropensityPage = (ctx) => {
         ${statusChip({ label: `Renewal pressure ${inputs.renewalPressure}`, tone: inputs.renewalPressure >= 60 ? 'warn' : 'neutral' })}
         ${statusChip({ label: `Flags on: ${[inputs.renewalSoonSignal, inputs.staleEngagement90, inputs.secureBelow30, inputs.strongMomentum].filter(Boolean).length}/4`, tone: 'neutral' })}
       </div>
+      <article class="card compact-card">
+        <div class="metric-head">
+          <h3>Sensitivity Analysis: Which Inputs Move Scores Most</h3>
+          ${statusChip({ label: 'Scenario delta view', tone: 'neutral' })}
+        </div>
+        <p class="muted">
+          Each row applies one test change to the current scenario. Larger deltas mean stronger formula leverage for that input.
+        </p>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Input probe</th>
+                <th>Change</th>
+                <th>PtE delta</th>
+                <th>PtC delta</th>
+                <th>Why outcome occurs</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sensitivity
+                .map((item) => {
+                  const pteWidth = Math.max(4, Math.round((Math.abs(Number(item.pteDelta || 0)) / maxSensitivityImpact) * 100));
+                  const ptcWidth = Math.max(4, Math.round((Math.abs(Number(item.ptcDelta || 0)) / maxSensitivityImpact) * 100));
+                  return `
+                    <tr>
+                      <td><strong>${escapeHtml(item.label)}</strong></td>
+                      <td>${escapeHtml(item.step)}</td>
+                      <td>
+                        <div class="formula-impact-cell">
+                          <div class="formula-impact"><i style="width:${pteWidth}%"></i></div>
+                          <strong>${formatSigned(item.pteDelta, 1)}</strong>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="formula-impact-cell">
+                          <div class="formula-impact formula-impact--risk"><i style="width:${ptcWidth}%"></i></div>
+                          <strong>${formatSigned(item.ptcDelta, 1)}</strong>
+                        </div>
+                      </td>
+                      <td>${escapeHtml(item.why)}</td>
+                    </tr>
+                  `;
+                })
+                .join('')}
+            </tbody>
+          </table>
+        </div>
+        <div class="callout">
+          <strong>Top PtE lever:</strong> ${escapeHtml(strongestPteLever?.label || 'N/A')} (${formatSigned(strongestPteLever?.pteDelta || 0, 1)}).<br>
+          <strong>Top PtC pressure lever:</strong> ${escapeHtml(strongestPtcPressure?.label || 'N/A')} (${formatSigned(
+            strongestPtcPressure?.ptcDelta || 0,
+            1
+          )}).
+        </div>
+      </article>
     `;
   };
 
