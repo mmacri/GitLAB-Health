@@ -1913,6 +1913,29 @@ export const renderPropensityPage = (ctx) => {
   const accountOptions = rows
     .map((row) => `<option value="${row.customer.id}">${escapeHtml(row.customer.name)}</option>`)
     .join('');
+  const formulaPlanPresets = [
+    {
+      id: 'stabilize-expand',
+      label: 'Stabilize + Expand (90d)',
+      actions: ['recover-engagement', 'reduce-risk', 'expansion-proof'],
+      cycles: 3,
+      note: 'Balanced recovery and growth loop for medium-risk portfolios.'
+    },
+    {
+      id: 'risk-recovery',
+      label: 'Risk Recovery (60d)',
+      actions: ['renewal-escalation', 'reduce-risk', 'recover-engagement'],
+      cycles: 2,
+      note: 'Use when PtC is high and renewal urgency is driving action sequencing.'
+    },
+    {
+      id: 'expansion-track',
+      label: 'Expansion Track (90d)',
+      actions: ['secure-rollout', 'expansion-proof', 'recover-engagement'],
+      cycles: 3,
+      note: 'Use when baseline PtE is medium/high and retention pressure is manageable.'
+    }
+  ];
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
@@ -2966,6 +2989,16 @@ export const renderPropensityPage = (ctx) => {
         <div class="form-actions">
           <button class="ghost-btn" type="button" data-formula-plan-run>Run projection</button>
           <button class="ghost-btn" type="button" data-formula-plan-clear>Clear projection</button>
+        </div>
+        <div class="form-actions">
+          ${formulaPlanPresets
+            .map(
+              (preset) =>
+                `<button class="ghost-btn" type="button" data-formula-plan-preset="${preset.id}" title="${escapeHtml(preset.note)}">${escapeHtml(
+                  preset.label
+                )}</button>`
+            )
+            .join('')}
         </div>
       </fieldset>
       <div class="section-stack" data-formula-plan-output>
@@ -4037,6 +4070,7 @@ export const renderPropensityPage = (ctx) => {
   const formulaPlanRun = wrapper.querySelector('[data-formula-plan-run]');
   const formulaPlanClear = wrapper.querySelector('[data-formula-plan-clear]');
   const formulaPlanOutput = wrapper.querySelector('[data-formula-plan-output]');
+  const formulaPlanPresetButtons = wrapper.querySelectorAll('[data-formula-plan-preset]');
 
   const readFormulaSandboxState = () => {
     if (!(formulaSandboxForm instanceof HTMLFormElement)) return { ...formulaSandboxBaseline };
@@ -4300,6 +4334,16 @@ export const renderPropensityPage = (ctx) => {
     return { actions, cycles };
   };
 
+  const setFormulaPlanSelection = (actions = [], cycles = 3) => {
+    const selected = new Set([...(actions || [])].map((item) => String(item || '').trim()));
+    wrapper.querySelectorAll('input[name="planAction"]').forEach((input) => {
+      if ('checked' in input) input.checked = selected.has(String(input.value || '').trim());
+    });
+    const cycleField = wrapper.querySelector('input[name="planCycles"]');
+    const safeCycles = Number.isFinite(Number(cycles)) ? Math.max(1, Math.min(6, Math.floor(Number(cycles)))) : 3;
+    if (cycleField && 'value' in cycleField) cycleField.value = String(safeCycles);
+  };
+
   const renderFormulaPlanProjection = () => {
     if (!formulaPlanOutput) return;
     const selection = readFormulaPlanSelection();
@@ -4312,6 +4356,14 @@ export const renderPropensityPage = (ctx) => {
     const projected = projection.projected;
     const pteDelta = round1(Number(projected.pte.final || 0) - Number(baseline.pte.final || 0));
     const ptcDelta = round1(Number(projected.ptc.final || 0) - Number(baseline.ptc.final || 0));
+    const pteHistoryPoints = projection.history.map((item) => ({
+      label: item.step === 'Baseline' ? 'Base' : `C${item.cycle}`,
+      value: Number(item.scenario?.pte?.final || 0)
+    }));
+    const ptcHistoryPoints = projection.history.map((item) => ({
+      label: item.step === 'Baseline' ? 'Base' : `C${item.cycle}`,
+      value: Number(item.scenario?.ptc?.final || 0)
+    }));
 
     formulaPlanOutput.innerHTML = `
       <div class="metric-grid kpi-4">
@@ -4359,6 +4411,26 @@ export const renderPropensityPage = (ctx) => {
               .join('')}
           </tbody>
         </table>
+      </div>
+      <div class="grid-cards">
+        <article class="card compact-card">
+          <div class="metric-head">
+            <h3>Projected PtE trajectory</h3>
+            ${statusChip({ label: `Δ ${formatSigned(pteDelta, 1)}`, tone: pteDelta > 0 ? 'good' : pteDelta < 0 ? 'warn' : 'neutral' })}
+          </div>
+          <div class="chart-wrap">
+            ${lineChartSvg(pteHistoryPoints, { width: 420, height: 220 })}
+          </div>
+        </article>
+        <article class="card compact-card">
+          <div class="metric-head">
+            <h3>Projected PtC trajectory</h3>
+            ${statusChip({ label: `Δ ${formatSigned(ptcDelta, 1)}`, tone: ptcDelta < 0 ? 'good' : ptcDelta > 0 ? 'risk' : 'neutral' })}
+          </div>
+          <div class="chart-wrap">
+            ${lineChartSvg(ptcHistoryPoints, { width: 420, height: 220 })}
+          </div>
+        </article>
       </div>
     `;
   };
@@ -4433,6 +4505,17 @@ export const renderPropensityPage = (ctx) => {
     if (cycleField && 'value' in cycleField) cycleField.value = '3';
     if (formulaPlanOutput) formulaPlanOutput.innerHTML = '<p class="empty-text">Run a play sequence projection to compare baseline vs projected PtE/PtC.</p>';
     notify?.('Projection selection cleared.');
+  });
+
+  formulaPlanPresetButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const presetId = String(button.getAttribute('data-formula-plan-preset') || '').trim();
+      const preset = formulaPlanPresets.find((item) => item.id === presetId);
+      if (!preset) return;
+      setFormulaPlanSelection(preset.actions, preset.cycles);
+      renderFormulaPlanProjection();
+      notify?.(`Preset applied: ${preset.label}`);
+    });
   });
 
   const playWizardForm = wrapper.querySelector('[data-play-wizard-form]');
