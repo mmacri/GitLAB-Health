@@ -101,9 +101,16 @@ const computeReadinessProxy = (adoptionAvg, engagementCoveragePct) => round1(Num
 const computeRiskPressureProxy = (redHealthRatePct, engagementCoveragePct) =>
   round1(Number(redHealthRatePct || 0) * 0.58 + (100 - Number(engagementCoveragePct || 0)) * 0.42);
 
-const renewalPressureScorePreview = (renewalDays) => {
+const renewalPressureScorePreview = (renewalDays, calibration = null) => {
+  const configuredBuckets = calibration?.renewalPressure?.buckets;
+  const configuredUnknown = calibration?.renewalPressure?.unknownScore;
   const days = Number(renewalDays);
-  if (!Number.isFinite(days)) return 20;
+  if (!Number.isFinite(days)) return Number.isFinite(Number(configuredUnknown)) ? Number(configuredUnknown) : 20;
+  if (Array.isArray(configuredBuckets) && configuredBuckets.length) {
+    const sorted = [...configuredBuckets].sort((left, right) => Number(left?.maxDays) - Number(right?.maxDays));
+    const match = sorted.find((item) => days <= Number(item?.maxDays ?? Number.POSITIVE_INFINITY));
+    if (match) return Number(match?.score || 0);
+  }
   if (days <= 30) return 100;
   if (days <= 60) return 80;
   if (days <= 90) return 60;
@@ -2013,32 +2020,57 @@ export const renderPropensityPage = (ctx) => {
   const avgRenewalDays = rowsWithRenewal.length
     ? round1(rowsWithRenewal.reduce((sum, row) => sum + Number(row.renewalDays || 0), 0) / rowsWithRenewal.length)
     : null;
-  const renewalPressurePreview = renewalPressureScorePreview(avgRenewalDays);
+  const pteWeights = ptCalibration.pte.weights;
+  const ptcWeights = ptCalibration.ptc.weights;
+  const pteAdjustments = ptCalibration.pte.adjustments;
+  const ptcAdjustments = ptCalibration.ptc.adjustments;
+  const renewalPressureMapLabel = (ptCalibration.renewalPressure.buckets || [])
+    .map((bucket, idx) => {
+      const previous = idx > 0 ? ptCalibration.renewalPressure.buckets[idx - 1].maxDays : null;
+      const maxDays = Number(bucket.maxDays);
+      const score = Number(bucket.score || 0);
+      if (!Number.isFinite(maxDays)) return `>${previous ?? 180}d=${score}`;
+      if (previous === null) return `<=${maxDays}d=${score}`;
+      return `${previous + 1}-${maxDays}d=${score}`;
+    })
+    .join(', ');
+  const renewalPressurePreview = renewalPressureScorePreview(avgRenewalDays, ptCalibration);
   const pteBasePreview = round1(
-    avgAdoptionScore * 0.32 +
-      avgEngagementScore * 0.23 +
-      (100 - avgRiskScore) * 0.15 +
-      avgCicdPercent * 0.13 +
-      avgSecurityPercent * 0.08 +
-      avgStageCoveragePercent * 0.09
+    avgAdoptionScore * pteWeights.adoption +
+      avgEngagementScore * pteWeights.engagement +
+      (100 - avgRiskScore) * pteWeights.riskStability +
+      avgCicdPercent * pteWeights.cicd +
+      avgSecurityPercent * pteWeights.security +
+      avgStageCoveragePercent * pteWeights.stageCoverage
   );
   const pteAdjustmentPreview = round1(
-    (avgRenewalDays !== null && avgRenewalDays <= 120 ? 8 : 0) +
-      (avgRenewalDays !== null && avgRenewalDays > 120 && avgRenewalDays <= 180 ? 4 : 0) +
-      (avgRenewalDays !== null && avgRenewalDays > 365 ? -4 : 0) +
-      Math.min(8, avgOpenExpansionCount * 2) +
-      (avgEngagementScore < 45 ? -10 : 0) +
-      (avgRiskScore >= 70 ? -12 : 0)
+    (avgRenewalDays !== null && avgRenewalDays <= pteAdjustments.renewalNearWindowDays ? pteAdjustments.renewalNearBonus : 0) +
+      (avgRenewalDays !== null &&
+      avgRenewalDays > pteAdjustments.renewalNearWindowDays &&
+      avgRenewalDays <= pteAdjustments.renewalMidWindowDays
+        ? pteAdjustments.renewalMidBonus
+        : 0) +
+      (avgRenewalDays !== null && avgRenewalDays > pteAdjustments.renewalDistantDays ? pteAdjustments.renewalDistantPenalty : 0) +
+      Math.min(pteAdjustments.openExpansionCap, avgOpenExpansionCount * pteAdjustments.openExpansionPerOpportunity) +
+      (avgEngagementScore < pteAdjustments.lowEngagementThreshold ? pteAdjustments.lowEngagementPenalty : 0) +
+      (avgRiskScore >= pteAdjustments.highRiskThreshold ? pteAdjustments.highRiskPenalty : 0)
   );
   const ptePreview = round1(Math.max(0, Math.min(100, pteBasePreview + pteAdjustmentPreview)));
   const ptcBasePreview = round1(
-    avgRiskScore * 0.42 + (100 - avgAdoptionScore) * 0.24 + (100 - avgEngagementScore) * 0.17 + renewalPressurePreview * 0.17
+    avgRiskScore * ptcWeights.risk +
+      (100 - avgAdoptionScore) * ptcWeights.adoptionGap +
+      (100 - avgEngagementScore) * ptcWeights.engagementGap +
+      renewalPressurePreview * ptcWeights.renewalPressure
   );
   const ptcAdjustmentPreview = round1(
-    (ptcHigh > 0 ? 8 : 0) +
-      (rows.some((row) => Number(row.engagementDays ?? 999) > 90) ? 10 : 0) +
-      (avgSecurityPercent < 30 ? 5 : 0) +
-      (avgEngagementScore >= 70 && avgAdoptionScore >= 70 && avgRiskScore <= 35 ? -12 : 0)
+    (ptcHigh > 0 ? ptcAdjustments.renewalSoonSignal : 0) +
+      (rows.some((row) => Number(row.engagementDays ?? 999) > ptcAdjustments.staleEngagementDays) ? ptcAdjustments.staleEngagementPenalty : 0) +
+      (avgSecurityPercent < ptcAdjustments.lowSecurityThreshold ? ptcAdjustments.lowSecurityPenalty : 0) +
+      (avgEngagementScore >= ptcAdjustments.strongMomentumEngagement &&
+      avgAdoptionScore >= ptcAdjustments.strongMomentumAdoption &&
+      avgRiskScore <= ptcAdjustments.strongMomentumRiskMax
+        ? ptcAdjustments.strongMomentumCredit
+        : 0)
   );
   const ptcPreview = round1(Math.max(0, Math.min(100, ptcBasePreview + ptcAdjustmentPreview)));
   const formulaSandboxBaseline = {
@@ -3057,19 +3089,101 @@ export const renderPropensityPage = (ctx) => {
       <div class="grid-cards">
         <article class="card compact-card">
           <div class="metric-head">
+            <h3>Core Input Formulas (computed before PtE/PtC)</h3>
+            ${statusChip({ label: 'Deterministic inputs', tone: 'neutral' })}
+          </div>
+          <p class="muted">
+            PtE and PtC consume these three scores first. Formula definitions below are the exact calculations used by the scoring engine.
+          </p>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Input score</th>
+                  <th>Complete formula</th>
+                  <th>Why variables are used</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Adoption score</strong></td>
+                  <td>
+                    useCaseAverage = avg(all use case % values)<br>
+                    stageScore = (% of DevSecOps stages with status = "Adopted") * 100<br>
+                    adoptionScore = round((useCaseAverage * 0.70) + (stageScore * 0.30))
+                  </td>
+                  <td>
+                    Use-case % captures depth of realized behavior; stage adopted % captures breadth across platform journey. The 70/30 split is a local weighting choice.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Engagement score</strong></td>
+                  <td>
+                    if no touch logged: 20<br>
+                    recencyScore = max(0, 100 - (daysSinceLastTouch * 1.8))<br>
+                    cadenceBonus = min(25, (freq30 * 6) + floor(freq90 / 2))<br>
+                    engagementScore = round(min(100, (recencyScore * 0.75) + cadenceBonus))
+                  </td>
+                  <td>
+                    Recency models decay of sponsor signal over time; frequency models execution cadence. Capping keeps score bounded and avoids over-crediting volume alone.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Risk score</strong></td>
+                  <td>
+                    riskSignalWeight = sum(severityWeight for active signals)<br>
+                    severityWeight map: Low=10, Medium=20, High=35, Critical=45<br>
+                    playbookPenalty = (open mitigation actions * 4)<br>
+                    riskScore = clamp(round(riskSignalWeight + playbookPenalty), 0..100)
+                  </td>
+                  <td>
+                    Signal severity weights represent pressure concentration. Open mitigation actions add penalty because unresolved actions increase execution risk.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="muted">
+            Source alignment: variable families (adoption, engagement, risk, renewal timing) are handbook-aligned; numeric constants above are local deterministic coefficients.
+          </p>
+          <p class="kicker">Risk trigger rules used by the Risk score input</p>
+          <ul class="simple-list">
+            <li><strong>LOW_ENGAGEMENT:</strong> daysSinceLastTouch &gt; 60</li>
+            <li><strong>RENEWAL_SOON:</strong> renewalDays &lt;= 90 (high severity at &lt;= 45)</li>
+            <li><strong>LOW_SECURITY_ADOPTION:</strong> Security% &lt; 30</li>
+            <li><strong>LOW_CICD_ADOPTION:</strong> CICD% &lt; 40</li>
+            <li><strong>NO_TIME_TO_VALUE:</strong> first pipeline milestone missing or status != Done</li>
+            <li><strong>STAGE_GAP_SECURE:</strong> CICD% &gt;= 60 and Secure stage = Not Started</li>
+          </ul>
+        </article>
+
+        <article class="card compact-card">
+          <div class="metric-head">
             <h3>PtE Local Proxy (Propensity to Expand)</h3>
             ${statusChip({ label: `Portfolio preview ${ptePreview}`, tone: ptePreview >= 70 ? 'good' : ptePreview >= 45 ? 'warn' : 'neutral' })}
           </div>
           <p class="muted">
             <strong>Base formula:</strong><br>
-            PtE_raw = (adoption * 0.32) + (engagement * 0.23) + ((100 - risk) * 0.15) + (CICD% * 0.13) + (Security% * 0.08) + (StageCoverage% * 0.09)
+            PtE_raw =
+            (adoption * ${pteWeights.adoption}) +
+            (engagement * ${pteWeights.engagement}) +
+            ((100 - risk) * ${pteWeights.riskStability}) +
+            (CICD% * ${pteWeights.cicd}) +
+            (Security% * ${pteWeights.security}) +
+            (StageCoverage% * ${pteWeights.stageCoverage})
           </p>
           <p class="muted">
-            <strong>Model note:</strong> weights (0.32, 0.23, 0.15, 0.13, 0.08, 0.09) are local heuristic coefficients for this static console.
+            <strong>Model note:</strong> weights are local heuristic coefficients for this static console.
             They are not published GitLab coefficients and should be validated against observed renewal/expansion outcomes before operational use.
           </p>
           <p class="muted">
-            <strong>Adjustments:</strong> +8 if renewal <=120d, +4 if <=180d, -4 if >365d, +min(8, openExpansion*2), -10 if engagement <45, -12 if risk >=70.
+            <strong>Adjustments:</strong>
+            +${pteAdjustments.renewalNearBonus} if renewal <=${pteAdjustments.renewalNearWindowDays}d,
+            +${pteAdjustments.renewalMidBonus} if <=${pteAdjustments.renewalMidWindowDays}d,
+            ${pteAdjustments.renewalDistantPenalty} if >${pteAdjustments.renewalDistantDays}d,
+            +min(${pteAdjustments.openExpansionCap}, openExpansion*${pteAdjustments.openExpansionPerOpportunity}),
+            ${pteAdjustments.lowEngagementPenalty} if engagement <${pteAdjustments.lowEngagementThreshold},
+            ${pteAdjustments.highRiskPenalty} if risk >=${pteAdjustments.highRiskThreshold}.
           </p>
           <div class="table-wrap">
             <table class="data-table">
@@ -3082,12 +3196,12 @@ export const renderPropensityPage = (ctx) => {
                 </tr>
               </thead>
               <tbody>
-                <tr><td>Adoption score</td><td>${avgAdoptionScore}</td><td>0.32</td><td>${round1(avgAdoptionScore * 0.32)}</td></tr>
-                <tr><td>Engagement score</td><td>${avgEngagementScore}</td><td>0.23</td><td>${round1(avgEngagementScore * 0.23)}</td></tr>
-                <tr><td>Risk stability (100-risk)</td><td>${round1(100 - avgRiskScore)}</td><td>0.15</td><td>${round1((100 - avgRiskScore) * 0.15)}</td></tr>
-                <tr><td>CI/CD adoption %</td><td>${avgCicdPercent}</td><td>0.13</td><td>${round1(avgCicdPercent * 0.13)}</td></tr>
-                <tr><td>Security adoption %</td><td>${avgSecurityPercent}</td><td>0.08</td><td>${round1(avgSecurityPercent * 0.08)}</td></tr>
-                <tr><td>Stage coverage %</td><td>${avgStageCoveragePercent}</td><td>0.09</td><td>${round1(avgStageCoveragePercent * 0.09)}</td></tr>
+                <tr><td>Adoption score</td><td>${avgAdoptionScore}</td><td>${pteWeights.adoption}</td><td>${round1(avgAdoptionScore * pteWeights.adoption)}</td></tr>
+                <tr><td>Engagement score</td><td>${avgEngagementScore}</td><td>${pteWeights.engagement}</td><td>${round1(avgEngagementScore * pteWeights.engagement)}</td></tr>
+                <tr><td>Risk stability (100-risk)</td><td>${round1(100 - avgRiskScore)}</td><td>${pteWeights.riskStability}</td><td>${round1((100 - avgRiskScore) * pteWeights.riskStability)}</td></tr>
+                <tr><td>CI/CD adoption %</td><td>${avgCicdPercent}</td><td>${pteWeights.cicd}</td><td>${round1(avgCicdPercent * pteWeights.cicd)}</td></tr>
+                <tr><td>Security adoption %</td><td>${avgSecurityPercent}</td><td>${pteWeights.security}</td><td>${round1(avgSecurityPercent * pteWeights.security)}</td></tr>
+                <tr><td>Stage coverage %</td><td>${avgStageCoveragePercent}</td><td>${pteWeights.stageCoverage}</td><td>${round1(avgStageCoveragePercent * pteWeights.stageCoverage)}</td></tr>
                 <tr><td><strong>Base subtotal</strong></td><td>-</td><td>-</td><td><strong>${pteBasePreview}</strong></td></tr>
                 <tr><td>Context adjustments</td><td>-</td><td>Rules</td><td>${formatSigned(pteAdjustmentPreview, 1)}</td></tr>
                 <tr><td><strong>PtE final</strong></td><td>-</td><td>clamp(0..100)</td><td><strong>${ptePreview}</strong></td></tr>
@@ -3106,17 +3220,25 @@ export const renderPropensityPage = (ctx) => {
           </div>
           <p class="muted">
             <strong>Base formula:</strong><br>
-            PtC_raw = (risk * 0.42) + ((100-adoption) * 0.24) + ((100-engagement) * 0.17) + (renewalPressure * 0.17)
+            PtC_raw =
+            (risk * ${ptcWeights.risk}) +
+            ((100-adoption) * ${ptcWeights.adoptionGap}) +
+            ((100-engagement) * ${ptcWeights.engagementGap}) +
+            (renewalPressure * ${ptcWeights.renewalPressure})
           </p>
           <p class="muted">
-            <strong>Model note:</strong> weights (0.42, 0.24, 0.17, 0.17) and rule adjustments are local explainable heuristics in this repo.
+            <strong>Model note:</strong> weights and rule adjustments are local explainable heuristics in this repo.
             They are not published from GitLab's internal PtC model.
           </p>
           <p class="muted">
-            <strong>Renewal pressure map:</strong> <=30d=100, <=60d=80, <=90d=60, <=180d=35, >180d=15.
+            <strong>Renewal pressure map:</strong> ${renewalPressureMapLabel}.
           </p>
           <p class="muted">
-            <strong>Adjustments:</strong> +8 renewal signal, +10 no-touch >90d, +5 security <30, -12 strong momentum (high adoption+engagement and low risk).
+            <strong>Adjustments:</strong>
+            +${ptcAdjustments.renewalSoonSignal} renewal signal,
+            +${ptcAdjustments.staleEngagementPenalty} no-touch >${ptcAdjustments.staleEngagementDays}d,
+            +${ptcAdjustments.lowSecurityPenalty} security <${ptcAdjustments.lowSecurityThreshold},
+            ${ptcAdjustments.strongMomentumCredit} strong momentum (adoption >=${ptcAdjustments.strongMomentumAdoption}, engagement >=${ptcAdjustments.strongMomentumEngagement}, risk <=${ptcAdjustments.strongMomentumRiskMax}).
           </p>
           <div class="table-wrap">
             <table class="data-table">
@@ -3129,10 +3251,10 @@ export const renderPropensityPage = (ctx) => {
                 </tr>
               </thead>
               <tbody>
-                <tr><td>Risk score</td><td>${avgRiskScore}</td><td>0.42</td><td>${round1(avgRiskScore * 0.42)}</td></tr>
-                <tr><td>Adoption gap (100-adoption)</td><td>${round1(100 - avgAdoptionScore)}</td><td>0.24</td><td>${round1((100 - avgAdoptionScore) * 0.24)}</td></tr>
-                <tr><td>Engagement gap (100-engagement)</td><td>${round1(100 - avgEngagementScore)}</td><td>0.17</td><td>${round1((100 - avgEngagementScore) * 0.17)}</td></tr>
-                <tr><td>Renewal pressure</td><td>${renewalPressurePreview}</td><td>0.17</td><td>${round1(renewalPressurePreview * 0.17)}</td></tr>
+                <tr><td>Risk score</td><td>${avgRiskScore}</td><td>${ptcWeights.risk}</td><td>${round1(avgRiskScore * ptcWeights.risk)}</td></tr>
+                <tr><td>Adoption gap (100-adoption)</td><td>${round1(100 - avgAdoptionScore)}</td><td>${ptcWeights.adoptionGap}</td><td>${round1((100 - avgAdoptionScore) * ptcWeights.adoptionGap)}</td></tr>
+                <tr><td>Engagement gap (100-engagement)</td><td>${round1(100 - avgEngagementScore)}</td><td>${ptcWeights.engagementGap}</td><td>${round1((100 - avgEngagementScore) * ptcWeights.engagementGap)}</td></tr>
+                <tr><td>Renewal pressure</td><td>${renewalPressurePreview}</td><td>${ptcWeights.renewalPressure}</td><td>${round1(renewalPressurePreview * ptcWeights.renewalPressure)}</td></tr>
                 <tr><td><strong>Base subtotal</strong></td><td>-</td><td>-</td><td><strong>${ptcBasePreview}</strong></td></tr>
                 <tr><td>Context adjustments</td><td>-</td><td>Rules</td><td>${formatSigned(ptcAdjustmentPreview, 1)}</td></tr>
                 <tr><td><strong>PtC final</strong></td><td>-</td><td>clamp(0..100)</td><td><strong>${ptcPreview}</strong></td></tr>
@@ -3164,9 +3286,9 @@ export const renderPropensityPage = (ctx) => {
         </article>
       </div>
       <div class="chip-row">
-        ${statusChip({ label: 'Banding: High >=70', tone: 'neutral' })}
-        ${statusChip({ label: 'Banding: Medium 45-69', tone: 'warn' })}
-        ${statusChip({ label: 'Banding: Low <45', tone: 'good' })}
+        ${statusChip({ label: `Banding: High >=${ptCalibration.banding.high}`, tone: 'neutral' })}
+        ${statusChip({ label: `Banding: Medium ${ptCalibration.banding.medium}-${Math.max(ptCalibration.banding.high - 1, ptCalibration.banding.medium)}`, tone: 'warn' })}
+        ${statusChip({ label: `Banding: Low <${ptCalibration.banding.medium}`, tone: 'good' })}
       </div>
     </section>
 
