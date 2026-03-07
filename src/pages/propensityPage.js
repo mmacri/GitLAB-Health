@@ -2513,6 +2513,41 @@ export const renderPropensityPage = (ctx) => {
     .sort((left, right) => Number(confidenceById.get(left.customer.id)?.score || 0) - Number(confidenceById.get(right.customer.id)?.score || 0));
   const missingRenewalCount = rows.filter((row) => !String(row.customer?.renewalDate || '').trim()).length;
   const missingEngagementCount = rows.filter((row) => !(workspace?.engagements?.[row.customer.id] || []).length && !String(row.lastEngagementDate || '').trim()).length;
+  const missingMilestoneCount = [...confidenceById.values()].filter((item) =>
+    (item.missing || []).some((label) => String(label).toLowerCase().includes('time-to-value milestones'))
+  ).length;
+  const missingEvidenceCount = [...confidenceById.values()].filter((item) =>
+    (item.missing || []).some((label) => String(label).toLowerCase().includes('evidence coverage'))
+  ).length;
+  const missingRiskPlanCount = [...confidenceById.values()].filter((item) =>
+    (item.missing || []).some((label) => String(label).toLowerCase().includes('risk mitigation action owner + due date set'))
+  ).length;
+  const renewalSoonHighPressureCount = rows.filter(
+    (row) =>
+      String(row.ptcBand || '') === 'High' &&
+      (row.riskSignals || []).some((signal) => normalizeCode(signal.code) === 'RENEWAL_SOON')
+  ).length;
+  const stabilizeFirstCount = rows.filter((row) => String(row.ptcBand || '') === 'High' && String(row.pteBand || '') !== 'High').length;
+  const expansionNowCount = Number(quadrants.expandAndRetain || 0);
+  const balancedDualTrackCount = rows.filter(
+    (row) => String(row.pteBand || '') === 'Medium' && String(row.ptcBand || '') === 'Medium'
+  ).length;
+  const dataTrustGateCount = lowConfidenceRows.length;
+  const decisionFlowVisual = [
+    { label: 'Renewal+HighPtC', value: renewalSoonHighPressureCount, color: '#DC2626' },
+    { label: 'StabilizeFirst', value: stabilizeFirstCount, color: '#D97706' },
+    { label: 'ExpandNow', value: expansionNowCount, color: '#16A34A' },
+    { label: 'DualTrack', value: balancedDualTrackCount, color: '#0284C7' },
+    { label: 'DataTrustGate', value: dataTrustGateCount, color: '#6B7280' }
+  ];
+  const confidenceGatePassCount = Math.max(0, total - dataTrustGateCount);
+  const lineageGapVisual = [
+    { label: 'Renewal missing', value: missingRenewalCount, color: '#DC2626' },
+    { label: 'Engagement missing', value: missingEngagementCount, color: '#D97706' },
+    { label: 'Milestones missing', value: missingMilestoneCount, color: '#0284C7' },
+    { label: 'Evidence gap', value: missingEvidenceCount, color: '#9333EA' },
+    { label: 'Risk plan gap', value: missingRiskPlanCount, color: '#6B7280' }
+  ];
   const ownerMap = buildAccountOwnerMap(workspace);
   const weeklyQueue = buildWeeklyActionQueue(rows, confidenceById);
   const mitigationSummary = buildMitigationCoverage(rows, workspace, confidenceById);
@@ -2855,6 +2890,18 @@ export const renderPropensityPage = (ctx) => {
       <p class="muted">
         Use this sequence table to decide first-action order by posture. Apply these guardrails before ad-hoc requests reorder the queue.
       </p>
+      <div class="chart-wrap">
+        ${barChartSvg(decisionFlowVisual, { width: 620 })}
+      </div>
+      <div class="chip-row">
+        ${statusChip({ label: `Renewal + PtC High ${renewalSoonHighPressureCount}`, tone: renewalSoonHighPressureCount ? 'risk' : 'good' })}
+        ${statusChip({ label: `Stabilize first ${stabilizeFirstCount}`, tone: stabilizeFirstCount ? 'warn' : 'good' })}
+        ${statusChip({ label: `Expand now ${expansionNowCount}`, tone: expansionNowCount ? 'good' : 'neutral' })}
+        ${statusChip({ label: `Data trust gate ${dataTrustGateCount}`, tone: dataTrustGateCount ? 'warn' : 'good' })}
+      </div>
+      <p class="muted" title="Visual summarizes current account distribution across decision branches.">
+        Visual readout: bars show how many accounts currently land in each first-action branch so CSE and Manager teams can plan weekly capacity by posture type.
+      </p>
       <div class="grid-cards">
         ${decisionTreeRows
           .map(
@@ -2886,6 +2933,39 @@ export const renderPropensityPage = (ctx) => {
       <p class="muted">
         This table links each metric to formula, required fields, and data-quality guardrail so teams can validate inputs before presenting outputs.
       </p>
+      <div class="grid-cards">
+        <article class="card compact-card">
+          <div class="metric-head">
+            <h3>Confidence Gate Coverage</h3>
+            ${statusChip({
+              label: `${safePercent(confidenceGatePassCount, Math.max(total, 1))}% pass`,
+              tone: confidenceGatePassCount >= dataTrustGateCount ? 'good' : 'warn'
+            })}
+          </div>
+          <div class="chart-wrap">
+            ${donutChartSvg([
+              { label: 'Gate pass', value: confidenceGatePassCount, color: '#16A34A' },
+              { label: 'Gate fail', value: dataTrustGateCount, color: '#D97706' }
+            ])}
+          </div>
+          <div class="chip-row">
+            ${statusChip({ label: `Pass ${confidenceGatePassCount}`, tone: 'good' })}
+            ${statusChip({ label: `Fail ${dataTrustGateCount}`, tone: dataTrustGateCount ? 'warn' : 'good' })}
+          </div>
+        </article>
+        <article class="card compact-card">
+          <div class="metric-head">
+            <h3>Input Gap Distribution</h3>
+            ${statusChip({ label: `${missingRenewalCount + missingEngagementCount + missingMilestoneCount + missingEvidenceCount + missingRiskPlanCount} total gaps`, tone: 'warn' })}
+          </div>
+          <div class="chart-wrap">
+            ${barChartSvg(lineageGapVisual, { width: 620 })}
+          </div>
+          <p class="muted" title="Higher bars indicate where data quality is reducing confidence and explainability.">
+            Use this chart to target the highest-impact data cleanup work before executive reviews.
+          </p>
+        </article>
+      </div>
       <div class="table-wrap">
         <table class="data-table">
           <thead>
