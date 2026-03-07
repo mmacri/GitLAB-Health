@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { ensureWorkspaceShape } from '../lib/model.js';
 import { deriveRiskSignals, scoreBreakdown } from '../lib/scoring.js';
+import { ensurePtCalibration } from '../config/ptCalibration.js';
 
 const buildWorkspace = () =>
   ensureWorkspaceShape({
@@ -95,4 +96,38 @@ test('scoreBreakdown exposes normalized scoring weights in explainable output', 
   assert.equal(typeof breakdown.ptcScore, 'number');
   assert.match(String(breakdown.pteBand), /High|Medium|Low/);
   assert.match(String(breakdown.ptcBand), /High|Medium|Low/);
+});
+
+test('scoreBreakdown respects workspace PtE/PtC calibration profile overrides', () => {
+  const workspace = buildWorkspace();
+  const baseline = scoreBreakdown(workspace, 'cust_test', new Date('2026-03-01T00:00:00.000Z'));
+
+  workspace.settings.ptCalibration = ensurePtCalibration({
+    ...workspace.settings.ptCalibration,
+    pte: {
+      ...workspace.settings.ptCalibration?.pte,
+      weights: {
+        adoption: 0.5,
+        engagement: 0.2,
+        riskStability: 0.1,
+        cicd: 0.1,
+        security: 0.05,
+        stageCoverage: 0.05
+      }
+    },
+    ptc: {
+      ...workspace.settings.ptCalibration?.ptc,
+      weights: {
+        risk: 0.55,
+        adoptionGap: 0.2,
+        engagementGap: 0.15,
+        renewalPressure: 0.1
+      }
+    }
+  });
+
+  const tuned = scoreBreakdown(workspace, 'cust_test', new Date('2026-03-01T00:00:00.000Z'));
+  assert.notEqual(tuned.pteScore, baseline.pteScore);
+  assert.notEqual(tuned.ptcScore, baseline.ptcScore);
+  assert.equal(typeof tuned.calibration?.profileId, 'string');
 });

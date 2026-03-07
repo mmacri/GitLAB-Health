@@ -45,6 +45,7 @@ import { storage, STORAGE_KEYS } from './lib/storage.js';
 import { createDefaultWorkspace, ensureWorkspaceShape, validateWorkspace } from './lib/model.js';
 import { useCustomerSafe, setCustomerSafeMode } from './composables/useCustomerSafe.js';
 import { ENGAGEMENT_TYPES, normalizeEngagementType } from './config/engagementTypes.js';
+import { DEFAULT_PT_CALIBRATION, ensurePtCalibration } from './config/ptCalibration.js';
 import { toastStore } from './stores/toastStore.js';
 import { renderAccountPage, accountCommandEntries } from './pages/accountPage.js';
 import { renderExportsPage, exportsCommandEntries } from './pages/exportsPage.js';
@@ -1266,7 +1267,7 @@ const onResetWorkspace = async () => {
   notify('Local workspace reset.');
 };
 
-  const onUpdateScoringWeights = (weights) => {
+const onUpdateScoringWeights = (weights) => {
   updateWorkspace((workspace) => {
     workspace.settings = workspace.settings || {};
     const adoption = Math.max(0, Number(weights.adoption || 0));
@@ -1281,6 +1282,14 @@ const onResetWorkspace = async () => {
         }
       : { adoption: 45, engagement: 30, risk: 25 };
     notify('Scoring weights updated.');
+  });
+};
+
+const onResetPtCalibration = () => {
+  updateWorkspace((workspace) => {
+    workspace.settings = workspace.settings || {};
+    workspace.settings.ptCalibration = ensurePtCalibration(DEFAULT_PT_CALIBRATION);
+    notify('PtE/PtC calibration profile reset to defaults.');
   });
 };
 
@@ -2083,6 +2092,7 @@ const renderCurrentRoute = () => {
       onExportWorkspace,
       onResetWorkspace,
       onUpdateScoringWeights,
+      onResetPtCalibration,
       onAddRiskTemplate,
       onAddProgramTemplate,
       onCreateSnapshot: onCreateMonthlySnapshot,

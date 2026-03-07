@@ -1,7 +1,17 @@
 import { pageHeader } from '../components/pageHeader.js';
 import { statusChip } from '../components/statusChip.js';
+import { ensurePtCalibration } from '../config/ptCalibration.js';
 
 const weightFields = ['adoption', 'engagement', 'risk'];
+const sourceBackedVariableChip = statusChip({ label: 'Source-backed variable', tone: 'good' });
+const localCoefficientChip = statusChip({ label: 'Local heuristic coefficient', tone: 'warn' });
+
+const provenanceCell = () => `
+  <div class="chip-row">
+    ${sourceBackedVariableChip}
+    ${localCoefficientChip}
+  </div>
+`;
 
 export const renderSettingsPage = (ctx) => {
   const {
@@ -12,6 +22,7 @@ export const renderSettingsPage = (ctx) => {
     onExportWorkspace,
     onResetWorkspace,
     onUpdateScoringWeights,
+    onResetPtCalibration,
     onAddRiskTemplate,
     onAddProgramTemplate,
     onCreateSnapshot,
@@ -28,8 +39,96 @@ export const renderSettingsPage = (ctx) => {
 
   const settings = workspace?.settings || {};
   const scoringWeights = settings.scoringWeights || {};
+  const ptCalibration = ensurePtCalibration(settings.ptCalibration);
   const riskTemplates = settings.riskPlaybookTemplates || [];
   const programTemplates = settings.programTemplates || [];
+  const pteWeightRows = [
+    {
+      metric: 'Adoption depth weight',
+      value: ptCalibration.pte.weights.adoption,
+      why: 'Promotes expansion only when measured use-case and stage adoption are already strong.'
+    },
+    {
+      metric: 'Engagement quality weight',
+      value: ptCalibration.pte.weights.engagement,
+      why: 'Captures whether sponsor/cadence quality is sufficient for a credible expansion motion.'
+    },
+    {
+      metric: 'Risk stability weight (100-risk)',
+      value: ptCalibration.pte.weights.riskStability,
+      why: 'Penalizes expansion confidence when retention pressure is already elevated.'
+    },
+    {
+      metric: 'CI/CD adoption depth weight',
+      value: ptCalibration.pte.weights.cicd,
+      why: 'Aligns to GitLab value realization where CI/CD adoption is a core realization path.'
+    },
+    {
+      metric: 'Security adoption depth weight',
+      value: ptCalibration.pte.weights.security,
+      why: 'Recognizes secure usage as expansion evidence in enterprise platform narratives.'
+    },
+    {
+      metric: 'DevSecOps stage progression weight',
+      value: ptCalibration.pte.weights.stageCoverage,
+      why: 'Adds breadth signal for platform journey progression beyond a single use case.'
+    }
+  ];
+
+  const ptcWeightRows = [
+    {
+      metric: 'Risk burden weight',
+      value: ptCalibration.ptc.weights.risk,
+      why: 'Keeps churn pressure primarily tied to explicit active risk signals.'
+    },
+    {
+      metric: 'Adoption gap weight (100-adoption)',
+      value: ptCalibration.ptc.weights.adoptionGap,
+      why: 'Models retention pressure from unrealized platform value and incomplete usage depth.'
+    },
+    {
+      metric: 'Engagement gap weight (100-engagement)',
+      value: ptCalibration.ptc.weights.engagementGap,
+      why: 'Accounts for governance drift when execution cadence is weak or stale.'
+    },
+    {
+      metric: 'Renewal pressure weight',
+      value: ptCalibration.ptc.weights.renewalPressure,
+      why: 'Increases urgency as contractual decision windows approach.'
+    }
+  ];
+
+  const thresholdRows = [
+    {
+      metric: 'Band high threshold',
+      value: `>= ${ptCalibration.banding.high}`,
+      why: 'Classifies accounts that require high-confidence expansion or high-pressure retention response.'
+    },
+    {
+      metric: 'Band medium threshold',
+      value: `>= ${ptCalibration.banding.medium}`,
+      why: 'Separates moderate posture from low posture for workload sequencing.'
+    },
+    {
+      metric: 'Renewal pressure (unknown renewal date)',
+      value: ptCalibration.renewalPressure.unknownScore,
+      why: 'Assigns non-zero uncertainty pressure when renewal timing data is incomplete.'
+    }
+  ];
+
+  const renewalBucketRows = ptCalibration.renewalPressure.buckets.map((bucket, idx) => {
+    const previous = idx > 0 ? ptCalibration.renewalPressure.buckets[idx - 1].maxDays : null;
+    const maxDays = Number(bucket.maxDays);
+    let label = '';
+    if (!Number.isFinite(maxDays)) label = `>${previous ?? 180} days`;
+    else if (previous === null) label = `<=${maxDays} days`;
+    else label = `${previous + 1}-${maxDays} days`;
+    return {
+      metric: `Renewal window ${label}`,
+      value: Number(bucket.score),
+      why: 'Maps renewal proximity into a normalized pressure score used in PtC.'
+    };
+  });
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
@@ -135,6 +234,104 @@ export const renderSettingsPage = (ctx) => {
 
       <article class="card compact-card">
         <div class="metric-head">
+          <h2>PtE / PtC Calibration Profile</h2>
+          ${statusChip({ label: `${ptCalibration.profileId} · ${ptCalibration.profileVersion}`, tone: 'neutral' })}
+        </div>
+        <p class="muted">${ptCalibration.provenance}</p>
+        <p class="muted">
+          Each row shows provenance. Variables align to handbook concepts; coefficient values and thresholds are local and should be calibrated with observed outcomes.
+        </p>
+
+        <p class="kicker">PtE coefficients</p>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Term</th>
+                <th>Value</th>
+                <th>Provenance</th>
+                <th>Why this term exists</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pteWeightRows
+                .map(
+                  (row) => `
+                <tr>
+                  <td>${row.metric}</td>
+                  <td>${row.value}</td>
+                  <td>${provenanceCell()}</td>
+                  <td>${row.why}</td>
+                </tr>
+              `
+                )
+                .join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <p class="kicker">PtC coefficients</p>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Term</th>
+                <th>Value</th>
+                <th>Provenance</th>
+                <th>Why this term exists</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${ptcWeightRows
+                .map(
+                  (row) => `
+                <tr>
+                  <td>${row.metric}</td>
+                  <td>${row.value}</td>
+                  <td>${provenanceCell()}</td>
+                  <td>${row.why}</td>
+                </tr>
+              `
+                )
+                .join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <p class="kicker">Banding and renewal pressure thresholds</p>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Threshold</th>
+                <th>Value</th>
+                <th>Provenance</th>
+                <th>Why this term exists</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[...thresholdRows, ...renewalBucketRows]
+                .map(
+                  (row) => `
+                <tr>
+                  <td>${row.metric}</td>
+                  <td>${row.value}</td>
+                  <td>${provenanceCell()}</td>
+                  <td>${row.why}</td>
+                </tr>
+              `
+                )
+                .join('')}
+            </tbody>
+          </table>
+        </div>
+        <div class="page-actions">
+          <button class="ghost-btn" type="button" data-reset-pt-calibration>Restore default calibration profile</button>
+        </div>
+      </article>
+
+      <article class="card compact-card">
+        <div class="metric-head">
           <h2>Risk Playbook Templates</h2>
           ${statusChip({ label: `${riskTemplates.length} templates`, tone: 'neutral' })}
         </div>
@@ -234,6 +431,10 @@ export const renderSettingsPage = (ctx) => {
       engagement: Number(form.get('engagement') || 0),
       risk: Number(form.get('risk') || 0)
     });
+  });
+
+  wrapper.querySelector('[data-reset-pt-calibration]')?.addEventListener('click', () => {
+    onResetPtCalibration?.();
   });
 
   wrapper.querySelector('[data-add-risk-template]')?.addEventListener('submit', (event) => {

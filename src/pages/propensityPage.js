@@ -5,6 +5,7 @@ import { barChartSvg, donutChartSvg, lineChartSvg } from '../lib/charts.js';
 import { toIsoDate } from '../lib/date.js';
 import { triggerDownload } from '../lib/exports.js';
 import { computePtCProxy, computePtEProxy } from '../lib/scoring.js';
+import { ensurePtCalibration } from '../config/ptCalibration.js';
 
 const safePercent = (value, total) => {
   const numerator = Number(value || 0);
@@ -1910,6 +1911,7 @@ const quadrantGuide = [
 
 export const renderPropensityPage = (ctx) => {
   const { manager, workspacePortfolio, workspace, navigate, notify } = ctx;
+  const ptCalibration = ensurePtCalibration(workspace?.settings?.ptCalibration);
   const rows = workspacePortfolio?.rows || manager?.portfolio?.rows || [];
   const total = rows.length;
   const pteHigh = rows.filter((row) => String(row.pteBand || '') === 'High').length;
@@ -2996,21 +2998,75 @@ export const renderPropensityPage = (ctx) => {
 
     <section class="card" id="section-formulas">
       <div class="metric-head">
-        <h2>Formula Reference: How PtE and PtC Are Calculated</h2>
-        ${statusChip({ label: 'Deterministic scoring model', tone: 'neutral' })}
+        <h2>Formula Reference: Source-backed Metrics + Local PtE/PtC Proxy</h2>
+        ${statusChip({ label: `${ptCalibration.profileId} · ${ptCalibration.profileVersion}`, tone: 'neutral' })}
       </div>
       <p class="muted">
-        These are the exact formulas used in this console. Scores are deterministic, clamped to 0-100, and then banded into High/Medium/Low.
+        This section separates <strong>published GitLab metrics</strong> from the <strong>local deterministic proxy model</strong> used by this console.
+        GitLab handbook confirms PtE/PTC as predictive concepts, but the production model details are internal; the coefficients below are
+        local and should be treated as an explainable operating heuristic, not an official GitLab formula.
       </p>
+      <article class="card compact-card">
+        <div class="metric-head">
+          <h3>Published GitLab Formulas and Thresholds (for calibration and explanation)</h3>
+          ${statusChip({ label: 'Handbook + docs', tone: 'good' })}
+        </div>
+        <ul class="simple-list">
+          <li>
+            <strong>Time to Engage</strong> = first timeline call/meeting date - onboarding CTA start date.
+            <a href="https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/" target="_blank" rel="noreferrer">Source</a>
+          </li>
+          <li>
+            <strong>Time to First Value</strong> = first value date - original contract date; first value auto-populates when known license utilization is >= 10%.
+            <a href="https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/" target="_blank" rel="noreferrer">Source</a>
+          </li>
+          <li>
+            <strong>Time to Onboard</strong> = onboarding CTA closed date - onboarding CTA start date.
+            <a href="https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/" target="_blank" rel="noreferrer">Source</a>
+          </li>
+          <li>
+            <strong>Instance TTV milestones</strong> = date metric achieved - subscription start date; guide thresholds include DevSecOps >= 20%, SCM >= 40%, CI >= 25%.
+            <a href="https://handbook.gitlab.com/handbook/customer-success/csm/onboarding/" target="_blank" rel="noreferrer">Source</a>
+          </li>
+          <li>
+            <strong>Platform Adoption Score</strong> = number of use cases at green; successful platform adoption is defined as 3+ green use cases.
+            <a href="https://handbook.gitlab.com/handbook/customer-success/product-usage-data/platform-value-score/" target="_blank" rel="noreferrer">Source</a>
+          </li>
+          <li>
+            <strong>Use-case normalization pattern</strong> uses a metric denominator (example: Git Operations User L28D / Billable Users = utilization %).
+            <a href="https://handbook.gitlab.com/handbook/customer-success/product-usage-data/maturity-scoring/" target="_blank" rel="noreferrer">Source</a>
+          </li>
+          <li>
+            <strong>DORA metrics formulas</strong>:
+            Deployment Frequency = successful production deployments per day (mean);
+            Lead Time for Changes = median seconds from MR merge to running in production;
+            Change Failure Rate = incidents / production deployments;
+            Time to Restore Service = median incident-open duration.
+            <a href="https://docs.gitlab.com/user/analytics/dora_metrics/" target="_blank" rel="noreferrer">Source</a>
+          </li>
+          <li>
+            <strong>Customer Health PROVE group weights</strong>: Product 50%, Risk 25%, Outcomes 10%, VoC 5%, Engagement 10%.
+            <a href="https://handbook.gitlab.com/handbook/customer-success/customer-health-scoring/" target="_blank" rel="noreferrer">Source</a>
+          </li>
+        </ul>
+        <p class="muted">
+          Note: the older Stage Adoption page explicitly states it is no longer active and points teams to Use Case Adoption Scoring for methodology.
+          <a href="https://handbook.gitlab.com/handbook/customer-success/csm/stage-adoption/" target="_blank" rel="noreferrer">Source</a>
+        </p>
+      </article>
       <div class="grid-cards">
         <article class="card compact-card">
           <div class="metric-head">
-            <h3>PtE (Propensity to Expand)</h3>
+            <h3>PtE Local Proxy (Propensity to Expand)</h3>
             ${statusChip({ label: `Portfolio preview ${ptePreview}`, tone: ptePreview >= 70 ? 'good' : ptePreview >= 45 ? 'warn' : 'neutral' })}
           </div>
           <p class="muted">
             <strong>Base formula:</strong><br>
             PtE_raw = (adoption * 0.32) + (engagement * 0.23) + ((100 - risk) * 0.15) + (CICD% * 0.13) + (Security% * 0.08) + (StageCoverage% * 0.09)
+          </p>
+          <p class="muted">
+            <strong>Model note:</strong> weights (0.32, 0.23, 0.15, 0.13, 0.08, 0.09) are local heuristic coefficients for this static console.
+            They are not published GitLab coefficients and should be validated against observed renewal/expansion outcomes before operational use.
           </p>
           <p class="muted">
             <strong>Adjustments:</strong> +8 if renewal <=120d, +4 if <=180d, -4 if >365d, +min(8, openExpansion*2), -10 if engagement <45, -12 if risk >=70.
@@ -3045,12 +3101,16 @@ export const renderPropensityPage = (ctx) => {
 
         <article class="card compact-card">
           <div class="metric-head">
-            <h3>PtC (Propensity to Churn/Contract)</h3>
+            <h3>PtC Local Proxy (Propensity to Churn/Contract)</h3>
             ${statusChip({ label: `Portfolio preview ${ptcPreview}`, tone: ptcPreview >= 70 ? 'risk' : ptcPreview >= 45 ? 'warn' : 'good' })}
           </div>
           <p class="muted">
             <strong>Base formula:</strong><br>
             PtC_raw = (risk * 0.42) + ((100-adoption) * 0.24) + ((100-engagement) * 0.17) + (renewalPressure * 0.17)
+          </p>
+          <p class="muted">
+            <strong>Model note:</strong> weights (0.42, 0.24, 0.17, 0.17) and rule adjustments are local explainable heuristics in this repo.
+            They are not published from GitLab's internal PtC model.
           </p>
           <p class="muted">
             <strong>Renewal pressure map:</strong> <=30d=100, <=60d=80, <=90d=60, <=180d=35, >180d=15.
@@ -3089,6 +3149,9 @@ export const renderPropensityPage = (ctx) => {
             <h3>Related Guide Metrics</h3>
             ${statusChip({ label: 'Derived supporting formulas', tone: 'neutral' })}
           </div>
+          <p class="muted">
+            The formulas below are local guide proxies for prioritization support (not GitLab handbook formulas).
+          </p>
           <ul class="simple-list">
             <li><strong>Readiness proxy:</strong> (adoptionAvg * 0.62) + (engagementCoverage * 0.38)</li>
             <li><strong>Risk pressure proxy:</strong> (redHealthRate * 100 * 0.58) + ((100 - engagementCoverage) * 0.42)</li>

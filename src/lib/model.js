@@ -1,6 +1,7 @@
 import { toIsoDate } from './date.js';
 import { maturityForPercent } from '../data/adoptionStages.js';
 import { normalizeEngagementType } from '../config/engagementTypes.js';
+import { DEFAULT_PT_CALIBRATION, ensurePtCalibration } from '../config/ptCalibration.js';
 
 export const WORKSPACE_VERSION = '3.0.0';
 
@@ -67,7 +68,8 @@ export const createDefaultWorkspace = () => ({
       adoption: 45,
       engagement: 30,
       risk: 25
-    }
+    },
+    ptCalibration: ensurePtCalibration(DEFAULT_PT_CALIBRATION)
   }
 });
 
@@ -440,7 +442,8 @@ export const ensureWorkspaceShape = (workspace, fallback = null) => {
       scoringWeights: {
         ...defaults.settings.scoringWeights,
         ...ensureObject(base?.settings?.scoringWeights)
-      }
+      },
+      ptCalibration: ensurePtCalibration(base?.settings?.ptCalibration || defaults.settings.ptCalibration)
     }
   };
 

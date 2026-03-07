@@ -1,5 +1,6 @@
 import { daysUntil, diffInDays, parseDate } from './date.js';
 import { evaluateOperatingModelEngine } from './operatingModelEngine.js';
+import { ensurePtCalibration } from '../config/ptCalibration.js';
 
 const HEALTH_RANK = { green: 1, yellow: 2, red: 3 };
 const STAGE_PRIORITY = { onboard: 2, enable: 3, expand: 2, optimize: 2, renew: 4 };
@@ -368,21 +369,25 @@ const clampScore = (value, min = 0, max = 100) => {
   return Math.max(min, Math.min(max, numeric));
 };
 
-const propensityBand = (score) => {
+const ptCalibration = (workspace) => ensurePtCalibration(workspace?.settings?.ptCalibration);
+
+const propensityBand = (score, banding) => {
   const value = Number(score || 0);
-  if (value >= 70) return 'High';
-  if (value >= 45) return 'Medium';
+  const high = Number(banding?.high || 70);
+  const medium = Number(banding?.medium || 45);
+  if (value >= high) return 'High';
+  if (value >= medium) return 'Medium';
   return 'Low';
 };
 
-const renewalPressureScore = (renewalDays) => {
+const renewalPressureScore = (renewalDays, profile) => {
+  const fallbackScore = Number(profile?.renewalPressure?.unknownScore || 20);
   const days = Number(renewalDays);
-  if (!Number.isFinite(days)) return 20;
-  if (days <= 30) return 100;
-  if (days <= 60) return 80;
-  if (days <= 90) return 60;
-  if (days <= 180) return 35;
-  return 15;
+  if (!Number.isFinite(days)) return fallbackScore;
+  const buckets = Array.isArray(profile?.renewalPressure?.buckets) ? profile.renewalPressure.buckets : [];
+  const match = buckets.find((bucket) => days <= Number(bucket?.maxDays ?? Number.POSITIVE_INFINITY));
+  if (match) return Number(match.score || 0);
+  return fallbackScore;
 };
 
 const primaryFactorLabel = (factors, fallback) => {
@@ -512,6 +517,7 @@ export const computeRiskScore = (workspace, customerId, now = new Date()) => {
 
 export const computePtEProxy = (workspace, customerId, now = new Date()) => {
   const customer = ensureWorkspaceCustomer(workspace, customerId);
+  const calibration = ptCalibration(workspace);
   if (!customer) {
     return {
       score: 0,
@@ -535,41 +541,50 @@ export const computePtEProxy = (workspace, customerId, now = new Date()) => {
   const openExpansionCount = deriveExpansionSuggestions(workspace, customerId).filter(
     (item) => !['won', 'closed'].includes(String(item.status || '').toLowerCase())
   ).length;
+  const pteWeights = calibration.pte.weights;
+  const pteAdjustments = calibration.pte.adjustments;
 
   const factors = [
-    { label: 'Adoption depth', points: adoptionScore * 0.32 },
-    { label: 'Engagement quality', points: engagementScore * 0.23 },
-    { label: 'Risk stability', points: (100 - riskScore) * 0.15 },
-    { label: 'CI/CD adoption depth', points: cicdPercent * 0.13 },
-    { label: 'Security adoption depth', points: securityPercent * 0.08 },
-    { label: 'DevSecOps stage progression', points: stageCoverage * 0.09 }
+    { label: 'Adoption depth', points: adoptionScore * pteWeights.adoption },
+    { label: 'Engagement quality', points: engagementScore * pteWeights.engagement },
+    { label: 'Risk stability', points: (100 - riskScore) * pteWeights.riskStability },
+    { label: 'CI/CD adoption depth', points: cicdPercent * pteWeights.cicd },
+    { label: 'Security adoption depth', points: securityPercent * pteWeights.security },
+    { label: 'DevSecOps stage progression', points: stageCoverage * pteWeights.stageCoverage }
   ];
 
   if (Number.isFinite(Number(renewalDays))) {
-    if (renewalDays <= 120) factors.push({ label: 'Renewal expansion window', points: 8 });
-    else if (renewalDays <= 180) factors.push({ label: 'Near-term renewal leverage', points: 4 });
-    else if (renewalDays > 365) factors.push({ label: 'Renewal too distant', points: -4 });
+    if (renewalDays <= pteAdjustments.renewalNearWindowDays)
+      factors.push({ label: 'Renewal expansion window', points: pteAdjustments.renewalNearBonus });
+    else if (renewalDays <= pteAdjustments.renewalMidWindowDays)
+      factors.push({ label: 'Near-term renewal leverage', points: pteAdjustments.renewalMidBonus });
+    else if (renewalDays > pteAdjustments.renewalDistantDays)
+      factors.push({ label: 'Renewal too distant', points: pteAdjustments.renewalDistantPenalty });
   }
 
   if (openExpansionCount > 0) {
-    factors.push({ label: 'Open expansion opportunities', points: Math.min(8, openExpansionCount * 2) });
+    factors.push({
+      label: 'Open expansion opportunities',
+      points: Math.min(pteAdjustments.openExpansionCap, openExpansionCount * pteAdjustments.openExpansionPerOpportunity)
+    });
   }
-  if (engagementScore < 45) {
-    factors.push({ label: 'Low engagement momentum', points: -10 });
+  if (engagementScore < pteAdjustments.lowEngagementThreshold) {
+    factors.push({ label: 'Low engagement momentum', points: pteAdjustments.lowEngagementPenalty });
   }
-  if (riskScore >= 70) {
-    factors.push({ label: 'High active risk burden', points: -12 });
+  if (riskScore >= pteAdjustments.highRiskThreshold) {
+    factors.push({ label: 'High active risk burden', points: pteAdjustments.highRiskPenalty });
   }
 
   const rawScore = factors.reduce((sum, factor) => sum + Number(factor.points || 0), 0);
   const score = Math.round(clampScore(rawScore));
-  const band = propensityBand(score);
+  const band = propensityBand(score, calibration.banding);
   const driver = primaryFactorLabel(factors, 'Balanced adoption and engagement posture.');
   return { score, band, driver, factors };
 };
 
 export const computePtCProxy = (workspace, customerId, now = new Date()) => {
   const customer = ensureWorkspaceCustomer(workspace, customerId);
+  const calibration = ptCalibration(workspace);
   if (!customer) {
     return {
       score: 0,
@@ -583,35 +598,41 @@ export const computePtCProxy = (workspace, customerId, now = new Date()) => {
   const engagementScore = computeEngagementScore(workspace, customerId, now);
   const riskScore = computeRiskScore(workspace, customerId, now);
   const renewalDays = daysUntil(customer.renewalDate, now);
-  const renewalPressure = renewalPressureScore(renewalDays);
+  const renewalPressure = renewalPressureScore(renewalDays, calibration);
   const signals = deriveRiskSignals(workspace, customerId, now);
   const lastTouch = latestEngagementTs(workspace, customerId);
   const noTouchDays = diffInDays(String(lastTouch || '').slice(0, 10), now) ?? 999;
   const securePercent = Number(workspace?.adoption?.[customerId]?.useCases?.Security?.percent || 0);
+  const ptcWeights = calibration.ptc.weights;
+  const ptcAdjustments = calibration.ptc.adjustments;
 
   const factors = [
-    { label: 'Active risk signals', points: riskScore * 0.42 },
-    { label: 'Adoption gap', points: (100 - adoptionScore) * 0.24 },
-    { label: 'Engagement gap', points: (100 - engagementScore) * 0.17 },
-    { label: 'Renewal pressure', points: renewalPressure * 0.17 }
+    { label: 'Active risk signals', points: riskScore * ptcWeights.risk },
+    { label: 'Adoption gap', points: (100 - adoptionScore) * ptcWeights.adoptionGap },
+    { label: 'Engagement gap', points: (100 - engagementScore) * ptcWeights.engagementGap },
+    { label: 'Renewal pressure', points: renewalPressure * ptcWeights.renewalPressure }
   ];
 
   if (signals.some((signal) => String(signal.code) === 'RENEWAL_SOON')) {
-    factors.push({ label: 'Renewal soon risk signal', points: 8 });
+    factors.push({ label: 'Renewal soon risk signal', points: ptcAdjustments.renewalSoonSignal });
   }
-  if (noTouchDays > 90) {
-    factors.push({ label: 'Prolonged engagement gap', points: 10 });
+  if (noTouchDays > ptcAdjustments.staleEngagementDays) {
+    factors.push({ label: 'Prolonged engagement gap', points: ptcAdjustments.staleEngagementPenalty });
   }
-  if (securePercent < 30) {
-    factors.push({ label: 'Security adoption gap', points: 5 });
+  if (securePercent < ptcAdjustments.lowSecurityThreshold) {
+    factors.push({ label: 'Security adoption gap', points: ptcAdjustments.lowSecurityPenalty });
   }
-  if (engagementScore >= 70 && adoptionScore >= 70 && riskScore <= 35) {
-    factors.push({ label: 'Strong customer momentum', points: -12 });
+  if (
+    engagementScore >= ptcAdjustments.strongMomentumEngagement &&
+    adoptionScore >= ptcAdjustments.strongMomentumAdoption &&
+    riskScore <= ptcAdjustments.strongMomentumRiskMax
+  ) {
+    factors.push({ label: 'Strong customer momentum', points: ptcAdjustments.strongMomentumCredit });
   }
 
   const rawScore = factors.reduce((sum, factor) => sum + Number(factor.points || 0), 0);
   const score = Math.round(clampScore(rawScore));
-  const band = propensityBand(score);
+  const band = propensityBand(score, calibration.banding);
   const driver = primaryFactorLabel(factors, 'No material churn pressure detected.');
   return { score, band, driver, factors };
 };
@@ -633,6 +654,7 @@ export const scoreBreakdown = (workspace, customerId, now = new Date()) => {
   const customer = ensureWorkspaceCustomer(workspace, customerId);
   const signals = deriveRiskSignals(workspace, customerId, now);
   const dismissals = activeDismissals(workspace, customerId, now);
+  const calibration = ptCalibration(workspace);
   const weights = scoringWeights(workspace);
   const healthOverride = workspace?.risk?.[customerId]?.overrideHealth || null;
   const health = healthOverride || healthFromScores({ adoptionScore, engagementScore, riskScore, weights });
@@ -649,6 +671,11 @@ export const scoreBreakdown = (workspace, customerId, now = new Date()) => {
     ptcBand: ptc.band,
     pteDriver: pte.driver,
     ptcDriver: ptc.driver,
+    calibration: {
+      profileId: calibration.profileId,
+      profileVersion: calibration.profileVersion,
+      provenance: calibration.provenance
+    },
     health,
     riskSignals: signals,
     dismissedSignals: dismissals,
