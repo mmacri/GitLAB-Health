@@ -2274,6 +2274,15 @@ export const renderPropensityPage = (ctx) => {
       <p class="muted">
         Follow these five steps in order to move from data confidence to execution and measurable outcome tracking.
       </p>
+      <div class="guide-progress" role="status" aria-live="polite">
+        <div class="guide-progress__row">
+          <strong data-guide-progress-label>0 / 5 steps complete</strong>
+          <button class="ghost-btn guide-progress__reset" type="button" data-reset-guide-progress>Reset progress</button>
+        </div>
+        <div class="guide-progress__track" aria-hidden="true">
+          <i data-guide-progress-bar></i>
+        </div>
+      </div>
       <div class="guide-stepper__actions">
         <button class="ghost-btn guide-stepper__item" type="button" data-jump-target="section-confidence">
           1. Data Trust
@@ -2291,8 +2300,53 @@ export const renderPropensityPage = (ctx) => {
           5. Track Outcomes
         </button>
       </div>
+      <div class="guide-stepper__checks">
+        <label class="guide-stepper__check"><input type="checkbox" data-guide-step-check="section-confidence">Data trust reviewed</label>
+        <label class="guide-stepper__check"><input type="checkbox" data-guide-step-check="section-visuals">Posture reviewed</label>
+        <label class="guide-stepper__check"><input type="checkbox" data-guide-step-check="section-formulas">Formula logic reviewed</label>
+        <label class="guide-stepper__check"><input type="checkbox" data-guide-step-check="section-play-wizard">Play selected</label>
+        <label class="guide-stepper__check"><input type="checkbox" data-guide-step-check="section-score-delta">Outcome tracked</label>
+      </div>
       <div class="form-actions">
         <button class="ghost-btn" type="button" data-toggle-guide-mode>Switch to Expert View</button>
+      </div>
+    </section>
+
+    <section class="card guide-paths" id="section-role-paths">
+      <div class="metric-head">
+        <h2>Choose Your Operating Path</h2>
+        ${statusChip({ label: 'CSE + Manager workflow', tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        Use the CSE path for day-to-day account execution and the Manager path for weekly calibration, escalation control, and portfolio prioritization.
+      </p>
+      <div class="guide-path-grid">
+        <article class="guide-path-card">
+          <h3>CSE Path (Execution Loop)</h3>
+          <ol>
+            <li>Validate confidence and missing evidence.</li>
+            <li>Read posture bands and queue priority accounts.</li>
+            <li>Select one mitigation play and one expansion play.</li>
+            <li>Log outcomes and compare next-cycle score movement.</li>
+          </ol>
+          <div class="form-actions">
+            <button class="ghost-btn" type="button" data-jump-target="section-confidence">Start CSE Path</button>
+            <button class="ghost-btn" type="button" data-jump-target="section-play-wizard">Open Play Wizard</button>
+          </div>
+        </article>
+        <article class="guide-path-card">
+          <h3>Manager Path (Calibration Loop)</h3>
+          <ol>
+            <li>Review confidence quality before score interpretation.</li>
+            <li>Inspect matrix distribution and band movement by segment.</li>
+            <li>Validate formula assumptions and threshold calibration.</li>
+            <li>Track mitigation effectiveness and adjust plays weekly.</li>
+          </ol>
+          <div class="form-actions">
+            <button class="ghost-btn" type="button" data-jump-target="section-visuals">Start Manager Path</button>
+            <button class="ghost-btn" type="button" data-jump-target="section-manager-calibration">Open Calibration</button>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -4207,6 +4261,8 @@ export const renderPropensityPage = (ctx) => {
   });
 
   const GUIDE_MODE_KEY = 'gh_propensity_guide_mode_v1';
+  const GUIDE_PROGRESS_KEY = 'gh_propensity_guide_progress_v1';
+  const guideStepIds = ['section-confidence', 'section-visuals', 'section-formulas', 'section-play-wizard', 'section-score-delta'];
   let guideMode = 'guided';
   try {
     const storedMode = String(window.localStorage.getItem(GUIDE_MODE_KEY) || '').trim().toLowerCase();
@@ -4225,7 +4281,71 @@ export const renderPropensityPage = (ctx) => {
     }
   };
 
+  const stepButtons = new Map();
+  wrapper.querySelectorAll('.guide-stepper [data-jump-target]').forEach((button) => {
+    const target = button.getAttribute('data-jump-target');
+    if (!target) return;
+    stepButtons.set(target, button);
+  });
+
+  const setActiveGuideStep = (stepId) => {
+    stepButtons.forEach((button, id) => {
+      button.classList.toggle('is-active', id === stepId);
+    });
+  };
+
+  const defaultGuideProgress = guideStepIds.reduce((acc, id) => {
+    acc[id] = false;
+    return acc;
+  }, {});
+  let guideProgress = { ...defaultGuideProgress };
+  try {
+    const raw = window.localStorage.getItem(GUIDE_PROGRESS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        guideStepIds.forEach((id) => {
+          if (typeof parsed[id] === 'boolean') guideProgress[id] = parsed[id];
+        });
+      }
+    }
+  } catch {
+    guideProgress = { ...defaultGuideProgress };
+  }
+
+  const progressInputs = Array.from(wrapper.querySelectorAll('[data-guide-step-check]'));
+  const progressBar = wrapper.querySelector('[data-guide-progress-bar]');
+  const progressLabel = wrapper.querySelector('[data-guide-progress-label]');
+
+  const persistGuideProgress = () => {
+    try {
+      window.localStorage.setItem(GUIDE_PROGRESS_KEY, JSON.stringify(guideProgress));
+    } catch {
+      // Ignore storage write failures in static mode.
+    }
+  };
+
+  const applyGuideProgress = () => {
+    const totalSteps = guideStepIds.length || 1;
+    let completed = 0;
+    progressInputs.forEach((input) => {
+      const stepId = input.getAttribute('data-guide-step-check');
+      if (!stepId) return;
+      const checked = Boolean(guideProgress[stepId]);
+      input.checked = checked;
+      if (checked) completed += 1;
+    });
+    const percent = Math.round((completed / totalSteps) * 100);
+    if (progressBar) progressBar.style.width = `${percent}%`;
+    if (progressLabel) progressLabel.textContent = `${completed} / ${totalSteps} steps complete`;
+    stepButtons.forEach((button, id) => {
+      button.classList.toggle('is-complete', Boolean(guideProgress[id]));
+    });
+  };
+
   applyGuideMode();
+  applyGuideProgress();
+  setActiveGuideStep(guideStepIds[0]);
 
   wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
@@ -4241,11 +4361,27 @@ export const renderPropensityPage = (ctx) => {
     }
     notify?.(guideMode === 'guided' ? 'Guided mode enabled.' : 'Expert mode enabled.');
   });
+  wrapper.querySelector('[data-reset-guide-progress]')?.addEventListener('click', () => {
+    guideProgress = { ...defaultGuideProgress };
+    persistGuideProgress();
+    applyGuideProgress();
+    notify?.('Guide progress reset.');
+  });
+  progressInputs.forEach((input) => {
+    input.addEventListener('change', () => {
+      const stepId = input.getAttribute('data-guide-step-check');
+      if (!stepId) return;
+      guideProgress[stepId] = input.checked;
+      persistGuideProgress();
+      applyGuideProgress();
+    });
+  });
 
   wrapper.querySelectorAll('[data-jump-target]').forEach((button) => {
     button.addEventListener('click', () => {
       const target = button.getAttribute('data-jump-target');
       if (!target) return;
+      if (stepButtons.has(target)) setActiveGuideStep(target);
       const node = wrapper.querySelector(`#${target}`);
       if (!node) return;
       node.scrollIntoView({ behavior: 'smooth', block: 'start' });

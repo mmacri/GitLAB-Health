@@ -2093,6 +2093,45 @@ textarea.artifact,
   gap: 10px;
 }
 
+.guide-progress {
+  display: grid;
+  gap: 6px;
+}
+
+.guide-progress__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.guide-progress__row strong {
+  font-size: 12px;
+  color: var(--ink-muted);
+  letter-spacing: 0.2px;
+}
+
+.guide-progress__reset {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.guide-progress__track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.guide-progress__track i {
+  display: block;
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--secondary) 82%, white), color-mix(in srgb, var(--success) 78%, white));
+  transition: width 180ms ease;
+}
+
 .guide-stepper__actions {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -2103,6 +2142,75 @@ textarea.artifact,
   justify-content: center;
   text-align: center;
   padding-inline: 10px;
+}
+
+.guide-stepper__item.is-active {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  background: color-mix(in srgb, var(--primary) 8%, white);
+  color: var(--primary-strong);
+}
+
+.guide-stepper__item.is-complete {
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border));
+  background: color-mix(in srgb, var(--success) 9%, white);
+}
+
+.guide-stepper__item.is-complete::after {
+  content: '✓';
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--success) 86%, black);
+}
+
+.guide-stepper__checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.guide-stepper__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.guide-stepper__check input {
+  accent-color: var(--primary-strong);
+}
+
+.guide-path-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--card-gap);
+}
+
+.guide-path-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-muted);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.guide-path-card h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.guide-path-card ol {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+
+.guide-path-card li {
+  color: var(--ink-muted);
+  font-size: 13px;
 }
 
 .guide-phase-card {
@@ -2680,6 +2788,16 @@ textarea.artifact,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .guide-stepper__checks {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .guide-path-grid {
+    grid-template-columns: 1fr;
+  }
+
   .app-shell {
     grid-template-columns: var(--sidebar-width-tablet, clamp(210px, 28vw, 240px)) minmax(0, 1fr);
     gap: var(--space-4);
@@ -2730,6 +2848,11 @@ textarea.artifact,
 }
 
 @media (max-width: 768px) {
+  .guide-stepper__actions,
+  .guide-stepper__checks {
+    grid-template-columns: 1fr;
+  }
+
   .app-shell {
     grid-template-columns: 1fr;
     padding: 0 var(--space-4) var(--s-8);
