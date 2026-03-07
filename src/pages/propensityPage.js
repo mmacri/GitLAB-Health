@@ -2565,6 +2565,70 @@ export const renderPropensityPage = (ctx) => {
   const playEffectivenessLog = loadPlayEffectivenessLog();
   const playEffectivenessRows = buildPlayEffectivenessRows(playEffectivenessLog, rows);
   const bandMatrix = buildBandMatrix(rows);
+  const pteDistribution = [
+    { label: '0-24', min: 0, max: 24, color: '#6B7280' },
+    { label: '25-44', min: 25, max: 44, color: '#9CA3AF' },
+    { label: '45-69', min: 45, max: 69, color: '#D97706' },
+    { label: '70-84', min: 70, max: 84, color: '#16A34A' },
+    { label: '85-100', min: 85, max: 100, color: '#065F46' }
+  ].map((bucket) => ({
+    label: bucket.label,
+    value: rows.filter((row) => {
+      const score = Number(row.pteScore || 0);
+      return score >= bucket.min && score <= bucket.max;
+    }).length,
+    color: bucket.color
+  }));
+  const ptcDistribution = [
+    { label: '0-24', min: 0, max: 24, color: '#16A34A' },
+    { label: '25-44', min: 25, max: 44, color: '#84CC16' },
+    { label: '45-69', min: 45, max: 69, color: '#D97706' },
+    { label: '70-84', min: 70, max: 84, color: '#DC2626' },
+    { label: '85-100', min: 85, max: 100, color: '#7F1D1D' }
+  ].map((bucket) => ({
+    label: bucket.label,
+    value: rows.filter((row) => {
+      const score = Number(row.ptcScore || 0);
+      return score >= bucket.min && score <= bucket.max;
+    }).length,
+    color: bucket.color
+  }));
+  const triggerSeverityMix = ['High', 'Medium', 'Low'].map((severity) => {
+    const value = signalWatchlist
+      .filter((item) => String(item.severity || '').toLowerCase() === severity.toLowerCase())
+      .reduce((sum, item) => sum + Number(item.count || 0), 0);
+    const color = severity === 'High' ? '#DC2626' : severity === 'Medium' ? '#D97706' : '#6B7280';
+    return { label: severity, value, color };
+  });
+  const confidenceMix = [
+    {
+      label: 'High (>=85)',
+      value: [...confidenceById.values()].filter((item) => Number(item.score || 0) >= 85).length,
+      color: '#16A34A'
+    },
+    {
+      label: 'Medium (65-84)',
+      value: [...confidenceById.values()].filter((item) => {
+        const score = Number(item.score || 0);
+        return score >= 65 && score < 85;
+      }).length,
+      color: '#D97706'
+    },
+    {
+      label: 'Low (<65)',
+      value: [...confidenceById.values()].filter((item) => Number(item.score || 0) < 65).length,
+      color: '#DC2626'
+    }
+  ];
+  const queueUrgencyMix = [
+    { label: 'Critical (>=90)', value: weeklyQueue.filter((item) => Number(item.priorityScore || 0) >= 90).length, color: '#DC2626' },
+    {
+      label: 'High (70-89)',
+      value: weeklyQueue.filter((item) => Number(item.priorityScore || 0) >= 70 && Number(item.priorityScore || 0) < 90).length,
+      color: '#D97706'
+    },
+    { label: 'Normal (<70)', value: weeklyQueue.filter((item) => Number(item.priorityScore || 0) < 70).length, color: '#6B7280' }
+  ];
 
   const accountOptions = rows
     .map((row) => `<option value="${row.customer.id}">${escapeHtml(row.customer.name)}</option>`)
@@ -3598,6 +3662,83 @@ export const renderPropensityPage = (ctx) => {
               : '<span class="muted">No trigger drill available.</span>'
           }
         </div>
+      </article>
+    </section>
+
+    <section class="grid-cards" id="section-visuals-advanced">
+      <article class="card">
+        <div class="metric-head">
+          <h2>PtE Score Distribution (Account Count)</h2>
+          ${statusChip({ label: 'Bucket view', tone: 'good' })}
+        </div>
+        <div class="chart-wrap">
+          ${barChartSvg(pteDistribution, { width: 560 })}
+        </div>
+        <div class="chip-row">
+          ${statusChip({ label: `>=70 score ${(pteDistribution[3]?.value || 0) + (pteDistribution[4]?.value || 0)}`, tone: 'good' })}
+          ${statusChip({ label: `<45 score ${(pteDistribution[0]?.value || 0) + (pteDistribution[1]?.value || 0)}`, tone: 'warn' })}
+        </div>
+        <p class="muted" title="Distribution helps separate broad readiness from isolated outliers.">
+          How to use: shape of distribution shows whether expansion readiness is concentrated in a few accounts or broadly distributed.
+        </p>
+      </article>
+
+      <article class="card">
+        <div class="metric-head">
+          <h2>PtC Score Distribution (Account Count)</h2>
+          ${statusChip({ label: 'Pressure profile', tone: 'risk' })}
+        </div>
+        <div class="chart-wrap">
+          ${barChartSvg(ptcDistribution, { width: 560 })}
+        </div>
+        <div class="chip-row">
+          ${statusChip({ label: `>=70 score ${(ptcDistribution[3]?.value || 0) + (ptcDistribution[4]?.value || 0)}`, tone: 'risk' })}
+          ${statusChip({ label: `<45 score ${(ptcDistribution[0]?.value || 0) + (ptcDistribution[1]?.value || 0)}`, tone: 'good' })}
+        </div>
+        <p class="muted" title="High-end tail should shrink over cycles if mitigation plays are effective.">
+          How to use: watch high-end bucket tail; it should contract when retention mitigation plays are working.
+        </p>
+      </article>
+
+      <article class="card">
+        <div class="metric-head">
+          <h2>Trigger Severity Mix (Weighted by Accounts)</h2>
+          ${statusChip({ label: 'Signal intensity', tone: 'warn' })}
+        </div>
+        <div class="chart-wrap">
+          ${donutChartSvg(triggerSeverityMix)}
+        </div>
+        <div class="chip-row">
+          ${statusChip({ label: `High ${triggerSeverityMix[0]?.value || 0}`, tone: 'risk' })}
+          ${statusChip({ label: `Medium ${triggerSeverityMix[1]?.value || 0}`, tone: 'warn' })}
+          ${statusChip({ label: `Low ${triggerSeverityMix[2]?.value || 0}`, tone: 'neutral' })}
+        </div>
+        <p class="muted" title="Severity-weighted volume is useful for escalation planning and SLA load.">
+          How to use: combine this with SLA matrix to estimate escalation load and manager coaching demand.
+        </p>
+      </article>
+
+      <article class="card">
+        <div class="metric-head">
+          <h2>Execution Quality Mix</h2>
+          ${statusChip({ label: 'Confidence + queue', tone: 'neutral' })}
+        </div>
+        <div class="chart-wrap">
+          ${barChartSvg(
+            [
+              { label: 'Conf High', value: confidenceMix[0]?.value || 0, color: '#16A34A' },
+              { label: 'Conf Med', value: confidenceMix[1]?.value || 0, color: '#D97706' },
+              { label: 'Conf Low', value: confidenceMix[2]?.value || 0, color: '#DC2626' },
+              { label: 'Queue Critical', value: queueUrgencyMix[0]?.value || 0, color: '#991B1B' },
+              { label: 'Queue High', value: queueUrgencyMix[1]?.value || 0, color: '#B45309' },
+              { label: 'Queue Normal', value: queueUrgencyMix[2]?.value || 0, color: '#6B7280' }
+            ],
+            { width: 620 }
+          )}
+        </div>
+        <p class="muted" title="Combines data confidence tiers with queue urgency tiers.">
+          How to use: if low-confidence and critical-queue bars are both high, prioritize data hygiene and escalation discipline before adding net-new plays.
+        </p>
       </article>
     </section>
 
