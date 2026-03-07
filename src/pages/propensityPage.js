@@ -5016,6 +5016,7 @@ export const renderPropensityPage = (ctx) => {
   const GUIDE_PROGRESS_KEY = 'gh_propensity_guide_progress_v1';
   const CHAPTER_PROGRESS_KEY = 'gh_propensity_chapter_progress_v1';
   const ROLE_FOCUS_KEY = 'gh_propensity_role_focus_v1';
+  const ACTIVE_CHAPTER_KEY = 'gh_propensity_active_chapter_v1';
   const guideStepIds = ['section-confidence', 'section-visuals', 'section-formulas', 'section-play-wizard', 'section-score-delta'];
   let guideMode = 'guided';
   try {
@@ -5170,6 +5171,13 @@ export const renderPropensityPage = (ctx) => {
   } catch {
     roleFocus = 'all';
   }
+  let activeChapterId = chapterIds[0] || 'chapter-orientation';
+  try {
+    const storedActive = String(window.localStorage.getItem(ACTIVE_CHAPTER_KEY) || '').trim();
+    if (storedActive && chapterIds.includes(storedActive)) activeChapterId = storedActive;
+  } catch {
+    activeChapterId = chapterIds[0] || 'chapter-orientation';
+  }
 
   const chapterGuidanceHtml = (guidance) => {
     if (!guidance) return '';
@@ -5270,6 +5278,7 @@ export const renderPropensityPage = (ctx) => {
             <p class="muted">${escapeHtml(chapter.subtitle || '')}</p>
             ${chapterGuidanceHtml(chapter.guidance)}
             <div class="form-actions guide-chapter__controls">
+              <button class="ghost-btn" type="button" data-activate-chapter="${chapter.id}">Open this chapter</button>
               <button class="ghost-btn" type="button" data-mark-chapter="${chapter.id}">Mark chapter complete</button>
             </div>
           </summary>
@@ -5290,6 +5299,7 @@ export const renderPropensityPage = (ctx) => {
             <p class="muted">${escapeHtml(chapter.subtitle || '')}</p>
             ${chapterGuidanceHtml(chapter.guidance)}
             <div class="form-actions guide-chapter__controls">
+              <button class="ghost-btn" type="button" data-activate-chapter="${chapter.id}">Open this chapter</button>
               <button class="ghost-btn" type="button" data-mark-chapter="${chapter.id}">Mark chapter complete</button>
               ${
                 nextChapter
@@ -5340,6 +5350,12 @@ export const renderPropensityPage = (ctx) => {
     if (!chapterId) return;
     chapterMarkButtons.set(chapterId, button);
   });
+  const chapterActivateButtons = new Map();
+  wrapper.querySelectorAll('[data-activate-chapter]').forEach((button) => {
+    const chapterId = button.getAttribute('data-activate-chapter');
+    if (!chapterId) return;
+    chapterActivateButtons.set(chapterId, button);
+  });
   const chapterNavButtons = new Map();
   wrapper.querySelectorAll('[data-chapter-nav]').forEach((button) => {
     const chapterId = button.getAttribute('data-chapter-nav');
@@ -5379,6 +5395,14 @@ export const renderPropensityPage = (ctx) => {
   const persistRoleFocus = () => {
     try {
       window.localStorage.setItem(ROLE_FOCUS_KEY, roleFocus);
+    } catch {
+      // Ignore storage write failures in static mode.
+    }
+  };
+
+  const persistActiveChapter = () => {
+    try {
+      window.localStorage.setItem(ACTIVE_CHAPTER_KEY, activeChapterId);
     } catch {
       // Ignore storage write failures in static mode.
     }
@@ -5440,9 +5464,21 @@ export const renderPropensityPage = (ctx) => {
   };
 
   const setActiveChapter = (chapterId) => {
+    const resolved = chapterIds.includes(chapterId) ? chapterId : chapterIds[0];
+    activeChapterId = resolved;
+    wrapper.setAttribute('data-active-chapter', resolved);
     chapterNavButtons.forEach((button, id) => {
-      button.classList.toggle('is-active', id === chapterId);
+      button.classList.toggle('is-active', id === resolved);
     });
+    chapterIds.forEach((id) => {
+      const chapterNode = wrapper.querySelector(`#${id}`);
+      if (chapterNode) chapterNode.classList.toggle('is-active', id === resolved);
+    });
+    const appendix = wrapper.querySelector('#chapter-appendix');
+    if (appendix instanceof HTMLDetailsElement && resolved === 'chapter-appendix') {
+      appendix.open = true;
+    }
+    persistActiveChapter();
   };
 
   roleFocusButtons.forEach((button, value) => {
@@ -5459,6 +5495,14 @@ export const renderPropensityPage = (ctx) => {
             ? 'Role focus set to CSE.'
             : 'Role focus set to Manager.'
       );
+    });
+  });
+
+  chapterActivateButtons.forEach((button, chapterId) => {
+    button.addEventListener('click', () => {
+      setActiveChapter(chapterId);
+      const node = wrapper.querySelector(`#${chapterId}`);
+      if (node) node.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
 
@@ -5488,7 +5532,11 @@ export const renderPropensityPage = (ctx) => {
 
   applyRoleFocus();
   applyChapterProgress();
-  setActiveChapter(jumpNextChapterButton?.getAttribute('data-next-target') || chapterIds[0]);
+  setActiveChapter(
+    chapterIds.includes(activeChapterId) && chapterMatchesFocus(activeChapterId)
+      ? activeChapterId
+      : jumpNextChapterButton?.getAttribute('data-next-target') || chapterIds[0]
+  );
 
   const stepButtons = new Map();
   wrapper.querySelectorAll('.guide-stepper [data-jump-target]').forEach((button) => {
