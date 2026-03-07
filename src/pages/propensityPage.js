@@ -319,6 +319,48 @@ const calculateFormulaPlanProjection = (input = {}, actions = [], cycles = 1) =>
   };
 };
 
+const evaluateProjectionForGoal = (projection, goal = 'balanced') => {
+  const baselinePte = Number(projection?.baseline?.pte?.final || 0);
+  const baselinePtc = Number(projection?.baseline?.ptc?.final || 0);
+  const projectedPte = Number(projection?.projected?.pte?.final || 0);
+  const projectedPtc = Number(projection?.projected?.ptc?.final || 0);
+  const pteDelta = round1(projectedPte - baselinePte);
+  const ptcDelta = round1(projectedPtc - baselinePtc);
+
+  let score = 0;
+  let rationale = 'Balances expansion readiness with retention pressure reduction.';
+
+  if (goal === 'retention') {
+    score = (100 - projectedPtc) * 0.7 + projectedPte * 0.1 + Math.max(0, -ptcDelta) * 1.5 + Math.max(0, pteDelta) * 0.4;
+    rationale = 'Prioritizes lower projected PtC and stronger PtC downtrend.';
+  } else if (goal === 'expansion') {
+    score = projectedPte * 0.6 + (100 - projectedPtc) * 0.2 + Math.max(0, pteDelta) * 1.1 + Math.max(0, -ptcDelta) * 0.4;
+    rationale = 'Prioritizes higher projected PtE while avoiding retention pressure spikes.';
+  } else {
+    score = projectedPte * 0.45 + (100 - projectedPtc) * 0.45 + Math.max(0, pteDelta) * 0.8 + Math.max(0, -ptcDelta) * 0.8;
+  }
+
+  return {
+    score: round1(score),
+    pteDelta,
+    ptcDelta,
+    rationale
+  };
+};
+
+const recommendProjectionPresets = (input = {}, presets = [], goal = 'balanced') =>
+  [...(presets || [])]
+    .map((preset) => {
+      const projection = calculateFormulaPlanProjection(input, preset.actions, preset.cycles);
+      const evaluation = evaluateProjectionForGoal(projection, goal);
+      return {
+        ...preset,
+        projection,
+        ...evaluation
+      };
+    })
+    .sort((left, right) => Number(right.score || 0) - Number(left.score || 0));
+
 const deriveBandTargetGuidance = (scenario, sensitivity) => {
   const pteFinal = Number(scenario?.pte?.final || 0);
   const ptcFinal = Number(scenario?.ptc?.final || 0);
@@ -3000,6 +3042,20 @@ export const renderPropensityPage = (ctx) => {
             )
             .join('')}
         </div>
+        <div class="form-actions formula-plan-controls">
+          <label class="formula-goal">
+            Optimization goal
+            <select name="planGoal">
+              <option value="balanced">Balanced (PtE up + PtC down)</option>
+              <option value="retention">Retention first (PtC reduction)</option>
+              <option value="expansion">Expansion first (PtE increase)</option>
+            </select>
+          </label>
+          <button class="ghost-btn" type="button" data-formula-plan-recommend>Recommend best preset</button>
+        </div>
+        <div class="section-stack" data-formula-plan-recommendation>
+          <p class="empty-text">Choose an optimization goal to get a ranked preset recommendation.</p>
+        </div>
       </fieldset>
       <div class="section-stack" data-formula-plan-output>
         <p class="empty-text">Run a play sequence projection to compare baseline vs projected PtE/PtC.</p>
@@ -4071,6 +4127,8 @@ export const renderPropensityPage = (ctx) => {
   const formulaPlanClear = wrapper.querySelector('[data-formula-plan-clear]');
   const formulaPlanOutput = wrapper.querySelector('[data-formula-plan-output]');
   const formulaPlanPresetButtons = wrapper.querySelectorAll('[data-formula-plan-preset]');
+  const formulaPlanRecommend = wrapper.querySelector('[data-formula-plan-recommend]');
+  const formulaPlanRecommendation = wrapper.querySelector('[data-formula-plan-recommendation]');
 
   const readFormulaSandboxState = () => {
     if (!(formulaSandboxForm instanceof HTMLFormElement)) return { ...formulaSandboxBaseline };
@@ -4344,6 +4402,12 @@ export const renderPropensityPage = (ctx) => {
     if (cycleField && 'value' in cycleField) cycleField.value = String(safeCycles);
   };
 
+  const readFormulaPlanGoal = () => {
+    const goalField = wrapper.querySelector('select[name="planGoal"]');
+    const value = goalField && 'value' in goalField ? String(goalField.value || 'balanced') : 'balanced';
+    return ['balanced', 'retention', 'expansion'].includes(value) ? value : 'balanced';
+  };
+
   const renderFormulaPlanProjection = () => {
     if (!formulaPlanOutput) return;
     const selection = readFormulaPlanSelection();
@@ -4435,6 +4499,50 @@ export const renderPropensityPage = (ctx) => {
     `;
   };
 
+  const renderFormulaPlanRecommendation = () => {
+    if (!formulaPlanRecommendation) return;
+    const goal = readFormulaPlanGoal();
+    const ranked = recommendProjectionPresets(readFormulaSandboxState(), formulaPlanPresets, goal).slice(0, 3);
+    if (!ranked.length) {
+      formulaPlanRecommendation.innerHTML = '<p class="empty-text">No presets available for recommendation.</p>';
+      return;
+    }
+    formulaPlanRecommendation.innerHTML = `
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Preset</th>
+              <th>Fit score</th>
+              <th>Projected PtE</th>
+              <th>Projected PtC</th>
+              <th>Delta (PtE / PtC)</th>
+              <th>Why recommended</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${ranked
+              .map(
+                (item) => `
+                  <tr>
+                    <td><strong>${escapeHtml(item.label)}</strong><br><span class="muted">${escapeHtml(item.note)}</span></td>
+                    <td>${statusChip({ label: `${item.score}`, tone: Number(item.score || 0) >= 70 ? 'good' : Number(item.score || 0) >= 50 ? 'warn' : 'neutral' })}</td>
+                    <td>${statusChip({ label: `${item.projection.projected.pte.final} (${item.projection.projected.pte.band})`, tone: item.projection.projected.pte.band === 'High' ? 'good' : item.projection.projected.pte.band === 'Medium' ? 'warn' : 'neutral' })}</td>
+                    <td>${statusChip({ label: `${item.projection.projected.ptc.final} (${item.projection.projected.ptc.band})`, tone: item.projection.projected.ptc.band === 'High' ? 'risk' : item.projection.projected.ptc.band === 'Medium' ? 'warn' : 'good' })}</td>
+                    <td>${formatSigned(item.pteDelta, 1)} / ${formatSigned(item.ptcDelta, 1)}</td>
+                    <td>${escapeHtml(item.rationale)}</td>
+                    <td><button class="ghost-btn" type="button" data-apply-plan-preset="${item.id}">Apply</button></td>
+                  </tr>
+                `
+              )
+              .join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  };
+
   if (formulaSandboxForm instanceof HTMLFormElement) {
     formulaSandboxForm.addEventListener('input', () => renderFormulaSandboxOutput());
     formulaSandboxForm.addEventListener('change', () => renderFormulaSandboxOutput());
@@ -4516,6 +4624,23 @@ export const renderPropensityPage = (ctx) => {
       renderFormulaPlanProjection();
       notify?.(`Preset applied: ${preset.label}`);
     });
+  });
+
+  formulaPlanRecommend?.addEventListener('click', () => {
+    renderFormulaPlanRecommendation();
+    notify?.('Preset recommendation updated.');
+  });
+
+  formulaPlanRecommendation?.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+    const applyButton = event.target.closest('[data-apply-plan-preset]');
+    if (!applyButton) return;
+    const presetId = String(applyButton.getAttribute('data-apply-plan-preset') || '').trim();
+    const preset = formulaPlanPresets.find((item) => item.id === presetId);
+    if (!preset) return;
+    setFormulaPlanSelection(preset.actions, preset.cycles);
+    renderFormulaPlanProjection();
+    notify?.(`Recommended preset applied: ${preset.label}`);
   });
 
   const playWizardForm = wrapper.querySelector('[data-play-wizard-form]');
