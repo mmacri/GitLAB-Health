@@ -3220,6 +3220,8 @@ export const renderPropensityPage = (ctx) => {
       </form>
       <div class="form-actions">
         <button class="ghost-btn" type="button" data-formula-sandbox-reset>Reset to portfolio baseline</button>
+        <button class="ghost-btn" type="button" data-formula-undo>Undo</button>
+        <button class="ghost-btn" type="button" data-formula-redo>Redo</button>
         <button class="ghost-btn" type="button" data-formula-sandbox-action="recover-engagement">Simulate: engagement recovery</button>
         <button class="ghost-btn" type="button" data-formula-sandbox-action="secure-rollout">Simulate: secure rollout</button>
         <button class="ghost-btn" type="button" data-formula-sandbox-action="reduce-risk">Simulate: risk burndown</button>
@@ -4361,6 +4363,8 @@ export const renderPropensityPage = (ctx) => {
   const formulaSandboxForm = wrapper.querySelector('[data-formula-sandbox-form]');
   const formulaSandboxOutput = wrapper.querySelector('[data-formula-sandbox-output]');
   const formulaSandboxReset = wrapper.querySelector('[data-formula-sandbox-reset]');
+  const formulaUndo = wrapper.querySelector('[data-formula-undo]');
+  const formulaRedo = wrapper.querySelector('[data-formula-redo]');
   const formulaSandboxActions = wrapper.querySelectorAll('[data-formula-sandbox-action]');
   const formulaSaveA = wrapper.querySelector('[data-formula-save-a]');
   const formulaSaveB = wrapper.querySelector('[data-formula-save-b]');
@@ -4377,6 +4381,8 @@ export const renderPropensityPage = (ctx) => {
   const formulaPlanRecommendation = wrapper.querySelector('[data-formula-plan-recommendation]');
   let formulaCompareA = null;
   let formulaCompareB = null;
+  let formulaStateHistory = [];
+  let formulaStateIndex = -1;
   let lastFormulaPlanProjection = null;
   let lastFormulaPlanSelection = null;
   let lastFormulaPlanGoal = 'balanced';
@@ -4431,6 +4437,34 @@ export const renderPropensityPage = (ctx) => {
     setChecked('staleEngagement90', state.staleEngagement90);
     setChecked('secureBelow30', state.secureBelow30);
     setChecked('strongMomentum', state.strongMomentum);
+  };
+
+  const serializeFormulaState = (state = {}) => JSON.stringify(normalizeFormulaScenarioInput(state));
+
+  const updateFormulaHistoryButtons = () => {
+    if (formulaUndo instanceof HTMLButtonElement) formulaUndo.disabled = formulaStateIndex <= 0;
+    if (formulaRedo instanceof HTMLButtonElement) formulaRedo.disabled = formulaStateIndex < 0 || formulaStateIndex >= formulaStateHistory.length - 1;
+  };
+
+  const pushFormulaState = (state = {}) => {
+    const normalized = normalizeFormulaScenarioInput(state);
+    const serialized = serializeFormulaState(normalized);
+    const currentSerialized =
+      formulaStateIndex >= 0 && formulaStateHistory[formulaStateIndex] ? serializeFormulaState(formulaStateHistory[formulaStateIndex]) : '';
+    if (serialized === currentSerialized) return false;
+    const head = formulaStateHistory.slice(0, formulaStateIndex + 1);
+    formulaStateHistory = [...head, normalized].slice(-100);
+    formulaStateIndex = formulaStateHistory.length - 1;
+    updateFormulaHistoryButtons();
+    return true;
+  };
+
+  const applyFormulaState = (state = {}, options = {}) => {
+    const { record = true } = options;
+    const normalized = normalizeFormulaScenarioInput(state);
+    setFormulaSandboxState(normalized);
+    renderFormulaSandboxOutput();
+    if (record) pushFormulaState(normalized);
   };
 
   const renderFormulaSandboxOutput = () => {
@@ -4974,9 +5008,15 @@ export const renderPropensityPage = (ctx) => {
 
   if (formulaSandboxForm instanceof HTMLFormElement) {
     formulaSandboxForm.addEventListener('input', () => renderFormulaSandboxOutput());
-    formulaSandboxForm.addEventListener('change', () => renderFormulaSandboxOutput());
+    formulaSandboxForm.addEventListener('change', () => {
+      renderFormulaSandboxOutput();
+      pushFormulaState(readFormulaSandboxState());
+    });
     renderFormulaSandboxOutput();
   }
+
+  pushFormulaState(readFormulaSandboxState());
+  updateFormulaHistoryButtons();
 
   renderFormulaCompareOutput();
 
@@ -5011,13 +5051,11 @@ export const renderPropensityPage = (ctx) => {
     next.strongMomentum = next.adoptionScore >= 70 && next.engagementScore >= 70 && next.riskScore <= 35;
     if (Number(next.engagementScore || 0) >= 50) next.staleEngagement90 = false;
 
-    setFormulaSandboxState(next);
-    renderFormulaSandboxOutput();
+    applyFormulaState(next, { record: true });
   };
 
   formulaSandboxReset?.addEventListener('click', () => {
-    setFormulaSandboxState(formulaSandboxBaseline);
-    renderFormulaSandboxOutput();
+    applyFormulaState(formulaSandboxBaseline, { record: true });
     notify?.('Formula sandbox reset to portfolio baseline.');
   });
 
@@ -5079,6 +5117,26 @@ export const renderPropensityPage = (ctx) => {
     });
   });
 
+  formulaUndo?.addEventListener('click', () => {
+    if (formulaStateIndex <= 0) return;
+    formulaStateIndex -= 1;
+    const previous = formulaStateHistory[formulaStateIndex];
+    if (!previous) return;
+    applyFormulaState(previous, { record: false });
+    updateFormulaHistoryButtons();
+    notify?.('Sandbox state reverted.');
+  });
+
+  formulaRedo?.addEventListener('click', () => {
+    if (formulaStateIndex >= formulaStateHistory.length - 1) return;
+    formulaStateIndex += 1;
+    const next = formulaStateHistory[formulaStateIndex];
+    if (!next) return;
+    applyFormulaState(next, { record: false });
+    updateFormulaHistoryButtons();
+    notify?.('Sandbox state restored.');
+  });
+
   formulaCompareOutput?.addEventListener('click', (event) => {
     if (!(event.target instanceof Element)) return;
     const loadButton = event.target.closest('[data-formula-load]');
@@ -5086,8 +5144,7 @@ export const renderPropensityPage = (ctx) => {
     const slot = String(loadButton.getAttribute('data-formula-load') || '').trim();
     const source = slot === 'A' ? formulaCompareA : slot === 'B' ? formulaCompareB : null;
     if (!source) return;
-    setFormulaSandboxState(source);
-    renderFormulaSandboxOutput();
+    applyFormulaState(source, { record: true });
     notify?.(`Loaded scenario ${slot} into sandbox.`);
   });
 
