@@ -1448,29 +1448,31 @@ ${
 `;
 };
 
+const compareWinnerForGoal = (goal, pteDelta, ptcDelta) => {
+  const normalizedGoal = ['balanced', 'retention', 'expansion'].includes(String(goal)) ? String(goal) : 'balanced';
+  if (normalizedGoal === 'retention') {
+    if (pteDelta >= 0 && ptcDelta < 0) return { winner: 'B', reason: 'PtC drops while PtE is stable/improving.' };
+    if (pteDelta <= 0 && ptcDelta > 0) return { winner: 'A', reason: 'Scenario B increases churn pressure under retention focus.' };
+    return { winner: 'mixed', reason: 'Mixed retention trade-off; prioritize the lower PtC scenario.' };
+  }
+  if (normalizedGoal === 'expansion') {
+    if (pteDelta > 0 && ptcDelta <= 0) return { winner: 'B', reason: 'PtE rises without adding churn pressure.' };
+    if (pteDelta < 0 && ptcDelta >= 0) return { winner: 'A', reason: 'Scenario B weakens readiness and/or risk posture.' };
+    return { winner: 'mixed', reason: 'Mixed expansion trade-off; prioritize higher PtE while containing PtC.' };
+  }
+  if (pteDelta > 0 && ptcDelta <= 0) return { winner: 'B', reason: 'Readiness improves while pressure is flat/down.' };
+  if (pteDelta < 0 && ptcDelta >= 0) return { winner: 'A', reason: 'Scenario B regresses balanced posture.' };
+  return { winner: 'mixed', reason: 'Mixed balanced trade-off; tune variables and compare again.' };
+};
+
 const buildScenarioCompareMarkdown = ({ generatedOn, goal, scenarioA, scenarioB }) => {
   if (!scenarioA || !scenarioB) return '';
   const goalLabel = goal === 'retention' ? 'Retention first' : goal === 'expansion' ? 'Expansion first' : 'Balanced';
   const pteDelta = round1(Number(scenarioB.pte.final || 0) - Number(scenarioA.pte.final || 0));
   const ptcDelta = round1(Number(scenarioB.ptc.final || 0) - Number(scenarioA.ptc.final || 0));
+  const winner = compareWinnerForGoal(goal, pteDelta, ptcDelta);
   const recommendation =
-    goal === 'retention'
-      ? pteDelta >= 0 && ptcDelta < 0
-        ? 'Scenario B is preferred for retention focus.'
-        : pteDelta <= 0 && ptcDelta > 0
-          ? 'Scenario A is safer for retention focus.'
-          : 'Compare trade-offs: prioritize lower PtC under retention focus.'
-      : goal === 'expansion'
-        ? pteDelta > 0 && ptcDelta <= 0
-          ? 'Scenario B is preferred for expansion focus.'
-          : pteDelta < 0 && ptcDelta >= 0
-            ? 'Scenario A is safer for expansion focus.'
-            : 'Compare trade-offs: prioritize higher PtE while constraining PtC.'
-        : pteDelta > 0 && ptcDelta <= 0
-          ? 'Scenario B is preferred for balanced improvement.'
-          : pteDelta < 0 && ptcDelta >= 0
-            ? 'Scenario A is preferred for balanced improvement.'
-            : 'Outcome is mixed; tune one or two inputs before finalizing plan.';
+    winner.winner === 'mixed' ? `Mixed outcome. ${winner.reason}` : `Scenario ${winner.winner} is preferred. ${winner.reason}`;
 
   const rows = [
     { key: 'adoptionScore', label: 'Adoption score' },
@@ -3232,6 +3234,8 @@ export const renderPropensityPage = (ctx) => {
         <button class="ghost-btn" type="button" data-formula-compare-swap>Swap A/B</button>
         <button class="ghost-btn" type="button" data-formula-compare-clear>Clear compare</button>
         <button class="ghost-btn" type="button" data-formula-compare-download>Download compare .md</button>
+        <button class="ghost-btn" type="button" data-formula-compare-apply>Apply recommended scenario</button>
+        <button class="ghost-btn" type="button" data-formula-compare-copy>Copy compare summary</button>
       </div>
       <p class="muted">Use simulation buttons to preview how common CSE plays change PtE/PtC before you commit to an account plan.</p>
       <fieldset class="filter-multi form-span formula-plan-builder">
@@ -4371,6 +4375,8 @@ export const renderPropensityPage = (ctx) => {
   const formulaCompareSwap = wrapper.querySelector('[data-formula-compare-swap]');
   const formulaCompareClear = wrapper.querySelector('[data-formula-compare-clear]');
   const formulaCompareDownload = wrapper.querySelector('[data-formula-compare-download]');
+  const formulaCompareApply = wrapper.querySelector('[data-formula-compare-apply]');
+  const formulaCompareCopy = wrapper.querySelector('[data-formula-compare-copy]');
   const formulaCompareOutput = wrapper.querySelector('[data-formula-compare-output]');
   const formulaPlanRun = wrapper.querySelector('[data-formula-plan-run]');
   const formulaPlanClear = wrapper.querySelector('[data-formula-plan-clear]');
@@ -4741,6 +4747,21 @@ export const renderPropensityPage = (ctx) => {
 
   const normalizeFormulaScenarioInput = (state = {}) => calculateFormulaSandbox(state).inputs;
 
+  const buildScenarioCompareSummaryText = (goal, scenarioA, scenarioB) => {
+    if (!scenarioA || !scenarioB) return '';
+    const pteDelta = round1(Number(scenarioB.pte.final || 0) - Number(scenarioA.pte.final || 0));
+    const ptcDelta = round1(Number(scenarioB.ptc.final || 0) - Number(scenarioA.ptc.final || 0));
+    const winner = compareWinnerForGoal(goal, pteDelta, ptcDelta);
+    return [
+      `Goal: ${goal}`,
+      `Scenario A PtE/PtC: ${scenarioA.pte.final}/${scenarioA.ptc.final}`,
+      `Scenario B PtE/PtC: ${scenarioB.pte.final}/${scenarioB.ptc.final}`,
+      `Delta B-A PtE: ${formatSigned(pteDelta, 1)}`,
+      `Delta B-A PtC: ${formatSigned(ptcDelta, 1)}`,
+      winner.winner === 'mixed' ? `Recommendation: Mixed - ${winner.reason}` : `Recommendation: Scenario ${winner.winner} - ${winner.reason}`
+    ].join('\n');
+  };
+
   const renderFormulaCompareOutput = () => {
     if (!formulaCompareOutput) return;
     if (!formulaCompareA && !formulaCompareB) {
@@ -4792,24 +4813,11 @@ export const renderPropensityPage = (ctx) => {
     const pteDelta = round1(Number(scenarioB.pte.final || 0) - Number(scenarioA.pte.final || 0));
     const ptcDelta = round1(Number(scenarioB.ptc.final || 0) - Number(scenarioA.ptc.final || 0));
     const goal = readFormulaPlanGoal();
+    const winner = compareWinnerForGoal(goal, pteDelta, ptcDelta);
     const compareRecommendation =
-      goal === 'retention'
-        ? pteDelta >= 0 && ptcDelta < 0
-          ? 'Scenario B is better for retention focus (PtC drops while PtE is stable/improving).'
-          : pteDelta <= 0 && ptcDelta > 0
-            ? 'Scenario A is safer for retention focus (Scenario B increases churn pressure).'
-            : 'Mixed retention outcome. Prioritize the scenario with lower PtC and then improve PtE.'
-        : goal === 'expansion'
-          ? pteDelta > 0 && ptcDelta <= 0
-            ? 'Scenario B is better for expansion focus (PtE rises without adding churn pressure).'
-            : pteDelta < 0 && ptcDelta >= 0
-              ? 'Scenario A is safer for expansion focus (Scenario B weakens readiness and/or risk).'
-              : 'Mixed expansion outcome. Prioritize higher PtE while containing PtC increase.'
-          : pteDelta > 0 && ptcDelta <= 0
-            ? 'Scenario B is the stronger balanced outcome (readiness up, pressure down).'
-            : pteDelta < 0 && ptcDelta >= 0
-              ? 'Scenario A is the stronger balanced outcome (Scenario B regresses posture).'
-              : 'Balanced outcome is mixed. Adjust one or two inputs and compare again.';
+      winner.winner === 'mixed'
+        ? `Mixed outcome. ${winner.reason}`
+        : `Scenario ${winner.winner} is preferred. ${winner.reason}`;
 
     formulaCompareOutput.innerHTML = `
       <article class="card compact-card">
@@ -5105,6 +5113,43 @@ export const renderPropensityPage = (ctx) => {
     });
     triggerDownload(`pte-ptc-compare-${toIsoDate(new Date())}.md`, markdown, 'text/markdown;charset=utf-8');
     notify?.('Scenario compare markdown downloaded.');
+  });
+
+  formulaCompareApply?.addEventListener('click', () => {
+    const scenarioA = formulaCompareA ? calculateFormulaSandbox(formulaCompareA) : null;
+    const scenarioB = formulaCompareB ? calculateFormulaSandbox(formulaCompareB) : null;
+    if (!scenarioA || !scenarioB) {
+      notify?.('Save both Scenario A and B before applying recommendation.');
+      return;
+    }
+    const goal = readFormulaPlanGoal();
+    const pteDelta = round1(Number(scenarioB.pte.final || 0) - Number(scenarioA.pte.final || 0));
+    const ptcDelta = round1(Number(scenarioB.ptc.final || 0) - Number(scenarioA.ptc.final || 0));
+    const winner = compareWinnerForGoal(goal, pteDelta, ptcDelta);
+    if (winner.winner === 'mixed') {
+      notify?.('No single winner for current goal; adjust scenarios and compare again.');
+      return;
+    }
+    const source = winner.winner === 'A' ? formulaCompareA : formulaCompareB;
+    if (!source) return;
+    applyFormulaState(source, { record: true });
+    notify?.(`Applied recommended scenario ${winner.winner}.`);
+  });
+
+  formulaCompareCopy?.addEventListener('click', async () => {
+    const scenarioA = formulaCompareA ? calculateFormulaSandbox(formulaCompareA) : null;
+    const scenarioB = formulaCompareB ? calculateFormulaSandbox(formulaCompareB) : null;
+    if (!scenarioA || !scenarioB) {
+      notify?.('Save both Scenario A and B before copying compare summary.');
+      return;
+    }
+    const summary = buildScenarioCompareSummaryText(readFormulaPlanGoal(), scenarioA, scenarioB);
+    try {
+      await navigator.clipboard.writeText(summary);
+      notify?.('Scenario compare summary copied.');
+    } catch {
+      notify?.('Clipboard blocked. Use compare markdown download instead.');
+    }
   });
 
   formulaSandboxActions.forEach((button) => {
