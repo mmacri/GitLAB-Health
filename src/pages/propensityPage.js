@@ -5015,6 +5015,7 @@ export const renderPropensityPage = (ctx) => {
   const GUIDE_MODE_KEY = 'gh_propensity_guide_mode_v1';
   const GUIDE_PROGRESS_KEY = 'gh_propensity_guide_progress_v1';
   const CHAPTER_PROGRESS_KEY = 'gh_propensity_chapter_progress_v1';
+  const ROLE_FOCUS_KEY = 'gh_propensity_role_focus_v1';
   const guideStepIds = ['section-confidence', 'section-visuals', 'section-formulas', 'section-play-wizard', 'section-score-delta'];
   let guideMode = 'guided';
   try {
@@ -5030,6 +5031,7 @@ export const renderPropensityPage = (ctx) => {
       title: 'Orientation',
       subtitle: 'Understand what PtE/PtC means and where to start in under 5 minutes.',
       tone: 'neutral',
+      role: 'both',
       outcome: 'Clear initial posture lane (stabilize, dual-track, or expand).',
       guidance: {
         question: 'What operating posture are we in right now?',
@@ -5045,6 +5047,7 @@ export const renderPropensityPage = (ctx) => {
       title: 'Data Trust Gate',
       subtitle: 'Validate confidence and input quality before score-based decisions.',
       tone: 'good',
+      role: 'both',
       outcome: 'Confidence and data gaps are known and prioritized.',
       guidance: {
         question: 'Are the inputs trustworthy enough for score-based decisions?',
@@ -5060,6 +5063,7 @@ export const renderPropensityPage = (ctx) => {
       title: 'Diagnose Posture',
       subtitle: 'Read band mix, matrix, trigger concentration, and account-level driver context.',
       tone: 'warn',
+      role: 'both',
       outcome: 'Top risk/growth clusters identified with evidence-backed drivers.',
       guidance: {
         question: 'Where is risk and growth pressure concentrated across the portfolio?',
@@ -5075,6 +5079,7 @@ export const renderPropensityPage = (ctx) => {
       title: 'Choose Plays',
       subtitle: 'Prioritize queue order and map trigger clusters to deterministic plays.',
       tone: 'warn',
+      role: 'both',
       outcome: 'Primary and secondary plays assigned for priority accounts.',
       guidance: {
         question: 'Which deterministic plays should be run first and by whom?',
@@ -5090,6 +5095,7 @@ export const renderPropensityPage = (ctx) => {
       title: 'Execute With Guardrails',
       subtitle: 'Run wizard recommendations with readiness checks and role-based operating cadence.',
       tone: 'good',
+      role: 'cse',
       outcome: 'Execution commitments are complete and cadence is scheduled.',
       guidance: {
         question: 'Are execution commitments complete and operationally ready?',
@@ -5105,6 +5111,7 @@ export const renderPropensityPage = (ctx) => {
       title: 'Verify and Calibrate',
       subtitle: 'Measure movement, compare to baseline, and adjust plays by observed effectiveness.',
       tone: 'neutral',
+      role: 'manager',
       outcome: 'Keep/change/escalate decisions documented for the next cycle.',
       guidance: {
         question: 'Did actions move the portfolio in the expected direction?',
@@ -5120,6 +5127,7 @@ export const renderPropensityPage = (ctx) => {
       title: 'Appendix and Formula Lab',
       subtitle: 'Reference formulas, glossary, FAQ, drills, and sandbox tools when needed.',
       tone: 'neutral',
+      role: 'both',
       outcome: 'Reference and simulation tools available for deep analysis.',
       collapsible: true,
       sections: [
@@ -5136,6 +5144,7 @@ export const renderPropensityPage = (ctx) => {
   ];
   const chapterIds = chapterPlan.map((item) => item.id);
   const chapterTitleById = new Map(chapterPlan.map((item) => [item.id, item.title]));
+  const chapterRoleById = new Map(chapterPlan.map((item) => [item.id, String(item.role || 'both')]));
   const defaultChapterProgress = chapterIds.reduce((acc, id) => {
     acc[id] = false;
     return acc;
@@ -5153,6 +5162,13 @@ export const renderPropensityPage = (ctx) => {
     }
   } catch {
     chapterProgress = { ...defaultChapterProgress };
+  }
+  let roleFocus = 'all';
+  try {
+    const storedFocus = String(window.localStorage.getItem(ROLE_FOCUS_KEY) || '').trim().toLowerCase();
+    if (storedFocus === 'cse' || storedFocus === 'manager' || storedFocus === 'all') roleFocus = storedFocus;
+  } catch {
+    roleFocus = 'all';
   }
 
   const chapterGuidanceHtml = (guidance) => {
@@ -5186,6 +5202,11 @@ export const renderPropensityPage = (ctx) => {
         ${statusChip({ label: `${chapterPlan.length} chapters`, tone: 'neutral' })}
       </div>
       <p class="muted">Follow chapters in order for a complete expansion + churn operating cycle.</p>
+      <div class="guide-chapter-rail__focus" role="group" aria-label="Role focus">
+        <button class="ghost-btn" type="button" data-set-role-focus="all">All</button>
+        <button class="ghost-btn" type="button" data-set-role-focus="cse">CSE Focus</button>
+        <button class="ghost-btn" type="button" data-set-role-focus="manager">Manager Focus</button>
+      </div>
       <div class="guide-chapter-rail__summary">
         <strong data-next-chapter-label>Next chapter: ${escapeHtml(chapterPlan[0]?.title || 'Orientation')}</strong>
         <button class="ghost-btn" type="button" data-jump-next-chapter>Go to next incomplete chapter</button>
@@ -5198,7 +5219,9 @@ export const renderPropensityPage = (ctx) => {
         ${chapterPlan
           .map(
             (chapter, index) => `
-              <article class="guide-chapter-rail__outcome" data-chapter-outcome="${chapter.id}">
+              <article class="guide-chapter-rail__outcome" data-chapter-outcome="${chapter.id}" data-role-priority="${escapeHtml(
+                chapter.role || 'both'
+              )}">
                 <span class="guide-chapter-rail__dot" aria-hidden="true"></span>
                 <div>
                   <strong>${index + 1}. ${escapeHtml(chapter.title)}</strong>
@@ -5213,7 +5236,9 @@ export const renderPropensityPage = (ctx) => {
         ${chapterPlan
           .map(
             (chapter, index) =>
-              `<button class="ghost-btn guide-chapter-rail__item" type="button" data-jump-target="${chapter.id}" data-chapter-nav="${chapter.id}">
+              `<button class="ghost-btn guide-chapter-rail__item" type="button" data-jump-target="${chapter.id}" data-chapter-nav="${chapter.id}" data-role-priority="${escapeHtml(
+                chapter.role || 'both'
+              )}">
                 <span>${index + 1}. ${escapeHtml(chapter.title)}</span>
                 <small data-chapter-status="${chapter.id}">Pending</small>
               </button>`
@@ -5228,12 +5253,19 @@ export const renderPropensityPage = (ctx) => {
       const node = chapter.collapsible ? document.createElement('details') : document.createElement('section');
       node.className = chapter.collapsible ? 'guide-chapter guide-chapter--appendix' : 'guide-chapter';
       node.id = chapter.id;
+      node.setAttribute('data-role-priority', String(chapter.role || 'both'));
       if (chapter.collapsible) {
         node.innerHTML = `
           <summary class="card guide-chapter__summary">
             <div class="metric-head">
               <h2>${index + 1}. ${escapeHtml(chapter.title)}</h2>
               ${statusChip({ label: 'Collapsed by default', tone: chapter.tone || 'neutral' })}
+            </div>
+            <div class="chip-row">
+              ${statusChip({
+                label: chapter.role === 'cse' ? 'Role emphasis: CSE' : chapter.role === 'manager' ? 'Role emphasis: Manager' : 'Role emphasis: Shared',
+                tone: 'neutral'
+              })}
             </div>
             <p class="muted">${escapeHtml(chapter.subtitle || '')}</p>
             ${chapterGuidanceHtml(chapter.guidance)}
@@ -5248,6 +5280,12 @@ export const renderPropensityPage = (ctx) => {
             <div class="metric-head">
               <h2>${index + 1}. ${escapeHtml(chapter.title)}</h2>
               ${statusChip({ label: 'Workflow chapter', tone: chapter.tone || 'neutral' })}
+            </div>
+            <div class="chip-row">
+              ${statusChip({
+                label: chapter.role === 'cse' ? 'Role emphasis: CSE' : chapter.role === 'manager' ? 'Role emphasis: Manager' : 'Role emphasis: Shared',
+                tone: 'neutral'
+              })}
             </div>
             <p class="muted">${escapeHtml(chapter.subtitle || '')}</p>
             ${chapterGuidanceHtml(chapter.guidance)}
@@ -5323,6 +5361,12 @@ export const renderPropensityPage = (ctx) => {
   const chapterProgressLabel = wrapper.querySelector('[data-chapter-progress-label]');
   const nextChapterLabel = wrapper.querySelector('[data-next-chapter-label]');
   const jumpNextChapterButton = wrapper.querySelector('[data-jump-next-chapter]');
+  const roleFocusButtons = new Map();
+  wrapper.querySelectorAll('[data-set-role-focus]').forEach((button) => {
+    const value = button.getAttribute('data-set-role-focus');
+    if (!value) return;
+    roleFocusButtons.set(value, button);
+  });
 
   const persistChapterProgress = () => {
     try {
@@ -5330,6 +5374,29 @@ export const renderPropensityPage = (ctx) => {
     } catch {
       // Ignore storage write failures in static mode.
     }
+  };
+
+  const persistRoleFocus = () => {
+    try {
+      window.localStorage.setItem(ROLE_FOCUS_KEY, roleFocus);
+    } catch {
+      // Ignore storage write failures in static mode.
+    }
+  };
+
+  const chapterMatchesFocus = (chapterId) => {
+    const role = chapterRoleById.get(chapterId) || 'both';
+    if (roleFocus === 'all') return true;
+    return role === 'both' || role === roleFocus;
+  };
+
+  const applyRoleFocus = () => {
+    wrapper.setAttribute('data-role-focus', roleFocus);
+    roleFocusButtons.forEach((button, value) => {
+      const isActive = value === roleFocus;
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-pressed', String(isActive));
+    });
   };
 
   const applyChapterProgress = () => {
@@ -5354,7 +5421,8 @@ export const renderPropensityPage = (ctx) => {
       const outcome = chapterOutcomeRows.get(chapterId);
       if (outcome) outcome.classList.toggle('is-complete', complete);
     });
-    const nextIncomplete = chapterIds.find((id) => !chapterProgress[id]) || null;
+    const nextIncomplete =
+      chapterIds.find((id) => !chapterProgress[id] && chapterMatchesFocus(id)) || chapterIds.find((id) => !chapterProgress[id]) || null;
     if (nextChapterLabel) {
       nextChapterLabel.textContent = nextIncomplete
         ? `Next chapter: ${chapterTitleById.get(nextIncomplete) || nextIncomplete}`
@@ -5376,6 +5444,23 @@ export const renderPropensityPage = (ctx) => {
       button.classList.toggle('is-active', id === chapterId);
     });
   };
+
+  roleFocusButtons.forEach((button, value) => {
+    button.addEventListener('click', () => {
+      roleFocus = value;
+      persistRoleFocus();
+      applyRoleFocus();
+      applyChapterProgress();
+      setActiveChapter(jumpNextChapterButton?.getAttribute('data-next-target') || chapterIds[0]);
+      notify?.(
+        roleFocus === 'all'
+          ? 'Role focus set to All.'
+          : roleFocus === 'cse'
+            ? 'Role focus set to CSE.'
+            : 'Role focus set to Manager.'
+      );
+    });
+  });
 
   chapterMarkButtons.forEach((button, chapterId) => {
     button.addEventListener('click', () => {
@@ -5401,8 +5486,9 @@ export const renderPropensityPage = (ctx) => {
     node.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
+  applyRoleFocus();
   applyChapterProgress();
-  setActiveChapter(chapterIds[0]);
+  setActiveChapter(jumpNextChapterButton?.getAttribute('data-next-target') || chapterIds[0]);
 
   const stepButtons = new Map();
   wrapper.querySelectorAll('.guide-stepper [data-jump-target]').forEach((button) => {

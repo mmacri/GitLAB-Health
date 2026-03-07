@@ -2250,6 +2250,23 @@ textarea.artifact,
   color: var(--ink-muted);
 }
 
+.guide-chapter-rail__focus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.guide-chapter-rail__focus .ghost-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.guide-chapter-rail__focus .ghost-btn.is-active {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  background: color-mix(in srgb, var(--primary) 8%, white);
+  color: var(--primary-strong);
+}
+
 .guide-chapter-rail__reset {
   padding: 4px 8px;
   font-size: 12px;
@@ -2418,6 +2435,19 @@ textarea.artifact,
 
 .route-page[data-page='propensity'][data-guide-layout='chaptered'] .guide-phase-card {
   display: none;
+}
+
+.route-page[data-page='propensity'][data-role-focus='cse'] [data-role-priority='manager'] {
+  opacity: 0.45;
+}
+
+.route-page[data-page='propensity'][data-role-focus='manager'] [data-role-priority='cse'] {
+  opacity: 0.45;
+}
+
+.route-page[data-page='propensity'][data-role-focus='cse'] .guide-chapter[data-role-priority='manager'] .guide-chapter__intro,
+.route-page[data-page='propensity'][data-role-focus='manager'] .guide-chapter[data-role-priority='cse'] .guide-chapter__intro {
+  border-left-color: color-mix(in srgb, var(--ink-soft) 55%, var(--border));
 }
 
 .matrix-grid {
@@ -3009,6 +3039,10 @@ textarea.artifact,
   .guide-chapter-rail__meta {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .guide-chapter-rail__focus {
+    width: 100%;
   }
 
   .app-shell {
