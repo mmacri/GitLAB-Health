@@ -2860,7 +2860,13 @@ export const renderPropensityPage = (ctx) => {
       </form>
       <div class="form-actions">
         <button class="ghost-btn" type="button" data-formula-sandbox-reset>Reset to portfolio baseline</button>
+        <button class="ghost-btn" type="button" data-formula-sandbox-action="recover-engagement">Simulate: engagement recovery</button>
+        <button class="ghost-btn" type="button" data-formula-sandbox-action="secure-rollout">Simulate: secure rollout</button>
+        <button class="ghost-btn" type="button" data-formula-sandbox-action="reduce-risk">Simulate: risk burndown</button>
+        <button class="ghost-btn" type="button" data-formula-sandbox-action="renewal-escalation">Simulate: renewal escalation</button>
+        <button class="ghost-btn" type="button" data-formula-sandbox-action="expansion-proof">Simulate: expansion proof points</button>
       </div>
+      <p class="muted">Use simulation buttons to preview how common CSE plays change PtE/PtC before you commit to an account plan.</p>
       <div class="section-stack" data-formula-sandbox-output></div>
     </section>
 
@@ -3923,6 +3929,7 @@ export const renderPropensityPage = (ctx) => {
   const formulaSandboxForm = wrapper.querySelector('[data-formula-sandbox-form]');
   const formulaSandboxOutput = wrapper.querySelector('[data-formula-sandbox-output]');
   const formulaSandboxReset = wrapper.querySelector('[data-formula-sandbox-reset]');
+  const formulaSandboxActions = wrapper.querySelectorAll('[data-formula-sandbox-action]');
 
   const readFormulaSandboxState = () => {
     if (!(formulaSandboxForm instanceof HTMLFormElement)) return { ...formulaSandboxBaseline };
@@ -4183,10 +4190,55 @@ export const renderPropensityPage = (ctx) => {
     renderFormulaSandboxOutput();
   }
 
+  const applyFormulaSandboxAction = (actionId) => {
+    const clampPct = (value) => Math.max(0, Math.min(100, Number(value || 0)));
+    const current = readFormulaSandboxState();
+    const next = { ...current };
+
+    if (actionId === 'recover-engagement') {
+      next.engagementScore = clampPct(next.engagementScore + 12);
+      next.staleEngagement90 = false;
+    } else if (actionId === 'secure-rollout') {
+      next.securityPercent = clampPct(next.securityPercent + 20);
+      next.riskScore = clampPct(next.riskScore - 8);
+    } else if (actionId === 'reduce-risk') {
+      next.riskScore = clampPct(next.riskScore - 15);
+      next.engagementScore = clampPct(next.engagementScore + 4);
+    } else if (actionId === 'renewal-escalation') {
+      next.renewalDays = Math.max(0, Number(next.renewalDays || 0) - 60);
+      next.renewalSoonSignal = true;
+    } else if (actionId === 'expansion-proof') {
+      next.adoptionScore = clampPct(next.adoptionScore + 10);
+      next.engagementScore = clampPct(next.engagementScore + 8);
+      next.openExpansionCount = Math.max(0, Number(next.openExpansionCount || 0) + 2);
+      next.riskScore = clampPct(next.riskScore - 5);
+    } else {
+      return;
+    }
+
+    next.secureBelow30 = next.securityPercent < 30;
+    next.renewalSoonSignal = next.renewalSoonSignal || Number(next.renewalDays || 0) <= 90;
+    next.strongMomentum = next.adoptionScore >= 70 && next.engagementScore >= 70 && next.riskScore <= 35;
+    if (Number(next.engagementScore || 0) >= 50) next.staleEngagement90 = false;
+
+    setFormulaSandboxState(next);
+    renderFormulaSandboxOutput();
+  };
+
   formulaSandboxReset?.addEventListener('click', () => {
     setFormulaSandboxState(formulaSandboxBaseline);
     renderFormulaSandboxOutput();
     notify?.('Formula sandbox reset to portfolio baseline.');
+  });
+
+  formulaSandboxActions.forEach((button) => {
+    button.addEventListener('click', () => {
+      const actionId = button.getAttribute('data-formula-sandbox-action');
+      if (!actionId) return;
+      applyFormulaSandboxAction(actionId);
+      const label = String(button.textContent || 'play simulation').trim();
+      notify?.(`${label} applied.`);
+    });
   });
 
   const playWizardForm = wrapper.querySelector('[data-play-wizard-form]');
