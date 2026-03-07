@@ -2266,6 +2266,36 @@ export const renderPropensityPage = (ctx) => {
       `
     })}
 
+    <section class="card guide-stepper" id="section-guided-workflow">
+      <div class="metric-head">
+        <h2>Guided Workflow (Recommended Path)</h2>
+        ${statusChip({ label: 'Step-by-step mode', tone: 'good' })}
+      </div>
+      <p class="muted">
+        Follow these five steps in order to move from data confidence to execution and measurable outcome tracking.
+      </p>
+      <div class="guide-stepper__actions">
+        <button class="ghost-btn guide-stepper__item" type="button" data-jump-target="section-confidence">
+          1. Data Trust
+        </button>
+        <button class="ghost-btn guide-stepper__item" type="button" data-jump-target="section-visuals">
+          2. Posture
+        </button>
+        <button class="ghost-btn guide-stepper__item" type="button" data-jump-target="section-formulas">
+          3. Explain Scores
+        </button>
+        <button class="ghost-btn guide-stepper__item" type="button" data-jump-target="section-play-wizard">
+          4. Choose Plays
+        </button>
+        <button class="ghost-btn guide-stepper__item" type="button" data-jump-target="section-score-delta">
+          5. Track Outcomes
+        </button>
+      </div>
+      <div class="form-actions">
+        <button class="ghost-btn" type="button" data-toggle-guide-mode>Switch to Expert View</button>
+      </div>
+    </section>
+
     <section class="card">
       <div class="metric-grid kpi-4">
         ${metricTile({ label: 'Portfolio rows', value: total, tone: 'neutral' })}
@@ -2275,6 +2305,19 @@ export const renderPropensityPage = (ctx) => {
       </div>
       <div class="callout">
         Use PtE/PtC as a prioritization system, not a replacement for account judgment. Run one PtC mitigation play and one PtE acceleration play per priority account each cycle.
+      </div>
+    </section>
+
+    <section class="card guide-phase-card">
+      <div class="metric-head">
+        <h2>Step 1: Validate Data Trust Before Action</h2>
+        ${statusChip({ label: 'Start here first', tone: 'good' })}
+      </div>
+      <p class="muted">
+        Confirm confidence quality and evidence coverage before interpreting PtE/PtC movement.
+      </p>
+      <div class="form-actions">
+        <button class="ghost-btn" type="button" data-jump-target="section-confidence">Continue to confidence checks</button>
       </div>
     </section>
 
@@ -2324,6 +2367,19 @@ export const renderPropensityPage = (ctx) => {
       }
       <div class="form-actions">
         <button class="ghost-btn" type="button" data-drill="confidence:low">Drill low-confidence accounts</button>
+      </div>
+    </section>
+
+    <section class="card guide-phase-card">
+      <div class="metric-head">
+        <h2>Step 2: Read Current Posture and Prioritize</h2>
+        ${statusChip({ label: 'Queue + matrix + distribution', tone: 'warn' })}
+      </div>
+      <p class="muted">
+        Use band mix, matrix distribution, and weekly queue together to sequence account actions.
+      </p>
+      <div class="form-actions">
+        <button class="ghost-btn" type="button" data-jump-target="section-visuals">Continue to posture visuals</button>
       </div>
     </section>
 
@@ -2693,6 +2749,19 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
+    <section class="card guide-phase-card">
+      <div class="metric-head">
+        <h2>Step 5: Track Movement and Calibrate</h2>
+        ${statusChip({ label: 'Manager cadence', tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        Compare against snapshots, validate direction changes, and tune plays based on observed deltas.
+      </p>
+      <div class="form-actions">
+        <button class="ghost-btn" type="button" data-jump-target="section-score-delta">Continue to outcome tracking</button>
+      </div>
+    </section>
+
     <section class="card" id="section-score-delta">
       <div class="metric-head">
         <h2>Why This Score Changed</h2>
@@ -3028,6 +3097,19 @@ export const renderPropensityPage = (ctx) => {
       </article>
     </section>
 
+    <section class="card guide-phase-card">
+      <div class="metric-head">
+        <h2>Step 3: Understand Why Scores Move</h2>
+        ${statusChip({ label: 'Formula + trigger logic', tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        Use the formula reference to explain each input, coefficient, and trigger to CSEs and managers.
+      </p>
+      <div class="form-actions">
+        <button class="ghost-btn" type="button" data-jump-target="section-formulas">Continue to formula reference</button>
+      </div>
+    </section>
+
     <section class="card" id="section-formulas">
       <div class="metric-head">
         <h2>Formula Reference: Source-backed Metrics + Local PtE/PtC Proxy</h2>
@@ -3292,7 +3374,7 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
-    <section class="card" id="section-formula-examples">
+    <section class="card guided-advanced" id="section-formula-examples">
       <div class="metric-head">
         <h2>Worked Examples: Why Scores Land in Each Band</h2>
         ${statusChip({ label: 'Formula walk-through', tone: 'neutral' })}
@@ -3344,7 +3426,7 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
-    <section class="card" id="section-formula-sandbox">
+    <section class="card guided-advanced" id="section-formula-sandbox">
       <div class="metric-head">
         <h2>Formula Sandbox: Test Scenarios Live</h2>
         ${statusChip({ label: 'Interactive calculator', tone: 'neutral' })}
@@ -3493,7 +3575,7 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
-    <section class="card" id="section-drill">
+    <section class="card guided-advanced" id="section-drill">
       <div class="metric-head">
         <h2 data-drill-title>Chart Drill-through Results</h2>
         ${statusChip({ label: 'Select a chart control', tone: 'neutral' })}
@@ -3669,6 +3751,19 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
+    <section class="card guide-phase-card">
+      <div class="metric-head">
+        <h2>Step 4: Select Plays and Execute</h2>
+        ${statusChip({ label: 'Operational execution', tone: 'good' })}
+      </div>
+      <p class="muted">
+        Convert trigger posture into primary and secondary plays, then log outcomes for calibration.
+      </p>
+      <div class="form-actions">
+        <button class="ghost-btn" type="button" data-jump-target="section-play-wizard">Continue to play selection</button>
+      </div>
+    </section>
+
     <section class="card" id="section-play-wizard">
       <div class="metric-head">
         <h2>Play Selection Wizard</h2>
@@ -3723,7 +3818,7 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
-    <section class="card" id="section-practice-scenarios">
+    <section class="card guided-advanced" id="section-practice-scenarios">
       <div class="metric-head">
         <h2>Practice Scenarios</h2>
         ${statusChip({ label: `${scenarioTemplates.length} guided examples`, tone: 'neutral' })}
@@ -4111,10 +4206,41 @@ export const renderPropensityPage = (ctx) => {
     mitigationRows: mitigationSummary.tableRows
   });
 
+  const GUIDE_MODE_KEY = 'gh_propensity_guide_mode_v1';
+  let guideMode = 'guided';
+  try {
+    const storedMode = String(window.localStorage.getItem(GUIDE_MODE_KEY) || '').trim().toLowerCase();
+    if (storedMode === 'expert' || storedMode === 'guided') guideMode = storedMode;
+  } catch {
+    guideMode = 'guided';
+  }
+
+  const applyGuideMode = () => {
+    wrapper.setAttribute('data-guide-mode', guideMode);
+    const toggle = wrapper.querySelector('[data-toggle-guide-mode]');
+    if (toggle) {
+      const isGuided = guideMode === 'guided';
+      toggle.textContent = isGuided ? 'Switch to Expert View' : 'Switch to Guided View';
+      toggle.setAttribute('aria-pressed', String(!isGuided));
+    }
+  };
+
+  applyGuideMode();
+
   wrapper.querySelector('[data-go-home]')?.addEventListener('click', () => navigate('home'));
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
   wrapper.querySelector('[data-go-manager]')?.addEventListener('click', () => navigate('manager'));
   wrapper.querySelector('[data-go-playbooks]')?.addEventListener('click', () => navigate('playbooks'));
+  wrapper.querySelector('[data-toggle-guide-mode]')?.addEventListener('click', () => {
+    guideMode = guideMode === 'guided' ? 'expert' : 'guided';
+    applyGuideMode();
+    try {
+      window.localStorage.setItem(GUIDE_MODE_KEY, guideMode);
+    } catch {
+      // Ignore storage write failures in static mode.
+    }
+    notify?.(guideMode === 'guided' ? 'Guided mode enabled.' : 'Expert mode enabled.');
+  });
 
   wrapper.querySelectorAll('[data-jump-target]').forEach((button) => {
     button.addEventListener('click', () => {

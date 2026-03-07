@@ -2085,6 +2085,38 @@ textarea.artifact,
   color: var(--ink-muted);
 }
 
+.guide-stepper {
+  position: sticky;
+  top: calc(var(--header-offset, 140px) + 8px);
+  z-index: 18;
+  display: grid;
+  gap: 10px;
+}
+
+.guide-stepper__actions {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.guide-stepper__item {
+  justify-content: center;
+  text-align: center;
+  padding-inline: 10px;
+}
+
+.guide-phase-card {
+  border-left: 3px solid var(--primary);
+}
+
+.guide-phase-card .form-actions {
+  margin-top: 4px;
+}
+
+.route-page[data-page='propensity'][data-guide-mode='guided'] .guided-advanced {
+  display: none;
+}
+
 .matrix-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -2640,6 +2672,14 @@ textarea.artifact,
 }
 
 @media (max-width: 1024px) {
+  .guide-stepper {
+    position: static;
+  }
+
+  .guide-stepper__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .app-shell {
     grid-template-columns: var(--sidebar-width-tablet, clamp(210px, 28vw, 240px)) minmax(0, 1fr);
     gap: var(--space-4);
