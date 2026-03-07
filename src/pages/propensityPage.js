@@ -3148,6 +3148,9 @@ export const renderPropensityPage = (ctx) => {
         <button class="ghost-btn" type="button" data-formula-sandbox-action="reduce-risk">Simulate: risk burndown</button>
         <button class="ghost-btn" type="button" data-formula-sandbox-action="renewal-escalation">Simulate: renewal escalation</button>
         <button class="ghost-btn" type="button" data-formula-sandbox-action="expansion-proof">Simulate: expansion proof points</button>
+        <button class="ghost-btn" type="button" data-formula-save-a>Save scenario A</button>
+        <button class="ghost-btn" type="button" data-formula-save-b>Save scenario B</button>
+        <button class="ghost-btn" type="button" data-formula-compare-clear>Clear compare</button>
       </div>
       <p class="muted">Use simulation buttons to preview how common CSE plays change PtE/PtC before you commit to an account plan.</p>
       <fieldset class="filter-multi form-span formula-plan-builder">
@@ -3215,6 +3218,9 @@ export const renderPropensityPage = (ctx) => {
         <p class="empty-text">Run a play sequence projection to compare baseline vs projected PtE/PtC.</p>
       </div>
       <div class="section-stack" data-formula-sandbox-output></div>
+      <div class="section-stack" data-formula-compare-output>
+        <p class="empty-text">Save scenario A and B to compare inputs and PtE/PtC outcomes side-by-side.</p>
+      </div>
     </section>
 
     <section class="card" id="section-drill">
@@ -4277,6 +4283,10 @@ export const renderPropensityPage = (ctx) => {
   const formulaSandboxOutput = wrapper.querySelector('[data-formula-sandbox-output]');
   const formulaSandboxReset = wrapper.querySelector('[data-formula-sandbox-reset]');
   const formulaSandboxActions = wrapper.querySelectorAll('[data-formula-sandbox-action]');
+  const formulaSaveA = wrapper.querySelector('[data-formula-save-a]');
+  const formulaSaveB = wrapper.querySelector('[data-formula-save-b]');
+  const formulaCompareClear = wrapper.querySelector('[data-formula-compare-clear]');
+  const formulaCompareOutput = wrapper.querySelector('[data-formula-compare-output]');
   const formulaPlanRun = wrapper.querySelector('[data-formula-plan-run]');
   const formulaPlanClear = wrapper.querySelector('[data-formula-plan-clear]');
   const formulaPlanDownload = wrapper.querySelector('[data-formula-plan-download]');
@@ -4284,6 +4294,8 @@ export const renderPropensityPage = (ctx) => {
   const formulaPlanPresetButtons = wrapper.querySelectorAll('[data-formula-plan-preset]');
   const formulaPlanRecommend = wrapper.querySelector('[data-formula-plan-recommend]');
   const formulaPlanRecommendation = wrapper.querySelector('[data-formula-plan-recommendation]');
+  let formulaCompareA = null;
+  let formulaCompareB = null;
   let lastFormulaPlanProjection = null;
   let lastFormulaPlanSelection = null;
   let lastFormulaPlanGoal = 'balanced';
@@ -4612,6 +4624,108 @@ export const renderPropensityPage = (ctx) => {
     return ['balanced', 'retention', 'expansion'].includes(value) ? value : 'balanced';
   };
 
+  const normalizeFormulaScenarioInput = (state = {}) => calculateFormulaSandbox(state).inputs;
+
+  const renderFormulaCompareOutput = () => {
+    if (!formulaCompareOutput) return;
+    if (!formulaCompareA && !formulaCompareB) {
+      formulaCompareOutput.innerHTML =
+        '<p class="empty-text">Save scenario A and B to compare inputs and PtE/PtC outcomes side-by-side.</p>';
+      return;
+    }
+
+    const scenarioA = formulaCompareA ? calculateFormulaSandbox(formulaCompareA) : null;
+    const scenarioB = formulaCompareB ? calculateFormulaSandbox(formulaCompareB) : null;
+
+    if (!scenarioA || !scenarioB) {
+      const partial = scenarioA || scenarioB;
+      const label = scenarioA ? 'A' : 'B';
+      formulaCompareOutput.innerHTML = `
+        <article class="card compact-card">
+          <div class="metric-head">
+            <h3>Scenario ${label} saved</h3>
+            ${statusChip({ label: 'Need both A and B', tone: 'warn' })}
+          </div>
+          <div class="metric-grid kpi-4">
+            ${metricTile({ label: `Scenario ${label} PtE`, value: `${partial?.pte?.final || 0} (${partial?.pte?.band || 'Low'})`, tone: partial?.pte?.band === 'High' ? 'good' : partial?.pte?.band === 'Medium' ? 'warn' : 'neutral' })}
+            ${metricTile({ label: `Scenario ${label} PtC`, value: `${partial?.ptc?.final || 0} (${partial?.ptc?.band || 'Low'})`, tone: partial?.ptc?.band === 'High' ? 'risk' : partial?.ptc?.band === 'Medium' ? 'warn' : 'good' })}
+          </div>
+          <p class="muted">Save the other scenario to unlock side-by-side delta analysis.</p>
+          <div class="form-actions">
+            <button class="ghost-btn" type="button" data-formula-load="${label}">Load scenario ${label} into sandbox</button>
+          </div>
+        </article>
+      `;
+      return;
+    }
+
+    const boolLabel = (value) => (value ? 'Yes' : 'No');
+    const diffFields = [
+      { key: 'adoptionScore', label: 'Adoption score' },
+      { key: 'engagementScore', label: 'Engagement score' },
+      { key: 'riskScore', label: 'Risk score' },
+      { key: 'cicdPercent', label: 'CI/CD adoption %' },
+      { key: 'securityPercent', label: 'Security adoption %' },
+      { key: 'stageCoveragePercent', label: 'Stage coverage %' },
+      { key: 'openExpansionCount', label: 'Open expansion count' },
+      { key: 'renewalDays', label: 'Renewal days' },
+      { key: 'renewalSoonSignal', label: 'Renewal signal active', boolean: true },
+      { key: 'staleEngagement90', label: 'No-touch > 90 days', boolean: true },
+      { key: 'secureBelow30', label: 'Security < 30%', boolean: true },
+      { key: 'strongMomentum', label: 'Strong momentum', boolean: true }
+    ];
+    const pteDelta = round1(Number(scenarioB.pte.final || 0) - Number(scenarioA.pte.final || 0));
+    const ptcDelta = round1(Number(scenarioB.ptc.final || 0) - Number(scenarioA.ptc.final || 0));
+
+    formulaCompareOutput.innerHTML = `
+      <article class="card compact-card">
+        <div class="metric-head">
+          <h3>Scenario Compare (B - A)</h3>
+          ${statusChip({ label: 'What-if delta', tone: 'neutral' })}
+        </div>
+        <div class="metric-grid kpi-4">
+          ${metricTile({ label: 'Scenario A PtE/PtC', value: `${scenarioA.pte.final}/${scenarioA.ptc.final}`, tone: 'neutral' })}
+          ${metricTile({ label: 'Scenario B PtE/PtC', value: `${scenarioB.pte.final}/${scenarioB.ptc.final}`, tone: 'neutral' })}
+          ${metricTile({ label: 'PtE delta', value: formatSigned(pteDelta, 1), tone: pteDelta > 0 ? 'good' : pteDelta < 0 ? 'warn' : 'neutral' })}
+          ${metricTile({ label: 'PtC delta', value: formatSigned(ptcDelta, 1), tone: ptcDelta < 0 ? 'good' : ptcDelta > 0 ? 'risk' : 'neutral' })}
+        </div>
+        <div class="form-actions">
+          <button class="ghost-btn" type="button" data-formula-load="A">Load scenario A into sandbox</button>
+          <button class="ghost-btn" type="button" data-formula-load="B">Load scenario B into sandbox</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Input</th>
+                <th>Scenario A</th>
+                <th>Scenario B</th>
+                <th>Delta (B - A)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${diffFields
+                .map((field) => {
+                  const left = scenarioA.inputs[field.key];
+                  const right = scenarioB.inputs[field.key];
+                  const delta = field.boolean ? (left === right ? 'No change' : `${boolLabel(left)} -> ${boolLabel(right)}`) : formatSigned(round1(Number(right || 0) - Number(left || 0)), 1);
+                  return `
+                    <tr>
+                      <td><strong>${escapeHtml(field.label)}</strong></td>
+                      <td>${field.boolean ? boolLabel(Boolean(left)) : Number(left)}</td>
+                      <td>${field.boolean ? boolLabel(Boolean(right)) : Number(right)}</td>
+                      <td>${delta}</td>
+                    </tr>
+                  `;
+                })
+                .join('')}
+            </tbody>
+          </table>
+        </div>
+      </article>
+    `;
+  };
+
   const renderFormulaPlanProjection = () => {
     if (!formulaPlanOutput) return;
     const selection = readFormulaPlanSelection();
@@ -4760,6 +4874,8 @@ export const renderPropensityPage = (ctx) => {
     renderFormulaSandboxOutput();
   }
 
+  renderFormulaCompareOutput();
+
   const applyFormulaSandboxAction = (actionId) => {
     const clampPct = (value) => Math.max(0, Math.min(100, Number(value || 0)));
     const current = readFormulaSandboxState();
@@ -4801,6 +4917,25 @@ export const renderPropensityPage = (ctx) => {
     notify?.('Formula sandbox reset to portfolio baseline.');
   });
 
+  formulaSaveA?.addEventListener('click', () => {
+    formulaCompareA = normalizeFormulaScenarioInput(readFormulaSandboxState());
+    renderFormulaCompareOutput();
+    notify?.('Scenario A saved.');
+  });
+
+  formulaSaveB?.addEventListener('click', () => {
+    formulaCompareB = normalizeFormulaScenarioInput(readFormulaSandboxState());
+    renderFormulaCompareOutput();
+    notify?.('Scenario B saved.');
+  });
+
+  formulaCompareClear?.addEventListener('click', () => {
+    formulaCompareA = null;
+    formulaCompareB = null;
+    renderFormulaCompareOutput();
+    notify?.('Scenario compare cleared.');
+  });
+
   formulaSandboxActions.forEach((button) => {
     button.addEventListener('click', () => {
       const actionId = button.getAttribute('data-formula-sandbox-action');
@@ -4809,6 +4944,18 @@ export const renderPropensityPage = (ctx) => {
       const label = String(button.textContent || 'play simulation').trim();
       notify?.(`${label} applied.`);
     });
+  });
+
+  formulaCompareOutput?.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+    const loadButton = event.target.closest('[data-formula-load]');
+    if (!loadButton) return;
+    const slot = String(loadButton.getAttribute('data-formula-load') || '').trim();
+    const source = slot === 'A' ? formulaCompareA : slot === 'B' ? formulaCompareB : null;
+    if (!source) return;
+    setFormulaSandboxState(source);
+    renderFormulaSandboxOutput();
+    notify?.(`Loaded scenario ${slot} into sandbox.`);
   });
 
   formulaPlanRun?.addEventListener('click', () => {
