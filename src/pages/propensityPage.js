@@ -5282,7 +5282,10 @@ export const renderPropensityPage = (ctx) => {
       </div>
       <div class="guide-chapter-rail__summary">
         <strong data-next-chapter-label>Next chapter: ${escapeHtml(chapterPlan[0]?.title || 'Orientation')}</strong>
-        <button class="ghost-btn" type="button" data-jump-next-chapter>Go to next incomplete chapter</button>
+        <div class="form-actions">
+          <button class="ghost-btn" type="button" data-jump-next-chapter>Go to next incomplete chapter</button>
+          <button class="ghost-btn" type="button" data-toggle-guide-mode>Switch to Expert View</button>
+        </div>
       </div>
       <div class="guide-chapter-rail__meta">
         <strong data-chapter-progress-label>0 / ${chapterPlan.length} complete</strong>
@@ -5395,12 +5398,11 @@ export const renderPropensityPage = (ctx) => {
 
   const applyGuideMode = () => {
     wrapper.setAttribute('data-guide-mode', guideMode);
-    const toggle = wrapper.querySelector('[data-toggle-guide-mode]');
-    if (toggle) {
+    wrapper.querySelectorAll('[data-toggle-guide-mode]').forEach((toggle) => {
       const isGuided = guideMode === 'guided';
       toggle.textContent = isGuided ? 'Switch to Expert View' : 'Switch to Guided View';
       toggle.setAttribute('aria-pressed', String(!isGuided));
-    }
+    });
     const appendix = wrapper.querySelector('#chapter-appendix');
     if (appendix instanceof HTMLDetailsElement) {
       appendix.open = guideMode === 'expert';
@@ -5761,15 +5763,17 @@ export const renderPropensityPage = (ctx) => {
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
   wrapper.querySelector('[data-go-manager]')?.addEventListener('click', () => navigate('manager'));
   wrapper.querySelector('[data-go-playbooks]')?.addEventListener('click', () => navigate('playbooks'));
-  wrapper.querySelector('[data-toggle-guide-mode]')?.addEventListener('click', () => {
-    guideMode = guideMode === 'guided' ? 'expert' : 'guided';
-    applyGuideMode();
-    try {
-      window.localStorage.setItem(GUIDE_MODE_KEY, guideMode);
-    } catch {
-      // Ignore storage write failures in static mode.
-    }
-    notify?.(guideMode === 'guided' ? 'Guided mode enabled.' : 'Expert mode enabled.');
+  wrapper.querySelectorAll('[data-toggle-guide-mode]').forEach((button) => {
+    button.addEventListener('click', () => {
+      guideMode = guideMode === 'guided' ? 'expert' : 'guided';
+      applyGuideMode();
+      try {
+        window.localStorage.setItem(GUIDE_MODE_KEY, guideMode);
+      } catch {
+        // Ignore storage write failures in static mode.
+      }
+      notify?.(guideMode === 'guided' ? 'Guided mode enabled.' : 'Expert mode enabled.');
+    });
   });
   wrapper.querySelector('[data-reset-guide-progress]')?.addEventListener('click', () => {
     guideProgress = { ...defaultGuideProgress };
