@@ -5284,6 +5284,7 @@ export const renderPropensityPage = (ctx) => {
         <strong data-next-chapter-label>Next chapter: ${escapeHtml(chapterPlan[0]?.title || 'Orientation')}</strong>
         <div class="form-actions">
           <button class="ghost-btn" type="button" data-jump-next-chapter>Go to next incomplete chapter</button>
+          <button class="ghost-btn" type="button" data-expand-all-chapters>Expand all chapters</button>
           <button class="ghost-btn" type="button" data-toggle-guide-mode>Switch to Expert View</button>
         </div>
       </div>
@@ -5774,6 +5775,21 @@ export const renderPropensityPage = (ctx) => {
       }
       notify?.(guideMode === 'guided' ? 'Guided mode enabled.' : 'Expert mode enabled.');
     });
+  });
+
+  wrapper.querySelector('[data-expand-all-chapters]')?.addEventListener('click', () => {
+    if (guideMode !== 'expert') {
+      guideMode = 'expert';
+      applyGuideMode();
+      try {
+        window.localStorage.setItem(GUIDE_MODE_KEY, guideMode);
+      } catch {
+        // Ignore storage write failures in static mode.
+      }
+    }
+    const appendix = wrapper.querySelector('#chapter-appendix');
+    if (appendix instanceof HTMLDetailsElement) appendix.open = true;
+    notify?.('All chapters expanded.');
   });
   wrapper.querySelector('[data-reset-guide-progress]')?.addEventListener('click', () => {
     guideProgress = { ...defaultGuideProgress };
