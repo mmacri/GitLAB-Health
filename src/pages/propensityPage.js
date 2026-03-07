@@ -1295,6 +1295,64 @@ Why outcomes occur:
 `;
 };
 
+const buildProjectionMarkdown = ({ generatedOn, goal, selection, projection }) => {
+  if (!projection) return '';
+  const goalLabel = goal === 'retention' ? 'Retention first' : goal === 'expansion' ? 'Expansion first' : 'Balanced';
+  const baselinePte = Number(projection?.baseline?.pte?.final || 0);
+  const baselinePtc = Number(projection?.baseline?.ptc?.final || 0);
+  const projectedPte = Number(projection?.projected?.pte?.final || 0);
+  const projectedPtc = Number(projection?.projected?.ptc?.final || 0);
+  const pteDelta = round1(projectedPte - baselinePte);
+  const ptcDelta = round1(projectedPtc - baselinePtc);
+
+  const historyTable = [
+    '| Step | PtE | PtE Band | PtC | PtC Band | PtE vs Baseline | PtC vs Baseline |',
+    '|---|---:|---|---:|---|---:|---:|',
+    ...(projection.history || []).map((item) => {
+      const pte = Number(item?.scenario?.pte?.final || 0);
+      const ptc = Number(item?.scenario?.ptc?.final || 0);
+      return `| ${escapeMd(item?.step || '')} | ${pte} | ${escapeMd(item?.scenario?.pte?.band || '')} | ${ptc} | ${escapeMd(
+        item?.scenario?.ptc?.band || ''
+      )} | ${formatSigned(round1(pte - baselinePte), 1)} | ${formatSigned(round1(ptc - baselinePtc), 1)} |`;
+    })
+  ].join('\n');
+
+  return `# PtE / PtC Projection Summary
+
+Generated: ${generatedOn}
+
+## Plan Setup
+
+- Optimization goal: **${goalLabel}**
+- Cycles: **${Number(selection?.cycles || 0)}**
+- Action sequence: **${(selection?.actions || []).map((item) => escapeMd(item)).join(' -> ') || 'None'}**
+
+## Summary Movement
+
+- Baseline PtE: **${baselinePte} (${projection?.baseline?.pte?.band || 'Low'})**
+- Projected PtE: **${projectedPte} (${projection?.projected?.pte?.band || 'Low'})**
+- PtE delta: **${formatSigned(pteDelta, 1)}**
+
+- Baseline PtC: **${baselinePtc} (${projection?.baseline?.ptc?.band || 'Low'})**
+- Projected PtC: **${projectedPtc} (${projection?.projected?.ptc?.band || 'Low'})**
+- PtC delta: **${formatSigned(ptcDelta, 1)}**
+
+## Cycle History
+
+${historyTable}
+
+## Interpretation
+
+${
+  pteDelta > 0 && ptcDelta <= 0
+    ? 'This sequence improves expansion readiness while reducing retention pressure.'
+    : pteDelta <= 0 && ptcDelta > 0
+      ? 'This sequence deteriorates posture and should be replaced with stronger mitigation + adoption actions.'
+      : 'This sequence has mixed outcomes; tune action order and intensity.'
+}
+`;
+};
+
 const buildExecutiveBriefMarkdown = ({
   generatedOn,
   baselineMonth,
@@ -3031,6 +3089,7 @@ export const renderPropensityPage = (ctx) => {
         <div class="form-actions">
           <button class="ghost-btn" type="button" data-formula-plan-run>Run projection</button>
           <button class="ghost-btn" type="button" data-formula-plan-clear>Clear projection</button>
+          <button class="ghost-btn" type="button" data-formula-plan-download>Download projection .md</button>
         </div>
         <div class="form-actions">
           ${formulaPlanPresets
@@ -4125,10 +4184,14 @@ export const renderPropensityPage = (ctx) => {
   const formulaSandboxActions = wrapper.querySelectorAll('[data-formula-sandbox-action]');
   const formulaPlanRun = wrapper.querySelector('[data-formula-plan-run]');
   const formulaPlanClear = wrapper.querySelector('[data-formula-plan-clear]');
+  const formulaPlanDownload = wrapper.querySelector('[data-formula-plan-download]');
   const formulaPlanOutput = wrapper.querySelector('[data-formula-plan-output]');
   const formulaPlanPresetButtons = wrapper.querySelectorAll('[data-formula-plan-preset]');
   const formulaPlanRecommend = wrapper.querySelector('[data-formula-plan-recommend]');
   const formulaPlanRecommendation = wrapper.querySelector('[data-formula-plan-recommendation]');
+  let lastFormulaPlanProjection = null;
+  let lastFormulaPlanSelection = null;
+  let lastFormulaPlanGoal = 'balanced';
 
   const readFormulaSandboxState = () => {
     if (!(formulaSandboxForm instanceof HTMLFormElement)) return { ...formulaSandboxBaseline };
@@ -4411,11 +4474,18 @@ export const renderPropensityPage = (ctx) => {
   const renderFormulaPlanProjection = () => {
     if (!formulaPlanOutput) return;
     const selection = readFormulaPlanSelection();
+    const goal = readFormulaPlanGoal();
     if (!selection.actions.length) {
       formulaPlanOutput.innerHTML = '<p class="empty-text">Select at least one play to run projection.</p>';
+      lastFormulaPlanProjection = null;
+      lastFormulaPlanSelection = null;
+      lastFormulaPlanGoal = goal;
       return;
     }
     const projection = calculateFormulaPlanProjection(readFormulaSandboxState(), selection.actions, selection.cycles);
+    lastFormulaPlanProjection = projection;
+    lastFormulaPlanSelection = selection;
+    lastFormulaPlanGoal = goal;
     const baseline = projection.baseline;
     const projected = projection.projected;
     const pteDelta = round1(Number(projected.pte.final || 0) - Number(baseline.pte.final || 0));
@@ -4641,6 +4711,21 @@ export const renderPropensityPage = (ctx) => {
     setFormulaPlanSelection(preset.actions, preset.cycles);
     renderFormulaPlanProjection();
     notify?.(`Recommended preset applied: ${preset.label}`);
+  });
+
+  formulaPlanDownload?.addEventListener('click', () => {
+    if (!lastFormulaPlanProjection || !lastFormulaPlanSelection) {
+      notify?.('Run a projection first, then download the summary.');
+      return;
+    }
+    const markdown = buildProjectionMarkdown({
+      generatedOn: new Date().toISOString(),
+      goal: lastFormulaPlanGoal,
+      selection: lastFormulaPlanSelection,
+      projection: lastFormulaPlanProjection
+    });
+    triggerDownload(`pte-ptc-projection-${toIsoDate(new Date())}.md`, markdown, 'text/markdown;charset=utf-8');
+    notify?.('Projection markdown downloaded.');
   });
 
   const playWizardForm = wrapper.querySelector('[data-play-wizard-form]');
