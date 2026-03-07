@@ -10,6 +10,19 @@ const cellForSignal = (present) =>
     ? `<span class="status-chip status-chip--risk"><span class="chip-icon" aria-hidden="true">●</span><span>Active</span></span>`
     : `<span class="status-chip status-chip--neutral"><span class="chip-icon" aria-hidden="true">●</span><span>Clear</span></span>`;
 
+const CSE_ACTION_MAP = {
+  LOW_ENGAGEMENT: 'Invite to next webinar or office hours session to rebuild touch cadence.',
+  RENEWAL_SOON: 'Run renewal readiness playbook; confirm adoption evidence for EBR narrative.',
+  LOW_SECURITY_ADOPTION: 'Schedule Secure workshop or SAST/dependency scanning lab session.',
+  LOW_CICD_ADOPTION: 'Run CI/Verify lab; share CI template starter kit and track pipeline coverage.',
+  NO_TIME_TO_VALUE: 'Execute time-to-value motion: first pipeline run, runner baseline, owner handoff.'
+};
+
+const cseAction = (signals = []) => {
+  const topCode = normalize(signals[0]?.code || '');
+  return CSE_ACTION_MAP[topCode] || 'Monitor adoption signals; consider proactive program invitation.';
+};
+
 export const renderRisksPage = (ctx) => {
   const { workspace, portfolioRows, navigate } = ctx;
   const rows = (portfolioRows || []).map((row) => ({
@@ -19,7 +32,8 @@ export const renderRisksPage = (ctx) => {
     signals: row.riskSignals || [],
     nextAction: row.riskSignals?.[0]?.code
       ? `Address ${row.riskSignals[0].code} with mitigation owner and due date`
-      : 'Maintain engagement and monitor adoption movement'
+      : 'Maintain engagement and monitor adoption movement',
+    cseAction: cseAction(row.riskSignals || [])
   }));
 
   const playbookTemplates = workspace?.settings?.riskPlaybookTemplates || [];
@@ -47,7 +61,8 @@ export const renderRisksPage = (ctx) => {
               <th>Customer</th>
               <th>Health</th>
               ${SIGNAL_CODES.map((code) => `<th>${code}</th>`).join('')}
-              <th>Next Best Action</th>
+              <th>CSM Action</th>
+              <th>CSE Action</th>
             </tr>
           </thead>
           <tbody>
@@ -62,11 +77,12 @@ export const renderRisksPage = (ctx) => {
                           <td>${statusChip({ label: row.health, tone: String(row.health).toLowerCase() === 'red' ? 'risk' : String(row.health).toLowerCase() === 'yellow' ? 'warn' : 'good' })}</td>
                           ${SIGNAL_CODES.map((code) => `<td>${cellForSignal(active.has(code))}</td>`).join('')}
                           <td>${row.nextAction}</td>
+                          <td>${row.cseAction}</td>
                         </tr>
                       `;
                     })
                     .join('')
-                : '<tr><td colspan="8">No customers available.</td></tr>'
+                : '<tr><td colspan="9">No customers available.</td></tr>'
             }
           </tbody>
         </table>

@@ -3,7 +3,7 @@ import { formatDate, toIsoDate } from '../lib/date.js';
 import { storage, STORAGE_KEYS } from '../lib/storage.js';
 import { statusChip } from '../components/statusChip.js';
 
-const REQUESTOR_ROLES = ['Account Executive', 'Renewals Manager'];
+const REQUESTOR_ROLES = ['Account Executive', 'Renewals Manager', 'CSM'];
 const STAGES = ['onboard', 'enable', 'expand', 'optimize', 'renew'];
 const TOPICS = ['SCM', 'CI', 'CD', 'Secure', 'platform foundations'];
 

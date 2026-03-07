@@ -505,6 +505,21 @@ const renderWorkspaceTodayPage = (ctx) => {
   const selectedCustomerId = rows[0]?.customer?.id || '';
   let selectedType = 'ALL';
 
+  const openRequests = (ctx.requests || []).filter((r) =>
+    ['new', 'in_progress'].includes(String(r.status || 'new').toLowerCase())
+  );
+  const allPrograms = ctx.programs || workspace?.programs || [];
+  const nowMs = Date.now();
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  const programsThisWeek = allPrograms.filter((p) => {
+    const d = new Date(p.date || p.startDate || '').getTime();
+    return Number.isFinite(d) && d >= nowMs && d <= nowMs + weekMs;
+  });
+  const proactiveCandidates = rows
+    .filter((row) => Number(row.adoptionScore || 0) < 60 && Number(row.touchStaleDays || 999) >= 30)
+    .sort((a, b) => Number(a.adoptionScore || 0) - Number(b.adoptionScore || 0))
+    .slice(0, 6);
+
   const counts = Object.keys(ENGAGEMENT_TYPES).reduce(
     (acc, key) => ({ ...acc, [key]: rows.filter((row) => normalizeEngagementType(row.engagementType) === key).length }),
     {}
@@ -588,6 +603,79 @@ const renderWorkspaceTodayPage = (ctx) => {
         </table>
       </div>
     </section>
+
+    ${openRequests.length ? `
+    <section class="card">
+      <div class="metric-head">
+        <h2>Open Intake Requests</h2>
+        ${statusChip({ label: `${openRequests.length} open`, tone: openRequests.length ? 'warn' : 'good' })}
+        <button class="ghost-btn" type="button" data-go-intake>New request</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Account</th><th>Topic</th><th>Stage</th><th>Requested by</th><th>Due</th><th>Status</th></tr></thead>
+          <tbody>
+            ${openRequests.slice(0, 8).map((req) => `
+              <tr>
+                <td>${req.account_id || '—'}</td>
+                <td>${req.topic || '—'}</td>
+                <td>${req.stage || '—'}</td>
+                <td>${req.requestor_role || '—'}</td>
+                <td>${formatDate(req.due_date)}</td>
+                <td>${statusChip({ label: req.status || 'new', tone: req.status === 'in_progress' ? 'warn' : 'neutral' })}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    ` : ''}
+
+    ${programsThisWeek.length ? `
+    <section class="card">
+      <div class="metric-head">
+        <h2>Programs This Week</h2>
+        ${statusChip({ label: `${programsThisWeek.length} scheduled`, tone: 'neutral' })}
+        <button class="ghost-btn" type="button" data-go-programs>View all programs</button>
+      </div>
+      <ul class="simple-list">
+        ${programsThisWeek.map((p) => `
+          <li>
+            <strong>${p.title || p.name || '—'}</strong>
+            ${statusChip({ label: p.type || 'program', tone: 'neutral' })}
+            — ${formatDate(p.date || p.startDate)}
+            ${(p.target_use_cases || []).length ? `| Use cases: ${(p.target_use_cases || []).join(', ')}` : ''}
+          </li>
+        `).join('')}
+      </ul>
+    </section>
+    ` : ''}
+
+    ${proactiveCandidates.length ? `
+    <section class="card">
+      <div class="metric-head">
+        <h2>Proactive Outreach Candidates</h2>
+        ${statusChip({ label: `${proactiveCandidates.length} accounts`, tone: 'warn' })}
+      </div>
+      <p class="muted">Accounts with adoption score below 60 and no engagement in 30+ days. Consider inviting to a program or scheduling a targeted session.</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Customer</th><th>Adoption Score</th><th>Days Since Touch</th><th>Lowest Use Case</th><th>Suggested Action</th></tr></thead>
+          <tbody>
+            ${proactiveCandidates.map((row) => `
+              <tr>
+                <td><a href="#" data-open-customer="${row.customer.id}">${maskField?.('accountName', row.customer.name) || row.customer.name}</a></td>
+                <td>${statusChip({ label: String(row.adoptionScore ?? 0), tone: Number(row.adoptionScore || 0) >= 50 ? 'warn' : 'risk' })}</td>
+                <td>${row.touchStaleDays ?? 'n/a'}d</td>
+                <td>${row.lowestUseCaseName || '—'}</td>
+                <td>Invite to ${row.lowestUseCaseName || 'CI/CD'} program or schedule office hours</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    ` : ''}
 
     <section class="dashboard-row-2">
       <article class="card">
@@ -797,6 +885,8 @@ const renderWorkspaceTodayPage = (ctx) => {
 
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
   wrapper.querySelector('[data-go-playbooks]')?.addEventListener('click', () => navigate('playbooks'));
+  wrapper.querySelector('[data-go-intake]')?.addEventListener('click', () => navigate('intake'));
+  wrapper.querySelector('[data-go-programs]')?.addEventListener('click', () => navigate('programs'));
 
   wrapper.addEventListener('click', (event) => {
     const customerLink = event.target.closest('[data-open-customer]');

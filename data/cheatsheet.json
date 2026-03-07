@@ -295,6 +295,56 @@
       ]
     }
   ],
+  "cse_operating_model": {
+    "description": "CSEs operate on a Success On-Demand pooled model — they are not dedicated to named accounts. They deliver technical depth across the segment in response to intake requests and through digital programs.",
+    "handbook_link": "https://handbook.gitlab.com/handbook/customer-success/csm/segment/cse/",
+    "accountability_boundary": [
+      "CSE owns: technical enablement sessions, workshops, hands-on labs, office hours, and post-session adoption follow-up.",
+      "CSE does NOT own: the success plan, cadence call cadence, escalation ownership, or renewal motion — those stay with the CSM and AE.",
+      "CSE coverage is triaged by request (AE, Renewals Manager, or CSM submits intake) or by proactive outreach based on adoption signals."
+    ],
+    "engagement_types": [
+      {
+        "type": "Webinar",
+        "when_to_use": "1:many adoption awareness across the segment; ideal for new use case announcements or low adoption signals across multiple accounts.",
+        "follow_up": "Share recording, send implementation checklist, identify accounts to route to office hours."
+      },
+      {
+        "type": "Hands-on Lab",
+        "when_to_use": "Technical implementation for a specific use case (CI templates, SAST baseline, runner setup). Use when adoption score is low and customer has an active implementation need.",
+        "follow_up": "Confirm lab outcomes with account, update adoption delta in next cadence note, schedule follow-up office hours if blockers remain."
+      },
+      {
+        "type": "Office Hours",
+        "when_to_use": "Targeted unblocking for one or a small group of accounts. Use after webinar or lab attendance when open questions remain.",
+        "follow_up": "Log resolved blockers and send summary to CSM for success plan update."
+      },
+      {
+        "type": "On-Demand / Async",
+        "when_to_use": "Low-touch response to intake request when live session is not required. Share relevant resources and guide self-service.",
+        "follow_up": "Confirm customer received materials and track if adoption improves within 30 days."
+      }
+    ],
+    "post_session_checklist": [
+      "Record attendance and update program attendance count in the account engagement record.",
+      "Log outcomes in the account engagement log with customer-safe summary.",
+      "Identify if adoption metrics moved within 30 days and note in next cadence update.",
+      "Route unresolved blockers to office hours or escalate to CSM for success plan update.",
+      "Mark intake request as completed if the session fulfilled the definition of done."
+    ],
+    "proactive_outreach_triggers": [
+      "Adoption score below 60 with no CSE engagement in last 45 days.",
+      "Use case score flat or declining for 30+ days.",
+      "Workshop cadence not met for the quarter (< 1 workshop per quarter).",
+      "Renewal window open (< 90 days) with low adoption and no CSE session in quarter."
+    ],
+    "success_metrics": [
+      "Adoption score movement after CSE engagement (target: +5 points within 30 days).",
+      "Program attendance rate (target: > 50% of invited accounts attend).",
+      "Intake request resolution time (target: session delivered within 14 days of request).",
+      "Post-session follow-up completion rate (target: 100% of attended sessions have follow-up log entry)."
+    ]
+  },
   "anti_patterns": [
     {
       "risk": "Cadence drifts beyond one month without contact",

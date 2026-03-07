@@ -1813,6 +1813,8 @@ const renderCurrentRoute = () => {
       onLogAttendance,
       onExportPortfolio: () => exportPortfolioCsv(workspaceModel),
       onCopyShare: copyShareSnapshot,
+      requests: state.data.requests || [],
+      programs: state.data.programs || [],
       ...common
     });
   }

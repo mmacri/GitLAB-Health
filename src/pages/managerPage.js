@@ -53,6 +53,21 @@ export const renderManagerPage = (ctx) => {
     monitor: 0
   };
 
+  const USE_CASE_KEYS = ['SCM', 'CI', 'CD', 'Secure'];
+  const useCaseHealth = USE_CASE_KEYS.reduce((acc, key) => {
+    acc[key] = { green: 0, yellow: 0, red: 0 };
+    rows.forEach((signal) => {
+      const score = Number(signal.account?.adoption?.use_case_scores?.[key] ?? -1);
+      if (score >= 75) acc[key].green += 1;
+      else if (score >= 50) acc[key].yellow += 1;
+      else if (score >= 0) acc[key].red += 1;
+    });
+    return acc;
+  }, {});
+
+  const renewalWindow = rows.filter((signal) => Number(signal.renewalDays ?? 999) <= 90);
+  const renewalWithoutRecentCse = renewalWindow.filter((signal) => Number(signal.touchStaleDays ?? 999) > 30);
+
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
   wrapper.setAttribute('data-page', 'manager');
@@ -80,6 +95,45 @@ export const renderManagerPage = (ctx) => {
       </div>
       `
     })}
+
+    <section class="grid-cards">
+      <article class="card">
+        <div class="metric-head">
+          <h2>Use Case Health by Adoption Level</h2>
+          ${statusChip({ label: `${rows.length} accounts`, tone: 'neutral' })}
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Use Case</th><th>Green (≥75)</th><th>Yellow (50–74)</th><th>Red (&lt;50)</th></tr></thead>
+            <tbody>
+              ${USE_CASE_KEYS.map((key) => `
+                <tr>
+                  <td>${key}</td>
+                  <td>${statusChip({ label: String(useCaseHealth[key].green), tone: useCaseHealth[key].green ? 'good' : 'neutral' })}</td>
+                  <td>${statusChip({ label: String(useCaseHealth[key].yellow), tone: useCaseHealth[key].yellow ? 'warn' : 'neutral' })}</td>
+                  <td>${statusChip({ label: String(useCaseHealth[key].red), tone: useCaseHealth[key].red ? 'risk' : 'neutral' })}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="metric-head">
+          <h2>Renewal Window — CSE Coverage Gap</h2>
+          ${statusChip({ label: `${renewalWithoutRecentCse.length} accounts`, tone: renewalWithoutRecentCse.length ? 'risk' : 'good' })}
+        </div>
+        <p class="muted">Accounts renewing within 90 days with no CSE engagement in the last 30 days.</p>
+        <ul class="simple-list">
+          ${renewalWithoutRecentCse.length
+            ? renewalWithoutRecentCse.slice(0, 8).map((signal) =>
+                `<li><a href="#" data-open-customer="${signal.customer?.id || signal.account?.id}">${signal.customer?.name || signal.account?.name}</a> — ${signal.renewalDays ?? 'n/a'}d to renewal, last touch ${signal.touchStaleDays ?? 'n/a'}d ago</li>`
+              ).join('')
+            : '<li>No renewal-window accounts with CSE coverage gaps.</li>'}
+        </ul>
+      </article>
+    </section>
 
     <section class="grid-cards">
       <article class="card">

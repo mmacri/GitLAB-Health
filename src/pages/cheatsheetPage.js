@@ -42,6 +42,12 @@ export const renderCheatsheetPage = (ctx) => {
   const { cheatsheet, navigate } = ctx;
   const links = Array.isArray(cheatsheet?.handbook_links) ? cheatsheet.handbook_links : [];
   const bullets = Array.isArray(cheatsheet?.overview_points) ? cheatsheet.overview_points : [];
+  const cseModel = cheatsheet?.cse_operating_model || null;
+  const engagementTypes = Array.isArray(cseModel?.engagement_types) ? cseModel.engagement_types : [];
+  const postSessionChecklist = Array.isArray(cseModel?.post_session_checklist) ? cseModel.post_session_checklist : [];
+  const outreachTriggers = Array.isArray(cseModel?.proactive_outreach_triggers) ? cseModel.proactive_outreach_triggers : [];
+  const successMetrics = Array.isArray(cseModel?.success_metrics) ? cseModel.success_metrics : [];
+  const accountabilityBoundary = Array.isArray(cseModel?.accountability_boundary) ? cseModel.accountability_boundary : [];
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
@@ -74,6 +80,53 @@ export const renderCheatsheetPage = (ctx) => {
         ${bullets.length ? bullets.map((point) => `<li>${point}</li>`).join('') : '<li>No operating notes configured.</li>'}
       </ul>
     </section>
+
+    ${cseModel ? `
+    <section class="card">
+      <div class="metric-head">
+        <h2>CSE Operating Model</h2>
+        ${statusChip({ label: 'Pooled On-Demand', tone: 'neutral' })}
+      </div>
+      ${cseModel.description ? `<p class="muted">${cseModel.description}</p>` : ''}
+
+      ${accountabilityBoundary.length ? `
+      <h3 class="section-subhead">Accountability Boundary</h3>
+      <ul class="simple-list">
+        ${accountabilityBoundary.map((item) => `<li>${item}</li>`).join('')}
+      </ul>` : ''}
+
+      ${engagementTypes.length ? `
+      <h3 class="section-subhead">Engagement Types</h3>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>Type</th><th>When to Use</th><th>Follow-up</th></tr>
+          </thead>
+          <tbody>
+            ${engagementTypes.map((et) => `<tr><td><strong>${et.type}</strong></td><td>${et.when_to_use || ''}</td><td>${et.follow_up || ''}</td></tr>`).join('')}
+          </tbody>
+        </table>
+      </div>` : ''}
+
+      ${postSessionChecklist.length ? `
+      <h3 class="section-subhead">Post-Session Checklist</h3>
+      <ul class="simple-list">
+        ${postSessionChecklist.map((item) => `<li>${item}</li>`).join('')}
+      </ul>` : ''}
+
+      ${outreachTriggers.length ? `
+      <h3 class="section-subhead">Proactive Outreach Triggers</h3>
+      <ul class="simple-list">
+        ${outreachTriggers.map((item) => `<li>${item}</li>`).join('')}
+      </ul>` : ''}
+
+      ${successMetrics.length ? `
+      <h3 class="section-subhead">Success Metrics</h3>
+      <ul class="simple-list">
+        ${successMetrics.map((item) => `<li>${item}</li>`).join('')}
+      </ul>` : ''}
+    </section>
+    ` : ''}
 
     <section class="card">
       <div class="metric-head">
