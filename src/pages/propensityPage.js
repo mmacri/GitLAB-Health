@@ -1448,6 +1448,83 @@ ${
 `;
 };
 
+const buildScenarioCompareMarkdown = ({ generatedOn, goal, scenarioA, scenarioB }) => {
+  if (!scenarioA || !scenarioB) return '';
+  const goalLabel = goal === 'retention' ? 'Retention first' : goal === 'expansion' ? 'Expansion first' : 'Balanced';
+  const pteDelta = round1(Number(scenarioB.pte.final || 0) - Number(scenarioA.pte.final || 0));
+  const ptcDelta = round1(Number(scenarioB.ptc.final || 0) - Number(scenarioA.ptc.final || 0));
+  const recommendation =
+    goal === 'retention'
+      ? pteDelta >= 0 && ptcDelta < 0
+        ? 'Scenario B is preferred for retention focus.'
+        : pteDelta <= 0 && ptcDelta > 0
+          ? 'Scenario A is safer for retention focus.'
+          : 'Compare trade-offs: prioritize lower PtC under retention focus.'
+      : goal === 'expansion'
+        ? pteDelta > 0 && ptcDelta <= 0
+          ? 'Scenario B is preferred for expansion focus.'
+          : pteDelta < 0 && ptcDelta >= 0
+            ? 'Scenario A is safer for expansion focus.'
+            : 'Compare trade-offs: prioritize higher PtE while constraining PtC.'
+        : pteDelta > 0 && ptcDelta <= 0
+          ? 'Scenario B is preferred for balanced improvement.'
+          : pteDelta < 0 && ptcDelta >= 0
+            ? 'Scenario A is preferred for balanced improvement.'
+            : 'Outcome is mixed; tune one or two inputs before finalizing plan.';
+
+  const rows = [
+    { key: 'adoptionScore', label: 'Adoption score' },
+    { key: 'engagementScore', label: 'Engagement score' },
+    { key: 'riskScore', label: 'Risk score' },
+    { key: 'cicdPercent', label: 'CI/CD adoption %' },
+    { key: 'securityPercent', label: 'Security adoption %' },
+    { key: 'stageCoveragePercent', label: 'Stage coverage %' },
+    { key: 'openExpansionCount', label: 'Open expansion count' },
+    { key: 'renewalDays', label: 'Renewal days' },
+    { key: 'renewalSoonSignal', label: 'Renewal signal', boolean: true },
+    { key: 'staleEngagement90', label: 'No-touch >90 days', boolean: true },
+    { key: 'secureBelow30', label: 'Security <30%', boolean: true },
+    { key: 'strongMomentum', label: 'Strong momentum', boolean: true }
+  ];
+
+  const table = [
+    '| Input | Scenario A | Scenario B | Delta (B - A) |',
+    '|---|---:|---:|---:|',
+    ...rows.map((row) => {
+      const a = scenarioA.inputs[row.key];
+      const b = scenarioB.inputs[row.key];
+      if (row.boolean) {
+        const aLabel = a ? 'Yes' : 'No';
+        const bLabel = b ? 'Yes' : 'No';
+        const delta = a === b ? 'No change' : `${aLabel} -> ${bLabel}`;
+        return `| ${escapeMd(row.label)} | ${aLabel} | ${bLabel} | ${escapeMd(delta)} |`;
+      }
+      return `| ${escapeMd(row.label)} | ${Number(a)} | ${Number(b)} | ${formatSigned(round1(Number(b || 0) - Number(a || 0)), 1)} |`;
+    })
+  ].join('\n');
+
+  return `# PtE / PtC Scenario Compare
+
+Generated: ${generatedOn}
+
+## Context
+
+- Optimization goal: **${goalLabel}**
+- Scenario A PtE/PtC: **${Number(scenarioA.pte.final || 0)} / ${Number(scenarioA.ptc.final || 0)}**
+- Scenario B PtE/PtC: **${Number(scenarioB.pte.final || 0)} / ${Number(scenarioB.ptc.final || 0)}**
+- PtE delta (B - A): **${formatSigned(pteDelta, 1)}**
+- PtC delta (B - A): **${formatSigned(ptcDelta, 1)}**
+
+## Recommendation
+
+${recommendation}
+
+## Input Delta Table
+
+${table}
+`;
+};
+
 const buildExecutiveBriefMarkdown = ({
   generatedOn,
   baselineMonth,
@@ -3150,7 +3227,9 @@ export const renderPropensityPage = (ctx) => {
         <button class="ghost-btn" type="button" data-formula-sandbox-action="expansion-proof">Simulate: expansion proof points</button>
         <button class="ghost-btn" type="button" data-formula-save-a>Save scenario A</button>
         <button class="ghost-btn" type="button" data-formula-save-b>Save scenario B</button>
+        <button class="ghost-btn" type="button" data-formula-compare-swap>Swap A/B</button>
         <button class="ghost-btn" type="button" data-formula-compare-clear>Clear compare</button>
+        <button class="ghost-btn" type="button" data-formula-compare-download>Download compare .md</button>
       </div>
       <p class="muted">Use simulation buttons to preview how common CSE plays change PtE/PtC before you commit to an account plan.</p>
       <fieldset class="filter-multi form-span formula-plan-builder">
@@ -4285,7 +4364,9 @@ export const renderPropensityPage = (ctx) => {
   const formulaSandboxActions = wrapper.querySelectorAll('[data-formula-sandbox-action]');
   const formulaSaveA = wrapper.querySelector('[data-formula-save-a]');
   const formulaSaveB = wrapper.querySelector('[data-formula-save-b]');
+  const formulaCompareSwap = wrapper.querySelector('[data-formula-compare-swap]');
   const formulaCompareClear = wrapper.querySelector('[data-formula-compare-clear]');
+  const formulaCompareDownload = wrapper.querySelector('[data-formula-compare-download]');
   const formulaCompareOutput = wrapper.querySelector('[data-formula-compare-output]');
   const formulaPlanRun = wrapper.querySelector('[data-formula-plan-run]');
   const formulaPlanClear = wrapper.querySelector('[data-formula-plan-clear]');
@@ -4676,6 +4757,25 @@ export const renderPropensityPage = (ctx) => {
     ];
     const pteDelta = round1(Number(scenarioB.pte.final || 0) - Number(scenarioA.pte.final || 0));
     const ptcDelta = round1(Number(scenarioB.ptc.final || 0) - Number(scenarioA.ptc.final || 0));
+    const goal = readFormulaPlanGoal();
+    const compareRecommendation =
+      goal === 'retention'
+        ? pteDelta >= 0 && ptcDelta < 0
+          ? 'Scenario B is better for retention focus (PtC drops while PtE is stable/improving).'
+          : pteDelta <= 0 && ptcDelta > 0
+            ? 'Scenario A is safer for retention focus (Scenario B increases churn pressure).'
+            : 'Mixed retention outcome. Prioritize the scenario with lower PtC and then improve PtE.'
+        : goal === 'expansion'
+          ? pteDelta > 0 && ptcDelta <= 0
+            ? 'Scenario B is better for expansion focus (PtE rises without adding churn pressure).'
+            : pteDelta < 0 && ptcDelta >= 0
+              ? 'Scenario A is safer for expansion focus (Scenario B weakens readiness and/or risk).'
+              : 'Mixed expansion outcome. Prioritize higher PtE while containing PtC increase.'
+          : pteDelta > 0 && ptcDelta <= 0
+            ? 'Scenario B is the stronger balanced outcome (readiness up, pressure down).'
+            : pteDelta < 0 && ptcDelta >= 0
+              ? 'Scenario A is the stronger balanced outcome (Scenario B regresses posture).'
+              : 'Balanced outcome is mixed. Adjust one or two inputs and compare again.';
 
     formulaCompareOutput.innerHTML = `
       <article class="card compact-card">
@@ -4692,6 +4792,10 @@ export const renderPropensityPage = (ctx) => {
         <div class="form-actions">
           <button class="ghost-btn" type="button" data-formula-load="A">Load scenario A into sandbox</button>
           <button class="ghost-btn" type="button" data-formula-load="B">Load scenario B into sandbox</button>
+        </div>
+        <div class="callout">
+          <strong>Goal:</strong> ${escapeHtml(goal)}<br>
+          <strong>Recommendation:</strong> ${escapeHtml(compareRecommendation)}
         </div>
         <div class="table-wrap">
           <table class="data-table">
@@ -4929,11 +5033,40 @@ export const renderPropensityPage = (ctx) => {
     notify?.('Scenario B saved.');
   });
 
+  formulaCompareSwap?.addEventListener('click', () => {
+    if (!formulaCompareA && !formulaCompareB) {
+      notify?.('Save at least one scenario before swapping.');
+      return;
+    }
+    const tmp = formulaCompareA;
+    formulaCompareA = formulaCompareB;
+    formulaCompareB = tmp;
+    renderFormulaCompareOutput();
+    notify?.('Scenario A/B swapped.');
+  });
+
   formulaCompareClear?.addEventListener('click', () => {
     formulaCompareA = null;
     formulaCompareB = null;
     renderFormulaCompareOutput();
     notify?.('Scenario compare cleared.');
+  });
+
+  formulaCompareDownload?.addEventListener('click', () => {
+    const scenarioA = formulaCompareA ? calculateFormulaSandbox(formulaCompareA) : null;
+    const scenarioB = formulaCompareB ? calculateFormulaSandbox(formulaCompareB) : null;
+    if (!scenarioA || !scenarioB) {
+      notify?.('Save both Scenario A and B before downloading compare output.');
+      return;
+    }
+    const markdown = buildScenarioCompareMarkdown({
+      generatedOn: new Date().toISOString(),
+      goal: readFormulaPlanGoal(),
+      scenarioA,
+      scenarioB
+    });
+    triggerDownload(`pte-ptc-compare-${toIsoDate(new Date())}.md`, markdown, 'text/markdown;charset=utf-8');
+    notify?.('Scenario compare markdown downloaded.');
   });
 
   formulaSandboxActions.forEach((button) => {
