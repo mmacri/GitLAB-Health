@@ -254,6 +254,71 @@ const calculateFormulaSensitivity = (input = {}) => {
     .sort((left, right) => Math.abs(right.pteDelta) + Math.abs(right.ptcDelta) - (Math.abs(left.pteDelta) + Math.abs(left.ptcDelta)));
 };
 
+const applyFormulaSandboxActionState = (current = {}, actionId) => {
+  const clampPct = (value) => Math.max(0, Math.min(100, Number(value || 0)));
+  const next = { ...current };
+
+  if (actionId === 'recover-engagement') {
+    next.engagementScore = clampPct(next.engagementScore + 12);
+    next.staleEngagement90 = false;
+  } else if (actionId === 'secure-rollout') {
+    next.securityPercent = clampPct(next.securityPercent + 20);
+    next.riskScore = clampPct(next.riskScore - 8);
+  } else if (actionId === 'reduce-risk') {
+    next.riskScore = clampPct(next.riskScore - 15);
+    next.engagementScore = clampPct(next.engagementScore + 4);
+  } else if (actionId === 'renewal-escalation') {
+    next.renewalDays = Math.max(0, Number(next.renewalDays || 0) - 60);
+    next.renewalSoonSignal = true;
+  } else if (actionId === 'expansion-proof') {
+    next.adoptionScore = clampPct(next.adoptionScore + 10);
+    next.engagementScore = clampPct(next.engagementScore + 8);
+    next.openExpansionCount = Math.max(0, Number(next.openExpansionCount || 0) + 2);
+    next.riskScore = clampPct(next.riskScore - 5);
+  }
+
+  next.secureBelow30 = Number(next.securityPercent || 0) < 30;
+  next.renewalSoonSignal = Boolean(next.renewalSoonSignal) || Number(next.renewalDays || 0) <= 90;
+  next.strongMomentum = Number(next.adoptionScore || 0) >= 70 && Number(next.engagementScore || 0) >= 70 && Number(next.riskScore || 0) <= 35;
+  if (Number(next.engagementScore || 0) >= 50) next.staleEngagement90 = false;
+
+  return next;
+};
+
+const calculateFormulaPlanProjection = (input = {}, actions = [], cycles = 1) => {
+  const selectedActions = [...(actions || [])].filter(Boolean);
+  const cycleCount = Math.max(1, Math.min(6, Number(cycles || 1)));
+  const baselineScenario = calculateFormulaSandbox(input);
+  const history = [
+    {
+      step: 'Baseline',
+      cycle: 0,
+      scenario: baselineScenario
+    }
+  ];
+  let state = { ...input };
+
+  for (let cycleIndex = 1; cycleIndex <= cycleCount; cycleIndex += 1) {
+    selectedActions.forEach((actionId) => {
+      state = applyFormulaSandboxActionState(state, actionId);
+    });
+    history.push({
+      step: `Cycle ${cycleIndex}`,
+      cycle: cycleIndex,
+      scenario: calculateFormulaSandbox(state)
+    });
+  }
+
+  const projected = history[history.length - 1]?.scenario || baselineScenario;
+  return {
+    baseline: baselineScenario,
+    projected,
+    history,
+    actions: selectedActions,
+    cycles: cycleCount
+  };
+};
+
 const deriveBandTargetGuidance = (scenario, sensitivity) => {
   const pteFinal = Number(scenario?.pte?.final || 0);
   const ptcFinal = Number(scenario?.ptc?.final || 0);
@@ -2867,6 +2932,45 @@ export const renderPropensityPage = (ctx) => {
         <button class="ghost-btn" type="button" data-formula-sandbox-action="expansion-proof">Simulate: expansion proof points</button>
       </div>
       <p class="muted">Use simulation buttons to preview how common CSE plays change PtE/PtC before you commit to an account plan.</p>
+      <fieldset class="filter-multi form-span formula-plan-builder">
+        <legend>Play Sequence Projection</legend>
+        <p class="muted">
+          Select one or more plays and cycles to preview compounded score movement (example: 30/60/90-day execution loops).
+        </p>
+        <div class="formula-plan-grid">
+          <label class="formula-flag">
+            <input type="checkbox" name="planAction" value="recover-engagement" />
+            Engagement recovery
+          </label>
+          <label class="formula-flag">
+            <input type="checkbox" name="planAction" value="secure-rollout" />
+            Secure rollout
+          </label>
+          <label class="formula-flag">
+            <input type="checkbox" name="planAction" value="reduce-risk" />
+            Risk burndown
+          </label>
+          <label class="formula-flag">
+            <input type="checkbox" name="planAction" value="renewal-escalation" />
+            Renewal escalation
+          </label>
+          <label class="formula-flag">
+            <input type="checkbox" name="planAction" value="expansion-proof" />
+            Expansion proof points
+          </label>
+          <label>
+            Number of cycles
+            <input type="number" name="planCycles" min="1" max="6" step="1" value="3" />
+          </label>
+        </div>
+        <div class="form-actions">
+          <button class="ghost-btn" type="button" data-formula-plan-run>Run projection</button>
+          <button class="ghost-btn" type="button" data-formula-plan-clear>Clear projection</button>
+        </div>
+      </fieldset>
+      <div class="section-stack" data-formula-plan-output>
+        <p class="empty-text">Run a play sequence projection to compare baseline vs projected PtE/PtC.</p>
+      </div>
       <div class="section-stack" data-formula-sandbox-output></div>
     </section>
 
@@ -3930,6 +4034,9 @@ export const renderPropensityPage = (ctx) => {
   const formulaSandboxOutput = wrapper.querySelector('[data-formula-sandbox-output]');
   const formulaSandboxReset = wrapper.querySelector('[data-formula-sandbox-reset]');
   const formulaSandboxActions = wrapper.querySelectorAll('[data-formula-sandbox-action]');
+  const formulaPlanRun = wrapper.querySelector('[data-formula-plan-run]');
+  const formulaPlanClear = wrapper.querySelector('[data-formula-plan-clear]');
+  const formulaPlanOutput = wrapper.querySelector('[data-formula-plan-output]');
 
   const readFormulaSandboxState = () => {
     if (!(formulaSandboxForm instanceof HTMLFormElement)) return { ...formulaSandboxBaseline };
@@ -4184,6 +4291,78 @@ export const renderPropensityPage = (ctx) => {
     `;
   };
 
+  const readFormulaPlanSelection = () => {
+    const actions = [...wrapper.querySelectorAll('input[name="planAction"]:checked')].map((input) => String(input.value || '').trim());
+    const cycleField = wrapper.querySelector('input[name="planCycles"]');
+    const cyclesRaw = cycleField && 'value' in cycleField ? Number(cycleField.value) : 3;
+    const cycles = Number.isFinite(cyclesRaw) ? Math.max(1, Math.min(6, Math.floor(cyclesRaw))) : 3;
+    if (cycleField && 'value' in cycleField) cycleField.value = String(cycles);
+    return { actions, cycles };
+  };
+
+  const renderFormulaPlanProjection = () => {
+    if (!formulaPlanOutput) return;
+    const selection = readFormulaPlanSelection();
+    if (!selection.actions.length) {
+      formulaPlanOutput.innerHTML = '<p class="empty-text">Select at least one play to run projection.</p>';
+      return;
+    }
+    const projection = calculateFormulaPlanProjection(readFormulaSandboxState(), selection.actions, selection.cycles);
+    const baseline = projection.baseline;
+    const projected = projection.projected;
+    const pteDelta = round1(Number(projected.pte.final || 0) - Number(baseline.pte.final || 0));
+    const ptcDelta = round1(Number(projected.ptc.final || 0) - Number(baseline.ptc.final || 0));
+
+    formulaPlanOutput.innerHTML = `
+      <div class="metric-grid kpi-4">
+        ${metricTile({ label: 'Projected PtE', value: `${projected.pte.final} (${projected.pte.band})`, tone: projected.pte.band === 'High' ? 'good' : projected.pte.band === 'Medium' ? 'warn' : 'neutral' })}
+        ${metricTile({ label: 'Projected PtC', value: `${projected.ptc.final} (${projected.ptc.band})`, tone: projected.ptc.band === 'High' ? 'risk' : projected.ptc.band === 'Medium' ? 'warn' : 'good' })}
+        ${metricTile({ label: 'PtE movement', value: formatSigned(pteDelta, 1), tone: pteDelta > 0 ? 'good' : pteDelta < 0 ? 'warn' : 'neutral' })}
+        ${metricTile({ label: 'PtC movement', value: formatSigned(ptcDelta, 1), tone: ptcDelta < 0 ? 'good' : ptcDelta > 0 ? 'risk' : 'neutral' })}
+      </div>
+      <div class="callout">
+        <strong>Sequence:</strong> ${projection.actions.map((action) => escapeHtml(action)).join(' → ')}<br>
+        <strong>Cycles:</strong> ${projection.cycles} | <strong>Interpretation:</strong> ${
+          pteDelta > 0 && ptcDelta <= 0
+            ? 'Projected posture improves for both expansion readiness and retention stability.'
+            : pteDelta <= 0 && ptcDelta > 0
+              ? 'Projected posture deteriorates; reconsider play mix or execution order.'
+              : 'Projected outcome is mixed; pair risk reduction with adoption/engagement lifts.'
+        }
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Step</th>
+              <th>PtE</th>
+              <th>PtC</th>
+              <th>PtE vs baseline</th>
+              <th>PtC vs baseline</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${projection.history
+              .map((item) => {
+                const pteValue = Number(item.scenario?.pte?.final || 0);
+                const ptcValue = Number(item.scenario?.ptc?.final || 0);
+                return `
+                  <tr>
+                    <td><strong>${escapeHtml(item.step)}</strong></td>
+                    <td>${statusChip({ label: `${pteValue} (${item.scenario?.pte?.band || 'Low'})`, tone: item.scenario?.pte?.band === 'High' ? 'good' : item.scenario?.pte?.band === 'Medium' ? 'warn' : 'neutral' })}</td>
+                    <td>${statusChip({ label: `${ptcValue} (${item.scenario?.ptc?.band || 'Low'})`, tone: item.scenario?.ptc?.band === 'High' ? 'risk' : item.scenario?.ptc?.band === 'Medium' ? 'warn' : 'good' })}</td>
+                    <td>${formatSigned(round1(pteValue - Number(baseline.pte.final || 0)), 1)}</td>
+                    <td>${formatSigned(round1(ptcValue - Number(baseline.ptc.final || 0)), 1)}</td>
+                  </tr>
+                `;
+              })
+              .join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  };
+
   if (formulaSandboxForm instanceof HTMLFormElement) {
     formulaSandboxForm.addEventListener('input', () => renderFormulaSandboxOutput());
     formulaSandboxForm.addEventListener('change', () => renderFormulaSandboxOutput());
@@ -4239,6 +4418,21 @@ export const renderPropensityPage = (ctx) => {
       const label = String(button.textContent || 'play simulation').trim();
       notify?.(`${label} applied.`);
     });
+  });
+
+  formulaPlanRun?.addEventListener('click', () => {
+    renderFormulaPlanProjection();
+    notify?.('Play sequence projection updated.');
+  });
+
+  formulaPlanClear?.addEventListener('click', () => {
+    wrapper.querySelectorAll('input[name="planAction"]').forEach((input) => {
+      if ('checked' in input) input.checked = false;
+    });
+    const cycleField = wrapper.querySelector('input[name="planCycles"]');
+    if (cycleField && 'value' in cycleField) cycleField.value = '3';
+    if (formulaPlanOutput) formulaPlanOutput.innerHTML = '<p class="empty-text">Run a play sequence projection to compare baseline vs projected PtE/PtC.</p>';
+    notify?.('Projection selection cleared.');
   });
 
   const playWizardForm = wrapper.querySelector('[data-play-wizard-form]');

@@ -1621,6 +1621,40 @@ textarea.artifact,
   height: 16px;
 }
 
+.formula-plan-builder {
+  display: grid;
+  gap: 10px;
+}
+
+.formula-plan-builder p {
+  margin: 0;
+}
+
+.formula-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+}
+
+.formula-plan-grid > label {
+  display: grid;
+  gap: 6px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.formula-plan-grid input[type='number'] {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--surface);
+}
+
 .formula-impact-cell {
   display: grid;
   gap: 4px;
@@ -2613,6 +2647,7 @@ textarea.artifact,
   .toolkit-grid,
   .simulator-grid,
   .workspace-layout,
+  .formula-plan-grid,
   .flow-steps,
   .matrix-grid,
   .landing-grid,
