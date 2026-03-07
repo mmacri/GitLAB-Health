@@ -2086,9 +2086,8 @@ textarea.artifact,
 }
 
 .guide-stepper {
-  position: sticky;
-  top: calc(var(--header-offset, 140px) + 8px);
-  z-index: 18;
+  /* Keep guide controls in normal flow so they never pin over chapter content. */
+  position: static;
   display: grid;
   gap: 10px;
 }
@@ -2221,9 +2220,8 @@ textarea.artifact,
 .guide-chapter-rail {
   display: grid;
   gap: 10px;
-  position: sticky;
-  top: calc(var(--header-offset, 140px) + 84px);
-  z-index: 17;
+  /* Do not stick the chapter rail; users need uninterrupted chapter scrolling/review. */
+  position: static;
 }
 
 .guide-chapter-rail__meta {
@@ -2362,6 +2360,7 @@ textarea.artifact,
 .guide-chapter {
   display: grid;
   gap: var(--card-gap);
+  scroll-margin-top: calc(var(--header-offset, 140px) + 16px);
 }
 
 .guide-chapter__intro {
