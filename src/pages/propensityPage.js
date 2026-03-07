@@ -1241,6 +1241,84 @@ const scenarioTemplates = [
   }
 ];
 
+const formulaGlossaryRows = [
+  {
+    variable: 'adoptionScore',
+    role: 'Primary expansion readiness input in PtE and gap input in PtC.',
+    validate: 'Use-case percentages and stage statuses reflect current customer behavior.',
+    rationale: 'Combines depth (use-case %) and breadth (stage progression) into one adoption signal.'
+  },
+  {
+    variable: 'engagementScore',
+    role: 'Momentum signal in PtE and inactivity gap in PtC.',
+    validate: 'Last-touch date and engagement log frequency are complete and current.',
+    rationale: 'Recency and cadence are leading indicators of sponsor alignment and delivery motion.'
+  },
+  {
+    variable: 'riskScore',
+    role: 'Inverse stability term in PtE and direct pressure term in PtC.',
+    validate: 'Risk signals are correctly classified by severity and mitigation status.',
+    rationale: 'Severity-weighted risk captures concentration of unresolved downside pressure.'
+  },
+  {
+    variable: 'renewalPressureScore',
+    role: 'Time-pressure multiplier in PtC.',
+    validate: 'Renewal date is accurate and mapped to the correct bucket.',
+    rationale: 'Risk impact increases as decision windows close and reaction time shrinks.'
+  },
+  {
+    variable: 'stageCoveragePercent',
+    role: 'Platform-breadth input in PtE.',
+    validate: 'DevSecOps stage statuses match latest implementation evidence.',
+    rationale: 'Broader stage adoption reduces single-use-case fragility and supports expansion.'
+  },
+  {
+    variable: 'openExpansionCount',
+    role: 'Context uplift term in PtE.',
+    validate: 'Only active, evidence-backed opportunities are counted.',
+    rationale: 'Open opportunities provide near-term expansion pathways when readiness is sufficient.'
+  },
+  {
+    variable: 'confidenceScore',
+    role: 'Execution confidence and queue-priority quality control.',
+    validate: 'Missing fields and evidence gaps are explicitly tracked.',
+    rationale: 'Low-confidence rows should trigger data hygiene before major decisions.'
+  }
+];
+
+const interpretationPitfalls = [
+  {
+    pitfall: 'Running expansion with PtC High unresolved',
+    why: 'Retention pressure can erase expansion gains and consume delivery capacity.',
+    better: 'Run at least one dated mitigation play first; require owner and success metric.'
+  },
+  {
+    pitfall: 'Using score bands without checking confidence quality',
+    why: 'Incomplete renewal/engagement data can misclassify account posture.',
+    better: 'Clear low-confidence gaps before leadership reviews or major plan changes.'
+  },
+  {
+    pitfall: 'Treating one-week movement as trend',
+    why: 'Single-cycle noise can come from logging delays or temporary campaign spikes.',
+    better: 'Use baseline snapshots and confirm direction over at least two cycles.'
+  },
+  {
+    pitfall: 'Comparing scores across accounts without trigger context',
+    why: 'Similar scores can represent different risk drivers and required plays.',
+    better: 'Always pair score with primary trigger code and severity in planning.'
+  },
+  {
+    pitfall: 'Optimizing PtE only by opening opportunities',
+    why: 'Opportunity count cannot substitute for adoption and engagement evidence.',
+    better: 'Treat opportunity uplift as additive only after adoption and cadence are healthy.'
+  },
+  {
+    pitfall: 'Assuming local proxy coefficients are canonical',
+    why: 'GitLab internal predictive model details are not published externally.',
+    better: 'Use this model as deterministic operating heuristic and recalibrate with outcomes.'
+  }
+];
+
 const escapeHtml = (value = '') =>
   String(value)
     .replace(/&/g, '&amp;')
@@ -1674,6 +1752,125 @@ const buildMitigationMarkdown = ({ generatedOn, summary, mitigationRows = [] }) 
   });
 
   return `${lines.join('\n')}\n`;
+};
+
+const buildCseCadenceMarkdown = ({ generatedOn, queueRows = [], topSignals = [] }) => {
+  const topQueue = (queueRows || []).slice(0, 5);
+  const topSignalRows = (topSignals || []).slice(0, 5);
+  const queueTable = topQueue.length
+    ? [
+        '| Priority | Account | Trigger | Primary play | Window |',
+        '|---:|---|---|---|---|',
+        ...topQueue.map(
+          (item, idx) =>
+            `| ${idx + 1} | ${escapeMd(item?.row?.customer?.name || 'Unknown')} | ${escapeMd(item?.primarySignal?.code || 'None')} | ${escapeMd(
+              item?.recommendation?.primary?.title || 'No play'
+            )} | ${escapeMd(item?.recommendation?.window || 'This cycle')} |`
+        )
+      ].join('\n')
+    : 'No queued accounts available.';
+
+  const signalTable = topSignalRows.length
+    ? [
+        '| Trigger | Accounts | Severity |',
+        '|---|---:|---|',
+        ...topSignalRows.map((item) => `| ${escapeMd(item.code)} | ${Number(item.count || 0)} | ${escapeMd(item.severity || 'Low')} |`)
+      ].join('\n')
+    : 'No active trigger clusters.';
+
+  return `# CSE Weekly PtE/PtC Cadence Agenda
+
+Generated: ${generatedOn}
+
+## 1) Data Trust Gate (5 minutes)
+
+- Review low-confidence accounts and close missing evidence.
+- Confirm renewal dates and recent engagement touchpoints are current.
+
+## 2) Trigger and Queue Review (10 minutes)
+
+${signalTable}
+
+${queueTable}
+
+## 3) Execution Commitments (10 minutes)
+
+- For each priority account: assign one mitigation play and one expansion-enabler play.
+- Confirm owner, due date, success metric, and next touch date.
+- Flag any SLA-risk items for manager escalation.
+
+## 4) End-of-Week Verification (5 minutes)
+
+- Which accounts moved PtC down?
+- Which accounts moved PtE up?
+- Which accounts were flat for two cycles and require play changes?
+`;
+};
+
+const buildManagerCadenceMarkdown = ({
+  generatedOn,
+  calibrationRows = [],
+  summary,
+  topSignals = [],
+  currentReadiness,
+  currentRiskPressure,
+  readinessDelta,
+  riskPressureDelta
+}) => {
+  const topCalibration = (calibrationRows || []).slice(0, 6);
+  const topSignalRows = (topSignals || []).slice(0, 6);
+  const signalTable = topSignalRows.length
+    ? [
+        '| Trigger | Accounts | Severity |',
+        '|---|---:|---|',
+        ...topSignalRows.map((item) => `| ${escapeMd(item.code)} | ${Number(item.count || 0)} | ${escapeMd(item.severity || 'Low')} |`)
+      ].join('\n')
+    : 'No active trigger clusters.';
+
+  const calibrationTable = topCalibration.length
+    ? [
+        '| Trigger | Impacted accounts | Dominant play | Alignment | SLA expectation |',
+        '|---|---:|---|---:|---|',
+        ...topCalibration.map(
+          (item) =>
+            `| ${escapeMd(item.code)} | ${Number(item.impactedCount || 0)} | ${escapeMd(item.dominantPlay || 'None')} | ${Number(
+              item.alignmentPct || 0
+            )}% | ${escapeMd(item.slaExpectation || 'Review')} |`
+        )
+      ].join('\n')
+    : 'No calibration cohorts available.';
+
+  return `# Manager Weekly PtE/PtC Calibration Agenda
+
+Generated: ${generatedOn}
+
+## 1) Portfolio Posture Snapshot
+
+- Readiness proxy: **${Number(currentReadiness || 0)}** (${formatSigned(readinessDelta, 1)} vs baseline)
+- Risk pressure proxy: **${Number(currentRiskPressure || 0)}** (${formatSigned(riskPressureDelta, 1)} vs baseline)
+- Mitigation coverage: **${Number(summary?.coveragePct || 0)}%**
+- Overdue mitigation accounts: **${Number(summary?.overdueAccounts || 0)}**
+
+## 2) Trigger Concentration and Escalation Focus
+
+${signalTable}
+
+## 3) Calibration and Coaching Review
+
+${calibrationTable}
+
+## 4) Capacity and Governance Decisions
+
+- Rebalance ownership for trigger clusters with low alignment.
+- Escalate any High-severity clusters with SLA misses.
+- Require measurable proof-point updates on red-health accounts.
+
+## 5) Next-Cycle Outcomes to Inspect
+
+- Net PtC High count up/down.
+- Expand+Retain quadrant movement.
+- Play effectiveness by trigger cohort.
+`;
 };
 
 const buildPlayEffectivenessRows = (logs, rows) => {
@@ -2978,6 +3175,48 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
+    <section class="card" id="section-cadence-agenda">
+      <div class="metric-head">
+        <h2>Operating Cadence Agendas (CSE and Manager)</h2>
+        ${statusChip({ label: 'Reusable meeting guides', tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        Use these agendas to run consistent weekly execution and calibration reviews. They are prefilled from current queue, trigger, and movement signals.
+      </p>
+      <div class="grid-cards">
+        <article class="card compact-card">
+          <div class="metric-head">
+            <h3>CSE Weekly Execution Agenda</h3>
+            ${statusChip({ label: `${Math.min(weeklyQueue.length, 5)} priority rows`, tone: weeklyQueue.length ? 'warn' : 'neutral' })}
+          </div>
+          <ul class="simple-list">
+            <li>Start with data trust and confidence gaps.</li>
+            <li>Review top trigger concentrations and queue order.</li>
+            <li>Commit one mitigation and one expansion-enabler play per account.</li>
+            <li>Verify end-of-week score movement and stale plays.</li>
+          </ul>
+          <div class="form-actions">
+            <button class="ghost-btn" type="button" data-download-cse-cadence>Download CSE cadence .md</button>
+          </div>
+        </article>
+        <article class="card compact-card">
+          <div class="metric-head">
+            <h3>Manager Weekly Calibration Agenda</h3>
+            ${statusChip({ label: `${calibrationRows.length} trigger cohorts`, tone: calibrationRows.length ? 'neutral' : 'warn' })}
+          </div>
+          <ul class="simple-list">
+            <li>Review readiness/risk direction versus baseline snapshot.</li>
+            <li>Inspect trigger concentration and SLA escalation load.</li>
+            <li>Coach play consistency and alignment by trigger cohort.</li>
+            <li>Set capacity and governance actions for next cycle.</li>
+          </ul>
+          <div class="form-actions">
+            <button class="ghost-btn" type="button" data-download-manager-cadence>Download Manager cadence .md</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <section class="grid-cards" id="section-visuals">
       <article class="card">
         <div class="metric-head">
@@ -3425,6 +3664,76 @@ export const renderPropensityPage = (ctx) => {
         ${statusChip({ label: `Banding: High >=${ptCalibration.banding.high}`, tone: 'neutral' })}
         ${statusChip({ label: `Banding: Medium ${ptCalibration.banding.medium}-${Math.max(ptCalibration.banding.high - 1, ptCalibration.banding.medium)}`, tone: 'warn' })}
         ${statusChip({ label: `Banding: Low <${ptCalibration.banding.medium}`, tone: 'good' })}
+      </div>
+    </section>
+
+    <section class="card" id="section-formula-glossary">
+      <div class="metric-head">
+        <h2>Formula Variable Glossary (How to Explain Each Input)</h2>
+        ${statusChip({ label: `${formulaGlossaryRows.length} core variables`, tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        Use this glossary when coaching new CSEs and managers. It connects each variable to operational purpose, validation check, and interpretation logic.
+      </p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Variable</th>
+              <th>Role in formulas</th>
+              <th>What to validate</th>
+              <th>Why it is included</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${formulaGlossaryRows
+              .map(
+                (item) => `
+                  <tr>
+                    <td><strong>${escapeHtml(item.variable)}</strong></td>
+                    <td>${escapeHtml(item.role)}</td>
+                    <td>${escapeHtml(item.validate)}</td>
+                    <td>${escapeHtml(item.rationale)}</td>
+                  </tr>
+                `
+              )
+              .join('')}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="section-interpretation-pitfalls">
+      <div class="metric-head">
+        <h2>Common Interpretation Pitfalls and Corrective Guardrails</h2>
+        ${statusChip({ label: 'Coach to this rubric', tone: 'warn' })}
+      </div>
+      <p class="muted">
+        These are the most common mistakes when teams first adopt PtE/PtC. Use the corrective guardrail column as operating policy.
+      </p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Pitfall</th>
+              <th>Why it causes bad decisions</th>
+              <th>Corrective guardrail</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${interpretationPitfalls
+              .map(
+                (item) => `
+                  <tr>
+                    <td><strong>${escapeHtml(item.pitfall)}</strong></td>
+                    <td>${escapeHtml(item.why)}</td>
+                    <td>${escapeHtml(item.better)}</td>
+                  </tr>
+                `
+              )
+              .join('')}
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -4258,6 +4567,21 @@ export const renderPropensityPage = (ctx) => {
     generatedOn: toIsoDate(new Date()),
     summary: mitigationSummary,
     mitigationRows: mitigationSummary.tableRows
+  });
+  const cseCadenceMarkdown = buildCseCadenceMarkdown({
+    generatedOn: toIsoDate(new Date()),
+    queueRows: weeklyQueue,
+    topSignals
+  });
+  const managerCadenceMarkdown = buildManagerCadenceMarkdown({
+    generatedOn: toIsoDate(new Date()),
+    calibrationRows,
+    summary: mitigationSummary,
+    topSignals,
+    currentReadiness,
+    currentRiskPressure,
+    readinessDelta,
+    riskPressureDelta
   });
 
   const GUIDE_MODE_KEY = 'gh_propensity_guide_mode_v1';
@@ -5896,6 +6220,18 @@ export const renderPropensityPage = (ctx) => {
     button.addEventListener('click', () => {
       triggerDownload(`pte-ptc-exec-brief-${toIsoDate(new Date())}.md`, executiveBriefMarkdown, 'text/markdown;charset=utf-8');
       notify?.('PtE/PtC executive brief downloaded.');
+    });
+  });
+  wrapper.querySelectorAll('[data-download-cse-cadence]').forEach((button) => {
+    button.addEventListener('click', () => {
+      triggerDownload(`pte-ptc-cse-cadence-${toIsoDate(new Date())}.md`, cseCadenceMarkdown, 'text/markdown;charset=utf-8');
+      notify?.('PtE/PtC CSE cadence agenda downloaded.');
+    });
+  });
+  wrapper.querySelectorAll('[data-download-manager-cadence]').forEach((button) => {
+    button.addEventListener('click', () => {
+      triggerDownload(`pte-ptc-manager-cadence-${toIsoDate(new Date())}.md`, managerCadenceMarkdown, 'text/markdown;charset=utf-8');
+      notify?.('PtE/PtC manager cadence agenda downloaded.');
     });
   });
   wrapper.querySelector('[data-print-guide]')?.addEventListener('click', () => {
