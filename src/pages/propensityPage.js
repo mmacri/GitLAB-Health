@@ -2678,6 +2678,48 @@ export const renderPropensityPage = (ctx) => {
       `
     })}
 
+    <section class="card guide-run-setup" id="section-run-setup">
+      <div class="metric-head">
+        <h2>Run Setup (Who, Why, When)</h2>
+        ${statusChip({ label: 'Guided session', tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        Set persona lens, operating goal, and time horizon first. Then launch the guided path with an aligned starting chapter.
+      </p>
+      <form class="form-grid">
+        <label>
+          Persona lens
+          <select data-run-persona>
+            <option value="cse">CSE On-Demand</option>
+            <option value="manager">CSE Manager</option>
+            <option value="all">Shared / Joint Review</option>
+          </select>
+        </label>
+        <label>
+          Primary goal
+          <select data-run-goal>
+            <option value="balanced">Balanced (default)</option>
+            <option value="retention">Retention first</option>
+            <option value="expansion">Expansion first</option>
+          </select>
+        </label>
+        <label>
+          Time horizon
+          <select data-run-horizon>
+            <option value="week">This week</option>
+            <option value="month">This month</option>
+            <option value="quarter">This quarter</option>
+          </select>
+        </label>
+      </form>
+      <div class="chip-row" data-run-setup-summary></div>
+      <div class="form-actions">
+        <button class="qa" type="button" data-start-guided-run>Start guided run</button>
+        <button class="ghost-btn" type="button" data-save-run-setup>Save run setup</button>
+        <button class="ghost-btn" type="button" data-reset-run-setup>Reset run setup</button>
+      </div>
+    </section>
+
     <section class="card guide-stepper" id="section-guided-workflow">
       <div class="metric-head">
         <h2>Guided Workflow (Recommended Path)</h2>
@@ -5017,6 +5059,7 @@ export const renderPropensityPage = (ctx) => {
   const CHAPTER_PROGRESS_KEY = 'gh_propensity_chapter_progress_v1';
   const ROLE_FOCUS_KEY = 'gh_propensity_role_focus_v1';
   const ACTIVE_CHAPTER_KEY = 'gh_propensity_active_chapter_v1';
+  const RUN_SETUP_KEY = 'gh_propensity_run_setup_v1';
   const guideStepIds = ['section-confidence', 'section-visuals', 'section-formulas', 'section-play-wizard', 'section-score-delta'];
   let guideMode = 'guided';
   try {
@@ -5177,6 +5220,28 @@ export const renderPropensityPage = (ctx) => {
     if (storedActive && chapterIds.includes(storedActive)) activeChapterId = storedActive;
   } catch {
     activeChapterId = chapterIds[0] || 'chapter-orientation';
+  }
+  const defaultRunSetup = {
+    persona: roleFocus === 'manager' ? 'manager' : roleFocus === 'all' ? 'all' : 'cse',
+    goal: 'balanced',
+    horizon: 'week'
+  };
+  let runSetup = { ...defaultRunSetup };
+  try {
+    const rawRunSetup = window.localStorage.getItem(RUN_SETUP_KEY);
+    if (rawRunSetup) {
+      const parsed = JSON.parse(rawRunSetup);
+      if (parsed && typeof parsed === 'object') {
+        const persona = String(parsed.persona || '').toLowerCase();
+        const goal = String(parsed.goal || '').toLowerCase();
+        const horizon = String(parsed.horizon || '').toLowerCase();
+        if (['cse', 'manager', 'all'].includes(persona)) runSetup.persona = persona;
+        if (['balanced', 'retention', 'expansion'].includes(goal)) runSetup.goal = goal;
+        if (['week', 'month', 'quarter'].includes(horizon)) runSetup.horizon = horizon;
+      }
+    }
+  } catch {
+    runSetup = { ...defaultRunSetup };
   }
 
   const chapterGuidanceHtml = (guidance) => {
@@ -5383,6 +5448,10 @@ export const renderPropensityPage = (ctx) => {
     if (!value) return;
     roleFocusButtons.set(value, button);
   });
+  const runPersonaSelect = wrapper.querySelector('[data-run-persona]');
+  const runGoalSelect = wrapper.querySelector('[data-run-goal]');
+  const runHorizonSelect = wrapper.querySelector('[data-run-horizon]');
+  const runSummary = wrapper.querySelector('[data-run-setup-summary]');
 
   const persistChapterProgress = () => {
     try {
@@ -5395,6 +5464,14 @@ export const renderPropensityPage = (ctx) => {
   const persistRoleFocus = () => {
     try {
       window.localStorage.setItem(ROLE_FOCUS_KEY, roleFocus);
+    } catch {
+      // Ignore storage write failures in static mode.
+    }
+  };
+
+  const persistRunSetup = () => {
+    try {
+      window.localStorage.setItem(RUN_SETUP_KEY, JSON.stringify(runSetup));
     } catch {
       // Ignore storage write failures in static mode.
     }
@@ -5421,6 +5498,44 @@ export const renderPropensityPage = (ctx) => {
       button.classList.toggle('is-active', isActive);
       button.setAttribute('aria-pressed', String(isActive));
     });
+  };
+
+  const hydrateRunSetupControls = () => {
+    if (runPersonaSelect instanceof HTMLSelectElement) runPersonaSelect.value = runSetup.persona;
+    if (runGoalSelect instanceof HTMLSelectElement) runGoalSelect.value = runSetup.goal;
+    if (runHorizonSelect instanceof HTMLSelectElement) runHorizonSelect.value = runSetup.horizon;
+  };
+
+  const renderRunSetupSummary = () => {
+    if (!runSummary) return;
+    const personaLabel =
+      runSetup.persona === 'manager' ? 'Persona Manager' : runSetup.persona === 'all' ? 'Persona Shared' : 'Persona CSE';
+    const goalLabel =
+      runSetup.goal === 'retention' ? 'Goal Retention-first' : runSetup.goal === 'expansion' ? 'Goal Expansion-first' : 'Goal Balanced';
+    const horizonLabel =
+      runSetup.horizon === 'quarter' ? 'Horizon Quarter' : runSetup.horizon === 'month' ? 'Horizon Month' : 'Horizon Week';
+    runSummary.innerHTML = `
+      ${statusChip({ label: personaLabel, tone: 'neutral' })}
+      ${statusChip({ label: goalLabel, tone: runSetup.goal === 'retention' ? 'risk' : runSetup.goal === 'expansion' ? 'good' : 'warn' })}
+      ${statusChip({ label: horizonLabel, tone: 'neutral' })}
+    `;
+  };
+
+  const readRunSetupFromControls = () => {
+    const persona = String(runPersonaSelect?.value || '').toLowerCase();
+    const goal = String(runGoalSelect?.value || '').toLowerCase();
+    const horizon = String(runHorizonSelect?.value || '').toLowerCase();
+    runSetup.persona = ['cse', 'manager', 'all'].includes(persona) ? persona : defaultRunSetup.persona;
+    runSetup.goal = ['balanced', 'retention', 'expansion'].includes(goal) ? goal : defaultRunSetup.goal;
+    runSetup.horizon = ['week', 'month', 'quarter'].includes(horizon) ? horizon : defaultRunSetup.horizon;
+  };
+
+  const startChapterForRunSetup = () => {
+    if (runSetup.horizon === 'quarter' && runSetup.persona === 'manager') return 'chapter-verify';
+    if (runSetup.goal === 'retention') return 'chapter-choose';
+    if (runSetup.goal === 'expansion') return 'chapter-diagnose';
+    if (runSetup.horizon === 'month') return 'chapter-data-trust';
+    return 'chapter-orientation';
   };
 
   const applyChapterProgress = () => {
@@ -5487,6 +5602,10 @@ export const renderPropensityPage = (ctx) => {
       persistRoleFocus();
       applyRoleFocus();
       applyChapterProgress();
+      runSetup.persona = roleFocus;
+      persistRunSetup();
+      hydrateRunSetupControls();
+      renderRunSetupSummary();
       setActiveChapter(jumpNextChapterButton?.getAttribute('data-next-target') || chapterIds[0]);
       notify?.(
         roleFocus === 'all'
@@ -5496,6 +5615,38 @@ export const renderPropensityPage = (ctx) => {
             : 'Role focus set to Manager.'
       );
     });
+  });
+
+  wrapper.querySelector('[data-save-run-setup]')?.addEventListener('click', () => {
+    readRunSetupFromControls();
+    persistRunSetup();
+    renderRunSetupSummary();
+    notify?.('Run setup saved.');
+  });
+
+  wrapper.querySelector('[data-reset-run-setup]')?.addEventListener('click', () => {
+    runSetup = { ...defaultRunSetup };
+    hydrateRunSetupControls();
+    persistRunSetup();
+    renderRunSetupSummary();
+    notify?.('Run setup reset.');
+  });
+
+  wrapper.querySelector('[data-start-guided-run]')?.addEventListener('click', () => {
+    readRunSetupFromControls();
+    persistRunSetup();
+    roleFocus = runSetup.persona;
+    persistRoleFocus();
+    applyRoleFocus();
+    applyChapterProgress();
+    guideMode = 'guided';
+    applyGuideMode();
+    const chapterId = startChapterForRunSetup();
+    setActiveChapter(chapterId);
+    const node = wrapper.querySelector(`#${chapterId}`);
+    if (node) node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    renderRunSetupSummary();
+    notify?.('Guided run started.');
   });
 
   chapterActivateButtons.forEach((button, chapterId) => {
@@ -5532,6 +5683,8 @@ export const renderPropensityPage = (ctx) => {
 
   applyRoleFocus();
   applyChapterProgress();
+  hydrateRunSetupControls();
+  renderRunSetupSummary();
   setActiveChapter(
     chapterIds.includes(activeChapterId) && chapterMatchesFocus(activeChapterId)
       ? activeChapterId
