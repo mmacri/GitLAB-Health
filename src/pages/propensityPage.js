@@ -5061,12 +5061,12 @@ export const renderPropensityPage = (ctx) => {
   const ACTIVE_CHAPTER_KEY = 'gh_propensity_active_chapter_v1';
   const RUN_SETUP_KEY = 'gh_propensity_run_setup_v1';
   const guideStepIds = ['section-confidence', 'section-visuals', 'section-formulas', 'section-play-wizard', 'section-score-delta'];
-  let guideMode = 'guided';
+  let guideMode = 'expert';
   try {
     const storedMode = String(window.localStorage.getItem(GUIDE_MODE_KEY) || '').trim().toLowerCase();
     if (storedMode === 'expert' || storedMode === 'guided') guideMode = storedMode;
   } catch {
-    guideMode = 'guided';
+    guideMode = 'expert';
   }
 
   const chapterPlan = [
