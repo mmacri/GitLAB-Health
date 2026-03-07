@@ -3742,7 +3742,7 @@ export const renderPropensityPage = (ctx) => {
       </article>
     </section>
 
-    <section class="card">
+    <section class="card" id="section-operating-loop">
       <div class="metric-head">
         <h2>How to Use PtE and PtC</h2>
         ${statusChip({ label: 'Weekly operating loop', tone: 'neutral' })}
@@ -3767,7 +3767,7 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
-    <section class="grid-cards">
+    <section class="grid-cards" id="section-pte-ptc-meaning">
       <article class="card">
         <div class="metric-head">
           <h2>What PtE Means</h2>
@@ -4866,7 +4866,7 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
-    <section class="grid-cards">
+    <section class="grid-cards" id="section-role-checklists">
       <article class="card">
         <div class="metric-head">
           <h2>CSE Checklist</h2>
@@ -4893,7 +4893,7 @@ export const renderPropensityPage = (ctx) => {
       </article>
     </section>
 
-    <section class="card">
+    <section class="card" id="section-quadrant-plays">
       <div class="metric-head">
         <h2>Quadrant Plays and Exit Criteria</h2>
         ${statusChip({ label: 'Decision framework', tone: 'neutral' })}
@@ -4919,7 +4919,7 @@ export const renderPropensityPage = (ctx) => {
       </div>
     </section>
 
-    <section class="card">
+    <section class="card" id="section-band-reference">
       <div class="metric-head">
         <h2>Bands and Portfolio Distribution</h2>
         ${statusChip({ label: `${total} customers`, tone: 'neutral' })}
@@ -5023,6 +5023,142 @@ export const renderPropensityPage = (ctx) => {
     guideMode = 'guided';
   }
 
+  const chapterPlan = [
+    {
+      id: 'chapter-orientation',
+      title: 'Orientation',
+      subtitle: 'Understand what PtE/PtC means and where to start in under 5 minutes.',
+      tone: 'neutral',
+      sections: ['section-start-here', 'section-learning-path', 'section-decision-tree', 'section-operating-loop', 'section-pte-ptc-meaning']
+    },
+    {
+      id: 'chapter-data-trust',
+      title: 'Data Trust Gate',
+      subtitle: 'Validate confidence and input quality before score-based decisions.',
+      tone: 'good',
+      sections: ['section-confidence', 'section-evidence-quality', 'section-metric-lineage']
+    },
+    {
+      id: 'chapter-diagnose',
+      title: 'Diagnose Posture',
+      subtitle: 'Read band mix, matrix, trigger concentration, and account-level driver context.',
+      tone: 'warn',
+      sections: ['section-visuals', 'section-visuals-advanced', 'section-matrix', 'section-trigger-lifecycle', 'section-score-explainer']
+    },
+    {
+      id: 'chapter-choose',
+      title: 'Choose Plays',
+      subtitle: 'Prioritize queue order and map trigger clusters to deterministic plays.',
+      tone: 'warn',
+      sections: ['section-action-queue', 'section-trigger-catalog', 'section-trigger-sla', 'section-role-walkthroughs', 'section-mitigation-coverage']
+    },
+    {
+      id: 'chapter-execute',
+      title: 'Execute With Guardrails',
+      subtitle: 'Run wizard recommendations with readiness checks and role-based operating cadence.',
+      tone: 'good',
+      sections: ['section-play-wizard', 'section-playbook-readiness', 'section-cadence-agenda', 'section-role-checklists']
+    },
+    {
+      id: 'chapter-verify',
+      title: 'Verify and Calibrate',
+      subtitle: 'Measure movement, compare to baseline, and adjust plays by observed effectiveness.',
+      tone: 'neutral',
+      sections: ['section-score-delta', 'section-change-cycle', 'section-quarter-plan', 'section-play-effectiveness', 'section-manager-calibration', 'section-quadrant-plays', 'section-band-reference']
+    },
+    {
+      id: 'chapter-appendix',
+      title: 'Appendix and Formula Lab',
+      subtitle: 'Reference formulas, glossary, FAQ, drills, and sandbox tools when needed.',
+      tone: 'neutral',
+      collapsible: true,
+      sections: [
+        'section-formulas',
+        'section-formula-glossary',
+        'section-interpretation-pitfalls',
+        'section-faq',
+        'section-formula-examples',
+        'section-formula-sandbox',
+        'section-drill',
+        'section-practice-scenarios'
+      ]
+    }
+  ];
+
+  const buildChapteredGuideLayout = () => {
+    wrapper.setAttribute('data-guide-layout', 'chaptered');
+    wrapper.querySelectorAll('.guide-phase-card').forEach((node) => node.remove());
+    const anchor = wrapper.querySelector('#section-role-paths') || wrapper.querySelector('#section-guided-workflow');
+    if (!anchor) return;
+
+    const chapterStack = document.createElement('section');
+    chapterStack.className = 'guide-chapter-stack';
+    chapterStack.id = 'section-guide-chapters';
+
+    const chapterRail = document.createElement('section');
+    chapterRail.className = 'card guide-chapter-rail';
+    chapterRail.innerHTML = `
+      <div class="metric-head">
+        <h2>Operator Chapters</h2>
+        ${statusChip({ label: `${chapterPlan.length} chapters`, tone: 'neutral' })}
+      </div>
+      <p class="muted">Follow chapters in order for a complete expansion + churn operating cycle.</p>
+      <div class="guide-chapter-rail__actions">
+        ${chapterPlan
+          .map(
+            (chapter, index) =>
+              `<button class="ghost-btn guide-chapter-rail__item" type="button" data-jump-target="${chapter.id}">${index + 1}. ${escapeHtml(
+                chapter.title
+              )}</button>`
+          )
+          .join('')}
+      </div>
+    `;
+    chapterStack.appendChild(chapterRail);
+
+    chapterPlan.forEach((chapter, index) => {
+      const node = chapter.collapsible ? document.createElement('details') : document.createElement('section');
+      node.className = chapter.collapsible ? 'guide-chapter guide-chapter--appendix' : 'guide-chapter';
+      node.id = chapter.id;
+      if (chapter.collapsible) {
+        node.innerHTML = `
+          <summary class="card guide-chapter__summary">
+            <div class="metric-head">
+              <h2>${index + 1}. ${escapeHtml(chapter.title)}</h2>
+              ${statusChip({ label: 'Collapsed by default', tone: chapter.tone || 'neutral' })}
+            </div>
+            <p class="muted">${escapeHtml(chapter.subtitle || '')}</p>
+          </summary>
+        `;
+      } else {
+        node.innerHTML = `
+          <article class="card guide-chapter__intro">
+            <div class="metric-head">
+              <h2>${index + 1}. ${escapeHtml(chapter.title)}</h2>
+              ${statusChip({ label: 'Workflow chapter', tone: chapter.tone || 'neutral' })}
+            </div>
+            <p class="muted">${escapeHtml(chapter.subtitle || '')}</p>
+          </article>
+        `;
+      }
+
+      const body = document.createElement('div');
+      body.className = 'guide-chapter__body';
+      let moved = 0;
+      chapter.sections.forEach((sectionId) => {
+        const section = wrapper.querySelector(`#${sectionId}`);
+        if (!section) return;
+        body.appendChild(section);
+        moved += 1;
+      });
+      if (!moved) return;
+      node.appendChild(body);
+      chapterStack.appendChild(node);
+    });
+
+    anchor.insertAdjacentElement('afterend', chapterStack);
+  };
+
   const applyGuideMode = () => {
     wrapper.setAttribute('data-guide-mode', guideMode);
     const toggle = wrapper.querySelector('[data-toggle-guide-mode]');
@@ -5032,6 +5168,8 @@ export const renderPropensityPage = (ctx) => {
       toggle.setAttribute('aria-pressed', String(!isGuided));
     }
   };
+
+  buildChapteredGuideLayout();
 
   const stepButtons = new Map();
   wrapper.querySelectorAll('.guide-stepper [data-jump-target]').forEach((button) => {
