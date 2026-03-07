@@ -110,6 +110,74 @@ const renewalPressureScorePreview = (renewalDays) => {
   return 15;
 };
 
+const calculateFormulaSandbox = (input = {}) => {
+  const toNum = (value, fallback = 0) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : fallback;
+  };
+  const clampPct = (value) => Math.max(0, Math.min(100, toNum(value, 0)));
+  const adoptionScore = clampPct(input.adoptionScore);
+  const engagementScore = clampPct(input.engagementScore);
+  const riskScore = clampPct(input.riskScore);
+  const cicdPercent = clampPct(input.cicdPercent);
+  const securityPercent = clampPct(input.securityPercent);
+  const stageCoveragePercent = clampPct(input.stageCoveragePercent);
+  const openExpansionCount = Math.max(0, toNum(input.openExpansionCount, 0));
+  const renewalDays = toNum(input.renewalDays, 999);
+  const renewalPressure = renewalPressureScorePreview(renewalDays);
+  const renewalSoonSignal = Boolean(input.renewalSoonSignal);
+  const staleEngagement90 = Boolean(input.staleEngagement90);
+  const secureBelow30 = Boolean(input.secureBelow30);
+  const strongMomentum = Boolean(input.strongMomentum);
+
+  const pteBase = round1(
+    adoptionScore * 0.32 +
+      engagementScore * 0.23 +
+      (100 - riskScore) * 0.15 +
+      cicdPercent * 0.13 +
+      securityPercent * 0.08 +
+      stageCoveragePercent * 0.09
+  );
+
+  const pteAdjustment = round1(
+    (renewalDays <= 120 ? 8 : 0) +
+      (renewalDays > 120 && renewalDays <= 180 ? 4 : 0) +
+      (renewalDays > 365 ? -4 : 0) +
+      Math.min(8, openExpansionCount * 2) +
+      (engagementScore < 45 ? -10 : 0) +
+      (riskScore >= 70 ? -12 : 0)
+  );
+  const pteFinal = round1(Math.max(0, Math.min(100, pteBase + pteAdjustment)));
+  const pteBand = pteFinal >= 70 ? 'High' : pteFinal >= 45 ? 'Medium' : 'Low';
+
+  const ptcBase = round1(riskScore * 0.42 + (100 - adoptionScore) * 0.24 + (100 - engagementScore) * 0.17 + renewalPressure * 0.17);
+  const ptcAdjustment = round1(
+    (renewalSoonSignal ? 8 : 0) + (staleEngagement90 ? 10 : 0) + (secureBelow30 ? 5 : 0) + (strongMomentum ? -12 : 0)
+  );
+  const ptcFinal = round1(Math.max(0, Math.min(100, ptcBase + ptcAdjustment)));
+  const ptcBand = ptcFinal >= 70 ? 'High' : ptcFinal >= 45 ? 'Medium' : 'Low';
+
+  return {
+    inputs: {
+      adoptionScore,
+      engagementScore,
+      riskScore,
+      cicdPercent,
+      securityPercent,
+      stageCoveragePercent,
+      openExpansionCount,
+      renewalDays,
+      renewalPressure,
+      renewalSoonSignal,
+      staleEngagement90,
+      secureBelow30,
+      strongMomentum
+    },
+    pte: { base: pteBase, adjustment: pteAdjustment, final: pteFinal, band: pteBand },
+    ptc: { base: ptcBase, adjustment: ptcAdjustment, final: ptcFinal, band: ptcBand }
+  };
+};
+
 const deriveHealthDistribution = (rows = []) =>
   rows.reduce(
     (acc, row) => {
@@ -1518,6 +1586,22 @@ export const renderPropensityPage = (ctx) => {
       (avgEngagementScore >= 70 && avgAdoptionScore >= 70 && avgRiskScore <= 35 ? -12 : 0)
   );
   const ptcPreview = round1(Math.max(0, Math.min(100, ptcBasePreview + ptcAdjustmentPreview)));
+  const formulaSandboxBaseline = {
+    adoptionScore: avgAdoptionScore,
+    engagementScore: avgEngagementScore,
+    riskScore: avgRiskScore,
+    cicdPercent: avgCicdPercent,
+    securityPercent: avgSecurityPercent,
+    stageCoveragePercent: avgStageCoveragePercent,
+    openExpansionCount: avgOpenExpansionCount,
+    renewalDays: avgRenewalDays !== null ? avgRenewalDays : 180,
+    renewalSoonSignal:
+      rows.some((row) => (row.riskSignals || []).some((signal) => normalizeCode(signal.code) === 'RENEWAL_SOON')) ||
+      (avgRenewalDays !== null && avgRenewalDays <= 90),
+    staleEngagement90: rows.some((row) => Number(row.engagementDays ?? 999) > 90),
+    secureBelow30: avgSecurityPercent < 30,
+    strongMomentum: avgAdoptionScore >= 70 && avgEngagementScore >= 70 && avgRiskScore <= 35
+  };
 
   const buildComparison = (snapshot) => {
     if (!snapshot) return null;
@@ -2483,6 +2567,73 @@ export const renderPropensityPage = (ctx) => {
         ${statusChip({ label: 'Banding: Medium 45-69', tone: 'warn' })}
         ${statusChip({ label: 'Banding: Low <45', tone: 'good' })}
       </div>
+    </section>
+
+    <section class="card" id="section-formula-sandbox">
+      <div class="metric-head">
+        <h2>Formula Sandbox: Test Scenarios Live</h2>
+        ${statusChip({ label: 'Interactive calculator', tone: 'neutral' })}
+      </div>
+      <p class="muted">
+        Change inputs to see exactly how PtE and PtC move. This uses the same deterministic formulas and adjustment rules shown above.
+      </p>
+      <form class="form-grid" data-formula-sandbox-form>
+        <label>
+          Adoption score (0-100)
+          <input type="number" name="adoptionScore" min="0" max="100" step="0.1" value="${formulaSandboxBaseline.adoptionScore}" />
+        </label>
+        <label>
+          Engagement score (0-100)
+          <input type="number" name="engagementScore" min="0" max="100" step="0.1" value="${formulaSandboxBaseline.engagementScore}" />
+        </label>
+        <label>
+          Risk score (0-100)
+          <input type="number" name="riskScore" min="0" max="100" step="0.1" value="${formulaSandboxBaseline.riskScore}" />
+        </label>
+        <label>
+          CI/CD adoption % (0-100)
+          <input type="number" name="cicdPercent" min="0" max="100" step="0.1" value="${formulaSandboxBaseline.cicdPercent}" />
+        </label>
+        <label>
+          Security adoption % (0-100)
+          <input type="number" name="securityPercent" min="0" max="100" step="0.1" value="${formulaSandboxBaseline.securityPercent}" />
+        </label>
+        <label>
+          Stage coverage % (0-100)
+          <input type="number" name="stageCoveragePercent" min="0" max="100" step="0.1" value="${formulaSandboxBaseline.stageCoveragePercent}" />
+        </label>
+        <label>
+          Open expansion count
+          <input type="number" name="openExpansionCount" min="0" max="20" step="1" value="${formulaSandboxBaseline.openExpansionCount}" />
+        </label>
+        <label>
+          Renewal days remaining
+          <input type="number" name="renewalDays" min="0" max="999" step="1" value="${formulaSandboxBaseline.renewalDays}" />
+        </label>
+        <fieldset class="filter-multi form-span formula-flags">
+          <legend>Adjustment flags</legend>
+          <label class="formula-flag">
+            <input type="checkbox" name="renewalSoonSignal" ${formulaSandboxBaseline.renewalSoonSignal ? 'checked' : ''} />
+            Renewal signal active
+          </label>
+          <label class="formula-flag">
+            <input type="checkbox" name="staleEngagement90" ${formulaSandboxBaseline.staleEngagement90 ? 'checked' : ''} />
+            No-touch engagement > 90 days
+          </label>
+          <label class="formula-flag">
+            <input type="checkbox" name="secureBelow30" ${formulaSandboxBaseline.secureBelow30 ? 'checked' : ''} />
+            Security adoption below 30%
+          </label>
+          <label class="formula-flag">
+            <input type="checkbox" name="strongMomentum" ${formulaSandboxBaseline.strongMomentum ? 'checked' : ''} />
+            Strong momentum (high adoption + engagement, low risk)
+          </label>
+        </fieldset>
+      </form>
+      <div class="form-actions">
+        <button class="ghost-btn" type="button" data-formula-sandbox-reset>Reset to portfolio baseline</button>
+      </div>
+      <div class="section-stack" data-formula-sandbox-output></div>
     </section>
 
     <section class="card" id="section-drill">
@@ -3539,6 +3690,167 @@ export const renderPropensityPage = (ctx) => {
       const section = wrapper.querySelector('#section-drill');
       section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+  });
+
+  const formulaSandboxForm = wrapper.querySelector('[data-formula-sandbox-form]');
+  const formulaSandboxOutput = wrapper.querySelector('[data-formula-sandbox-output]');
+  const formulaSandboxReset = wrapper.querySelector('[data-formula-sandbox-reset]');
+
+  const readFormulaSandboxState = () => {
+    if (!(formulaSandboxForm instanceof HTMLFormElement)) return { ...formulaSandboxBaseline };
+    const readNumber = (name, fallback = 0) => {
+      const field = formulaSandboxForm.elements.namedItem(name);
+      if (!field || !('value' in field)) return fallback;
+      const numeric = Number(field.value);
+      return Number.isFinite(numeric) ? numeric : fallback;
+    };
+    const readCheckbox = (name, fallback = false) => {
+      const field = formulaSandboxForm.elements.namedItem(name);
+      return field && 'checked' in field ? Boolean(field.checked) : fallback;
+    };
+    return {
+      adoptionScore: readNumber('adoptionScore', formulaSandboxBaseline.adoptionScore),
+      engagementScore: readNumber('engagementScore', formulaSandboxBaseline.engagementScore),
+      riskScore: readNumber('riskScore', formulaSandboxBaseline.riskScore),
+      cicdPercent: readNumber('cicdPercent', formulaSandboxBaseline.cicdPercent),
+      securityPercent: readNumber('securityPercent', formulaSandboxBaseline.securityPercent),
+      stageCoveragePercent: readNumber('stageCoveragePercent', formulaSandboxBaseline.stageCoveragePercent),
+      openExpansionCount: readNumber('openExpansionCount', formulaSandboxBaseline.openExpansionCount),
+      renewalDays: readNumber('renewalDays', formulaSandboxBaseline.renewalDays),
+      renewalSoonSignal: readCheckbox('renewalSoonSignal', formulaSandboxBaseline.renewalSoonSignal),
+      staleEngagement90: readCheckbox('staleEngagement90', formulaSandboxBaseline.staleEngagement90),
+      secureBelow30: readCheckbox('secureBelow30', formulaSandboxBaseline.secureBelow30),
+      strongMomentum: readCheckbox('strongMomentum', formulaSandboxBaseline.strongMomentum)
+    };
+  };
+
+  const setFormulaSandboxState = (state = {}) => {
+    if (!(formulaSandboxForm instanceof HTMLFormElement)) return;
+    const setValue = (name, value) => {
+      const field = formulaSandboxForm.elements.namedItem(name);
+      if (field && 'value' in field) field.value = String(value ?? '');
+    };
+    const setChecked = (name, value) => {
+      const field = formulaSandboxForm.elements.namedItem(name);
+      if (field && 'checked' in field) field.checked = Boolean(value);
+    };
+    setValue('adoptionScore', state.adoptionScore);
+    setValue('engagementScore', state.engagementScore);
+    setValue('riskScore', state.riskScore);
+    setValue('cicdPercent', state.cicdPercent);
+    setValue('securityPercent', state.securityPercent);
+    setValue('stageCoveragePercent', state.stageCoveragePercent);
+    setValue('openExpansionCount', state.openExpansionCount);
+    setValue('renewalDays', state.renewalDays);
+    setChecked('renewalSoonSignal', state.renewalSoonSignal);
+    setChecked('staleEngagement90', state.staleEngagement90);
+    setChecked('secureBelow30', state.secureBelow30);
+    setChecked('strongMomentum', state.strongMomentum);
+  };
+
+  const renderFormulaSandboxOutput = () => {
+    if (!formulaSandboxOutput) return;
+    const scenario = calculateFormulaSandbox(readFormulaSandboxState());
+    const { inputs, pte, ptc } = scenario;
+    const pteTone = pte.band === 'High' ? 'good' : pte.band === 'Medium' ? 'warn' : 'neutral';
+    const ptcTone = ptc.band === 'High' ? 'risk' : ptc.band === 'Medium' ? 'warn' : 'good';
+    const pteWhy =
+      pte.band === 'High'
+        ? 'Expansion readiness is high because weighted adoption/engagement drivers and context adjustments keep the score above 70.'
+        : pte.band === 'Medium'
+          ? 'Expansion readiness is moderate. Improve one major input (adoption, engagement, or risk stability) to move above 70.'
+          : 'Expansion readiness is low because weighted drivers are not yet strong enough or penalties are reducing the final score.';
+    const ptcWhy =
+      ptc.band === 'High'
+        ? 'Retention pressure is high because risk, adoption/engagement gaps, and renewal urgency stack into a high final score.'
+        : ptc.band === 'Medium'
+          ? 'Retention pressure is moderate. Closing trigger adjustments and reducing gap metrics should move this toward Low.'
+          : 'Retention pressure is low because risk burden and gap metrics remain controlled after adjustments.';
+
+    formulaSandboxOutput.innerHTML = `
+      <div class="metric-grid kpi-4">
+        ${metricTile({ label: 'PtE base', value: pte.base, tone: 'neutral' })}
+        ${metricTile({ label: 'PtE final', value: `${pte.final} (${pte.band})`, tone: pteTone })}
+        ${metricTile({ label: 'PtC base', value: ptc.base, tone: 'neutral' })}
+        ${metricTile({ label: 'PtC final', value: `${ptc.final} (${ptc.band})`, tone: ptcTone })}
+      </div>
+      <div class="grid-cards">
+        <article class="card compact-card">
+          <div class="metric-head">
+            <h3>PtE contribution breakdown</h3>
+            ${statusChip({ label: `Adjustment ${formatSigned(pte.adjustment, 1)}`, tone: pte.adjustment >= 0 ? 'good' : 'warn' })}
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Component</th>
+                  <th>Input</th>
+                  <th>Weight/Rule</th>
+                  <th>Contribution</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Adoption score</td><td>${inputs.adoptionScore}</td><td>0.32</td><td>${round1(inputs.adoptionScore * 0.32)}</td></tr>
+                <tr><td>Engagement score</td><td>${inputs.engagementScore}</td><td>0.23</td><td>${round1(inputs.engagementScore * 0.23)}</td></tr>
+                <tr><td>Risk stability (100-risk)</td><td>${round1(100 - inputs.riskScore)}</td><td>0.15</td><td>${round1((100 - inputs.riskScore) * 0.15)}</td></tr>
+                <tr><td>CI/CD adoption %</td><td>${inputs.cicdPercent}</td><td>0.13</td><td>${round1(inputs.cicdPercent * 0.13)}</td></tr>
+                <tr><td>Security adoption %</td><td>${inputs.securityPercent}</td><td>0.08</td><td>${round1(inputs.securityPercent * 0.08)}</td></tr>
+                <tr><td>Stage coverage %</td><td>${inputs.stageCoveragePercent}</td><td>0.09</td><td>${round1(inputs.stageCoveragePercent * 0.09)}</td></tr>
+                <tr><td><strong>Base subtotal</strong></td><td>-</td><td>-</td><td><strong>${pte.base}</strong></td></tr>
+                <tr><td>Rule adjustment</td><td>-</td><td>Context rules</td><td>${formatSigned(pte.adjustment, 1)}</td></tr>
+                <tr><td><strong>Final PtE</strong></td><td>-</td><td>clamp(0..100)</td><td><strong>${pte.final}</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="muted"><strong>Outcome logic:</strong> ${pteWhy}</p>
+        </article>
+        <article class="card compact-card">
+          <div class="metric-head">
+            <h3>PtC contribution breakdown</h3>
+            ${statusChip({ label: `Adjustment ${formatSigned(ptc.adjustment, 1)}`, tone: ptc.adjustment > 0 ? 'risk' : ptc.adjustment < 0 ? 'good' : 'neutral' })}
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Component</th>
+                  <th>Input</th>
+                  <th>Weight/Rule</th>
+                  <th>Contribution</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Risk score</td><td>${inputs.riskScore}</td><td>0.42</td><td>${round1(inputs.riskScore * 0.42)}</td></tr>
+                <tr><td>Adoption gap (100-adoption)</td><td>${round1(100 - inputs.adoptionScore)}</td><td>0.24</td><td>${round1((100 - inputs.adoptionScore) * 0.24)}</td></tr>
+                <tr><td>Engagement gap (100-engagement)</td><td>${round1(100 - inputs.engagementScore)}</td><td>0.17</td><td>${round1((100 - inputs.engagementScore) * 0.17)}</td></tr>
+                <tr><td>Renewal pressure</td><td>${inputs.renewalPressure}</td><td>0.17</td><td>${round1(inputs.renewalPressure * 0.17)}</td></tr>
+                <tr><td><strong>Base subtotal</strong></td><td>-</td><td>-</td><td><strong>${ptc.base}</strong></td></tr>
+                <tr><td>Rule adjustment</td><td>-</td><td>Signals/momentum</td><td>${formatSigned(ptc.adjustment, 1)}</td></tr>
+                <tr><td><strong>Final PtC</strong></td><td>-</td><td>clamp(0..100)</td><td><strong>${ptc.final}</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="muted"><strong>Outcome logic:</strong> ${ptcWhy}</p>
+        </article>
+      </div>
+      <div class="chip-row">
+        ${statusChip({ label: `Renewal pressure ${inputs.renewalPressure}`, tone: inputs.renewalPressure >= 60 ? 'warn' : 'neutral' })}
+        ${statusChip({ label: `Flags on: ${[inputs.renewalSoonSignal, inputs.staleEngagement90, inputs.secureBelow30, inputs.strongMomentum].filter(Boolean).length}/4`, tone: 'neutral' })}
+      </div>
+    `;
+  };
+
+  if (formulaSandboxForm instanceof HTMLFormElement) {
+    formulaSandboxForm.addEventListener('input', () => renderFormulaSandboxOutput());
+    formulaSandboxForm.addEventListener('change', () => renderFormulaSandboxOutput());
+    renderFormulaSandboxOutput();
+  }
+
+  formulaSandboxReset?.addEventListener('click', () => {
+    setFormulaSandboxState(formulaSandboxBaseline);
+    renderFormulaSandboxOutput();
+    notify?.('Formula sandbox reset to portfolio baseline.');
   });
 
   const playWizardForm = wrapper.querySelector('[data-play-wizard-form]');

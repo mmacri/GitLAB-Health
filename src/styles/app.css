@@ -1600,6 +1600,27 @@ textarea.artifact,
   grid-column: 1 / -1;
 }
 
+.formula-flags {
+  display: grid;
+  gap: 8px;
+}
+
+.formula-flags .formula-flag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.formula-flags .formula-flag input[type='checkbox'] {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+}
+
 .density-control {
   display: flex;
   gap: var(--space-2);
