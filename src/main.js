@@ -633,16 +633,27 @@ const renderLeftRail = () => {
     </div>
 
     <section class="sidebar__zone sidebar__zone--nav">
-      <p class="sidebar__zone-label">Mode</p>
-      <div class="sidebar__mode-echo">
-        <span class="sidebar__mode-pill">
-          ${state.viewMode === 'deep' ? 'Deep Dive' : state.viewMode === 'review' ? 'Review' : 'Today'}
-        </span>
-      </div>
+      <p class="sidebar__zone-label">Work</p>
       <button class="sidebar__item ${state.route.name === 'home' ? 'active' : ''}" type="button" data-nav-route="home">
         ${shellIcon('today')}
         <span>Today</span>
       </button>
+      <button class="sidebar__item ${state.route.name === 'intake' ? 'active' : ''}" type="button" data-nav-route="intake">
+        ${shellIcon('current')}
+        <span>Intake</span>
+      </button>
+      <button class="sidebar__item ${state.route.name === 'programs' || state.route.name === 'program' ? 'active' : ''}" type="button" data-nav-route="programs">
+        ${shellIcon('programs')}
+        <span>Programs</span>
+      </button>
+      <button class="sidebar__item ${state.route.name === 'playbooks' ? 'active' : ''}" type="button" data-go-playbooks>
+        ${shellIcon('playbooks')}
+        <span>Playbooks</span>
+      </button>
+    </section>
+
+    <section class="sidebar__zone sidebar__zone--portfolio">
+      <p class="sidebar__zone-label">Portfolio</p>
       <button class="sidebar__item ${state.route.name === 'portfolio' ? 'active' : ''}" type="button" data-nav-route="portfolio">
         ${shellIcon('portfolio')}
         <span>Portfolio</span>
@@ -651,36 +662,47 @@ const renderLeftRail = () => {
         ${shellIcon('customers')}
         <span>Customers</span>
       </button>
-      <button class="sidebar__item ${state.route.name === 'programs' || state.route.name === 'program' ? 'active' : ''}" type="button" data-nav-route="programs">
-        ${shellIcon('programs')}
-        <span>Programs</span>
+      <button class="sidebar__item ${state.route.name === 'risks' ? 'active' : ''}" type="button" data-nav-route="risks">
+        ${shellIcon('dot')}
+        <span>Risks</span>
       </button>
+      <button class="sidebar__item ${state.route.name === 'expansion' ? 'active' : ''}" type="button" data-nav-route="expansion">
+        ${shellIcon('dot')}
+        <span>Expansion</span>
+      </button>
+      <button class="sidebar__item ${state.route.name === 'propensity' ? 'active' : ''}" type="button" data-go-propensity>
+        ${shellIcon('propensity')}
+        <span>PtE / PtC</span>
+      </button>
+      <button class="sidebar__item" type="button" data-open-filters aria-expanded="false">
+        ${shellIcon('filters')}
+        <span>Filters</span>
+        ${filterCount > 0 ? `<span class="sidebar__badge">${filterCount}</span>` : ''}
+      </button>
+    </section>
+
+    <section class="sidebar__zone sidebar__zone--insights">
+      <p class="sidebar__zone-label">Insights</p>
       <button class="sidebar__item ${state.route.name === 'manager' ? 'active' : ''}" type="button" data-nav-route="manager">
         ${shellIcon('manager')}
         <span>Manager</span>
       </button>
+      <button class="sidebar__item ${state.route.name === 'reports' ? 'active' : ''}" type="button" data-nav-route="reports">
+        ${shellIcon('portfolio')}
+        <span>Reports</span>
+      </button>
+      <button class="sidebar__item ${state.route.name === 'voc' ? 'active' : ''}" type="button" data-nav-route="voc">
+        ${shellIcon('dot')}
+        <span>Voice of Customer</span>
+      </button>
+      <button class="sidebar__item ${state.route.name === 'cheatsheet' ? 'active' : ''}" type="button" data-nav-route="cheatsheet">
+        ${shellIcon('resources')}
+        <span>Cheatsheet</span>
+      </button>
     </section>
 
     <section class="sidebar__zone sidebar__zone--tools">
-      <p class="sidebar__zone-label">${isAccountContext ? 'Jump To Section' : 'Tools'}</p>
-      <button class="sidebar__item" type="button" data-open-filters aria-expanded="false">
-        ${shellIcon('filters')}
-        <span>Portfolio Filters</span>
-        ${filterCount > 0 ? `<span class="sidebar__badge">${filterCount}</span>` : ''}
-      </button>
-      <button class="sidebar__item" type="button" data-go-playbooks>
-        ${shellIcon('playbooks')}
-        <span>Open Playbooks</span>
-      </button>
-      <button class="sidebar__item ${state.route.name === 'propensity' ? 'active' : ''}" type="button" data-go-propensity>
-        ${shellIcon('propensity')}
-        <span>PtE / PtC Guide</span>
-      </button>
-      ${
-        lastPlaybook?.name
-          ? `<span class="sidebar__subtitle">${lastPlaybook.name}</span>`
-          : ''
-      }
+      <p class="sidebar__zone-label">${isAccountContext ? 'Jump To Section' : 'Open'}</p>
       <button class="sidebar__item" type="button" data-rail-open-current ${current ? '' : 'disabled'}>
         ${shellIcon('current')}
         <span>Open Selected Customer</span>
@@ -733,14 +755,6 @@ const renderLeftRail = () => {
         <label for="sidebar-account">Account</label>
         <select id="sidebar-account" data-global-account-select></select>
       </div>
-      <button class="sidebar__item" type="button" data-copy-snapshot>
-        ${shellIcon('link')}
-        <span>Copy Snapshot Link</span>
-      </button>
-      <button class="sidebar__item" type="button" data-global-export>
-        ${shellIcon('export')}
-        <span>Export</span>
-      </button>
       <button class="sidebar__item" type="button" data-open-settings>
         ${shellIcon('settings')}
         <span>Settings</span>
@@ -748,6 +762,14 @@ const renderLeftRail = () => {
       <button class="sidebar__item" type="button" data-go-resources>
         ${shellIcon('resources')}
         <span>Resources</span>
+      </button>
+      <button class="sidebar__item" type="button" data-global-export>
+        ${shellIcon('export')}
+        <span>Export</span>
+      </button>
+      <button class="sidebar__item" type="button" data-copy-snapshot>
+        ${shellIcon('link')}
+        <span>Copy Snapshot Link</span>
       </button>
     </section>
   `;
@@ -1815,6 +1837,7 @@ const renderCurrentRoute = () => {
       onCopyShare: copyShareSnapshot,
       requests: state.data.requests || [],
       programs: state.data.programs || [],
+      accounts: state.data.accounts || [],
       ...common
     });
   }

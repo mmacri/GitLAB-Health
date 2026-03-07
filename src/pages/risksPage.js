@@ -1,14 +1,26 @@
 import { pageHeader } from '../components/pageHeader.js';
 import { statusChip } from '../components/statusChip.js';
 
-const SIGNAL_CODES = ['LOW_ENGAGEMENT', 'RENEWAL_SOON', 'LOW_SECURITY_ADOPTION', 'LOW_CICD_ADOPTION', 'NO_TIME_TO_VALUE'];
+const SIGNAL_LABELS = {
+  LOW_ENGAGEMENT: 'Low Engagement',
+  RENEWAL_SOON: 'Renewal Soon',
+  LOW_SECURITY_ADOPTION: 'Low Security',
+  LOW_CICD_ADOPTION: 'Low CI/CD',
+  NO_TIME_TO_VALUE: 'No Time to Value'
+};
 
 const normalize = (value) => String(value || '').trim().toUpperCase();
 
-const cellForSignal = (present) =>
-  present
-    ? `<span class="status-chip status-chip--risk"><span class="chip-icon" aria-hidden="true">●</span><span>Active</span></span>`
-    : `<span class="status-chip status-chip--neutral"><span class="chip-icon" aria-hidden="true">●</span><span>Clear</span></span>`;
+const signalChips = (signals = []) => {
+  if (!signals.length) return `<span class="status-chip status-chip--neutral">None</span>`;
+  return signals
+    .slice(0, 3)
+    .map((signal) => {
+      const label = SIGNAL_LABELS[normalize(signal.code)] || signal.code;
+      return `<span class="status-chip status-chip--risk"><span class="chip-icon" aria-hidden="true">●</span><span>${label}</span></span>`;
+    })
+    .join(' ');
+};
 
 const CSE_ACTION_MAP = {
   LOW_ENGAGEMENT: 'Invite to next webinar or office hours session to rebuild touch cadence.',
@@ -31,7 +43,7 @@ export const renderRisksPage = (ctx) => {
     health: row.health,
     signals: row.riskSignals || [],
     nextAction: row.riskSignals?.[0]?.code
-      ? `Address ${row.riskSignals[0].code} with mitigation owner and due date`
+      ? `Address "${SIGNAL_LABELS[normalize(row.riskSignals[0].code)] || row.riskSignals[0].code}" — assign mitigation owner and due date`
       : 'Maintain engagement and monitor adoption movement',
     cseAction: cseAction(row.riskSignals || [])
   }));
@@ -60,7 +72,7 @@ export const renderRisksPage = (ctx) => {
             <tr>
               <th>Customer</th>
               <th>Health</th>
-              ${SIGNAL_CODES.map((code) => `<th>${code}</th>`).join('')}
+              <th>Active Risk Signals</th>
               <th>CSM Action</th>
               <th>CSE Action</th>
             </tr>
@@ -69,20 +81,17 @@ export const renderRisksPage = (ctx) => {
             ${
               rows.length
                 ? rows
-                    .map((row) => {
-                      const active = new Set((row.signals || []).map((signal) => normalize(signal.code)));
-                      return `
-                        <tr>
-                          <td><a href="#" data-open-customer="${row.id}">${row.name}</a></td>
-                          <td>${statusChip({ label: row.health, tone: String(row.health).toLowerCase() === 'red' ? 'risk' : String(row.health).toLowerCase() === 'yellow' ? 'warn' : 'good' })}</td>
-                          ${SIGNAL_CODES.map((code) => `<td>${cellForSignal(active.has(code))}</td>`).join('')}
-                          <td>${row.nextAction}</td>
-                          <td>${row.cseAction}</td>
-                        </tr>
-                      `;
-                    })
+                    .map((row) => `
+                      <tr>
+                        <td><a href="#" data-open-customer="${row.id}">${row.name}</a></td>
+                        <td>${statusChip({ label: row.health, tone: String(row.health).toLowerCase() === 'red' ? 'risk' : String(row.health).toLowerCase() === 'yellow' ? 'warn' : 'good' })}</td>
+                        <td>${signalChips(row.signals)}</td>
+                        <td>${row.nextAction}</td>
+                        <td>${row.cseAction}</td>
+                      </tr>
+                    `)
                     .join('')
-                : '<tr><td colspan="9">No customers available.</td></tr>'
+                : '<tr><td colspan="5">No customers available.</td></tr>'
             }
           </tbody>
         </table>

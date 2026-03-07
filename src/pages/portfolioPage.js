@@ -508,6 +508,9 @@ const renderWorkspaceTodayPage = (ctx) => {
   const openRequests = (ctx.requests || []).filter((r) =>
     ['new', 'in_progress'].includes(String(r.status || 'new').toLowerCase())
   );
+  const accountNameById = {};
+  (ctx.accounts || []).forEach((a) => { accountNameById[a.id] = a.name; });
+  (workspace?.customers || []).forEach((c) => { accountNameById[c.id] = c.name; });
   const allPrograms = ctx.programs || workspace?.programs || [];
   const nowMs = Date.now();
   const weekMs = 7 * 24 * 60 * 60 * 1000;
@@ -537,7 +540,7 @@ const renderWorkspaceTodayPage = (ctx) => {
         <p class="muted page-meta">Focus first on at-risk customers, near-term renewals, and adoption blockers.</p>
       </div>
       <div class="page-actions">
-        ${isManager ? '<span class="status-chip tone-info">Manager</span>' : ''}
+        ${isManager ? statusChip({ label: 'Manager view', tone: 'neutral' }) : ''}
         <button class="ghost-btn" type="button" data-open-filters aria-expanded="false">Open Filters${
           Number(filterCount || 0) > 0 ? ` (${Number(filterCount)} active)` : ''
         }</button>
@@ -617,7 +620,7 @@ const renderWorkspaceTodayPage = (ctx) => {
           <tbody>
             ${openRequests.slice(0, 8).map((req) => `
               <tr>
-                <td>${req.account_id || '—'}</td>
+                <td>${accountNameById[req.account_id] || req.account_id || '—'}</td>
                 <td>${req.topic || '—'}</td>
                 <td>${req.stage || '—'}</td>
                 <td>${req.requestor_role || '—'}</td>

@@ -78,14 +78,16 @@ export const renderManagerPage = (ctx) => {
       subtitle:
         'Team-level operating view for coverage, portfolio risk, adoption improvement, and program performance.',
       actionsHtml: `
-        <button class="ghost-btn" type="button" data-go-portfolio>Back to Portfolio</button>
-        <button class="ghost-btn" type="button" data-go-reports>Open Reports</button>
+        <button class="ghost-btn" type="button" data-go-risks>Risk Heatmap</button>
+        <button class="ghost-btn" type="button" data-go-programs>Programs</button>
+        <button class="ghost-btn" type="button" data-go-portfolio>Portfolio</button>
+        <button class="ghost-btn" type="button" data-go-reports>Reports</button>
       `
     })}
 
     ${sectionCard({
       bodyHtml: `
-      <div class="kpi-grid kpi-4">
+      <div class="kpi-grid kpi-3">
         ${metricTile({ label: 'Total customers', value: rows.length, tone: 'neutral' })}
         ${metricTile({ label: 'Average adoption', value: adoption.avgAdoption || 0, tone: (adoption.avgAdoption || 0) >= 70 ? 'good' : 'warn' })}
         ${metricTile({ label: 'At-risk customers', value: atRisk.length, tone: atRisk.length ? 'risk' : 'good' })}
@@ -287,6 +289,8 @@ export const renderManagerPage = (ctx) => {
 
   wrapper.querySelector('[data-go-portfolio]')?.addEventListener('click', () => navigate('portfolio'));
   wrapper.querySelector('[data-go-reports]')?.addEventListener('click', () => navigate('reports'));
+  wrapper.querySelector('[data-go-risks]')?.addEventListener('click', () => navigate('risks'));
+  wrapper.querySelector('[data-go-programs]')?.addEventListener('click', () => navigate('programs'));
   wrapper.addEventListener('click', (event) => {
     const link = event.target.closest('[data-open-customer]');
     if (!link) return;

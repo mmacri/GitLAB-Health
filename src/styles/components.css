@@ -121,7 +121,17 @@
 }
 
 .metric-head h2 {
-  font-size: 22px;
+  font-size: var(--text-2xl);
+}
+
+.section-subhead {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--gl-text);
+  margin-top: var(--gl-space-4);
+  margin-bottom: var(--gl-space-2);
+  padding-top: var(--gl-space-3);
+  border-top: 1px solid var(--gl-border);
 }
 
 .metric-head h3 {
@@ -149,6 +159,10 @@
 
 .kpi-4 {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.kpi-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .metric-tile {
