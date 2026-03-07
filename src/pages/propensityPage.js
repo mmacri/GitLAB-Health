@@ -319,6 +319,101 @@ const calculateFormulaPlanProjection = (input = {}, actions = [], cycles = 1) =>
   };
 };
 
+const deriveFormulaRuleStates = (inputs = {}) => {
+  const renewalDays = Number(inputs.renewalDays ?? 999);
+  const openExpansionCount = Math.max(0, Number(inputs.openExpansionCount || 0));
+  const engagementScore = Number(inputs.engagementScore || 0);
+  const riskScore = Number(inputs.riskScore || 0);
+  const secureBelow30 = Boolean(inputs.secureBelow30);
+  const staleEngagement90 = Boolean(inputs.staleEngagement90);
+  const renewalSoonSignal = Boolean(inputs.renewalSoonSignal);
+  const strongMomentum = Boolean(inputs.strongMomentum);
+  const expansionPoints = Math.min(8, openExpansionCount * 2);
+
+  return [
+    {
+      id: 'pte-renewal-120',
+      metric: 'PtE',
+      label: 'Renewal <= 120 days',
+      points: 8,
+      active: renewalDays <= 120,
+      why: 'Near-term renewal window increases expansion urgency and value narrative focus.'
+    },
+    {
+      id: 'pte-renewal-180',
+      metric: 'PtE',
+      label: 'Renewal 121-180 days',
+      points: 4,
+      active: renewalDays > 120 && renewalDays <= 180,
+      why: 'Mid-term renewal horizon supports light uplift in expansion timing.'
+    },
+    {
+      id: 'pte-renewal-long',
+      metric: 'PtE',
+      label: 'Renewal > 365 days',
+      points: -4,
+      active: renewalDays > 365,
+      why: 'Long renewal horizon reduces urgency for near-term expansion motion.'
+    },
+    {
+      id: 'pte-expansion-count',
+      metric: 'PtE',
+      label: 'Open expansion count bonus',
+      points: expansionPoints,
+      active: expansionPoints > 0,
+      why: 'Validated expansion opportunities add confidence to expansion propensity.'
+    },
+    {
+      id: 'pte-low-engagement',
+      metric: 'PtE',
+      label: 'Engagement score < 45',
+      points: -10,
+      active: engagementScore < 45,
+      why: 'Low engagement weakens confidence that expansion motions will land.'
+    },
+    {
+      id: 'pte-high-risk',
+      metric: 'PtE',
+      label: 'Risk score >= 70',
+      points: -12,
+      active: riskScore >= 70,
+      why: 'High risk burden suppresses expansion readiness until stabilization work is done.'
+    },
+    {
+      id: 'ptc-renewal-signal',
+      metric: 'PtC',
+      label: 'Renewal signal active',
+      points: 8,
+      active: renewalSoonSignal,
+      why: 'Renewal signals amplify retention pressure and short-term churn exposure.'
+    },
+    {
+      id: 'ptc-stale-touch',
+      metric: 'PtC',
+      label: 'No-touch > 90 days',
+      points: 10,
+      active: staleEngagement90,
+      why: 'Stale engagement increases uncertainty and retention volatility.'
+    },
+    {
+      id: 'ptc-low-security',
+      metric: 'PtC',
+      label: 'Security adoption < 30%',
+      points: 5,
+      active: secureBelow30,
+      why: 'Low security adoption frequently correlates with lower platform stickiness.'
+    },
+    {
+      id: 'ptc-strong-momentum',
+      metric: 'PtC',
+      label: 'Strong momentum',
+      points: -12,
+      active: strongMomentum,
+      why: 'Strong adoption + engagement with controlled risk reduces churn pressure.'
+    }
+  ];
+};
+
 const evaluateProjectionForGoal = (projection, goal = 'balanced') => {
   const baselinePte = Number(projection?.baseline?.pte?.final || 0);
   const baselinePtc = Number(projection?.baseline?.ptc?.final || 0);
@@ -4250,6 +4345,9 @@ export const renderPropensityPage = (ctx) => {
     const scenario = calculateFormulaSandbox(readFormulaSandboxState());
     const { inputs, pte, ptc } = scenario;
     const sensitivity = calculateFormulaSensitivity(inputs);
+    const baselineRules = deriveFormulaRuleStates(formulaSandboxBaseline);
+    const baselineRuleById = new Map(baselineRules.map((item) => [item.id, item]));
+    const currentRules = deriveFormulaRuleStates(inputs);
     const targetGuidance = deriveBandTargetGuidance(scenario, sensitivity);
     const maxSensitivityImpact = Math.max(
       1,
@@ -4441,6 +4539,49 @@ export const renderPropensityPage = (ctx) => {
                 : '<p class="muted">PtC already Low. Keep renewal and engagement protections in place to prevent drift.</p>'
             }
           </article>
+        </div>
+      </article>
+      <article class="card compact-card">
+        <div class="metric-head">
+          <h3>Rule Activation Delta vs Baseline</h3>
+          ${statusChip({ label: 'Why score changed', tone: 'neutral' })}
+        </div>
+        <p class="muted">
+          This compares adjustment rules against portfolio baseline defaults. Use it to explain exactly which triggers moved PtE/PtC.
+        </p>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Rule</th>
+                <th>Metric</th>
+                <th>Baseline</th>
+                <th>Current</th>
+                <th>Points</th>
+                <th>Why it matters</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${currentRules
+                .map((rule) => {
+                  const baselineRule = baselineRuleById.get(rule.id);
+                  const baselineActive = Boolean(baselineRule?.active);
+                  const currentActive = Boolean(rule.active);
+                  const stateTone = currentActive ? (Number(rule.points || 0) >= 0 ? 'good' : 'risk') : 'neutral';
+                  return `
+                    <tr>
+                      <td><strong>${escapeHtml(rule.label)}</strong></td>
+                      <td>${escapeHtml(rule.metric)}</td>
+                      <td>${statusChip({ label: baselineActive ? 'Active' : 'Inactive', tone: baselineActive ? 'warn' : 'neutral' })}</td>
+                      <td>${statusChip({ label: currentActive ? 'Active' : 'Inactive', tone: stateTone })}</td>
+                      <td>${formatSigned(rule.points, 1)}</td>
+                      <td>${escapeHtml(rule.why)}</td>
+                    </tr>
+                  `;
+                })
+                .join('')}
+            </tbody>
+          </table>
         </div>
       </article>
     `;
