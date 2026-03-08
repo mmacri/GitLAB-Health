@@ -701,6 +701,11 @@ button:hover {
   font-size: var(--text-sm);
 }
 
+.sidebar__field select option {
+  background: #111827;
+  color: #f9fafb;
+}
+
 .sidebar-overlay {
   display: none;
 }

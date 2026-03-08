@@ -583,7 +583,17 @@ const focusAccountSection = (sectionId) => {
     if (tabButton) {
       tabButton.click();
       const panel = routeRoot.querySelector(`[data-tab-panel="${sectionId}"]`);
-      panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (panel) {
+        const rootStyles = window.getComputedStyle(document.documentElement);
+        const headerOffset = Number.parseInt(rootStyles.getPropertyValue('--header-offset'), 10) || 0;
+        const stickyAccountHeader = routeRoot.querySelector('.account-header');
+        const stickyAccountOffset = stickyAccountHeader
+          ? Math.ceil(stickyAccountHeader.getBoundingClientRect().height) + 16
+          : 0;
+        const targetTop =
+          window.scrollY + panel.getBoundingClientRect().top - headerOffset - stickyAccountOffset - 12;
+        window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+      }
       return;
     }
     if (attempt >= 8) return;
