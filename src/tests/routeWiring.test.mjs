@@ -18,6 +18,10 @@ test('route wiring passes expected callbacks to pages with action handlers', () 
     'reports page should receive programs csv callback'
   );
   assert.ok(
+    mainSource.includes('onBulkApplyPlaybook: onWorkspaceBulkApplyPlaybook'),
+    'risks page should receive bulk playbook apply callback'
+  );
+  assert.ok(
     mainSource.includes("onSelectCustomer: (customerId) => {"),
     'exports page should receive customer selection callback'
   );

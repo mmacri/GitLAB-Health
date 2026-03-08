@@ -1364,6 +1364,27 @@ const onWorkspaceTogglePlaybookStatus = (customerId, index, complete) => {
   });
 };
 
+const onWorkspaceBulkApplyPlaybook = (customerIds, payload) => {
+  const ids = Array.from(new Set((customerIds || []).filter(Boolean)));
+  if (!ids.length) return;
+  updateWorkspace((workspace) => {
+    ids.forEach((customerId) => {
+      if (!workspace.customers.some((customer) => customer.id === customerId)) return;
+      workspace.risk[customerId] = workspace.risk[customerId] || { signals: [], playbook: [], dismissals: [], overrideHealth: null };
+      workspace.risk[customerId].playbook = [
+        ...(workspace.risk[customerId].playbook || []),
+        {
+          action: payload.action,
+          owner: payload.owner || 'CSE',
+          due: payload.due || toIsoDate(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)),
+          status: payload.status || 'Planned'
+        }
+      ];
+    });
+  });
+  notify(`Applied mitigation action to ${ids.length} customers.`);
+};
+
 const onWorkspaceAddExpansion = (customerId, payload) => {
   withWorkspaceCustomer(customerId, (workspace) => {
     const row = {
@@ -2293,6 +2314,8 @@ const renderCurrentRoute = () => {
     view = renderRisksPage({
       workspace: workspaceModel,
       portfolioRows: workspacePortfolio.rows,
+      onBulkApplyPlaybook: onWorkspaceBulkApplyPlaybook,
+      notify,
       ...common
     });
   }
