@@ -569,6 +569,7 @@ export const renderAccountPage = (ctx) => {
 
   const wrapper = document.createElement('section');
   wrapper.className = 'route-page page-shell section-stack';
+  wrapper.setAttribute('data-page', journeyMode ? 'journey' : 'account');
   wrapper.innerHTML = `
     <header class="page-head account-header" id="today-console">
       <div>

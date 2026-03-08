@@ -8,4 +8,5 @@ test('account view includes devops adoption journey map and simulator shortcut',
   assert.match(source, /DevOps Adoption Journey Map/);
   assert.match(source, /data-go-simulator/);
   assert.match(source, /navigate\('simulator'\)/);
+  assert.match(source, /setAttribute\('data-page', journeyMode \? 'journey' : 'account'\)/);
 });

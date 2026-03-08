@@ -1062,6 +1062,13 @@ hr {
   padding: var(--space-3);
 }
 
+.route-page[data-page='journey'] .account-header,
+.route-page[data-page='customer'] .account-header {
+  position: static;
+  top: auto;
+  z-index: auto;
+}
+
 .lifecycle-progress {
   margin-top: 10px;
   display: grid;
