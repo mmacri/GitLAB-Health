@@ -2259,12 +2259,31 @@ const renderCurrentRoute = () => {
 
   if (route.name === 'exports') {
     view = renderExportsPage({
+      workspace: workspaceModel,
       account: currentAccount(),
+      selectedCustomerId: state.selectedCustomerId,
       customerSafe: state.customerSafe,
       mode: state.viewMode,
+      onSelectCustomer: (customerId) => {
+        setSelectedCustomer(customerId);
+        render();
+      },
       onExportPortfolio: () => exportPortfolioCsv(workspaceModel),
-      onExportAccountCsv: (account, options) => exportAccountCsv(account, options),
-      onExportAccountPdf: (account, options) => exportAccountSummaryPdf(account, options),
+      onExportProgramsCsv: () => exportProgramsCsv(workspaceModel),
+      onExportVocCsv: () => exportVocCsv(workspaceModel),
+      onExportManagerSummary: () => exportManagerSummaryPdf(workspaceModel),
+      onExportAccountCsv: (target, options = {}) => {
+        if (typeof target === 'string') {
+          return exportAccountCsv(workspaceModel, { ...options, customerId: target });
+        }
+        return exportAccountCsv(target, options);
+      },
+      onExportAccountPdf: (target, options = {}) => {
+        if (typeof target === 'string') {
+          return exportAccountSummaryPdf(workspaceModel, { ...options, customerId: target });
+        }
+        return exportAccountSummaryPdf(target, options);
+      },
       onCopyShare: copyShareSnapshot,
       ...common
     });

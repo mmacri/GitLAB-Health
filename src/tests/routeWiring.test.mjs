@@ -18,8 +18,32 @@ test('route wiring passes expected callbacks to pages with action handlers', () 
     'reports page should receive programs csv callback'
   );
   assert.ok(
-    mainSource.includes('onExportAccountCsv: (account, options) => exportAccountCsv(account, options)'),
-    'exports page should receive account csv callback'
+    mainSource.includes("onSelectCustomer: (customerId) => {"),
+    'exports page should receive customer selection callback'
+  );
+  assert.ok(
+    mainSource.includes('onExportVocCsv: () => exportVocCsv(workspaceModel)'),
+    'exports page should receive voc export callback'
+  );
+  assert.ok(
+    mainSource.includes("if (typeof target === 'string') {"),
+    'exports page account export callback should support workspace customer ids'
+  );
+  assert.ok(
+    mainSource.includes('return exportAccountCsv(workspaceModel, { ...options, customerId: target });'),
+    'exports page should resolve customer id exports through workspace model'
+  );
+  assert.ok(
+    mainSource.includes('onExportManagerSummary: () => exportManagerSummaryPdf(workspaceModel)'),
+    'exports page should receive manager summary export callback'
+  );
+  assert.ok(
+    mainSource.includes('return exportAccountSummaryPdf(workspaceModel, { ...options, customerId: target });'),
+    'exports page should resolve customer pdf exports through workspace model'
+  );
+  assert.ok(
+    mainSource.includes('onExportProgramsCsv: () => exportProgramsCsv(workspaceModel)'),
+    'exports page should receive programs export callback'
   );
   assert.ok(
     mainSource.includes('onCopyShare: copyShareSnapshot'),
