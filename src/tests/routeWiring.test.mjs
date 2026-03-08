@@ -97,4 +97,12 @@ test('route wiring passes expected callbacks to pages with action handlers', () 
     mainSource.includes("if (route.params.id && !workspaceCustomerById(route.params.id) && fallbackCustomerId) {"),
     'invalid customer routes should recover to first available customer'
   );
+  assert.ok(
+    mainSource.includes('const inCustomerModel = !isLegacyAccountContextRoute(state.route.name);'),
+    'shell context should consistently use shared customer-vs-account route context helper'
+  );
+  assert.ok(
+    mainSource.includes('const customerRouteContext = !isLegacyAccountContextRoute(state.route.name);'),
+    'jump handler should consistently use shared customer-vs-account route context helper'
+  );
 });

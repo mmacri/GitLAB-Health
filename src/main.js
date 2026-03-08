@@ -174,6 +174,10 @@ const state = {
 };
 
 const VALID_MODES = new Set(['today', 'review', 'deep']);
+const LEGACY_ACCOUNT_CONTEXT_ROUTES = new Set(['account', 'journey', 'toolkit', 'simulator', 'playbooks', 'resources', 'cheatsheet', 'exports', 'intake']);
+const CUSTOMER_SECTION_IDS = new Set(['adoption', 'success-plan', 'engagement', 'risk', 'expansion', 'voc']);
+
+const isLegacyAccountContextRoute = (routeName) => LEGACY_ACCOUNT_CONTEXT_ROUTES.has(String(routeName || ''));
 
 const normalizeMode = (value) => {
   const mode = String(value || 'today').trim().toLowerCase();
@@ -574,10 +578,18 @@ const shellIcon = (name, extraClass = '') =>
 
 const focusAccountSection = (sectionId) => {
   if (!sectionId) return;
-  const tabButton = routeRoot.querySelector(`[data-tab-target="${sectionId}"]`);
-  tabButton?.click();
-  const panel = routeRoot.querySelector(`[data-tab-panel="${sectionId}"]`);
-  panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const attemptFocus = (attempt = 0) => {
+    const tabButton = routeRoot.querySelector(`[data-tab-target="${sectionId}"]`);
+    if (tabButton) {
+      tabButton.click();
+      const panel = routeRoot.querySelector(`[data-tab-panel="${sectionId}"]`);
+      panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (attempt >= 8) return;
+    window.setTimeout(() => attemptFocus(attempt + 1), 80);
+  };
+  attemptFocus();
 };
 
 const setActiveNav = () => {
@@ -783,9 +795,7 @@ const renderLeftRail = () => {
   `;
 
   leftRailRoot.querySelector('[data-rail-open-current]')?.addEventListener('click', () => {
-    const customerContext = ['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'propensity', 'settings'].includes(
-      state.route.name
-    );
+    const customerContext = !isLegacyAccountContextRoute(state.route.name);
     if (customerContext) {
       const targetId = currentCustomer()?.id || state.data.workspace?.customers?.[0]?.id || '';
       if (!targetId) return;
@@ -1716,9 +1726,7 @@ const renderShellContext = () => {
   const accounts = state.data?.accounts || [];
   const workspace = currentWorkspace();
   const customers = workspace.customers || [];
-  const inCustomerModel = ['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'propensity', 'settings'].includes(
-    state.route.name
-  );
+  const inCustomerModel = !isLegacyAccountContextRoute(state.route.name);
   const activeAccountId = inCustomerModel
     ? state.selectedCustomerId || customers[0]?.id || ''
     : state.selectedAccountId || accounts[0]?.id || '';
@@ -2569,12 +2577,11 @@ const bindGlobalEvents = () => {
   const handleJumpSelection = (rawValue, select) => {
     const value = String(rawValue || '').trim();
     if (!value) return;
-    const customerRouteContext = ['customer', 'customers', 'program', 'risks', 'expansion', 'voc', 'reports', 'propensity', 'settings'].includes(
-      state.route.name
-    );
+    const customerRouteContext = !isLegacyAccountContextRoute(state.route.name);
     if (value.startsWith('section:')) {
       const sectionId = value.split(':')[1] || '';
-      const accountId = customerRouteContext
+      const isCustomerSection = CUSTOMER_SECTION_IDS.has(sectionId);
+      const accountId = isCustomerSection
         ? state.selectedCustomerId || state.data.workspace?.customers?.[0]?.id || ''
         : state.selectedAccountId || state.data.accounts?.[0]?.id || '';
       if (!accountId || !sectionId) return;
@@ -2582,7 +2589,7 @@ const bindGlobalEvents = () => {
       if (state.route.name === 'account' || state.route.name === 'journey' || state.route.name === 'customer') {
         applyFocus();
       } else {
-        if (customerRouteContext) {
+        if (isCustomerSection || customerRouteContext) {
           setSelectedCustomer(accountId);
           router.navigate('customer', { id: accountId });
         } else {
@@ -2791,7 +2798,7 @@ const bindGlobalEvents = () => {
     if (target.matches('[data-global-account-select]')) {
       const accountId = target.value;
       if (!accountId) return;
-      if (['customers', 'customer', 'program', 'risks', 'expansion', 'voc', 'reports', 'propensity', 'settings'].includes(state.route.name)) {
+      if (!isLegacyAccountContextRoute(state.route.name)) {
         setSelectedCustomer(accountId);
         router.navigate('customer', { id: accountId });
       } else {
