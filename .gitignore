@@ -1,0 +1,5 @@
+node_modules/
+.chrome-profile/
+.edge-profile/
+tmp_dom_*.html
+npm-debug.log*
