@@ -2,7 +2,7 @@ import { createCommandPalette } from './components/commandPalette.js';
 import { createModal } from './components/modal.js';
 import { createCustomerSafeBanner } from './components/CustomerSafeBanner.js';
 import { createEngagementExportModal } from './components/EngagementExportModal.js';
-import { createModeTabs } from './components/ModeTabs.js';
+import { createModeTabs } from './components/ModeTabs.js?v=20260308-3';
 import { createActiveFilterChips } from './components/ActiveFilterChips.js';
 import { createEmptyState } from './components/EmptyState.js';
 import { mountToastContainer } from './components/ToastContainer.js';

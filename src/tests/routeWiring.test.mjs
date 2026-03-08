@@ -18,6 +18,10 @@ test('route wiring passes expected callbacks to pages with action handlers', () 
     'document click handler should use defined filter button helper'
   );
   assert.ok(
+    mainSource.includes("./components/ModeTabs.js?v=20260308-3"),
+    'main should import cache-busted ModeTabs module'
+  );
+  assert.ok(
     mainSource.includes('onBulkAddToProgram: onBulkAddCustomersToProgram'),
     'customers page should receive bulk add-to-program handler'
   );
