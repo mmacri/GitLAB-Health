@@ -141,6 +141,13 @@ const state = {
   theme: String(initialTheme) === 'dark' ? 'dark' : 'light',
   density: storage.get(STORAGE_KEYS.density, 'default') || 'default',
   sidebarOpen: false,
+  activeQueueTab: 'all',
+  filters: {
+    engagementTypes: [],
+    requestedBy: [],
+    engagementStatus: [],
+    useCaseMaturity: []
+  },
   basePath: '',
   portfolioFilters: {
     segment: 'all',
@@ -2814,11 +2821,11 @@ const bindGlobalEvents = () => {
       moreMenu.hidden = true;
       moreButton?.setAttribute('aria-expanded', 'false');
     }
-    const filtersButton = getFiltersButton();
+    const filtersButtons = getFiltersButtons();
     const insideFilters = event.target.closest('[data-filters-panel]') || event.target.closest('[data-open-filters]');
     if (filtersPanel && !filtersPanel.hasAttribute('hidden') && !insideFilters) {
       filtersPanel.setAttribute('hidden', 'hidden');
-      filtersButton?.setAttribute('aria-expanded', 'false');
+      filtersButtons.forEach((button) => button.setAttribute('aria-expanded', 'false'));
     }
     syncHeaderOffset();
   });

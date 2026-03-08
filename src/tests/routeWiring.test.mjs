@@ -6,6 +6,18 @@ const mainSource = readFileSync('src/main.js', 'utf8');
 
 test('route wiring passes expected callbacks to pages with action handlers', () => {
   assert.ok(
+    mainSource.includes("activeQueueTab: 'all'"),
+    'main state should initialize activeQueueTab'
+  );
+  assert.ok(
+    mainSource.includes('filters: {'),
+    'main state should initialize filter buckets'
+  );
+  assert.ok(
+    mainSource.includes('const filtersButtons = getFiltersButtons();'),
+    'document click handler should use defined filter button helper'
+  );
+  assert.ok(
     mainSource.includes('onBulkAddToProgram: onBulkAddCustomersToProgram'),
     'customers page should receive bulk add-to-program handler'
   );
