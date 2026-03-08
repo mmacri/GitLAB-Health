@@ -12,6 +12,7 @@ const normalizeMode = (value) => {
 
 export const createModeTabs = ({ currentMode = 'today', modes = DEFAULT_MODES, counts = {}, onSelect = () => {} } = {}) => {
   const activeMode = normalizeMode(currentMode);
+  const safeCounts = counts && typeof counts === 'object' ? counts : {};
   const wrapper = document.createElement('nav');
   wrapper.className = 'mode-tabs';
   wrapper.setAttribute('role', 'tablist');
@@ -30,8 +31,8 @@ export const createModeTabs = ({ currentMode = 'today', modes = DEFAULT_MODES, c
       <span class="mode-tab__icon" aria-hidden="true">${mode.icon || '•'}</span>
       <span>${mode.label || mode.id}</span>
       ${
-        Number.isFinite(Number(counts[mode.id]))
-          ? `<span class="mode-tab__count">${Number(counts[mode.id])}</span>`
+        Number.isFinite(Number(safeCounts[mode.id]))
+          ? `<span class="mode-tab__count">${Number(safeCounts[mode.id])}</span>`
           : ''
       }
     `;

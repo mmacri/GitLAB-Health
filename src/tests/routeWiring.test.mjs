@@ -22,6 +22,18 @@ test('route wiring passes expected callbacks to pages with action handlers', () 
     'risks page should receive bulk playbook apply callback'
   );
   assert.ok(
+    mainSource.includes('currentMode: state.viewMode'),
+    'mode tabs should receive currentMode prop'
+  );
+  assert.ok(
+    mainSource.includes('onSelect: (mode) => setViewMode(mode)'),
+    'mode tabs should receive onSelect callback'
+  );
+  assert.ok(
+    mainSource.includes('deep: (workspacePortfolio.expansionCandidates || []).length'),
+    'mode tabs deep count should map to deep key'
+  );
+  assert.ok(
     mainSource.includes("onSelectCustomer: (customerId) => {"),
     'exports page should receive customer selection callback'
   );

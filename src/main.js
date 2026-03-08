@@ -2430,16 +2430,16 @@ const renderCurrentRoute = () => {
 
   routeRoot.innerHTML = '';
   const modeTabs = createModeTabs({
-    mode: state.viewMode,
+    currentMode: state.viewMode,
     counts:
       state.route.name === 'home'
         ? {
             today: (workspacePortfolio.rows || []).length,
             review: (workspacePortfolio.atRisk || []).length,
-            deepdive: (workspacePortfolio.expansionCandidates || []).length
+            deep: (workspacePortfolio.expansionCandidates || []).length
           }
-        : null,
-    onChange: (mode) => setViewMode(mode)
+        : {},
+    onSelect: (mode) => setViewMode(mode)
   });
   routeRoot.appendChild(modeTabs);
 
