@@ -31,6 +31,7 @@ import {
 } from './lib/exports.js';
 import { formatDateTime, toIsoDate } from './lib/date.js';
 import { addEngagementLogEntry } from './lib/engagementLog.js';
+import { toProgramLookupKey } from './lib/programIdentity.js';
 import {
   buildAccountWorkspace,
   buildManagerDashboard,
@@ -830,6 +831,22 @@ const workspaceProgramUseCases = (program) => {
   });
 };
 
+const findWorkspaceProgramIn = (workspace, programId) => {
+  const targetId = String(programId || '').trim();
+  const lookupKey = toProgramLookupKey(targetId);
+  return (
+    (workspace?.programs || []).find((program) => {
+      const candidateId = String(program?.id || '').trim();
+      if (!candidateId) return false;
+      if (candidateId === targetId) return true;
+      if (!lookupKey) return false;
+      if (toProgramLookupKey(candidateId) === lookupKey) return true;
+      const legacyId = String(program?.legacyProgramId || '').trim();
+      return legacyId ? toProgramLookupKey(legacyId) === lookupKey : false;
+    }) || null
+  );
+};
+
 const workspaceProgramToLegacyView = (program) => ({
   program_id: program.id,
   title: program.name,
@@ -846,9 +863,47 @@ const workspaceProgramsForProgramsPage = (workspace = currentWorkspace()) =>
   (workspace?.programs || []).map(workspaceProgramToLegacyView);
 
 const findWorkspaceProgram = (programId, workspace = currentWorkspace()) =>
-  (workspace?.programs || []).find((program) => program.id === programId) || null;
+  findWorkspaceProgramIn(workspace, programId);
 
-const findLegacyProgram = (programId) => state.data.programs.find((program) => program.program_id === programId) || null;
+const findLegacyProgram = (programId) => {
+  const targetId = String(programId || '').trim();
+  const lookupKey = toProgramLookupKey(targetId);
+  return (
+    (state.data.programs || []).find((program) => {
+      const legacyId = String(program?.program_id || '').trim();
+      if (!legacyId) return false;
+      if (legacyId === targetId) return true;
+      if (!lookupKey) return false;
+      return toProgramLookupKey(legacyId) === lookupKey;
+    }) || null
+  );
+};
+
+const legacyProgramToWorkspaceDetail = (legacyProgram) => {
+  if (!legacyProgram) return null;
+  return {
+    id: legacyProgram.program_id,
+    name: legacyProgram.title,
+    type: legacyProgram.type,
+    startDate: String(legacyProgram.date || '').slice(0, 10),
+    endDate: String(legacyProgram.date || '').slice(0, 10),
+    objective: legacyProgram.invite_blurb || 'Program objective',
+    cohortCustomerIds: [],
+    funnel: {
+      invited: Number(legacyProgram.registration_count || 0),
+      attended: Number(legacyProgram.attendance_count || 0),
+      completed: Math.max(0, Math.floor(Number(legacyProgram.attendance_count || 0) * 0.7))
+    },
+    adoptionImpact: {},
+    sessions: [
+      {
+        date: String(legacyProgram.date || '').slice(0, 10),
+        title: legacyProgram.title,
+        artifact: ''
+      }
+    ]
+  };
+};
 
 const findProgram = (programId) => {
   const workspaceProgram = findWorkspaceProgram(programId);
@@ -882,7 +937,15 @@ const onCopyInvite = async (programId) => {
 };
 
 const updateProgram = (programId, updater) => {
-  const index = state.data.programs.findIndex((program) => program.program_id === programId);
+  const targetId = String(programId || '').trim();
+  const lookupKey = toProgramLookupKey(targetId);
+  const index = (state.data.programs || []).findIndex((program) => {
+    const legacyId = String(program?.program_id || '').trim();
+    if (!legacyId) return false;
+    if (legacyId === targetId) return true;
+    if (!lookupKey) return false;
+    return toProgramLookupKey(legacyId) === lookupKey;
+  });
   if (index < 0) return;
   const updated = updater(state.data.programs[index]);
   state.data.programs[index] = updated;
@@ -895,7 +958,7 @@ const onLogAttendance = (programId, amount = 1, accountId = '') => {
   const workspaceProgram = findWorkspaceProgram(programId);
   if (workspaceProgram) {
     updateWorkspace((workspace) => {
-      const program = (workspace.programs || []).find((item) => item.id === programId);
+      const program = findWorkspaceProgramIn(workspace, programId);
       if (!program) return;
       const currentInvited = Math.max(0, Number(program.funnel?.invited || 0));
       const nextAttended = Math.max(0, Number(program.funnel?.attended || 0) + normalizedAmount);
@@ -988,7 +1051,7 @@ const onAddRegistration = (programId, amount = 1) => {
   if (workspaceProgram) {
     const normalizedAmount = Number(amount || 0);
     updateWorkspace((workspace) => {
-      const program = (workspace.programs || []).find((item) => item.id === programId);
+      const program = findWorkspaceProgramIn(workspace, programId);
       if (!program) return;
       program.funnel = {
         ...(program.funnel || {}),
@@ -1107,7 +1170,7 @@ const onCreateCustomer = () => {
 
 const onBulkAddCustomersToProgram = (customerIds, programId) => {
   updateWorkspace((workspace) => {
-    const program = (workspace.programs || []).find((item) => item.id === programId);
+    const program = findWorkspaceProgramIn(workspace, programId);
     if (!program) return;
     const existing = new Set(program.cohortCustomerIds || []);
     (customerIds || []).forEach((customerId) => existing.add(customerId));
@@ -1337,7 +1400,7 @@ const onWorkspaceAddVoc = (payload) => {
 
 const onWorkspaceAddCustomerToProgram = (programId, customerId) => {
   updateWorkspace((workspace) => {
-    const program = (workspace.programs || []).find((item) => item.id === programId);
+    const program = findWorkspaceProgramIn(workspace, programId);
     if (!program) return;
     const cohort = new Set(program.cohortCustomerIds || []);
     cohort.add(customerId);
@@ -1348,8 +1411,10 @@ const onWorkspaceAddCustomerToProgram = (programId, customerId) => {
 
 const onWorkspaceUpdateProgramFunnel = (programId, funnel) => {
   updateWorkspace((workspace) => {
+    const targetProgram = findWorkspaceProgramIn(workspace, programId);
+    if (!targetProgram?.id) return;
     workspace.programs = (workspace.programs || []).map((program) =>
-      program.id === programId
+      program.id === targetProgram.id
         ? {
             ...program,
             funnel: {
@@ -1467,7 +1532,7 @@ const onCreateMonthlySnapshot = () => {
 
 const onExportProgramFollowupList = (programId) => {
   const workspace = currentWorkspace();
-  const program = (workspace.programs || []).find((item) => item.id === programId);
+  const program = findWorkspaceProgramIn(workspace, programId);
   if (!program) return;
   const customers = workspace.customers || [];
   const rows = (program.cohortCustomerIds || [])
@@ -1515,7 +1580,7 @@ const onInviteAccountToProgram = async (programId, accountId) => {
   const nextTouchDate = toIsoDate(program.date || new Date());
   if (match?.source === 'workspace') {
     updateWorkspace((workspace) => {
-      const target = (workspace.programs || []).find((item) => item.id === programId);
+      const target = findWorkspaceProgramIn(workspace, programId);
       if (!target) return;
       const cohort = new Set(target.cohortCustomerIds || []);
       cohort.add(accountId);
@@ -1901,10 +1966,23 @@ const renderCurrentRoute = () => {
     }
   }
   if (route.name === 'program') {
-    const programId = route.params.id || workspaceModel.programs?.[0]?.id || '';
-    if (!route.params.id && programId) {
-      router.navigate('program', { id: programId }, { replace: true });
+    const fallbackProgramId = workspaceModel.programs?.[0]?.id || state.data.programs?.[0]?.program_id || '';
+    const requestedProgramId = String(route.params.id || '').trim();
+    if (!requestedProgramId && fallbackProgramId) {
+      router.navigate('program', { id: fallbackProgramId }, { replace: true });
       return;
+    }
+    if (requestedProgramId) {
+      const match = findProgram(requestedProgramId);
+      if (!match && fallbackProgramId) {
+        router.navigate('program', { id: fallbackProgramId }, { replace: true });
+        return;
+      }
+      const canonicalWorkspaceId = match?.workspaceProgram?.id || '';
+      if (canonicalWorkspaceId && requestedProgramId !== canonicalWorkspaceId) {
+        router.navigate('program', { id: canonicalWorkspaceId }, { replace: true });
+        return;
+      }
     }
   }
 
@@ -1913,37 +1991,15 @@ const renderCurrentRoute = () => {
   const selectedCustomerId = route.params.id || state.selectedCustomerId || workspaceModel.customers?.[0]?.id || '';
   const selectedCustomer = workspaceCustomerById(selectedCustomerId);
   const customerMetrics = selectedCustomer ? scoreBreakdown(workspaceModel, selectedCustomer.id, new Date()) : null;
+  const programMatch =
+    route.name === 'program'
+      ? findProgram(route.params.id || workspaceModel.programs?.[0]?.id || state.data.programs?.[0]?.program_id || '')
+      : null;
   const programDetail =
     route.name === 'program'
-      ? (() => {
-          const targetId = route.params.id || workspaceModel.programs?.[0]?.id || '';
-          const workspaceProgram = (workspaceModel.programs || []).find((item) => item.id === targetId);
-          if (workspaceProgram) return workspaceProgram;
-          const legacyProgram = (state.data.programs || []).find((item) => item.program_id === targetId);
-          if (!legacyProgram) return null;
-          return {
-            id: legacyProgram.program_id,
-            name: legacyProgram.title,
-            type: legacyProgram.type,
-            startDate: String(legacyProgram.date || '').slice(0, 10),
-            endDate: String(legacyProgram.date || '').slice(0, 10),
-            objective: legacyProgram.invite_blurb || 'Program objective',
-            cohortCustomerIds: [],
-            funnel: {
-              invited: Number(legacyProgram.registration_count || 0),
-              attended: Number(legacyProgram.attendance_count || 0),
-              completed: Math.max(0, Math.floor(Number(legacyProgram.attendance_count || 0) * 0.7))
-            },
-            adoptionImpact: {},
-            sessions: [
-              {
-                date: String(legacyProgram.date || '').slice(0, 10),
-                title: legacyProgram.title,
-                artifact: ''
-              }
-            ]
-          };
-        })()
+      ? programMatch?.source === 'workspace'
+        ? programMatch.workspaceProgram
+        : legacyProgramToWorkspaceDetail(programMatch?.view)
       : null;
 
   const common = {
@@ -1989,21 +2045,33 @@ const renderCurrentRoute = () => {
       portfolio,
       workspace: workspaceModel,
       workspacePortfolio,
+      manager,
       filters: state.portfolioFilters,
+      filterCount: countActivePortfolioFilters(state.portfolioFilters),
       onSetFilters: setPortfolioFilters,
       updatedOn: state.data.updated_on,
+      mode: state.viewMode,
       accountLoadError,
       onRetryData: reloadData,
-      onExportPortfolio: () => exportPortfolioCsv(workspaceModel),
+      onCopyInvite,
+      onLogAttendance,
+      onOpenMissingEditor: openMissingEditor,
+      onQuickLogEngagement: onWorkspaceQuickLogEngagement,
+      onCreateRequest,
+      requests: state.data.requests || [],
+      notify,
+      copyText,
       ...common
     });
   }
 
   if (route.name === 'manager') {
     view = renderManagerPage({
-      portfolio,
-      manager,
+      dashboard: manager,
+      workspace: workspaceModel,
       mode: state.viewMode,
+      customerSafe: state.customerSafe,
+      onSetMode: (mode) => setViewMode(mode),
       ...common
     });
   }
@@ -2011,76 +2079,72 @@ const renderCurrentRoute = () => {
   if (route.name === 'customers') {
     view = renderCustomersPage({
       workspace: workspaceModel,
-      portfolioRows: workspacePortfolio.rows,
+      mode: state.viewMode,
+      customerSafe: state.customerSafe,
       onCreateCustomer,
-      onBulkAddToProgram: onBulkAddCustomersToProgram,
-      onBulkExport: onWorkspaceExportSelectedCustomers,
+      onSelectCustomer: (customerId) => {
+        setSelectedCustomer(customerId);
+        router.navigate('customer', { id: customerId });
+      },
+      onBulkAddCustomersToProgram,
+      onBulkExportCustomers: onWorkspaceExportSelectedCustomers,
       onBulkLogEngagement: onBulkLogWorkspaceEngagement,
-      notify,
       ...common
     });
   }
 
   if (route.name === 'customer' && selectedCustomer) {
     view = renderCustomerDetailPage({
+      workspace: workspaceModel,
       customer: selectedCustomer,
       metrics: customerMetrics,
-      adoption: workspaceModel.adoption?.[selectedCustomer.id],
-      successPlan: workspaceModel.successPlans?.[selectedCustomer.id],
-      engagements: workspaceModel.engagements?.[selectedCustomer.id],
-      risk: workspaceModel.risk?.[selectedCustomer.id],
-      expansion: workspaceModel.expansion?.[selectedCustomer.id],
-      voc: (workspaceModel.voc || []).filter((item) => item.customerId === selectedCustomer.id),
+      mode: state.viewMode,
       customerSafe: state.customerSafe,
+      onSetMode: (mode) => setViewMode(mode),
+      onUpdateCustomer: onWorkspaceUpdateCustomer,
       onUpdateStageStatus: onWorkspaceUpdateStageStatus,
       onUpdateUseCasePercent: onWorkspaceUpdateUseCasePercent,
       onUpdateUseCaseEvidence: onWorkspaceUpdateUseCaseEvidence,
-      onAddTimeToValueMilestone: onWorkspaceAddTimeToValue,
+      onAddTimeToValue: onWorkspaceAddTimeToValue,
       onAddOutcome: onWorkspaceAddOutcome,
       onAddMilestone: onWorkspaceAddMilestone,
       onAddEngagement: onWorkspaceAddEngagement,
-      onSetRiskOverride: onWorkspaceSetRiskOverride,
-      onAddRiskSignal: onWorkspaceAddRiskSignal,
+      onUpdateRiskOverride: onWorkspaceUpdateRiskOverride,
       onDismissRiskSignal: onWorkspaceDismissRiskSignal,
+      onAddManualRiskSignal: onWorkspaceAddManualRiskSignal,
       onAddPlaybookAction: onWorkspaceAddPlaybookAction,
-      onTogglePlaybookStatus: onWorkspaceTogglePlaybookStatus,
+      onTogglePlaybookAction: onWorkspaceTogglePlaybookAction,
       onAddExpansion: onWorkspaceAddExpansion,
       onSetExpansionStatus: onWorkspaceSetExpansionStatus,
       onAddVoc: onWorkspaceAddVoc,
-      onExportCustomerPdf: (customerId) =>
-        exportAccountSummaryPdf(workspaceModel, {
-          customerId,
-          customerSafe: state.customerSafe
-        }),
-      onExportCustomerCsv: (customerId) =>
-        exportAccountCsv(workspaceModel, {
-          customerId,
-          customerSafe: state.customerSafe
-        }),
+      onExportAccountPdf: (customer, options) => exportAccountSummaryPdf(customer, options),
+      onExportAccountCsv: (customer, options) => exportAccountCsv(customer, options),
+      notify,
       ...common
     });
   }
 
   if (route.name === 'toolkit') {
     view = renderToolkitPage({
-      accounts: state.data.accounts,
-      templates: state.data.templates || {},
+      selectedAccount: currentAccount(),
+      playbooks: state.data.playbooks,
       customerSafe: state.customerSafe,
-      onToggleSafe: setSafeMode,
+      mode: state.viewMode,
+      onCopyInvite,
       notify,
-      copyText,
-      selectedAccountId: state.selectedAccountId,
       ...common
     });
   }
 
   if (route.name === 'simulator') {
     view = renderSimulatorPage({
-      capabilities: state.data.simulatorCapabilities || [],
-      rules: state.data.simulatorRules || [],
+      account: currentAccount(),
       customerSafe: state.customerSafe,
-      onToggleSafe: setSafeMode,
-      copyText,
+      mode: state.viewMode,
+      onOpenAccount: (accountId) => {
+        setSelectedAccount(accountId);
+        router.navigate('account', { id: accountId });
+      },
       notify,
       ...common
     });
@@ -2102,9 +2166,11 @@ const renderCurrentRoute = () => {
       onLogEngagement,
       copyText,
       notify,
+      journeyMode: true,
       ...common
     });
   }
+
   if (route.name === 'journey') {
     view = renderAccountPage({
       workspace,
@@ -2196,9 +2262,12 @@ const renderCurrentRoute = () => {
       customerSafe: state.customerSafe,
       mode: state.viewMode,
       onExportPortfolio: () => exportPortfolioCsv(workspaceModel),
-      onExportAccountCsv: (account, options) => exportAccountCsv(account, options),
-      onExportAccountPdf: (account, options) => exportAccountSummaryPdf(account, options),
-      onCopyShare: copyShareSnapshot,
+      onExportPrograms: () => exportProgramsCsv(workspaceModel),
+      onExportVoc: () => exportVocCsv(workspaceModel),
+      onExportAccountSummary: (account) => exportAccountSummaryPdf(account),
+      onExportManagerSummary: () => exportManagerSummaryPdf(workspaceModel),
+      onCopySnapshot: () => copyText(buildShareSnapshotUrl(currentWorkspace(), state.basePath)),
+      notify,
       ...common
     });
   }
@@ -2206,7 +2275,7 @@ const renderCurrentRoute = () => {
   if (route.name === 'risks') {
     view = renderRisksPage({
       workspace: workspaceModel,
-      portfolioRows: workspacePortfolio.rows,
+      customerSafe: state.customerSafe,
       ...common
     });
   }
@@ -2214,9 +2283,8 @@ const renderCurrentRoute = () => {
   if (route.name === 'expansion') {
     view = renderExpansionPage({
       workspace: workspaceModel,
-      onAddExpansion: onWorkspaceAddExpansion,
+      customerSafe: state.customerSafe,
       onSetExpansionStatus: onWorkspaceSetExpansionStatus,
-      notify,
       ...common
     });
   }
@@ -2224,19 +2292,17 @@ const renderCurrentRoute = () => {
   if (route.name === 'voc') {
     view = renderVocPage({
       workspace: workspaceModel,
+      customerSafe: state.customerSafe,
       onAddVoc: onWorkspaceAddVoc,
-      onExportVocCsv: () => exportVocCsv(workspaceModel),
-      notify,
       ...common
     });
   }
 
   if (route.name === 'reports') {
     view = renderReportsPage({
+      workspace: workspaceModel,
       manager,
-      onExportManagerSummary: () => exportManagerSummaryPdf(workspaceModel),
-      onExportPortfolioCsv: () => exportPortfolioCsv(workspaceModel),
-      onExportProgramsCsv: () => exportProgramsCsv(workspaceModel),
+      customerSafe: state.customerSafe,
       ...common
     });
   }
@@ -2244,9 +2310,7 @@ const renderCurrentRoute = () => {
   if (route.name === 'propensity') {
     view = renderPropensityPage({
       workspace: workspaceModel,
-      workspacePortfolio,
-      manager,
-      notify,
+      customerSafe: state.customerSafe,
       ...common
     });
   }
@@ -2254,34 +2318,25 @@ const renderCurrentRoute = () => {
   if (route.name === 'settings') {
     view = renderSettingsPage({
       workspace: workspaceModel,
-      onLoadSamplePortfolio: onLoadSampleWorkspace,
-      onImportWorkspace,
+      customerSafe: state.customerSafe,
       onExportWorkspace,
+      onImportWorkspace,
+      onLoadSampleWorkspace,
       onResetWorkspace,
       onUpdateScoringWeights,
-      onResetPtCalibration,
       onAddRiskTemplate,
       onAddProgramTemplate,
-      onCreateSnapshot: onCreateMonthlySnapshot,
-      theme: state.theme,
-      onSetTheme: setTheme,
-      density: state.density,
-      onSetDensity: setDensity,
-      defaultMode: storage.get(STORAGE_KEYS.defaultMode, state.viewMode) || 'today',
-      defaultPersona: storage.get(STORAGE_KEYS.defaultPersona, state.persona) || 'cse',
-      onSetDefaultMode: setDefaultMode,
-      onSetDefaultPersona: setDefaultPersona,
-      notify,
+      onCreateMonthlySnapshot,
       ...common
     });
   }
 
   if (route.name === 'intake') {
     view = renderIntakePage({
-      data: state.data,
-      requests: state.data.requests,
+      accounts: workspaceModel.customers || [],
+      customerSafe: state.customerSafe,
+      mode: state.viewMode,
       onCreateRequest,
-      copyText,
       notify,
       ...common
     });
@@ -2290,71 +2345,96 @@ const renderCurrentRoute = () => {
   if (!view) {
     view = document.createElement('section');
     view.className = 'route-page';
-    view.innerHTML = `<section class="card"><h1>Route not found</h1><button class="qa" type="button" data-go-home>Back to Portfolio</button></section>`;
+    view.innerHTML = `
+      <div class="card empty-state">
+        <h2>Page not available</h2>
+        <p class="muted">The requested route is not configured yet.</p>
+        <button class="ghost-btn" type="button" data-go-home>Back to Today</button>
+      </div>
+    `;
     view.querySelector('[data-go-home]')?.addEventListener('click', () => router.navigate('home'));
   }
 
   routeRoot.innerHTML = '';
-  const modeCounts = {
-    today:
-      state.route.name === 'home'
-        ? Number(workspacePortfolio.rows?.length || portfolio?.todayQueue?.length || 0)
-        : undefined
-  };
   const modeTabs = createModeTabs({
-    currentMode: state.viewMode,
-    counts: modeCounts,
-    onSelect: (mode) => setViewMode(mode)
+    mode: state.viewMode,
+    counts:
+      state.route.name === 'home'
+        ? {
+            today: (workspacePortfolio.rows || []).length,
+            review: (workspacePortfolio.atRisk || []).length,
+            deepdive: (workspacePortfolio.expansionCandidates || []).length
+          }
+        : null,
+    onChange: (mode) => setViewMode(mode)
   });
   routeRoot.appendChild(modeTabs);
 
   const chips = createActiveFilterChips({
-    filters: activeFilterChipData(state.portfolioFilters),
-    onRemove: (chipId) => {
-      if (!chipId) return;
-      const reset = {};
-      if (chipId === 'segment') reset.segment = 'all';
-      if (chipId === 'renewalWindow') reset.renewalWindow = 'all';
-      if (chipId === 'health') reset.health = 'all';
-      if (chipId === 'pteBand') reset.pteBand = 'all';
-      if (chipId === 'ptcBand') reset.ptcBand = 'all';
-      if (chipId === 'staleOnly') reset.staleOnly = false;
-      if (chipId === 'belowThreeGreen') reset.belowThreeGreen = false;
-      if (chipId === 'engagementTypes') reset.engagementTypes = [];
-      if (chipId === 'requestedBy') reset.requestedBy = [];
-      if (chipId === 'engagementStatus') reset.engagementStatus = [];
-      if (chipId === 'hasOpenRequest') reset.hasOpenRequest = false;
-      setPortfolioFilters(reset);
+    filters: (() => {
+      const filters = [];
+      const queueTab = state.activeQueueTab;
+      if (queueTab && queueTab !== 'all') {
+        filters.push({ id: `queue-${queueTab}`, label: `Queue: ${ENGAGEMENT_TYPES[queueTab]?.label || queueTab}` });
+      }
+      const typeFilters = state.filters?.engagementTypes || [];
+      typeFilters.forEach((type) => filters.push({ id: `type-${type}`, label: `Type: ${ENGAGEMENT_TYPES[type]?.label || type}` }));
+      const requestedByFilters = state.filters?.requestedBy || [];
+      requestedByFilters.forEach((requestedBy) => filters.push({ id: `requested-${requestedBy}`, label: `Requested by: ${requestedBy}` }));
+      const statusFilters = state.filters?.engagementStatus || [];
+      statusFilters.forEach((status) => filters.push({ id: `status-${status}`, label: `Status: ${status}` }));
+      const useCaseFilters = state.filters?.useCaseMaturity || [];
+      useCaseFilters.forEach((entry, index) =>
+        filters.push({
+          id: `usecase-${entry.useCase}-${index}`,
+          label: `${entry.useCase}: ${(entry.levels || []).join(', ')}`
+        })
+      );
+      return filters;
+    })(),
+    onRemove: (id) => {
+      if (id.startsWith('queue-')) {
+        state.activeQueueTab = 'all';
+      } else if (id.startsWith('type-')) {
+        const target = id.replace('type-', '');
+        state.filters.engagementTypes = (state.filters.engagementTypes || []).filter((value) => value !== target);
+      } else if (id.startsWith('requested-')) {
+        const target = id.replace('requested-', '');
+        state.filters.requestedBy = (state.filters.requestedBy || []).filter((value) => value !== target);
+      } else if (id.startsWith('status-')) {
+        const target = id.replace('status-', '');
+        state.filters.engagementStatus = (state.filters.engagementStatus || []).filter((value) => value !== target);
+      } else if (id.startsWith('usecase-')) {
+        const [, useCase, idxRaw] = id.split('-');
+        const index = Number(idxRaw);
+        state.filters.useCaseMaturity = (state.filters.useCaseMaturity || []).filter((entry, entryIndex) => {
+          if (Number.isFinite(index)) return entryIndex !== index;
+          return entry.useCase !== useCase;
+        });
+      }
+      render();
     },
-    onClear: () =>
-      setPortfolioFilters({
-        segment: 'all',
-        renewalWindow: 'all',
-        health: 'all',
-        pteBand: 'all',
-        ptcBand: 'all',
-        staleOnly: false,
-        hasOpenRequest: false,
-        belowThreeGreen: false,
-        engagementTypes: [],
-        requestedBy: [],
-        engagementStatus: []
-      })
+    onClear: () => {
+      state.activeQueueTab = 'all';
+      state.filters.engagementTypes = [];
+      state.filters.requestedBy = [];
+      state.filters.engagementStatus = [];
+      state.filters.useCaseMaturity = [];
+      render();
+    }
   });
   if (chips) routeRoot.appendChild(chips);
 
-  normalizeRouteLayout(view);
-  if (state.customerSafe) {
-    view.prepend(
-      createCustomerSafeBanner({
-        onDisable: () => setSafeMode(false)
-      })
-    );
-  }
   routeRoot.appendChild(view);
 
-  const commands = commandEntries(workspace);
-  palette?.setEntries(commands);
+  normalizeTables(routeRoot);
+  normalizeAccordions(routeRoot);
+
+  bindRouteEvents();
+  renderShellContext();
+  renderLeftRail();
+  setActiveNav();
+  syncHeaderOffset();
 };
 
 const render = () => {
