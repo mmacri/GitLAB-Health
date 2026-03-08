@@ -2067,11 +2067,8 @@ const renderCurrentRoute = () => {
 
   if (route.name === 'manager') {
     view = renderManagerPage({
-      dashboard: manager,
-      workspace: workspaceModel,
-      mode: state.viewMode,
-      customerSafe: state.customerSafe,
-      onSetMode: (mode) => setViewMode(mode),
+      portfolio,
+      manager,
       ...common
     });
   }
@@ -2079,73 +2076,77 @@ const renderCurrentRoute = () => {
   if (route.name === 'customers') {
     view = renderCustomersPage({
       workspace: workspaceModel,
-      mode: state.viewMode,
-      customerSafe: state.customerSafe,
+      portfolioRows: workspacePortfolio.rows,
       onCreateCustomer,
-      onSelectCustomer: (customerId) => {
-        setSelectedCustomer(customerId);
-        router.navigate('customer', { id: customerId });
-      },
-      onBulkAddCustomersToProgram,
-      onBulkExportCustomers: onWorkspaceExportSelectedCustomers,
+      onBulkAddToProgram: onBulkAddCustomersToProgram,
+      onBulkExport: onWorkspaceExportSelectedCustomers,
       onBulkLogEngagement: onBulkLogWorkspaceEngagement,
+      notify,
       ...common
     });
   }
 
   if (route.name === 'customer' && selectedCustomer) {
     view = renderCustomerDetailPage({
-      workspace: workspaceModel,
       customer: selectedCustomer,
       metrics: customerMetrics,
-      mode: state.viewMode,
+      adoption: workspaceModel.adoption?.[selectedCustomer.id],
+      successPlan: workspaceModel.successPlans?.[selectedCustomer.id],
+      engagements: workspaceModel.engagements?.[selectedCustomer.id],
+      risk: workspaceModel.risk?.[selectedCustomer.id],
+      expansion: workspaceModel.expansion?.[selectedCustomer.id],
+      voc: (workspaceModel.voc || []).filter((item) => item.customerId === selectedCustomer.id),
       customerSafe: state.customerSafe,
-      onSetMode: (mode) => setViewMode(mode),
-      onUpdateCustomer: onWorkspaceUpdateCustomer,
       onUpdateStageStatus: onWorkspaceUpdateStageStatus,
       onUpdateUseCasePercent: onWorkspaceUpdateUseCasePercent,
       onUpdateUseCaseEvidence: onWorkspaceUpdateUseCaseEvidence,
-      onAddTimeToValue: onWorkspaceAddTimeToValue,
+      onAddTimeToValueMilestone: onWorkspaceAddTimeToValue,
       onAddOutcome: onWorkspaceAddOutcome,
       onAddMilestone: onWorkspaceAddMilestone,
       onAddEngagement: onWorkspaceAddEngagement,
-      onUpdateRiskOverride: onWorkspaceUpdateRiskOverride,
+      onSetRiskOverride: onWorkspaceUpdateRiskOverride,
+      onAddRiskSignal: onWorkspaceAddManualRiskSignal,
       onDismissRiskSignal: onWorkspaceDismissRiskSignal,
-      onAddManualRiskSignal: onWorkspaceAddManualRiskSignal,
       onAddPlaybookAction: onWorkspaceAddPlaybookAction,
-      onTogglePlaybookAction: onWorkspaceTogglePlaybookAction,
+      onTogglePlaybookStatus: onWorkspaceTogglePlaybookAction,
       onAddExpansion: onWorkspaceAddExpansion,
       onSetExpansionStatus: onWorkspaceSetExpansionStatus,
       onAddVoc: onWorkspaceAddVoc,
-      onExportAccountPdf: (customer, options) => exportAccountSummaryPdf(customer, options),
-      onExportAccountCsv: (customer, options) => exportAccountCsv(customer, options),
-      notify,
+      onExportCustomerPdf: (customerId) =>
+        exportAccountSummaryPdf(workspaceModel, {
+          customerId,
+          customerSafe: state.customerSafe
+        }),
+      onExportCustomerCsv: (customerId) =>
+        exportAccountCsv(workspaceModel, {
+          customerId,
+          customerSafe: state.customerSafe
+        }),
       ...common
     });
   }
 
   if (route.name === 'toolkit') {
     view = renderToolkitPage({
-      selectedAccount: currentAccount(),
-      playbooks: state.data.playbooks,
+      accounts: state.data.accounts,
+      templates: state.data.templates || {},
       customerSafe: state.customerSafe,
-      mode: state.viewMode,
-      onCopyInvite,
+      onToggleSafe: setSafeMode,
+      selectedAccountId: state.selectedAccountId,
       notify,
+      copyText,
       ...common
     });
   }
 
   if (route.name === 'simulator') {
     view = renderSimulatorPage({
-      account: currentAccount(),
+      capabilities: state.data.simulatorCapabilities || [],
+      rules: state.data.simulatorRules || [],
       customerSafe: state.customerSafe,
-      mode: state.viewMode,
-      onOpenAccount: (accountId) => {
-        setSelectedAccount(accountId);
-        router.navigate('account', { id: accountId });
-      },
+      onToggleSafe: setSafeMode,
       notify,
+      copyText,
       ...common
     });
   }
@@ -2262,12 +2263,9 @@ const renderCurrentRoute = () => {
       customerSafe: state.customerSafe,
       mode: state.viewMode,
       onExportPortfolio: () => exportPortfolioCsv(workspaceModel),
-      onExportPrograms: () => exportProgramsCsv(workspaceModel),
-      onExportVoc: () => exportVocCsv(workspaceModel),
-      onExportAccountSummary: (account) => exportAccountSummaryPdf(account),
-      onExportManagerSummary: () => exportManagerSummaryPdf(workspaceModel),
-      onCopySnapshot: () => copyText(buildShareSnapshotUrl(currentWorkspace(), state.basePath)),
-      notify,
+      onExportAccountCsv: (account, options) => exportAccountCsv(account, options),
+      onExportAccountPdf: (account, options) => exportAccountSummaryPdf(account, options),
+      onCopyShare: copyShareSnapshot,
       ...common
     });
   }
@@ -2275,7 +2273,7 @@ const renderCurrentRoute = () => {
   if (route.name === 'risks') {
     view = renderRisksPage({
       workspace: workspaceModel,
-      customerSafe: state.customerSafe,
+      portfolioRows: workspacePortfolio.rows,
       ...common
     });
   }
@@ -2283,8 +2281,9 @@ const renderCurrentRoute = () => {
   if (route.name === 'expansion') {
     view = renderExpansionPage({
       workspace: workspaceModel,
-      customerSafe: state.customerSafe,
+      onAddExpansion: onWorkspaceAddExpansion,
       onSetExpansionStatus: onWorkspaceSetExpansionStatus,
+      notify,
       ...common
     });
   }
@@ -2292,17 +2291,19 @@ const renderCurrentRoute = () => {
   if (route.name === 'voc') {
     view = renderVocPage({
       workspace: workspaceModel,
-      customerSafe: state.customerSafe,
       onAddVoc: onWorkspaceAddVoc,
+      onExportVocCsv: () => exportVocCsv(workspaceModel),
+      notify,
       ...common
     });
   }
 
   if (route.name === 'reports') {
     view = renderReportsPage({
-      workspace: workspaceModel,
       manager,
-      customerSafe: state.customerSafe,
+      onExportManagerSummary: () => exportManagerSummaryPdf(workspaceModel),
+      onExportPortfolioCsv: () => exportPortfolioCsv(workspaceModel),
+      onExportProgramsCsv: () => exportProgramsCsv(workspaceModel),
       ...common
     });
   }
@@ -2310,7 +2311,9 @@ const renderCurrentRoute = () => {
   if (route.name === 'propensity') {
     view = renderPropensityPage({
       workspace: workspaceModel,
-      customerSafe: state.customerSafe,
+      workspacePortfolio,
+      manager,
+      notify,
       ...common
     });
   }
@@ -2318,25 +2321,34 @@ const renderCurrentRoute = () => {
   if (route.name === 'settings') {
     view = renderSettingsPage({
       workspace: workspaceModel,
-      customerSafe: state.customerSafe,
-      onExportWorkspace,
+      onLoadSamplePortfolio: onLoadSampleWorkspace,
       onImportWorkspace,
-      onLoadSampleWorkspace,
+      onExportWorkspace,
       onResetWorkspace,
       onUpdateScoringWeights,
+      onResetPtCalibration,
       onAddRiskTemplate,
       onAddProgramTemplate,
-      onCreateMonthlySnapshot,
+      onCreateSnapshot: onCreateMonthlySnapshot,
+      theme: state.theme,
+      onSetTheme: setTheme,
+      density: state.density,
+      onSetDensity: setDensity,
+      defaultMode: storage.get(STORAGE_KEYS.defaultMode, state.viewMode) || 'today',
+      defaultPersona: storage.get(STORAGE_KEYS.defaultPersona, state.persona) || 'cse',
+      onSetDefaultMode: setDefaultMode,
+      onSetDefaultPersona: setDefaultPersona,
+      notify,
       ...common
     });
   }
 
   if (route.name === 'intake') {
     view = renderIntakePage({
-      accounts: workspaceModel.customers || [],
-      customerSafe: state.customerSafe,
-      mode: state.viewMode,
+      data: state.data,
+      requests: state.data.requests,
       onCreateRequest,
+      copyText,
       notify,
       ...common
     });
