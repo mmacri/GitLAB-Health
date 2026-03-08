@@ -105,4 +105,32 @@ test('route wiring passes expected callbacks to pages with action handlers', () 
     mainSource.includes('const customerRouteContext = !isLegacyAccountContextRoute(state.route.name);'),
     'jump handler should consistently use shared customer-vs-account route context helper'
   );
+  assert.ok(
+    mainSource.includes('onSetRiskOverride: onWorkspaceSetRiskOverride'),
+    'customer detail page should receive existing risk override callback'
+  );
+  assert.ok(
+    mainSource.includes('const normalizeTables = (root) => {'),
+    'normalizeTables helper should be defined before render usage'
+  );
+  assert.ok(
+    mainSource.includes('const normalizeAccordions = (root) => {'),
+    'normalizeAccordions helper should be defined before render usage'
+  );
+  assert.ok(
+    mainSource.includes('const bindRouteEvents = () => {};'),
+    'bindRouteEvents hook should be defined to prevent post-render runtime errors'
+  );
+  assert.ok(
+    mainSource.includes('onAddRiskSignal: onWorkspaceAddRiskSignal'),
+    'customer detail page should receive existing workspace risk signal callback'
+  );
+  assert.ok(
+    mainSource.includes('onTogglePlaybookStatus: onWorkspaceTogglePlaybookStatus'),
+    'customer detail page should receive playbook status toggle callback'
+  );
+  assert.ok(
+    mainSource.includes('renderLeftRail();\n  renderShellContext();'),
+    'render pipeline should hydrate sidebar before shell context so jump/select controls stay populated'
+  );
 });

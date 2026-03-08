@@ -837,6 +837,42 @@ const normalizeProgramType = (value) => {
   return 'webinar';
 };
 
+const normalizeTables = (root) => {
+  if (!root) return;
+  root.querySelectorAll('.table-wrap table').forEach((table) => {
+    if (!table.classList.contains('data-table')) {
+      table.classList.add('data-table');
+    }
+  });
+};
+
+const normalizeAccordions = (root) => {
+  if (!root) return;
+  root.querySelectorAll('.accordion').forEach((accordion) => {
+    accordion.querySelectorAll('details').forEach((details) => {
+      if (!details.classList.contains('accordion__item')) {
+        details.classList.add('accordion__item');
+      }
+      const summary = details.querySelector(':scope > summary');
+      if (summary && !summary.classList.contains('accordion__header')) {
+        summary.classList.add('accordion__header');
+      }
+      let body = details.querySelector(':scope > .accordion__body');
+      if (!body) {
+        const contentNodes = [...details.childNodes].filter((node) => node !== summary);
+        body = document.createElement('div');
+        body.className = 'accordion__body';
+        contentNodes.forEach((node) => body.appendChild(node));
+        details.appendChild(body);
+      }
+    });
+  });
+};
+
+// Route views bind their own handlers; keep this hook defined so route rendering
+// cannot fail when shared post-render steps invoke it.
+const bindRouteEvents = () => {};
+
 const workspaceProgramUseCases = (program) => {
   const keys = Object.keys(program?.adoptionImpact || {});
   if (!keys.length) return ['Platform'];
@@ -2176,11 +2212,11 @@ const renderCurrentRoute = () => {
       onAddOutcome: onWorkspaceAddOutcome,
       onAddMilestone: onWorkspaceAddMilestone,
       onAddEngagement: onWorkspaceAddEngagement,
-      onSetRiskOverride: onWorkspaceUpdateRiskOverride,
-      onAddRiskSignal: onWorkspaceAddManualRiskSignal,
+      onSetRiskOverride: onWorkspaceSetRiskOverride,
+      onAddRiskSignal: onWorkspaceAddRiskSignal,
       onDismissRiskSignal: onWorkspaceDismissRiskSignal,
       onAddPlaybookAction: onWorkspaceAddPlaybookAction,
-      onTogglePlaybookStatus: onWorkspaceTogglePlaybookAction,
+      onTogglePlaybookStatus: onWorkspaceTogglePlaybookStatus,
       onAddExpansion: onWorkspaceAddExpansion,
       onSetExpansionStatus: onWorkspaceSetExpansionStatus,
       onAddVoc: onWorkspaceAddVoc,
@@ -2536,8 +2572,8 @@ const renderCurrentRoute = () => {
   normalizeAccordions(routeRoot);
 
   bindRouteEvents();
-  renderShellContext();
   renderLeftRail();
+  renderShellContext();
   setActiveNav();
   syncHeaderOffset();
 };
