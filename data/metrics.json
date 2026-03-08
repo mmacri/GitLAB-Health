@@ -172,16 +172,20 @@
         "adoption_timeline": "1 month after license purchase",
         "rollup_rule": "single_metric",
         "summary_metric_index": 0,
-        "green_criteria": "Track planning usage once service ping data is available.",
-        "placeholder": true,
+        "score": 68,
+        "green_criteria": "Green when planning activity exceeds 0.75 planning events per billable user in the last 28 days.",
         "metrics": [
           {
             "name": "Planning feature utilization (issues/epics)",
-            "value": null,
+            "value": 0.81,
             "format": "number",
             "calc": "Issues + epics created L28D / Billable users",
-            "threshold_text": "Not yet tracked in this snapshot",
-            "thresholds": {}
+            "threshold_text": "Red <=0.25, Yellow >0.25 and <=0.75, Green >0.75",
+            "thresholds": {
+              "red_max": 0.25,
+              "yellow_max": 0.75,
+              "green_inclusive": false
+            }
           }
         ]
       },
@@ -338,16 +342,20 @@
         "adoption_timeline": "1 month after license purchase",
         "rollup_rule": "single_metric",
         "summary_metric_index": 0,
-        "green_criteria": "Track value stream analytics usage once enabled.",
-        "placeholder": true,
+        "score": 54,
+        "green_criteria": "Green when delivery telemetry coverage exceeds 20% of CI-enabled projects.",
         "metrics": [
           {
-            "name": "Value stream analytics utilization",
-            "value": null,
-            "format": "number",
-            "calc": "VSA views L28D / Billable users",
-            "threshold_text": "Not yet tracked in this snapshot",
-            "thresholds": {}
+            "name": "Delivery telemetry coverage %",
+            "value": 0.13,
+            "format": "percent",
+            "calc": "Projects deploying via GitLab / CI-enabled projects",
+            "threshold_text": "Red <=5%, Yellow >5% and <=20%, Green >20%",
+            "thresholds": {
+              "red_max": 0.05,
+              "yellow_max": 0.2,
+              "green_inclusive": false
+            }
           }
         ]
       }
