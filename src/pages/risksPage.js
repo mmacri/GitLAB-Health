@@ -1,5 +1,6 @@
 import { pageHeader } from '../components/pageHeader.js';
 import { statusChip } from '../components/statusChip.js';
+import { formatDate, formatDateTime } from '../lib/date.js';
 
 const SIGNAL_LABELS = {
   LOW_ENGAGEMENT: 'Low Engagement',
@@ -50,6 +51,7 @@ export const renderRisksPage = (ctx) => {
   }));
 
   const playbookTemplates = workspace?.settings?.riskPlaybookTemplates || [];
+  const riskRuns = Array.isArray(workspace?.operations?.riskRuns) ? workspace.operations.riskRuns : [];
   const selected = new Set();
   const defaultDueDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
@@ -147,6 +149,32 @@ export const renderRisksPage = (ctx) => {
         <button class="ghost-btn" type="button" data-go-settings>Manage templates</button>
       </div>
     </section>
+
+    <section class="card">
+      <div class="metric-head">
+        <h2>Bulk Mitigation History</h2>
+        ${statusChip({ label: `${riskRuns.length} runs`, tone: riskRuns.length ? 'good' : 'neutral' })}
+      </div>
+      <ul class="simple-list">
+        ${
+          riskRuns.length
+            ? riskRuns
+                .slice(0, 8)
+                .map((run) => {
+                  const customerPreview = (run.customerNames || []).slice(0, 3).join(', ');
+                  const remaining = Math.max(0, (run.customerNames || []).length - 3);
+                  const previewText = remaining ? `${customerPreview}, +${remaining} more` : customerPreview;
+                  return `<li>
+                    <strong>${run.templateName || 'Custom mitigation'}</strong> - ${formatDateTime(run.at)} by ${run.createdBy || 'CSE'}
+                    <p class="muted">Owner: ${run.owner || 'CSE'} · Due: ${formatDate(run.due)} · Coverage: ${(run.customerIds || []).length} customers</p>
+                    <p class="muted">${previewText || 'No customer names captured.'}</p>
+                  </li>`;
+                })
+                .join('')
+            : '<li>No bulk mitigation runs captured yet.</li>'
+        }
+      </ul>
+    </section>
   `;
 
   wrapper.querySelector('[data-go-manager]')?.addEventListener('click', () => navigate('manager'));
@@ -196,6 +224,8 @@ export const renderRisksPage = (ctx) => {
     const owner = String(wrapper.querySelector('[data-bulk-owner]')?.value || template.owner || 'CSE').trim();
     const due = String(wrapper.querySelector('[data-bulk-due]')?.value || defaultDueDate).trim();
     onBulkApplyPlaybook?.([...selected], {
+      templateId: template.id,
+      templateName: template.name,
       action: template.action,
       owner,
       due,

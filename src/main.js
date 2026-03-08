@@ -1367,9 +1367,11 @@ const onWorkspaceTogglePlaybookStatus = (customerId, index, complete) => {
 const onWorkspaceBulkApplyPlaybook = (customerIds, payload) => {
   const ids = Array.from(new Set((customerIds || []).filter(Boolean)));
   if (!ids.length) return;
+  const runAt = new Date().toISOString();
   updateWorkspace((workspace) => {
+    const customersById = new Map((workspace.customers || []).map((customer) => [customer.id, customer]));
     ids.forEach((customerId) => {
-      if (!workspace.customers.some((customer) => customer.id === customerId)) return;
+      if (!customersById.has(customerId)) return;
       workspace.risk[customerId] = workspace.risk[customerId] || { signals: [], playbook: [], dismissals: [], overrideHealth: null };
       workspace.risk[customerId].playbook = [
         ...(workspace.risk[customerId].playbook || []),
@@ -1381,6 +1383,23 @@ const onWorkspaceBulkApplyPlaybook = (customerIds, payload) => {
         }
       ];
     });
+
+    const run = {
+      id: createWorkspaceId('riskrun'),
+      at: runAt,
+      templateId: String(payload.templateId || '').trim(),
+      templateName: String(payload.templateName || payload.action || 'Custom mitigation').trim(),
+      action: String(payload.action || '').trim(),
+      owner: String(payload.owner || 'CSE').trim(),
+      due: String(payload.due || toIsoDate(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000))).slice(0, 10),
+      customerIds: ids,
+      customerNames: ids.map((id) => customersById.get(id)?.name).filter(Boolean),
+      createdBy: state.persona === 'manager' ? 'CSE Manager' : 'CSE On-Demand'
+    };
+
+    workspace.operations = workspace.operations || {};
+    const existingRuns = Array.isArray(workspace.operations.riskRuns) ? workspace.operations.riskRuns : [];
+    workspace.operations.riskRuns = [run, ...existingRuns].slice(0, 150);
   });
   notify(`Applied mitigation action to ${ids.length} customers.`);
 };

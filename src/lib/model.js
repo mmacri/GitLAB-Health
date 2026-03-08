@@ -54,6 +54,9 @@ export const createDefaultWorkspace = () => ({
   team: {
     cseMembers: []
   },
+  operations: {
+    riskRuns: []
+  },
   snapshots: [],
   settings: {
     riskPlaybookTemplates: [
@@ -429,6 +432,25 @@ const normalizePrograms = (programs) =>
     };
   });
 
+const normalizeRiskRuns = (rows) =>
+  ensureArray(rows)
+    .map((row, index) => {
+      const source = ensureObject(row);
+      return {
+        id: pick(source.id, toId(`risk_run_${index + 1}`, 'ops')),
+        at: pick(source.at, new Date().toISOString()),
+        templateId: pick(source.templateId, ''),
+        templateName: pick(source.templateName, 'Custom mitigation'),
+        action: pick(source.action, ''),
+        owner: pick(source.owner, 'CSE'),
+        due: String(pick(source.due, '')).slice(0, 10),
+        customerIds: ensureArray(source.customerIds).map((value) => String(value || '')).filter(Boolean),
+        customerNames: ensureArray(source.customerNames).map((value) => String(value || '')).filter(Boolean),
+        createdBy: pick(source.createdBy, 'CSE')
+      };
+    })
+    .slice(0, 150);
+
 export const ensureWorkspaceShape = (workspace, fallback = null) => {
   const base = ensureObject(workspace);
   const defaults = fallback || createDefaultWorkspace();
@@ -481,6 +503,9 @@ export const ensureWorkspaceShape = (workspace, fallback = null) => {
     voc: ensureArray(base.voc),
     team: {
       cseMembers: ensureArray(base?.team?.cseMembers || defaults.team.cseMembers)
+    },
+    operations: {
+      riskRuns: normalizeRiskRuns(base?.operations?.riskRuns || defaults?.operations?.riskRuns)
     },
     snapshots: ensureArray(base.snapshots),
     settings: {
