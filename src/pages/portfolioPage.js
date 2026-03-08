@@ -914,7 +914,7 @@ const renderWorkspaceTodayPage = (ctx) => {
 };
 
 export const renderPortfolioHomePage = (ctx) => {
-  if ((ctx.workspacePortfolio?.rows || []).length && ctx.workspace) {
+  if (ctx.workspace) {
     return renderWorkspaceTodayPage(ctx);
   }
 
@@ -1191,7 +1191,7 @@ export const renderPortfolioHomePage = (ctx) => {
 };
 
 export const renderPortfolioPage = (ctx) => {
-  if ((ctx.workspacePortfolio?.rows || []).length && ctx.workspace) {
+  if (ctx.workspace) {
     const { workspace, workspacePortfolio, filters, onSetFilters, navigate, onExportPortfolio, maskField } = ctx;
     const rows = workspacePortfolio.rows || [];
     const greenUseCaseCount = (customerId) => {

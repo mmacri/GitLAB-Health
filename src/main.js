@@ -811,18 +811,74 @@ const renderLeftRail = () => {
   });
 };
 
-const findProgram = (programId) => state.data.programs.find((program) => program.program_id === programId) || null;
+const normalizeProgramType = (value) => {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (normalized.includes('webinar')) return 'webinar';
+  if (normalized.includes('office')) return 'office hours';
+  if (normalized.includes('lab')) return 'hands-on lab';
+  return 'webinar';
+};
+
+const workspaceProgramUseCases = (program) => {
+  const keys = Object.keys(program?.adoptionImpact || {});
+  if (!keys.length) return ['Platform'];
+  return keys.map((key) => {
+    if (key === 'CICD') return 'CI';
+    if (key === 'Security') return 'Secure';
+    if (key === 'ReleaseAutomation') return 'CD';
+    return key;
+  });
+};
+
+const workspaceProgramToLegacyView = (program) => ({
+  program_id: program.id,
+  title: program.name,
+  type: normalizeProgramType(program.type),
+  date: program.startDate || '',
+  target_use_cases: workspaceProgramUseCases(program),
+  registration_count: Number(program.funnel?.invited || 0),
+  attendance_count: Number(program.funnel?.attended || 0),
+  invite_blurb: program.objective || '',
+  followup_steps: [`Track adoption movement for ${(program.name || 'program').trim()} attendees.`]
+});
+
+const workspaceProgramsForProgramsPage = (workspace = currentWorkspace()) =>
+  (workspace?.programs || []).map(workspaceProgramToLegacyView);
+
+const findWorkspaceProgram = (programId, workspace = currentWorkspace()) =>
+  (workspace?.programs || []).find((program) => program.id === programId) || null;
+
+const findLegacyProgram = (programId) => state.data.programs.find((program) => program.program_id === programId) || null;
+
+const findProgram = (programId) => {
+  const workspaceProgram = findWorkspaceProgram(programId);
+  if (workspaceProgram) {
+    return {
+      source: 'workspace',
+      view: workspaceProgramToLegacyView(workspaceProgram),
+      workspaceProgram
+    };
+  }
+  const legacyProgram = findLegacyProgram(programId);
+  if (!legacyProgram) return null;
+  return {
+    source: 'legacy',
+    view: legacyProgram,
+    workspaceProgram: null
+  };
+};
 
 const onCopyInvite = async (programId) => {
-  const program = findProgram(programId);
-  if (!program) return;
+  const match = findProgram(programId);
+  if (!match) return;
+  const program = match.view;
   const blurb = program.invite_blurb || [
-    `Join ${program.title}`,
+    `Join ${program.title || 'Program session'}`,
     `When: ${formatDateTime(program.date)}`,
-    `Use cases: ${(program.target_use_cases || []).join(', ')}`
+    `Use cases: ${(program.target_use_cases || []).join(', ') || 'Platform'}`
   ].join('\n');
   await copyText(blurb);
-  notify(`Invite copied for ${program.title}.`);
+  notify(`Invite copied for ${program.title || 'program'}.`);
 };
 
 const updateProgram = (programId, updater) => {
@@ -836,6 +892,50 @@ const updateProgram = (programId, updater) => {
 
 const onLogAttendance = (programId, amount = 1, accountId = '') => {
   const normalizedAmount = Number(amount || 0);
+  const workspaceProgram = findWorkspaceProgram(programId);
+  if (workspaceProgram) {
+    updateWorkspace((workspace) => {
+      const program = (workspace.programs || []).find((item) => item.id === programId);
+      if (!program) return;
+      const currentInvited = Math.max(0, Number(program.funnel?.invited || 0));
+      const nextAttended = Math.max(0, Number(program.funnel?.attended || 0) + normalizedAmount);
+      program.funnel = {
+        ...(program.funnel || {}),
+        invited: Math.max(currentInvited, nextAttended),
+        attended: nextAttended,
+        completed: Math.max(0, Number(program.funnel?.completed || 0))
+      };
+
+      if (!accountId) return;
+      const cohort = new Set(program.cohortCustomerIds || []);
+      cohort.add(accountId);
+      program.cohortCustomerIds = [...cohort];
+      if (!Array.isArray(workspace.engagements[accountId])) workspace.engagements[accountId] = [];
+      workspace.engagements[accountId].unshift({
+        id: createWorkspaceId('eng'),
+        ts: `${toIsoDate(new Date())}T12:00:00.000Z`,
+        type: 'Workshop',
+        summary: `Attendance logged for ${program.name}.`,
+        tags: ['program', normalizeProgramType(program.type)],
+        nextSteps: ['Confirm follow-up owner and next enablement motion'],
+        owner: 'CSE'
+      });
+    });
+    if (accountId) {
+      const customer = workspaceCustomerById(accountId);
+      addEngagementLogEntry({
+        account_id: accountId,
+        account_name: customer?.name || accountId,
+        date: toIsoDate(new Date()),
+        type: `program attendance (${normalizeProgramType(workspaceProgram.type)})`,
+        notes_customer_safe: `Attendance logged for ${workspaceProgram.name}.`,
+        notes_internal: `Program attendance incremented by ${normalizedAmount}.`
+      });
+    }
+    notify('Attendance updated.');
+    return;
+  }
+
   updateProgram(programId, (program) => ({
     ...program,
     attendance_count: Math.max(0, Number(program.attendance_count || 0) + normalizedAmount)
@@ -844,7 +944,8 @@ const onLogAttendance = (programId, amount = 1, accountId = '') => {
   if (!accountId) return;
 
   const account = getAccountById(accountId);
-  const program = findProgram(programId);
+  const match = findProgram(programId);
+  const program = match?.view;
   if (!account || !program) return;
 
   const today = toIsoDate(new Date());
@@ -883,10 +984,28 @@ const onLogAttendance = (programId, amount = 1, accountId = '') => {
 };
 
 const onAddRegistration = (programId, amount = 1) => {
+  const workspaceProgram = findWorkspaceProgram(programId);
+  if (workspaceProgram) {
+    const normalizedAmount = Number(amount || 0);
+    updateWorkspace((workspace) => {
+      const program = (workspace.programs || []).find((item) => item.id === programId);
+      if (!program) return;
+      program.funnel = {
+        ...(program.funnel || {}),
+        invited: Math.max(0, Number(program.funnel?.invited || 0) + normalizedAmount),
+        attended: Math.max(0, Number(program.funnel?.attended || 0)),
+        completed: Math.max(0, Number(program.funnel?.completed || 0))
+      };
+    });
+    notify('Registration updated.');
+    return;
+  }
+
   updateProgram(programId, (program) => ({
     ...program,
     registration_count: Math.max(0, Number(program.registration_count || 0) + Number(amount || 0))
   }));
+  notify('Registration updated.');
 };
 
 const onCreateRequest = (request) => {
@@ -1377,35 +1496,58 @@ const onExportProgramFollowupList = (programId) => {
 };
 
 const onInviteAccountToProgram = async (programId, accountId) => {
-  const program = findProgram(programId);
+  const match = findProgram(programId);
+  const customer = workspaceCustomerById(accountId);
   const account = getAccountById(accountId);
-  if (!program || !account) return;
+  const program = match?.view;
+  if (!program || (!customer && !account)) return;
+  const participantName = customer?.name || account?.name || accountId;
   const invite = [
-    `Hello ${account.name} team,`,
+    `Hello ${participantName} team,`,
     ``,
-    `You are invited to ${program.title}.`,
+    `You are invited to ${program.title || 'this program'}.`,
     `Date/Time: ${formatDateTime(program.date)}`,
-    `Target use cases: ${(program.target_use_cases || []).join(', ')}`,
+    `Target use cases: ${(program.target_use_cases || []).join(', ') || 'Platform'}`,
     ``,
     `${program.invite_blurb || 'Please register and bring implementation questions.'}`
   ].join('\n');
   await copyText(invite);
-  const nextTouchDate = toIsoDate(program.date);
-  account.engagement = {
-    ...account.engagement,
-    next_touch_date: nextTouchDate
-  };
-  persistAccountField(accountId, 'engagement.next_touch_date', nextTouchDate);
-  appendChangeLog(accountId, 'Engagement', `Invited to program ${program.title}.`, nextTouchDate);
+  const nextTouchDate = toIsoDate(program.date || new Date());
+  if (match?.source === 'workspace') {
+    updateWorkspace((workspace) => {
+      const target = (workspace.programs || []).find((item) => item.id === programId);
+      if (!target) return;
+      const cohort = new Set(target.cohortCustomerIds || []);
+      cohort.add(accountId);
+      target.cohortCustomerIds = [...cohort];
+      if (!Array.isArray(workspace.engagements[accountId])) workspace.engagements[accountId] = [];
+      workspace.engagements[accountId].unshift({
+        id: createWorkspaceId('eng'),
+        ts: `${toIsoDate(new Date())}T12:00:00.000Z`,
+        type: 'Webinar',
+        summary: `Invite sent for ${target.name}.`,
+        tags: ['program', 'invitation'],
+        nextSteps: ['Confirm registration and follow-up plan'],
+        owner: 'CSE'
+      });
+    });
+  } else if (account) {
+    account.engagement = {
+      ...account.engagement,
+      next_touch_date: nextTouchDate
+    };
+    persistAccountField(accountId, 'engagement.next_touch_date', nextTouchDate);
+    appendChangeLog(accountId, 'Engagement', `Invited to program ${program.title}.`, nextTouchDate);
+  }
   addEngagementLogEntry({
-    account_id: account.id,
-    account_name: account.name,
+    account_id: accountId,
+    account_name: participantName,
     date: toIsoDate(new Date()),
     type: 'program invitation',
     notes_customer_safe: `Invite sent for ${program.title}.`,
     notes_internal: `Next touch moved to ${nextTouchDate}.`
   });
-  notify(`Invite copied for ${account.name}.`);
+  notify(`Invite copied for ${participantName}.`);
   render();
 };
 
@@ -1663,7 +1805,7 @@ const commandEntries = (workspace) => {
     ...portfolioCommandEntries(state.data),
     ...managerCommandEntries(),
     ...simulatorCommandEntries(),
-    ...programsCommandEntries(state.data.programs),
+    ...programsCommandEntries(workspaceProgramsForProgramsPage()),
     ...playbooksCommandEntries(state.data.playbooks),
     ...resourcesCommandEntries(),
     ...propensityCommandEntries(),
@@ -1836,8 +1978,8 @@ const renderCurrentRoute = () => {
       onExportPortfolio: () => exportPortfolioCsv(workspaceModel),
       onCopyShare: copyShareSnapshot,
       requests: state.data.requests || [],
-      programs: state.data.programs || [],
-      accounts: state.data.accounts || [],
+      programs: workspaceModel.programs || [],
+      accounts: workspaceModel.customers || [],
       ...common
     });
   }
@@ -1986,8 +2128,8 @@ const renderCurrentRoute = () => {
 
   if (route.name === 'programs') {
     view = renderProgramsPage({
-      programs: state.data.programs,
-      accounts: state.data.accounts,
+      programs: workspaceProgramsForProgramsPage(workspaceModel),
+      accounts: workspaceModel.customers || [],
       mode: state.viewMode,
       onCopyInvite,
       onLogAttendance,
