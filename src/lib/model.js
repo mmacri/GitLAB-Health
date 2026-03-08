@@ -248,6 +248,7 @@ const mapLegacySuccessPlan = (account) => {
 const mapLegacyPrograms = (programs, customerIds) =>
   ensureArray(programs).map((program, index) => ({
     id: toId(program.program_id || program.title, 'prog'),
+    legacyProgramId: pick(program.program_id, ''),
     name: program.title,
     type: String(program.type || 'webinar')
       .replace(/\b\w/g, (match) => match.toUpperCase())
@@ -382,6 +383,52 @@ const normalizeUseCases = (value) => {
   return defaults;
 };
 
+const normalizePrograms = (programs) =>
+  ensureArray(programs).map((program, index) => {
+    const source = ensureObject(program);
+    const fallbackId = toId(
+      source.id || source.legacyProgramId || source.program_id || source.name || source.title || `program_${index + 1}`,
+      'prog'
+    );
+    const normalizedId = pick(source.id, fallbackId);
+    const startDate = String(pick(source.startDate, pick(source.date, ''))).slice(0, 10);
+    const endDate = String(pick(source.endDate, startDate)).slice(0, 10);
+    const fallbackInvited = Number(pick(source.registration_count, 0));
+    const fallbackAttended = Number(pick(source.attendance_count, 0));
+    const funnelSource = ensureObject(source.funnel);
+
+    return {
+      id: normalizedId,
+      legacyProgramId: pick(source.legacyProgramId, pick(source.program_id, '')),
+      name: pick(source.name, pick(source.title, `Program ${index + 1}`)),
+      type: pick(source.type, 'Webinar'),
+      startDate,
+      endDate,
+      objective: pick(
+        source.objective,
+        pick(source.invite_blurb, pick(ensureArray(source.followup_steps)[0], 'Improve adoption outcomes through enablement.'))
+      ),
+      cohortCustomerIds: ensureArray(source.cohortCustomerIds).map((value) => String(value || '')).filter(Boolean),
+      funnel: {
+        invited: Math.max(0, Number(pick(funnelSource.invited, fallbackInvited))),
+        attended: Math.max(0, Number(pick(funnelSource.attended, fallbackAttended))),
+        completed: Math.max(
+          0,
+          Number(pick(funnelSource.completed, Math.floor(Number(pick(funnelSource.attended, fallbackAttended)) * 0.72)))
+        )
+      },
+      adoptionImpact: ensureObject(source.adoptionImpact),
+      sessions: ensureArray(source.sessions).map((session, sessionIndex) => {
+        const sessionSource = ensureObject(session);
+        return {
+          date: String(pick(sessionSource.date, startDate)).slice(0, 10),
+          title: pick(sessionSource.title, `${pick(source.name, pick(source.title, `Program ${index + 1}`))} session ${sessionIndex + 1}`),
+          artifact: pick(sessionSource.artifact, '')
+        };
+      })
+    };
+  });
+
 export const ensureWorkspaceShape = (workspace, fallback = null) => {
   const base = ensureObject(workspace);
   const defaults = fallback || createDefaultWorkspace();
@@ -427,7 +474,7 @@ export const ensureWorkspaceShape = (workspace, fallback = null) => {
     })),
     adoption: ensureObject(base.adoption),
     successPlans: ensureObject(base.successPlans),
-    programs: ensureArray(base.programs),
+    programs: normalizePrograms(base.programs),
     engagements: ensureObject(base.engagements),
     risk: ensureObject(base.risk),
     expansion: ensureObject(base.expansion),
