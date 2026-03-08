@@ -22,7 +22,13 @@ export const wireTabs = (root, selector = '[data-tabs]') => {
     tab.addEventListener('click', () => setActive(tab.getAttribute('data-tab-target')));
   });
 
-  if (tabs[0]) {
+  const preselectedTab =
+    tabs.find((tab) => tab.getAttribute('aria-selected') === 'true') ||
+    tabs.find((tab) => tab.classList.contains('is-active')) ||
+    null;
+  if (preselectedTab) {
+    setActive(preselectedTab.getAttribute('data-tab-target'));
+  } else if (tabs[0]) {
     setActive(tabs[0].getAttribute('data-tab-target'));
   }
 
