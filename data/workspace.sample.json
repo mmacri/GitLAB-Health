@@ -901,7 +901,7 @@
           },
           "Observability": {
             "percent": 10,
-            "evidence": "No operational scorecard yet."
+            "evidence": "Service reliability scorecard drafted with SLO baselines for checkout APIs."
           }
         },
         "timeToValue": [
@@ -1006,7 +1006,7 @@
           },
           "Observability": {
             "percent": 5,
-            "evidence": "No observability workflow yet."
+            "evidence": "Prometheus and Alertmanager integration design approved; implementation queued."
           }
         },
         "timeToValue": [

@@ -89,4 +89,12 @@ test('route wiring passes expected callbacks to pages with action handlers', () 
     mainSource.includes('onCreateSnapshot: onCreateMonthlySnapshot'),
     'settings page should receive snapshot creation callback'
   );
+  assert.ok(
+    mainSource.includes("if (route.params.id && !getAccountById(route.params.id) && fallbackAccountId) {"),
+    'invalid account routes should recover to first available account'
+  );
+  assert.ok(
+    mainSource.includes("if (route.params.id && !workspaceCustomerById(route.params.id) && fallbackCustomerId) {"),
+    'invalid customer routes should recover to first available customer'
+  );
 });

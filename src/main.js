@@ -1988,9 +1988,16 @@ const renderCurrentRoute = () => {
   const manager = buildManagerDashboard(workspaceModel);
   const loadErrors = Array.isArray(state.data?.loadErrors) ? state.data.loadErrors : [];
   const accountLoadError = loadErrors.some((item) => item.file === 'accounts.json');
+  const fallbackAccountId = state.data.accounts?.[0]?.id || '';
+  const fallbackCustomerId = workspaceModel.customers?.[0]?.id || '';
 
   if (route.name === 'account') {
     if (route.params.id) setSelectedAccount(route.params.id);
+    if (route.params.id && !getAccountById(route.params.id) && fallbackAccountId) {
+      setSelectedAccount(fallbackAccountId);
+      router.navigate('account', { id: fallbackAccountId }, { replace: true });
+      return;
+    }
     if (!route.params.id && currentAccount()) {
       router.navigate('account', { id: currentAccount().id }, { replace: true });
       return;
@@ -1998,6 +2005,11 @@ const renderCurrentRoute = () => {
   }
   if (route.name === 'journey') {
     const journeyId = route.params.id || state.selectedAccountId || state.data.accounts?.[0]?.id || '';
+    if (route.params.id && !getAccountById(route.params.id) && fallbackAccountId) {
+      setSelectedAccount(fallbackAccountId);
+      router.navigate('journey', { id: fallbackAccountId }, { replace: true });
+      return;
+    }
     if (journeyId && journeyId !== state.selectedAccountId) setSelectedAccount(journeyId);
     if (!route.params.id && journeyId) {
       router.navigate('journey', { id: journeyId }, { replace: true });
@@ -2006,6 +2018,11 @@ const renderCurrentRoute = () => {
   }
   if (route.name === 'customer') {
     if (route.params.id) setSelectedCustomer(route.params.id);
+    if (route.params.id && !workspaceCustomerById(route.params.id) && fallbackCustomerId) {
+      setSelectedCustomer(fallbackCustomerId);
+      router.navigate('customer', { id: fallbackCustomerId }, { replace: true });
+      return;
+    }
     const selectedId = route.params.id || state.selectedCustomerId || workspaceModel.customers?.[0]?.id || '';
     if (!route.params.id && selectedId) {
       router.navigate('customer', { id: selectedId }, { replace: true });
